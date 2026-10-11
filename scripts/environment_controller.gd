@@ -266,7 +266,9 @@ func _sync_ground_material_variants() -> void:
 	# Existing appearance setters own the originals. Forward their ordinary art
 	# parameters (including night/emission) to variants; textures remain aliases.
 	# Cached parameter names only: no scene/native-array gather per frame.
-	for entry: Dictionary in _ground_material_variants.values():
+	# Iterate the retained dictionary without allocating a values array each frame.
+	for key: String in _ground_material_variants:
+		var entry: Dictionary = _ground_material_variants[key]
 		for name: String in entry.parameters:
 			entry.selected.set_shader_parameter(name,entry.original.get_shader_parameter(name))
 
