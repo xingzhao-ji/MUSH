@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac062 app fails p95; the prior lower-joint source pass and earlier failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac063 app fails p95; the current source passes its recorded route. Earlier results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -344,3 +344,45 @@ and reaped, and the failed attempt retained. No ordinary save was created;
 Save/Continue and visible ordinary UI remain unverified on mac063. mac061's prior
 UI evidence is not transferred to this app. Current launch/artifact details are
 in MAC-CANDIDATE.md. The user-authorized upload retains these unmet gates.
+
+## Front paving surface successor
+
+The existing pinned CC0 Rock01 texture now also covers the front paving batch,
+using the existing shader's world-space triplanar branch. This makes weathered
+front faces read more consistently with the tops. It affects all 3,078 batch
+corners, including the retained 2,598-corner prefix. Relative to the previous
+source, it adds one startup material and three albedo samples on visible front
+fragments. It adds no texture file, draw node, geometry, collider or custom frame
+loop; the existing environment loop receives the additional material binding.
+The albedo-derived relief is shading only. GPU sampling cost is not isolated.
+
+Isolated and integrated front comparisons each pass 19 checks and eight full
+PNG decodes. The refactored top comparison also passes 19 checks/eight decodes.
+All native geometry/contact, nonselected aliases and original art uniforms remain
+exact, and the actual installed material pointer is restored after comparisons.
+Both materials receive live clock/cloud/wetness values. Source import passes;
+the four Python runner failure-path tests pass. The consumer additionally binds
+selected batch, projection mode and fixture hash to the requested suite.
+
+After those material runs, startup report fields were clarified to distinguish
+pre-install corner counts (972/2526) from final geometry counts (4638/3078), and
+to describe the existing environment binding. The consumer reread both material
+receipts successfully. Fresh gameplay on the clarified source passes all 295
+assertions across 15 scenarios. Its 120-second night/rain route passes with
+10,189 frames, two loops, no stalls, 1920 x 1080 and default VSync: **p95 16.254 ms /
+p99 17.853 ms**. These are callback intervals, not presented frames or GPU timing.
+The run establishes no causal speedup, sustained thermal or mobile result.
+
+The separate upper-front geometry trial is **not adopted**. The last trial passed
+58 native checks, matching render/contact and exact soil/base preservation, but
+paired art review found only a marginal lip change. Earlier slope/inversion
+failures remain failed. Its movement was deliberately not qualified. Current
+baked geometry remains `1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057`.
+Thick front silhouettes, night readability, reference fidelity and full upper-soil
+contact coverage remain open. Still images do not qualify motion or live audio.
+
+The frozen mac063 app/ZIP predates this material change. No new package or app
+performance result is claimed. A second ordinary mac063 window attempt used an
+explicit on-screen position and a fresh UI-tool session; cgWindowNotFound persisted.
+Its failed receipt and exact source/profile/app guards remain recorded, and the
+owned process was reaped. No ordinary mac063 save/Continue proof was obtained.

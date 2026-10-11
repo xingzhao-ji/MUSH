@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T15:24:53.910750+00:00",
+  "prepared_utc": "2026-10-11T16:01:57.606940+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -32,8 +32,8 @@
       ]
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-080312-42163/result.json",
-      "receipt_sha256": "bcdb4c550a713243e3a41cb10979e0f3c3f177c453f2ff4c4bdf7fea8fadaad4",
+      "receipt": "reports/acceptance-20261011-085334-55185/result.json",
+      "receipt_sha256": "cf7b6ced0ef259b9eabbb4f78f7eca5882f42cbfbe823248cbc8244245783c38",
       "passed": true,
       "source_changes": [],
       "generated_source_files": [],
@@ -156,12 +156,12 @@
       }
     },
     "latest_import": {
-      "receipt": "reports/import-20261011-065744-38505/result.json",
-      "receipt_sha256": "4dd70b02b6914c3da6283fff8caf24247258cb09c1c7c7e3acd45c7314b587b6",
+      "receipt": "reports/import-20261011-085121-54958/result.json",
+      "receipt_sha256": "60574f9614adca3befb2eba42b0d47679bcd01c1ebec858466a03b9167274ea3",
       "passed": true,
       "source_changes": [],
       "generated_source_files": [
-        "tests/native_paired_support.gd.uid"
+        "tests/paving_front_surface.gd.uid"
       ],
       "source_preservation_failed": false,
       "checks": {
@@ -325,8 +325,11 @@
     "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
     "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
     "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
-    "scripts/baked_world.gd": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30",
-    "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8"
+    "scripts/baked_world.gd": "cea575504ca62d583a2c88ba5cad6eb120e1ef38d30a69dc7a740c75419d174c",
+    "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
+    "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
+    "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
+    "tools/verify.py": "5395cdc780b17c06b358031b73d88d230253abd9c69524cdc6a2cb9c8f4885f3"
   },
   "isolated_trials": [
     {
@@ -549,7 +552,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Final upper-joint source 120s callback-timing route passes; exported mac063 p95 fails at 18.049 ms. No GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current front-material source120s callback route passes16.254/17.853ms; frozen mac063 predates it and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -1029,5 +1032,271 @@
       "scripts/baked_world.gd": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30",
       "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8"
     }
+  },
+  "front_material_successor": {
+    "rollback_commit": "c402675f4632b60b6f84beacdf3893b2a0f86d26",
+    "adopted": true,
+    "new_texture_assets": 0,
+    "added_draw_nodes": 0,
+    "additional_materials": 1,
+    "front_batch_corners": 3078,
+    "retained_prefix_corners": 2598,
+    "front_shader_albedo_samples": 3,
+    "sample_count_is_not_gpu_cost": true,
+    "geometry_collision_changed": false,
+    "new_frame_loop": false,
+    "existing_environment_binding": true,
+    "front_comparison": {
+      "receipt": "reports/paving-front-20261011-085134-55034/result.json",
+      "receipt_sha256": "2bfed947b97fd123b0c5bd6d63a52c719dfa2c7d30c478f131607b7c83e19406",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "assertions": 19,
+        "full_png_decodes": [
+          {
+            "bytes": 1675992,
+            "png_sha256": "909b3002da6417a0d30cd87309c54754c89b171f6a64a8eebe4493938f855e33",
+            "rgba_sha256": "e54930a26021b5d9819813e6f95e13301e680d0c39803e1f89d6a323e81b2925",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1679339,
+            "png_sha256": "c09d01333ecf71dbb3876bffc5fb0c9bd682db9801adce89e37b1690c7bea575",
+            "rgba_sha256": "c1d0115235834a9d49a7e994b640c77fff0ae7446fe22f36b93cccb3734c7a5c",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1353062,
+            "png_sha256": "21a4e20dc0e8a7fc0e8ca57a4e9beb70bfec44aca4621c6edfb06d3b8483e25f",
+            "rgba_sha256": "806aa44baca70bba650affbe4b2aebfa103865993df76ac5a523dc1e8e712de8",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1367245,
+            "png_sha256": "d025799cc1fd8f184301ced4e993492c1cb442665fa189a01c6ba5810ba4c000",
+            "rgba_sha256": "c34485389e6ac10c228e292bbd04067380a28e0d552ef52763456efd866eeeb2",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1673770,
+            "png_sha256": "3d31829a9552de80dd67c4cdb98a872554c4fe65fe51bfb3e7efd6984e52e151",
+            "rgba_sha256": "77a38991940c172d09a4bc7823ea417b82acc3cbbc2c680f491721885dc63e3a",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1682087,
+            "png_sha256": "706fa98aa36d9489d890cea2fd9c4b3a106fdc2641ae751428f025f6c1152f76",
+            "rgba_sha256": "933b4bc3d24fb34ac3786ac75c300c8969d0b8a7c11058e5a2f7fc6d4ed26afe",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1509639,
+            "png_sha256": "4274d6a3a0248ba39bc1d33bd0b6e7362051c4a0ccef9ba413a282365d6b0b09",
+            "rgba_sha256": "15ff07b5e744e4437198420978a72cc3caf751853eba65693d496d2890d0e9b7",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1494516,
+            "png_sha256": "ba8e6f6da2cd30646eb12e1ea2b74e26ae108a080b8172a6cc11db7c15fd414d",
+            "rgba_sha256": "7c569124f4448e843ae6c5381b899e2491703309ed94de835e8e9c35b5b50442",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          }
+        ],
+        "motion_verified": false,
+        "art_approved": false,
+        "performance_measured": false
+      }
+    },
+    "top_regression": {
+      "receipt": "reports/paving-20261011-085219-55110/result.json",
+      "receipt_sha256": "b1417c76dbe7add2ecd1876f29acd3a7eb252e8e4b2eff3b1a7967b7f4e65d11",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "assertions": 19,
+        "full_png_decodes": [
+          {
+            "bytes": 1570047,
+            "png_sha256": "f2b1e8c107876d8050af01008bd05e1c79b9951dd1b98e457bd0d8345f5c293f",
+            "rgba_sha256": "299b3a679a83cdcf5fef35888acded8ae7d1f0c0475f922a3685551fc9f89b48",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1592618,
+            "png_sha256": "79e5069b8f5dfd06f7378218cc2280d55ee60774c2dcfd83c2a51b05d55daab1",
+            "rgba_sha256": "df81b9f9da41e7cb05f030960b357ce4371eb2ea1a7942462126a8d12c758d5a",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1264343,
+            "png_sha256": "f8470f97c40755649ba6ee5ecf144b17e7270ea98472205c31731ce5399d9230",
+            "rgba_sha256": "361a972fce65e58f45d99a8d83ed3939ac7c35a1e0d3dae195afbb83074921ac",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1303891,
+            "png_sha256": "569cfaa18fca62c2e91a62d141154f769cf0a7692c8ecdffa62a4805abacc38f",
+            "rgba_sha256": "e982006dfabc42258ea7cd362e9726916f26b411a4bbd0798635b1c00f45eadf",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1678339,
+            "png_sha256": "5dd4d688b0466be98898630c67ecb872a940d11ed06e965abdbe48d56eb29837",
+            "rgba_sha256": "62e205706dfed9d22f1d0e53e76be5ee17dcc27a9ba48d6cf3900203cb4420a1",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1680012,
+            "png_sha256": "076d9f56443f4d8e6971eec8eb508bdada8ca4df82f4207d25189764b9be7449",
+            "rgba_sha256": "812f95b334aa0c73c78f118375a9c0e36695b3e34e98cc44f6965fb98341be7a",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1438990,
+            "png_sha256": "1a7b06fab0dc2ce46b0bc3a4316989f20c67b45a0ecb2f6a68e4f6d1666110e0",
+            "rgba_sha256": "5023b311d3ee8b00c67bbbe5d6d781973fccfc3165634057aee262b4bfe5f303",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1455509,
+            "png_sha256": "510fba2caca4c26893808909facd12e2df553a2df4daa3ac3f1c9896cee50563",
+            "rgba_sha256": "3ebd9b3a7092eb78603fb44dc1d4411d57bd7a1d05a73c3812114492d3672ebb",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          }
+        ],
+        "motion_verified": false,
+        "art_approved": false,
+        "performance_measured": false
+      }
+    },
+    "acceptance": {
+      "receipt": "reports/acceptance-20261011-085334-55185/result.json",
+      "receipt_sha256": "cf7b6ced0ef259b9eabbb4f78f7eca5882f42cbfbe823248cbc8244245783c38",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "scenarios": 15,
+        "assertions": 295,
+        "all_passed": true,
+        "manual_acceptance": false
+      }
+    },
+    "benchmark": {
+      "receipt": "reports/benchmark-20261011-085750-55406/result.json",
+      "receipt_sha256": "868999eb4cc54e99007ca3ae2e9b2aadf4ae2e80fee499fd1c5317909bdf1836",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "frames": 10189,
+        "frame_p95_ms": 16.254,
+        "frame_p99_ms": 17.853,
+        "route_stalls": 0,
+        "thresholds_passed": true,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "gpu_timing_available": false,
+        "physical_device_tested": false,
+        "display_presentation_measured": false
+      }
+    },
+    "isolated_receipt": "reports/front-surface-traversal-capture-20261011-084813/receipt.json",
+    "isolated_receipt_sha256": "d1564e6fd4c748f3a10244f87323e91ffbc6fc2a5a61e1971d44bc2810057807",
+    "isolated_decodes": "reports/front-surface-traversal-capture-20261011-084813/inspection.json",
+    "consumer_review": "reports/front-return-development/material-consumer-review.json",
+    "consumer_review_sha256": "26a97a5982dc0fd5214b962dbc3631f57888bc5961e041d3ca4a129f69ec97a0",
+    "report_label_clarification_after_material_runs": true,
+    "geometry_trial_adopted": false,
+    "geometry_rejection_review": "reports/front-return-development/review.json",
+    "geometry_rejection_review_sha256": "378d6d518e00a632e939278977114a802b3ba5320cd22deeff3e36ef80bf3d6e",
+    "packaged": false,
+    "art_approved": false,
+    "motion_verified": false,
+    "live_audio_verified": false,
+    "physical_device_tested": false,
+    "observed_free_bytes": 14544289792
+  },
+  "mac063_window_recheck": {
+    "receipt": "reports/mac063-windowed-ui/new-save/result.json",
+    "receipt_sha256": "d8f60a0a383cfffeb7653c970a108d06960ec647565e4aa35e031adc2fcc662d",
+    "passed": false,
+    "reason": "cgWindowNotFound persists with explicit100,100 position and freshUI session. Owned process reaped; no ordinary save created.",
+    "source_profile_app_guards_exact": true
   }
 }

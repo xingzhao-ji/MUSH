@@ -44,6 +44,15 @@ var source_material_unchanged: bool = true
 var texture_readback: Dictionary = {}
 var registration: Dictionary = {}
 
+# The front fixture reuses the same preservation and live-environment gates.
+func _selected_path() -> String: return TOP
+func _selected_index() -> int: return 0
+func _original_property() -> String: return "paving_surface_original"
+func _report_property() -> String: return "paving_surface_report"
+func _triplanar() -> bool: return false
+func _close_camera() -> Vector3: return Vector3(1.8,1.6,9.5)
+func _close_target() -> Vector3: return Vector3(0,.2,5.8)
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -70,7 +79,7 @@ func _run() -> void:
 		await process_frame
 	controller = game.get("environment_controller") as Node
 	owner = game.world.get("paving_preview_prebuilt") as RefCounted
-	top = game.world.get_node_or_null(TOP) as MeshInstance3D
+	top = game.world.get_node_or_null(_selected_path()) as MeshInstance3D
 	if not _check("Real playable startup and actual preview owner verified", controller != null and owner != null and top != null and game.world.snapshot_loaded and bool(owner.call("verify", game.world, true))):
 		_finish(); return
 	_check("Fresh test-only save profile", str(game.store.directory).begins_with("user://verification/paving_surface_"))
@@ -88,11 +97,11 @@ func _run() -> void:
 	game.get_window().size = Vector2i(960, 960)
 	game.get_window().content_scale_size = Vector2i(960, 960)
 	installed = top.material_override as ShaderMaterial
-	original = game.world.get("paving_surface_original") as ShaderMaterial
+	original = game.world.get(_original_property()) as ShaderMaterial
 	integrated = original != null
 	if not integrated: original = installed
-	var integration_report: Variant = game.world.get("paving_surface_report")
-	if not _check("Admitted installed top pointer and retained baseline tactile material", installed != null and original != null and original.shader != null and original.shader.resource_path == "res://assets/world/tactile.gdshader" and installed.shader == original.shader and top.mesh.surface_get_array_len(0) == 4638 and top == owner.get("_entries")[0].node and installed == owner.get("_entries")[0].material and (not integrated or (installed != original and integration_report is Dictionary and bool(integration_report.get("passed", false))))):
+	var integration_report: Variant = game.world.get(_report_property())
+	if not _check("Admitted installed surface pointer and retained baseline tactile material", installed != null and original != null and original.shader != null and original.shader.resource_path == "res://assets/world/tactile.gdshader" and installed.shader == original.shader and top.mesh.surface_get_array_len(0) == [4638,3078][_selected_index()] and top == owner.get("_entries")[_selected_index()].node and installed == owner.get("_entries")[_selected_index()].material and (not integrated or (installed != original and integration_report is Dictionary and bool(integration_report.get("passed", false))))):
 		_finish(); return
 	var initial := _parameters(original)
 	if not _check("Retained material has scale4/grain.9 and no surface texture blend", initial.texture_scale == 4.0 and is_equal_approx(initial.grain, .9) and initial.surface_blend == 0.0 and initial.surface_scale == 1.0 and initial.surface_triplanar == false and initial.env_anchor_enabled == 0.0 and FileAccess.get_sha256(TEXTURE) == TEXTURE_SHA):
@@ -114,7 +123,7 @@ func _run() -> void:
 		candidate.set_shader_parameter("surface_albedo", texture)
 		candidate.set_shader_parameter("surface_blend", .60)
 		candidate.set_shader_parameter("surface_scale", 2.0 / 3.0)
-		candidate.set_shader_parameter("surface_triplanar", false)
+		candidate.set_shader_parameter("surface_triplanar", _triplanar())
 	if not _check("Exactly four declared surface parameters; other art uniforms exact", _candidate_exact(false)):
 		_finish(); return
 	geometry_before = _geometry(); collision_before = _collision(); bindings_before = _bindings()
@@ -138,8 +147,8 @@ func _pair(label: String) -> void:
 	var rain := label == "close-rain"
 	var close := label.begins_with("close")
 	game.player.visible = not close
-	game.review_camera.position = Vector3(1.8, 1.6, 9.5) if close else Vector3(4.8, 2.65, 17.0)
-	var target := Vector3(0, .2, 5.8) if close else Vector3(0, 1.3, 3.6)
+	game.review_camera.position = _close_camera() if close else Vector3(4.8, 2.65, 17.0)
+	var target := _close_target() if close else Vector3(0, 1.3, 3.6)
 	game.review_camera.fov = 55.0 if close else 58.0
 	game.review_camera.look_at(target); game.review_camera.make_current()
 	game.world.set_environment_foreground(true); controller.set_foreground(true)
@@ -215,7 +224,7 @@ func _configuration(material: ShaderMaterial) -> String:
 func _candidate_exact(compare_environment: bool = true) -> bool:
 	if candidate == null or original == null or candidate.shader != original.shader or _configuration(original) != original_configuration or _configuration(candidate) != original_configuration: return false
 	var a := _parameters(original); var b := _parameters(candidate)
-	if a.keys() != b.keys() or b.surface_albedo != texture or not is_equal_approx(b.surface_blend, .60) or not is_equal_approx(b.surface_scale, 2.0 / 3.0) or b.surface_triplanar != false: return false
+	if a.keys() != b.keys() or b.surface_albedo != texture or not is_equal_approx(b.surface_blend, .60) or not is_equal_approx(b.surface_scale, 2.0 / 3.0) or b.surface_triplanar != _triplanar(): return false
 	for name: String in a:
 		# The retained baseline may not have an initial controller binding yet.
 		# All env parameters are required exact during every live/capture sample.
@@ -320,7 +329,7 @@ func _finish() -> void:
 		if not row.passed: failed += 1
 	var pins: Dictionary = {}
 	for path: String in ["res://tests/paving_surface.gd", "res://scripts/paving_preview_prebuilt.gd", "res://baked/paving-preview192.json", "res://baked/paving-preview192.res", "res://baked/paving-joints.res", "res://baked/paving-joints.json", "res://assets/world/tactile.gdshader", "res://scripts/environment_controller.gd", TEXTURE]: pins[path] = FileAccess.get_sha256(path)
-	var report := {"schema":"mush-portable-paving-surface/1", "passed":failed == 0, "failed":failed, "assertions":checks.size(), "checks":checks, "views":views, "pairs":pairs, "geometry_unchanged":geometry_unchanged, "collision_unchanged":collision_unchanged, "material_rollback_exact":material_rollback_exact, "source_material_unchanged":source_material_unchanged and material_rollback_exact, "source_material_scope":"The original installed material retains its art/configuration; both comparison materials retain full stored/effective maps within each frozen pair. Live env values intentionally advance between pairs.", "rollback_scope":"Restore the actual installed startup pointer, not the untextured comparison baseline.", "integrated_source":integrated, "installed_material_id":str(installed.get_instance_id()) if installed != null else "", "baseline_material_id":str(original.get_instance_id()) if original != null else "", "candidate_material_id":str(candidate.get_instance_id()) if candidate != null else "", "texture":texture_readback, "registration":registration, "live_transitions":transitions, "pins":pins, "engine":Engine.get_version_info().string, "renderer":RenderingServer.get_current_rendering_method(), "temporary_binding_retained_until_shutdown":registration.get("expected_append", 0) == 1, "environmental_shader_motion_frozen":true, "shader_TIME_frozen":false, "art_approved":false, "motion_verified":false, "performance_verified":false, "scope":"Real Main startup, one shallow top-material fork and four declared surface parameters. Existing geometry/physics/camera controller retained; fixed diagnostic cameras. No traversal, GPU-cost, exported-app or visual approval."}
+	var report := {"schema":"mush-portable-paving-surface/1", "selected_batch":_selected_index(), "triplanar":_triplanar(), "fixture_sha256":FileAccess.get_sha256(get_script().resource_path), "passed":failed == 0, "failed":failed, "assertions":checks.size(), "checks":checks, "views":views, "pairs":pairs, "geometry_unchanged":geometry_unchanged, "collision_unchanged":collision_unchanged, "material_rollback_exact":material_rollback_exact, "source_material_unchanged":source_material_unchanged and material_rollback_exact, "source_material_scope":"The original installed material retains its art/configuration; both comparison materials retain full stored/effective maps within each frozen pair. Live env values intentionally advance between pairs.", "rollback_scope":"Restore the actual installed startup pointer, not the untextured comparison baseline.", "integrated_source":integrated, "installed_material_id":str(installed.get_instance_id()) if installed != null else "", "baseline_material_id":str(original.get_instance_id()) if original != null else "", "candidate_material_id":str(candidate.get_instance_id()) if candidate != null else "", "texture":texture_readback, "registration":registration, "live_transitions":transitions, "pins":pins, "engine":Engine.get_version_info().string, "renderer":RenderingServer.get_current_rendering_method(), "temporary_binding_retained_until_shutdown":registration.get("expected_append", 0) == 1, "environmental_shader_motion_frozen":true, "shader_TIME_frozen":false, "art_approved":false, "motion_verified":false, "performance_verified":false, "scope":"Real Main startup, one shallow selected-material fork and four declared surface parameters. Existing geometry/physics/camera controller retained; fixed diagnostic cameras. No traversal, GPU-cost, exported-app or visual approval."}
 	var file := FileAccess.open(output.path_join("paving-surface.json"), FileAccess.WRITE)
 	if file == null:
 		push_error("Cannot write paving surface report"); failed += 1

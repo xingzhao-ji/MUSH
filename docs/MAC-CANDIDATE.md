@@ -5,6 +5,8 @@ joints, the native paired-support stepping fix and restrained moonlit sky fill.
 The accepted 0.5.7 app and 0.5.5 rollback remain retained separately. This is not
 a whole-game acceptance or notarized release.
 
+Current source additionally applies the existing Rock01 texture to the complete front paving batch through the existing triplanar shader. That material-only change is absent from this frozen mac063 app and ZIP; no new package is claimed. The current baked geometry is unchanged. The newer source passes 295 gameplay assertions and its 120-second callback-timing gate (p95 16.254 ms / p99 17.853 ms); this app's recorded results remain bound to its earlier source.
+
 Double-click `builds/mac-20261011-081358-42723/MUSH.app`, or run:
 
 ```sh
@@ -30,7 +32,8 @@ that ordinary UI roundtrip remains unverified for this candidate.
 - Exported 120-second night/rain route: 9,678 frames, two loops, no stalls,
   1920 x 1080, default VSync; **p95 18.049 ms / p99 23.515 ms**.
   The unchanged 16.7 ms p95 limit fails. The source run's 16.302/18.321 ms result
-  qualifies that source run only. No causal speedup, GPU/display or mobile result.
+  qualifies that source run only and predates the front-material fork. No causal
+  speedup, GPU/display or mobile result.
 - A 106-frame, 1280 x 720 offline30-FPS clip fully decodes (3.533 seconds).
   Its encoded audio track does not establish speaker playback or listening quality.
   Fixed-FPS capture does not establish real-time motion quality.

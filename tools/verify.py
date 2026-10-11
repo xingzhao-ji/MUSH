@@ -176,8 +176,13 @@ def inspect(suite, output, duration, expected_vsync=1):
                 "vsync": report["vsync"],
                 "gpu_timing_available": report["gpu_timing_available"],
                 "physical_device_tested": False, "display_presentation_measured": False}
-    if suite == "paving":
+    if suite in ("paving", "paving-front"):
         report = read_report(output / "native/paving-surface.json")
+        front = suite == "paving-front"
+        fixture = ROOT / "tests" / ("paving_front_surface.gd" if front else "paving_surface.gd")
+        assert report["selected_batch"] == (1 if front else 0)
+        assert report["triplanar"] is front
+        assert report["fixture_sha256"] == sha(fixture)
         assert report["passed"] is True and report["failed"] == 0 and report["assertions"] > 0
         assert all(row["passed"] for row in report["checks"])
         for key in ("geometry_unchanged", "collision_unchanged", "material_rollback_exact", "source_material_unchanged"):
@@ -281,7 +286,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "traversal", "gap-step", "shape-build", "shape-capture"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -323,8 +328,9 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
-    elif args.suite == "paving":
-        command += ["--script", "res://tests/paving_surface.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite in ("paving", "paving-front"):
+        fixture = "paving_front_surface.gd" if args.suite == "paving-front" else "paving_surface.gd"
+        command += ["--script", "res://tests/" + fixture, "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "traversal":
         command += ["--script", "res://tests/paving_traversal.gd", "--", "--report-dir=" + str(output / "native")]
         if args.candidate:

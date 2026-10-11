@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 4238,
-      "sha256": "f44a433b241a421db09eb9a0ab4b26b6a48b4e36fa91723014ca0651c7284a5c"
+      "bytes": 4307,
+      "sha256": "b5e876af95a6cf46c00817215ad0076e1ed6e6378c82e3f0c9a2399e2ad8a5fe"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -367,32 +367,32 @@
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
     "docs/ARCHITECTURE.md": {
-      "bytes": 6255,
-      "sha256": "b7ad641a6f8589122ada8ed45435d6d95a925dcaa8b7141f84cd1bed018f065c"
+      "bytes": 6916,
+      "sha256": "a735090d13f5c43c2c9b0f143f0699cdb13512d951b844848017253a053e81dc"
     },
     "docs/DEPENDENCIES.md": {
-      "bytes": 3636,
-      "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
+      "bytes": 4073,
+      "sha256": "aa13ef227d93f1b930e1443937d50a3f760d19d7bf38c9cb8afd62dee86d66e4"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 2902,
-      "sha256": "e84c9331bcec334b55c019916fbf0ceb5bea14b0677a6869dae2044683429b56"
+      "bytes": 3406,
+      "sha256": "2ab1e6e6fa65d9cd324bcace61d11d9d6a9c6a251c2e9f0a07e223f090ee1e36"
     },
     "docs/STATUS.md": {
-      "bytes": 3726,
-      "sha256": "58cae81b0378d1b8aa8d18a6b13cd789610a30d2a6d11118e16e63913be1839b"
+      "bytes": 4389,
+      "sha256": "2bb5900ba8ea9f9f93366de1219855399cda9029e4ea6a9269ead6067530e3ed"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 26740,
-      "sha256": "6c42eb5ca86fc786a0c19791d1d66b7f9dc034e775da98b7575ef111dffc0f18"
+      "bytes": 29575,
+      "sha256": "8713072090291684f2696b9938fe77e76c328b37f608ac3763a83dca46fa452d"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 41909,
-      "sha256": "79bdebf1cd62dd8330ef18bba69eb70e24ce6720ceba13b7b4d46a449a464aec"
+      "bytes": 52106,
+      "sha256": "67a804dee368274e7475908086995314580298908e7e95b155f25f529fb977a4"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -699,8 +699,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 28045,
-      "sha256": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30"
+      "bytes": 28694,
+      "sha256": "cea575504ca62d583a2c88ba5cad6eb120e1ef38d30a69dc7a740c75419d174c"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -962,6 +962,14 @@
       "bytes": 20,
       "sha256": "0c06b22b0081106b713b70a01fc74fe55fcf6d3d0fc7827e186ff4ad64e2fa94"
     },
+    "tests/paving_front_surface.gd": {
+      "bytes": 556,
+      "sha256": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073"
+    },
+    "tests/paving_front_surface.gd.uid": {
+      "bytes": 20,
+      "sha256": "cd84b658a92e82492e88930d7c258ccba0cdc9e627e553b76ad5fc68e3d8fd37"
+    },
     "tests/paving_gap_step.gd": {
       "bytes": 5552,
       "sha256": "1660465a81770845cfd76f978fbbee0cbb9d18bdb2c3092a336d0887e81329b2"
@@ -987,8 +995,8 @@
       "sha256": "926c5f7675ad699033b8ca14a8d81a09c2a0c28711830211e16bd468c848b66e"
     },
     "tests/paving_surface.gd": {
-      "bytes": 23635,
-      "sha256": "639fe27aabba825504f081d1c9eed9b17690f7c25f63acfebfeb81379c81c257"
+      "bytes": 24295,
+      "sha256": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7"
     },
     "tests/paving_surface.gd.uid": {
       "bytes": 20,
@@ -1063,8 +1071,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 20753,
-      "sha256": "0a264007a002f1096ff2f43f0e054df127464020fe4b7fcf4aeaf6921a891025"
+      "bytes": 21199,
+      "sha256": "5395cdc780b17c06b358031b73d88d230253abd9c69524cdc6a2cb9c8f4885f3"
     }
   }
 }
