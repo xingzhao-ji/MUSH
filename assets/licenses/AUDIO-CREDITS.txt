@@ -1,0 +1,14 @@
+AUDIO CREDITS — MUSH 0.4.6
+
+'Reverie' by Scott Buckley — released under CC-BY 4.0.
+www.scottbuckley.com.au
+Original: https://www.scottbuckley.com.au/library/reverie/
+License: https://creativecommons.org/licenses/by/4.0/
+MUSH adaptation: -12 dB gain, five-second fade-in, ten-second final fade, eighteen-second silent interval, MP3 160 kbps re-encoding. No melody or composition claimed by MUSH.
+
+Footsteps: Kenney — Impact Sounds 1.0 (2019), CC0 1.0.
+https://kenney.nl/assets/impact-sounds
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Five carpet/grass pairs were blended, filtered, shortened, faded and converted to mono 22050 Hz PCM16.
+
+Sky: Children of the Light is an aesthetic reference only. No Sky recordings are included.

@@ -1,0 +1,558 @@
+{
+  "schema": "mush-midstory45-proposal/1",
+  "authoring_revision": "midstory45-v1",
+  "provisional": true,
+  "parent_path": "res://lineage/entrance52-capture03/motion-world.gd",
+  "parent_sha256": "d3c53a4c1aadca7a4c81669f881da3763bfc9e4958cb425395e14ec75867b212",
+  "units": "metres",
+  "up_axis": "Y",
+  "groups": [
+    {
+      "id": "west_tree_skirt",
+      "center_xz": [
+        -8.0,
+        -12.0
+      ],
+      "parts": [
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            -0.38,
+            0.75,
+            0.0
+          ],
+          "scale": [
+            0.65,
+            0.45,
+            0.62
+          ],
+          "yaw": 0.35,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            0.42,
+            0.94,
+            -0.2
+          ],
+          "scale": [
+            0.6,
+            0.46,
+            0.55
+          ],
+          "yaw": 1.16,
+          "material": "leaf"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            -0.05,
+            0.62,
+            0.38
+          ],
+          "scale": [
+            0.45,
+            0.35,
+            0.48
+          ],
+          "yaw": -0.71,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            -1.05,
+            0,
+            0.15
+          ],
+          "scale": [
+            1.25,
+            1.6,
+            1.05
+          ],
+          "yaw": 0.81,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            0.72,
+            0,
+            0.72
+          ],
+          "scale": [
+            1.02,
+            1.35,
+            1.1
+          ],
+          "yaw": -1.06,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            0.52,
+            0,
+            -0.78
+          ],
+          "scale": [
+            1.12,
+            1.4,
+            0.95
+          ],
+          "yaw": 2.07,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            -0.62,
+            0,
+            0.68
+          ],
+          "scale": [
+            1.12,
+            1.3,
+            1.04
+          ],
+          "yaw": 1.42,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.95,
+            0,
+            -0.24
+          ],
+          "scale": [
+            1.05,
+            1.15,
+            0.93
+          ],
+          "yaw": -0.43,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.0,
+            0,
+            -0.92
+          ],
+          "scale": [
+            1.18,
+            1.24,
+            1.1
+          ],
+          "yaw": 2.49,
+          "material": "leaf"
+        }
+      ]
+    },
+    {
+      "id": "rear_tree_skirt",
+      "center_xz": [
+        3.5,
+        -13.0
+      ],
+      "parts": [
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            -0.182968737,
+            0.75,
+            0.349705132
+          ],
+          "scale": [
+            0.65,
+            0.45,
+            0.62
+          ],
+          "yaw": 1.37,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            0.045440728,
+            0.94,
+            -0.499563244
+          ],
+          "scale": [
+            0.6,
+            0.46,
+            0.55
+          ],
+          "yaw": 2.18,
+          "material": "leaf"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            0.273822131,
+            0.62,
+            0.26080322
+          ],
+          "scale": [
+            0.45,
+            0.35,
+            0.48
+          ],
+          "yaw": 0.31,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            -0.387980602,
+            0,
+            1.051075781
+          ],
+          "scale": [
+            1.25,
+            1.6,
+            1.05
+          ],
+          "yaw": 1.83,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            0.91111396,
+            0,
+            -0.255629834
+          ],
+          "scale": [
+            1.02,
+            1.35,
+            1.1
+          ],
+          "yaw": -0.04,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            -0.361094445,
+            0,
+            -0.919427342
+          ],
+          "scale": [
+            1.12,
+            1.4,
+            0.95
+          ],
+          "yaw": 3.09,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.23455084,
+            0,
+            0.954931486
+          ],
+          "scale": [
+            1.12,
+            1.3,
+            1.04
+          ],
+          "yaw": 2.44,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.26927639,
+            0,
+            -1.009919285
+          ],
+          "scale": [
+            1.05,
+            1.15,
+            0.93
+          ],
+          "yaw": 0.59,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            -0.72122423,
+            0,
+            -0.520016409
+          ],
+          "scale": [
+            1.18,
+            1.24,
+            1.1
+          ],
+          "yaw": 3.51,
+          "material": "leaf"
+        }
+      ]
+    },
+    {
+      "id": "east_tree_skirt",
+      "center_xz": [
+        16.5,
+        -11.0
+      ],
+      "parts": [
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            -0.289174418,
+            0.75,
+            -0.232787624
+          ],
+          "scale": [
+            0.65,
+            0.45,
+            0.62
+          ],
+          "yaw": -0.42,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            0.467194501,
+            0.94,
+            0.130939306
+          ],
+          "scale": [
+            0.6,
+            0.46,
+            0.55
+          ],
+          "yaw": 0.39,
+          "material": "leaf"
+        },
+        {
+          "kind": "leaf_volume",
+          "offset": [
+            -0.31845254,
+            0.62,
+            0.209439377
+          ],
+          "scale": [
+            0.45,
+            0.35,
+            0.48
+          ],
+          "yaw": -1.48,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            -0.909720078,
+            0,
+            -0.548464752
+          ],
+          "scale": [
+            1.25,
+            1.6,
+            1.05
+          ],
+          "yaw": 0.04,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            0.016619009,
+            0,
+            0.895939487
+          ],
+          "scale": [
+            1.02,
+            1.35,
+            1.1
+          ],
+          "yaw": -1.83,
+          "material": "leaf_dark"
+        },
+        {
+          "kind": "fern",
+          "offset": [
+            0.971276976,
+            0,
+            -0.174222398
+          ],
+          "scale": [
+            1.12,
+            1.4,
+            0.95
+          ],
+          "yaw": 1.3,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            -0.973585172,
+            0,
+            0.049786359
+          ],
+          "scale": [
+            1.12,
+            1.3,
+            1.04
+          ],
+          "yaw": 0.65,
+          "material": "leaf"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.900032849,
+            0,
+            0.430346326
+          ],
+          "scale": [
+            1.05,
+            1.15,
+            0.93
+          ],
+          "yaw": -1.2,
+          "material": "leaf_gold"
+        },
+        {
+          "kind": "broadleaf",
+          "offset": [
+            0.678871085,
+            0,
+            -0.581220478
+          ],
+          "scale": [
+            1.18,
+            1.24,
+            1.1
+          ],
+          "yaw": 1.72,
+          "material": "leaf"
+        }
+      ]
+    }
+  ],
+  "added_nodes_expected": 36,
+  "layout_scope": "Three proposed uneven woody shrub groups around existing trees. Exact placements, proportions and wind numbers remain tunable and unapproved. No clearing expansion.",
+  "asset_scope": "Existing native curved-leaf canopy_far, fern and broadleaf resources/materials, plus nine editable procedural owned stems. No asset/image/audio generation or external imports. Existing licensing inventory still applies.",
+  "construction_scope": "Separate ProposedMidstory45 nodes created after inherited assembly and batching. Original 474 placement table, 242 cached MultiMeshes, colliders and existing assets are retained. Their witnesses do not cover these added nodes.",
+  "support_policy": {
+    "root_gap_m_proposed": 0.002,
+    "root_gap_limit_m_proposed": 0.004,
+    "native_soil_penetration_allowed_m": 0.0,
+    "actual_collision_floor_sources": "Enabled ConcavePolygonShape3D under direct StaticBody children of actual GroundAndPaths; native faces plus current transforms",
+    "complete_native_vertices_required": true,
+    "complete_native_triangle_soil_clipping_required": true,
+    "nondegenerate_projected_area_coverage_absolute_limit_m2": 1e-07,
+    "nondegenerate_projected_area_coverage_relative_limit": 1e-05,
+    "clip_arithmetic_epsilon": 1e-07,
+    "projected_degenerate_triangles": "Exact zero-area projections require complete soil-clipped segment interval coverage; point projections require native support. Every native vertex and clipped soil-plane witness undergoes strict nonnegative gap checks.",
+    "obstacle_policy": "Closed native triangle-AABB overlap (including exact touching) refuses for visible MeshInstance3D ArrayMesh triangle surfaces whose material_override matches original stone/stone_light/bark/wood/wood_light/wall/floor registry entries, cached in each group center plus/minus2m XZ and Y[-1,3]m. The separate actual physics BoxShape query covers collision-mask1 bodies. Only exact enabled direct GroundAndPaths floor-body RIDs are excluded; shapes, membership, full captured body layers/mask, RID, faces and transforms are rechecked.",
+    "group_internal_leaf_overlap": "Intentional overlapping leaves and stem/crown joins within proposed groups; not an assertion that leaf triangles never touch each other.",
+    "route_scope": "Complete actual native root AABB radius and every native vertex use unchanged inherited foliage-route/house/water reservations plus the analytic owned wind bound.",
+    "caller_must_wait_native_physics_updates": "At least two native physics frames after the added assembly, rather than a global startup-frame assumption.",
+    "local_soil_tangent_scaling": "Orientation multiplied by Basis.from_scale; nonuniform scaling applies in the mesh local axes and retains intended soil tangent orientation."
+  },
+  "wind_proposal": {
+    "leaf_volume_material_forks_only": true,
+    "material_registry_setters": false,
+    "shader_path": "res://lineage/living-scenery37-proposal01/canopy-wind37.gdshader",
+    "maximum_horizontal_displacement_m": 0.008,
+    "clock_owner": "Inherited pause-aware _m37_elapsed; no shader TIME or new clock",
+    "pause": "Hold inherited elapsed phase",
+    "disabled_and_reduced": "Zero displacement through the same active predicate; clock does not advance",
+    "ferns_broadleaf_stems": "Static first proposal",
+    "GPU_displaced_vertex_measurement": false,
+    "in_game_motion_verified": false,
+    "rounding_certificate": "Native binary32 stored maximum is used for support/obstacle dilation, positive analytic Jacobian and upward-rounded native node cull margin.",
+    "render_priority_and_next_pass_parity_required": true
+  },
+  "art_approved": false,
+  "placements_approved": false,
+  "source_adopted": false,
+  "native_adopted": false,
+  "performance_measured": false,
+  "required_next_evidence": "Root binds exact current Motion45 parent SHA and NEW operative runtime source path together; source review plus complete identity/seven-metadata closure; installed parser and separate36-node support/rest/physics admission after two physics updates; actual fixed-camera screenshots and wind sequence; current changed-scene contact/save checks and art approval. Existing native05 CPU/GPU/bake proof covers inherited nodes only.",
+  "preserved_predecessor": {
+    "directory": "res://lineage/midstory38-proposal02",
+    "source_sha256": "0630b1b9c324175de7037b50e9dd01b80195f2649a263ecdf606c3df5a95fc4b",
+    "descriptor_sha256": "b173743481366dbd9c95d947526f878b37eae5e7d3ffcb040c652125c017fb53",
+    "status": "Held source-only unexecuted proposal02 remains byte-exact; earlier five source corrections retained."
+  },
+  "assembly_state": "ASSEMBLED_PENDING_NATIVE",
+  "runtime_source_path_placeholder": "res://lineage/entrance52-capture03/midstory-world.gd",
+  "parent_context": {
+    "previous_attempt": "Closed midstory43 remains unexecuted with unresolved failed43/44 ancestry; this rebase pins current closed native05/Motion45 while retaining operative assembly refusal.",
+    "required_current_chain": "Closed Motion45/Sky45/native05 plus native05 current owned bake. The descriptor parent-SHA sentinel is the existing active refusal until root assembles it with the new operative runtime path.",
+    "terrain_revision_expected": "entrance-landform35-v9",
+    "bake_schema_expected": "mush-entrance35-owned-bake-lock/1",
+    "typed_records_expected": 474,
+    "existing_entry_groups_expected": 242,
+    "new_added_nodes_in_inherited_bake": false,
+    "landform_report_current_required": true,
+    "native_boundary_seam_correction_required": true,
+    "current_root_strict_preservation_expected": true,
+    "current_parent_path": "res://lineage/entrance45-capture-proposal01/motion-world.gd",
+    "current_parent_source_sha256": "ceb2bccd2dbb36b909d768ab1608fa4c9d7508a855019c2c926be0e51e5a165a",
+    "owned_bake_path": "res://lineage/entrance-landform35-owned-bake09-native05/lock.json",
+    "owned_bake_lock_sha256": "9fced59fc87555755e65825c032f2eeb31028a57792f106960266abd34661799",
+    "current_source_proposal_only": true
+  },
+  "source_feasibility": {
+    "groups_outside_changed_entrance_Z_interval": true,
+    "entrance_native_rect_Z_m": [
+      3.0,
+      11.0
+    ],
+    "highest_group_center_Z_m": -8.0,
+    "expected_Y_is_hardcoded": false,
+    "Y_source": "Actual highest enabled native floor triangle support, then proposed root gap0.002m. No terrain-height or actual-clearance value is inferred from this static rebase.",
+    "original_groups_and_parts_byte_domain_equal": true,
+    "current_native_floor_or_visual_obstacle_readback_performed": false,
+    "route_obstacle_scope": "Same complete native vertex/AABB route, soil clipping and material-filtered visual/native physics clearance predicates as held02.",
+    "view_scope": "Three rear clumps target existing tree skirts; visibility and overlap/depth improvement are unproven without a current GPU capture. They do not add entrance-side foreground plants or lights."
+  },
+  "root_retry03_delta": {
+    "provisional": true,
+    "source_template_east_center_xz": [
+      15.8,
+      -8.0
+    ],
+    "old_actual02_east_center_xz": [
+      18.0,
+      -8.0
+    ],
+    "new_east_center_xz": [
+      16.5,
+      -11.0
+    ],
+    "same_three_groups36_nodes": true,
+    "all_support_clearance_wind_algorithms_and_tolerances_unchanged": true,
+    "prior_failed_native": {
+      "path": "res://lineage/midstory45-capture02-actual/midstory-native.json",
+      "identity": {
+        "bytes": 44228,
+        "sha256": "62fbd6cb38cfa124bb7ab690373f5852104db2be6a56b22763a927444bd20539"
+      }
+    },
+    "actual_obstacle_screen": {
+      "path": "res://lineage/midstory45-obstacle01-actual/obstacle-debug.json",
+      "identity": {
+        "bytes": 253036,
+        "sha256": "b1f3ee2561019f62b1b75f006a258d4bc3508bd6c77846ab52c71fd6f70ba29c"
+      },
+      "wind_bound_broadphase_only_clear": true,
+      "proposed_extra15cm_clear": false,
+      "extra15cm_is_not_a_placement_requirement": true,
+      "new_orientation_support_physics_and_full_native_required": true
+    }
+  }
+}

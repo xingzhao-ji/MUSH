@@ -1,0 +1,225 @@
+{
+  "schema": "mush-hero-stone-normal-prebuilt-proof/1",
+  "passed": true,
+  "native_candidate_passed": true,
+  "native_library_roundtrip_exact": true,
+  "original_world_restored": true,
+  "root_selected_for_next_isolated_source_checkpoint": true,
+  "authoring_report_sha256": "e1fc51bd8ea1068cf6e936076759655b9a49a48b57af70e7390a4372d918d469",
+  "authoring_check_count": 44,
+  "crease_dot_original": 0.82,
+  "crease_dot_candidate": 0.5,
+  "artifact": "res://baked/hero-stone-normals.res",
+  "artifact_sha256": "a265ffebcceff0c2f7654ec22aa8a8cf9ad52c3c2915ee5881c5c4d774298f23",
+  "artifact_bytes": 28772,
+  "loader_sha256": "6d94007e93e34107f2009dc011fd4aa75406ea4480a7d809a3bf2485e90de585",
+  "native_reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "original_sha256": "7d9455f72f63636f1adcce198ba9a03a73568d7224c04ddbcdcdcaefbc8bda37",
+  "neutral_sha256": "e35b74ff3adf5f0e77dcca84ffb2ed4f73a0d08c7119b42957a44ae8c0ea36ac",
+  "neutral_proof_sha256": "9aa70d569e8813a09d42675dc44d89e8310c9c61f4ac5165318ebff04414b833",
+  "mesh": {
+    "added_draw_nodes": 0,
+    "added_triangles": 0,
+    "attribute_buffer_bytes": 10368,
+    "baseline_reconstruction_max_normal_distance": 0.000160672425408848,
+    "candidate": {
+      "aabb_sha256": "ee8d64a7021f00f2f9d10e9bcc81ed35cff71978a143d28999ffd6503a62b3cc",
+      "arrays_sha256": "d049a867946993f21d37bb24c99053cea0bc63ac2f2158290d51b150a5853082",
+      "channels": [
+        {
+          "native_type": 36,
+          "sha256": "3dea5ed749076166b236fccbae4fd61ee22c4d17515aebea043c9ed89f9a8d14",
+          "slot": 0
+        },
+        {
+          "native_type": 36,
+          "sha256": "b97260b363673187c5451cc1031737e4eb97de010e42c072ed35e4fdf6c84b94",
+          "slot": 1
+        },
+        {
+          "native_type": 32,
+          "sha256": "05d8879d875660558a3369c6025b719500331cb0b3a4d4757c6784abc147fcfd",
+          "slot": 2
+        },
+        {
+          "native_type": 37,
+          "sha256": "4152125413f7afecde0fc848b42ae851b0707cdf31ac08a6f9d20d31334da66f",
+          "slot": 3
+        },
+        {
+          "native_type": 35,
+          "sha256": "314f6a42abe4c693ae00d81ded80d690a210b87ed610e8b3a3f0d64715f8a064",
+          "slot": 4
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 5
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 6
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 7
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 8
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 9
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 10
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 11
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 12
+        }
+      ],
+      "configuration": {
+        "blend_shape_mode": 1,
+        "blend_shapes": 0,
+        "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+        "format": "34359738399",
+        "lods_empty": true,
+        "metadata_empty": true,
+        "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+        "primitive": 3,
+        "resource_local_to_scene": false,
+        "resource_name": "",
+        "script_null": true,
+        "shadow_mesh_null": true,
+        "surface_material_null": true,
+        "surface_name": ""
+      },
+      "corners": 864,
+      "eligible": true
+    },
+    "candidate_native_surface_sha256": "41b9aa066f26030c939f77b6b7d224a7cc182e2d391ae5030cb515563ed2963d",
+    "changed_slots": [
+      1,
+      2
+    ],
+    "corners": 864,
+    "new_colliders": 0,
+    "new_materials": 0,
+    "normal_packing_max_error": 0.000171754843904637,
+    "original": {
+      "aabb_sha256": "ee8d64a7021f00f2f9d10e9bcc81ed35cff71978a143d28999ffd6503a62b3cc",
+      "arrays_sha256": "437c243491d8b86dcb0ce6d526d8abbb8495fa4ad702ba4b0f118469b28315f6",
+      "channels": [
+        {
+          "native_type": 36,
+          "sha256": "3dea5ed749076166b236fccbae4fd61ee22c4d17515aebea043c9ed89f9a8d14",
+          "slot": 0
+        },
+        {
+          "native_type": 36,
+          "sha256": "23af7b32d098553f3645bc2afae8f053213cba5a7d28895b6913b7968d104e84",
+          "slot": 1
+        },
+        {
+          "native_type": 32,
+          "sha256": "4b544c092e8d42f49ef3819ad241cdfb27d845ef7251ba4073db002b95ec89f5",
+          "slot": 2
+        },
+        {
+          "native_type": 37,
+          "sha256": "4152125413f7afecde0fc848b42ae851b0707cdf31ac08a6f9d20d31334da66f",
+          "slot": 3
+        },
+        {
+          "native_type": 35,
+          "sha256": "314f6a42abe4c693ae00d81ded80d690a210b87ed610e8b3a3f0d64715f8a064",
+          "slot": 4
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 5
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 6
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 7
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 8
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 9
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 10
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 11
+        },
+        {
+          "native_type": 0,
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "slot": 12
+        }
+      ],
+      "configuration": {
+        "blend_shape_mode": 1,
+        "blend_shapes": 0,
+        "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+        "format": "34359738399",
+        "lods_empty": true,
+        "metadata_empty": true,
+        "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+        "primitive": 3,
+        "resource_local_to_scene": false,
+        "resource_name": "",
+        "script_null": true,
+        "shadow_mesh_null": true,
+        "surface_material_null": true,
+        "surface_name": ""
+      },
+      "corners": 864,
+      "eligible": true
+    },
+    "original_native_surface_sha256": "a41dfc40e28b68b10523f08f442d0f79c5ee7c516272499787b6b5fd4a8560c0",
+    "path": "BatchedStaticWorld/Static_-9223371982194603912_0_1",
+    "perframe_work_added": false,
+    "stub": "GroundAndPaths/@MeshInstance3D@252",
+    "tangent_normal_max_dot": 0.000142112374305725,
+    "triangles": 288,
+    "vertex_buffer_bytes": 17280
+  },
+  "scope": "One original decorative stone. Offline normals/tangents only; no shape, material, physics or per-frame animation changes.",
+  "final_art_approved": false,
+  "performance_measured": false,
+  "continuous_motion_verified": false,
+  "physical_mobile_device_tested": false
+}

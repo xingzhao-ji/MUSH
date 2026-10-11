@@ -1,0 +1,181 @@
+{
+  "GPU_or_runtime_performance_measured": false,
+  "artifact": "res://baked/paving-collar.res",
+  "artifact_bytes": 682394,
+  "artifact_sha256": "78896f84b340e02e1301069f50017a49ff287cedb0487bdd1bb42892f5719a7a",
+  "author_result_sha256": "e61f4546db82a7defe6c9e6fa750a24ed5c4b33c2d3325e9cb02da1f83da0f4d",
+  "contact": {
+    "body": "MushroomHome/@StaticBody3D@339",
+    "candidate_faces_sha256": "1d312ca39437fc262996c999b5eabf0e95d1598d4344e304b3563d5beb49e915",
+    "candidate_native_vertices": 7989,
+    "configuration_sha256": "970e21c18f9ae8a7129b463fdcf6421e03df87f004881456174dde2444ca45b5",
+    "index": 0,
+    "layer": 1,
+    "mask": 2,
+    "node": "MushroomHome/@StaticBody3D@339/@CollisionShape3D@340",
+    "original_faces_sha256": "19ac6ebf1e819cd9fa370724670abdfd2ab2f15210dde71f8332aa6cd92b78cb",
+    "original_native_vertices": 3129,
+    "owner": 0,
+    "visual_soil_contact_faces": 0
+  },
+  "contact_movement_accepted": false,
+  "costs": {
+    "GPU_frame_time_measured": false,
+    "actual_added_render_triangles": 2100,
+    "actual_added_stone_contact_triangles": 1620,
+    "actual_added_visual_collar_triangles": 480,
+    "actual_total_encoded_delta_bytes": 201600,
+    "collar_encoded_delta_bytes": 46080,
+    "encoded_byte_limit": 204800,
+    "off_tree_native_resources_only": true,
+    "render_triangle_limit": 2100,
+    "stone_encoded_delta_bytes": 155520
+  },
+  "existing_native_JSON_descriptor_adapter_resource_Metal_observed": true,
+  "expected_native_items": [
+    {
+      "all13_sha256": "60f46d69189382a5feac985744db5228b224e058593ec088ea15accd6c0f44da",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000925ad1bf115df23dd0d6414004702a40f09bf63e3a55b940",
+      "native_buffers": {
+        "buffers": {
+          "attribute_data": {
+            "bytes": 61344,
+            "sha256": "70f0da43427363ba5cdc6e5c6920e50fd65ec567e7e9fac50e6258ecc0bd554d"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "vertex_data": {
+            "bytes": 102240,
+            "sha256": "47cfbf31ea9d47ebeea5676708985782ecb39eb7c00f07c7237796821c154bd6"
+          }
+        },
+        "format": "34359738399",
+        "native_vertices": 5112,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
+        "total_native_surface_buffer_bytes": 163584
+      },
+      "native_surface_blob_sha256": "72a70d8a4a67f785e4e772fb436715cec1d2c03259d89588b29fa67fdea25244",
+      "rendering_server_surface_sha256": "c69416d20df869e8783b747f5571898244c123afbcec19c6de544ad7573cefdc"
+    },
+    {
+      "all13_sha256": "71047c3099ba56cced5cdb38227f40493a46bdcc04b8753efc21de5fbb98b533",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000ca3268c00ad7a3bc763e4140b28ce640afcb6d3f17eeb940",
+      "native_buffers": {
+        "buffers": {
+          "attribute_data": {
+            "bytes": 38952,
+            "sha256": "035e8277e8a0c527703618deac078c43010b9b7b5784cf09028e9cf8b2b45a8b"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "vertex_data": {
+            "bytes": 64920,
+            "sha256": "af9bd6db36e86f1e2b2672f7dac0e6f788301260de8d03149a24ed68d935eb7e"
+          }
+        },
+        "format": "34359738399",
+        "native_vertices": 3246,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
+        "total_native_surface_buffer_bytes": 103872
+      },
+      "native_surface_blob_sha256": "0c6700530af18d725c877b7558774d7ba33d73e524e7380ae763cdc2dc358b42",
+      "rendering_server_surface_sha256": "06d95409ab53f73725f3cabe2677693758c02b12b03ff8a64cd8fef746c15f23"
+    },
+    {
+      "all13_sha256": "c733d0127f2085cb2493b85209b4ffe7fc2bd0c5843492ae7ca10a49b07008fd",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000000084c0f3fdd4bc000040406666fe40e7546f3f00000041",
+      "native_buffers": {
+        "buffers": {
+          "attribute_data": {
+            "bytes": 118620,
+            "sha256": "ef12de75eace3495ef744bab25c8ff06a6d44c4466cc85a548b2242a2a5ed372"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "vertex_data": {
+            "bytes": 197700,
+            "sha256": "b0a52d995fda88c70dcef1a9e786878b921e54143d3c49ffe471d5e442cee235"
+          }
+        },
+        "format": "34359738399",
+        "native_vertices": 9885,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
+        "total_native_surface_buffer_bytes": 316320
+      },
+      "native_surface_blob_sha256": "5456a9d3ca427372ed5e47a28f3f69dea29a4d746bd4bacd8c2f56c96f40e803",
+      "rendering_server_surface_sha256": "03a231cd83ebb960c6f5708cdef120b99d85114a899b1cd377cc90c759775de4"
+    }
+  ],
+  "headed_fullgame_installation_verified": false,
+  "license_provenance": {
+    "engine": "Existing Godot4.7.2 runtime APIs, engine MIT license/copyright retained in assets/licenses/GODOT-LICENSE.txt and GODOT-COPYRIGHT.txt.",
+    "loader": "Project-authored reuse of existing cap/plaster/paving native reader patterns; no bundled external triangulator or new addon.",
+    "new_third_party_runtime_dependencies": []
+  },
+  "material_policy": "No material assignments. Shared original material users allowed; exact selected pointers/shaders and complete live stored/uniform maps preserved immediately across assignments/rollback. No snapshot-default uniform typing.",
+  "native_authoring_save_reload_exact": true,
+  "native_mesh_reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "native_version": [
+    4,
+    7,
+    2
+  ],
+  "production_adopted": false,
+  "proof_scope": "Off-tree native resource identity/save-reload plus resource-only Metal exact comparison using the existing cap descriptor JSON-number adapter. All3 real records accepted and7 count/hash negatives refused.13/14 live admission refused before geometry assignment; actual game original-config/ownership and visual/contact acceptance remain pending15. All hash/native gates retained.",
+  "provenance": {
+    "cap_mesh_reader": {
+      "bytes": 15722,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac044-cap-return-integration-ready01/candidate/scripts/cap57_prebuilt.gd",
+      "sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694"
+    },
+    "native_author_result": {
+      "bytes": 222892,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-paving-collar-prebuilt01/result.json",
+      "sha256": "e61f4546db82a7defe6c9e6fa750a24ed5c4b33c2d3325e9cb02da1f83da0f4d"
+    },
+    "native_resource_proof": {
+      "bytes": 110431,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-paving-collar-harness-ready13/native-proof.json",
+      "sha256": "aa1744093f7ce299038a72d275b42719823b95ec3b6d83f66afc1453a8ebb6d8"
+    },
+    "resource_geometry_ready13": {
+      "bytes": 6792,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-paving-collar-harness-ready13/READY.json",
+      "sha256": "c6a29671cbf81349afe19e7c0c280c3f10718db2ab46ac6f4e91fdda9dc63c25"
+    },
+    "resource_only_Metal_comparator": {
+      "bytes": 33537,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-paving-prebuilt-metal-readback02/result.json",
+      "sha256": "d0ec6172eb83ba83f690fe2ff00d70d93ec951478d6d7541ef43bbc7f33e29a0"
+    },
+    "shared_material_policy_ready14": {
+      "bytes": 6812,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-paving-collar-harness-ready14/READY.json",
+      "sha256": "2e48c1535e068aa87805133c05b15ab4b22220560bc79d81e5fa9a88283c0450"
+    }
+  },
+  "root_visual_accepted": false,
+  "runtime_loader_sha256": "b469bece311013c376633b2d31200fcfbdcc3c3d848284de96981981335da337",
+  "schema": "mush-paving-collar-native-resource-proof/1"
+}

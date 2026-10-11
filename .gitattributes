@@ -1,0 +1,9 @@
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.gdshaderinc text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.res binary
+*.png binary
+*.mp3 binary
+*.wav binary

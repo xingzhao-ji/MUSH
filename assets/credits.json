@@ -1,0 +1,181 @@
+{
+  "build": "0.4.6",
+  "engine": {
+    "id": "godot-4.7.2",
+    "version": "4.7.2.stable.official.ed1daf0bf",
+    "source": "https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable",
+    "license": "MIT",
+    "notices": [
+      "assets/licenses/GODOT-LICENSE.txt",
+      "assets/licenses/GODOT-COPYRIGHT.txt"
+    ]
+  },
+  "asset_families": [
+    {
+      "id": "clearing-world-revision-02",
+      "source": "scripts/world.gd + assets/world/*.gdshader",
+      "author": "Original procedural geometry and shaders authored in this workspace",
+      "exporter": "Godot 4.7.2 runtime ArrayMesh/MultiMesh",
+      "scale": "meters",
+      "up": "+Y",
+      "front": "+Z house",
+      "pivot": "world origin",
+      "collision": "authored static simplified surfaces, trunk colliders, smooth ramps",
+      "materials": "Procedural PBR surfaces, peach cap, cream stem, luminous violet gills, wood/stone/moss and reflective water; proposed bark/moss albedo textures",
+      "textures": [
+        {
+          "file": "assets/world/textures/bark-albedo-proposal-v1.png",
+          "sha256": "164507e71043b92c2d14a1757f6ea1087d1de7fe379985de8f0dff2041d60570"
+        },
+        {
+          "file": "assets/world/textures/moss-albedo-proposal-v1.png",
+          "sha256": "5cbcec5b42550430fbfb4c84b09d304be037d44e069ae138cf4ab1d52adf5de5"
+        }
+      ],
+      "status": "prototype; appearance pending user review"
+    },
+    {
+      "id": "generated-surface-proposals-02",
+      "source": "../source-assets/textures/revision-02",
+      "author": "Two built-in image_gen output proposals, exact prompts and tool metadata preserved",
+      "model_version": "not exposed by tool",
+      "license_sources": [
+        "https://openai.com/policies/terms-of-use/",
+        "https://openai.com/policies/services-agreement/",
+        "https://openai.com/policies/service-terms/"
+      ],
+      "license_status": "Hosted output rights framework documented; governing account terms and user input provenance unexposed. No distributed model weights or blanket release clearance.",
+      "status": "unapproved material proposals; actual 1254x1254 PNGs"
+    },
+    {
+      "id": "provisional-player-v1",
+      "source": "scripts/player.gd",
+      "author": "Original procedural articulated character authored in this workspace",
+      "exporter": "Godot 4.7.2 Skeleton3D/BoneAttachment3D/AnimationPlayer",
+      "scale": "meters; 1m visual height",
+      "up": "+Y",
+      "front": "-Z",
+      "pivot": "feet",
+      "collision": ".95m capsule radius .28m",
+      "materials": "cream body, dark eyes; PBR",
+      "textures": [],
+      "status": "deliberately provisional species and motion"
+    },
+    {
+      "id": "props-plants-resident-v1",
+      "source": "scripts/props.gd + scripts/main.gd",
+      "author": "Original procedural meshes authored in this workspace",
+      "exporter": "Godot 4.7.2 runtime primitive meshes",
+      "scale": "meters",
+      "up": "+Y",
+      "front": "-Z furniture",
+      "pivot": "ground contact",
+      "collision": "furniture bounded box colliders; resident capsule; plants non-solid",
+      "materials": "honey and moss styles; emissive moonbell petals",
+      "textures": [],
+      "status": "prototype"
+    },
+    {
+      "id": "clearing-audio-v1",
+      "source": "assets/generate_audio.py",
+      "author": "Original offline synthetic score, noise ambience and sound cues authored in this workspace",
+      "exporter": "Python standard-library WAV generation; 22050Hz mono PCM16",
+      "license": "original source, no external samples or model-generated audio",
+      "files": [
+        "clearing-music.wav",
+        "forest-ambience.wav",
+        "door.wav",
+        "growth.wav",
+        "glow.wav",
+        "footstep.wav"
+      ],
+      "status": "Original files retained for rollback; music and footstep replaced at runtime in 0.4.6. Ambience and other cues unchanged."
+    },
+    {
+      "id": "engine-default-font",
+      "source": "Godot bundled default font",
+      "author": "Godot bundled third-party components",
+      "license": "See GODOT-COPYRIGHT.txt Noto Sans font notices",
+      "status": "bundled engine resource"
+    },
+    {
+      "id": "portable-entrance52-clearing",
+      "source": "scripts/baked_world.gd + baked/clearing.res + lineage/entrance52-capture03/midstory-world.gd",
+      "source_stage": "entrance52-capture03",
+      "native_snapshot_sha256": "7d9455f72f63636f1adcce198ba9a03a73568d7224c04ddbcdcdcaefbc8bda37",
+      "geometry": "5,043 original current native nodes; original mesh arrays, collision shapes and transforms",
+      "status": "local prototype; art approval and Unreal production validation pending"
+    },
+    {
+      "id": "explicit-firefly-process-02",
+      "source": "assets/world/fireflies.gdshader",
+      "author": "Original shader authored for this workspace",
+      "status": "Provisional motion, preserved emitter limits; new renderer validation required",
+      "shader_sha256": "3d607867036dfb8b1ee52a0b88676278ef2ee83cea9316a6ed0d9c24f5bba741"
+    },
+    {
+      "id": "forest-middle-layer53",
+      "source": "scripts/forest_enclosure.gd",
+      "author": "Original procedural tree placement and segmented geometry authored in this workspace",
+      "materials": "Existing bark material and smallest native visible canopy mesh/wind material reused",
+      "geometry": "30 decorative trees, 240 trunk/branch segments, 210 canopy clusters; 8m spatial chunks inside original forest perimeter; no new collision",
+      "seed": 530052,
+      "status": "Provisional local prototype art; approval pending"
+    },
+    {
+      "id": "soft-audio-refresh046",
+      "music": {
+        "title": "Reverie",
+        "author": "Scott Buckley",
+        "source": "https://www.scottbuckley.com.au/library/reverie/",
+        "license": "CC-BY-4.0"
+      },
+      "footsteps": {
+        "author": "Kenney",
+        "pack": "Impact Sounds 1.0",
+        "source": "https://kenney.nl/assets/impact-sounds",
+        "license": "CC0-1.0"
+      },
+      "files": {
+        "clearing-reverie.mp3": {
+          "bytes": 4834993,
+          "sha256": "5faa87245fb975ea90af468b58bdb32b58f33e1cc387c27c19e79cee9acc342f"
+        },
+        "footstep-soft-0.wav": {
+          "bytes": 11986,
+          "sha256": "cbbbeb0618db310c0552613c91264dbe29799fbdcd416c45e8cae56f4e91e491"
+        },
+        "footstep-soft-1.wav": {
+          "bytes": 11986,
+          "sha256": "3c968f616756c5495f20eb8f6ccc7d502e00ae85407c2b5081f2708d99f90786"
+        },
+        "footstep-soft-2.wav": {
+          "bytes": 11986,
+          "sha256": "f020a66951a969b1e03d3c419027b0e5131b7d0af6f486a544010156afea0688"
+        },
+        "footstep-soft-3.wav": {
+          "bytes": 11986,
+          "sha256": "b8968bea04b5ead1b3c255a9164c09e9a83b156fd435e17006c94d9ac69db839"
+        },
+        "footstep-soft-4.wav": {
+          "bytes": 11986,
+          "sha256": "f3d3028ab157e1266271a313b40967fe0db15bc87acc7c301bb09ffbf7c78546"
+        },
+        "footstep-soft.tres": {
+          "bytes": 886,
+          "sha256": "18e8a072311f705a9f634a450e6b4132e850227bc3b9fe1a0b14e55ee3c48122"
+        }
+      },
+      "notice": "assets/licenses/AUDIO-CREDITS.txt",
+      "scope": "Native MP3 and AudioStreamRandomizer reuse; five variations, no surface classifier. Physical device cost and human listening pending."
+    }
+  ],
+  "reference": {
+    "source": "../Mushroom-Home-Complete-Specs-and-References/images/00-approved-day-night.webp",
+    "usage": "user-supplied visual reference only; reference pixels are not in runtime build",
+    "provenance": "provided reference package",
+    "approval": "original anchor only"
+  },
+  "rights_status": "Original procedural assets and separately documented texture proposals retained. Added music licensed CC BY 4.0 and Kenney footsteps CC0; attribution and modifications are in assets/licenses/AUDIO-CREDITS.txt and Settings > Audio credits. Other asset rights remain as previously documented.",
+  "scenery_revision": "02"
+}

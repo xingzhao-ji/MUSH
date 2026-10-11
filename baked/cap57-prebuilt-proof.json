@@ -1,0 +1,732 @@
+{
+  "artifact": "res://baked/cap57-prebuilt.res",
+  "artifact_bytes": 7300873,
+  "artifact_sha256": "141aa98423f9e4ad77ea954ad7ead0b24627b473b648ae29d4d199f4370f4797",
+  "authoring_report_sha256": "3ab85b2498285e7a2b2b70eab9cabadc11f9bf834c70e3b9bcdb7448251bce34",
+  "baseline_030_reconstruction_native_exact": true,
+  "baseline_to_candidate_native_scope": {
+    "cream": {
+      "Y_displacement_bound_m": 0.14,
+      "all_UV_color_index_other_native_slots_exact": true,
+      "all_native_XZ_exact": true,
+      "changed_normal_rows": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "changed_position_rows": [
+        29,
+        30,
+        31
+      ],
+      "changed_tangent_rows": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "comparison_baseline": "Actual current043 cap57-prebuilt .30 meshes after exact reconstruction",
+      "configuration_exact": true,
+      "conservative_tangent_rows": [
+        28,
+        32
+      ],
+      "maximum_native_Y_delta_m": 0.0437521934509277,
+      "normal_rows": [
+        28,
+        31
+      ],
+      "normals_outside_halo_and_shared_seam_exact": true,
+      "passed": true,
+      "position_rows": [
+        29,
+        31
+      ],
+      "positions_outside_Y_domain_exact": true,
+      "slots": [
+        {
+          "after_sha256": "8ae253279d97105f03bf040d12eef053ea918f1ccef387d367730c6b06df38b0",
+          "before_sha256": "8ae253279d97105f03bf040d12eef053ea918f1ccef387d367730c6b06df38b0",
+          "passed": true,
+          "slot": 3
+        },
+        {
+          "after_sha256": "8cfe340f02530af33c515532abfb4607527c6bd3bdf4df063317a4169a9cb7a1",
+          "before_sha256": "8cfe340f02530af33c515532abfb4607527c6bd3bdf4df063317a4169a9cb7a1",
+          "passed": true,
+          "slot": 4
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 5
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 6
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 7
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 8
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 9
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 10
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 11
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 12
+        }
+      ],
+      "tangent_W_every_corner_exact": true,
+      "tangent_components_outside_halo_exact": true,
+      "tangent_presence_cardinality_exact": true
+    },
+    "seam": {
+      "exact_native_encoded_position_and_normal_bytes": true,
+      "passed": true,
+      "scope": "Exact native shared192-knot normal field after world transform/normalization/native packing; no tolerance. Different existing shader/color/emission boundary remains.",
+      "shared_corner_count": 1344,
+      "shared_unique_native_knots": 192
+    },
+    "skin": {
+      "Y_displacement_bound_m": 0.36,
+      "all_UV_color_index_other_native_slots_exact": true,
+      "all_native_XZ_exact": true,
+      "changed_normal_rows": [
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "changed_position_rows": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "changed_tangent_rows": [
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "comparison_baseline": "Actual current043 cap57-prebuilt .30 meshes after exact reconstruction",
+      "configuration_exact": true,
+      "conservative_tangent_rows": [
+        22,
+        40
+      ],
+      "maximum_native_Y_delta_m": 0.173670291900635,
+      "normal_rows": [
+        22,
+        39
+      ],
+      "normals_outside_halo_and_shared_seam_exact": true,
+      "passed": true,
+      "position_rows": [
+        23,
+        39
+      ],
+      "positions_outside_Y_domain_exact": true,
+      "slots": [
+        {
+          "after_sha256": "5be4ef8de16aaf1c8f836b95affc76eab72c37f3dee2452ea29409702f9e2cc1",
+          "before_sha256": "5be4ef8de16aaf1c8f836b95affc76eab72c37f3dee2452ea29409702f9e2cc1",
+          "passed": true,
+          "slot": 3
+        },
+        {
+          "after_sha256": "13d0856141f380662eb5153f2f04165ab6fed71bf8c0c32d9b97ab7561066a98",
+          "before_sha256": "13d0856141f380662eb5153f2f04165ab6fed71bf8c0c32d9b97ab7561066a98",
+          "passed": true,
+          "slot": 4
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 5
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 6
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 7
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 8
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 9
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 10
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 11
+        },
+        {
+          "after_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "before_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+          "passed": true,
+          "slot": 12
+        }
+      ],
+      "tangent_W_every_corner_exact": true,
+      "tangent_components_outside_halo_exact": true,
+      "tangent_presence_cardinality_exact": true
+    }
+  },
+  "corners": [
+    46080,
+    182016
+  ],
+  "current043_candidate_install_and_rollback_verified": true,
+  "current_relative_scope_seam_quality_passed": true,
+  "direct_seed_to_016_runtime_installation_previously_observed": false,
+  "factory_sha256": "c8b4bae88dc60c5fb14e8df8263adf0d98db86f79990dd91cfa757a3764099a4",
+  "future044_packaged_startup_verified": false,
+  "helper56_sha256": "61dc8c644d3cf5b78f98ba6e542967909d4a393399be00e08b68ccb590876fe7",
+  "helper57_sha256": "cb0c9b82709b58c7f0a86f66e096f7f69930db5f69f0212490353755ab596d84",
+  "meshes": [
+    {
+      "candidate": {
+        "aabb_sha256": "5fd47dfbf9c54620a512c21e9cb8200d18b21e73895527277138c6be9b7f528d",
+        "arrays_sha256": "53ffa8bc38a293f3eabce09090890d08aa55cac027a2423b190167fac3b08874",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "9b7aa86da2b68208e18008edbc497b7501266103050f062bed6c787bcf37248a",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "c8326cdbba1d8cf6234cb6dafb1b2feba176754061289b4d5ab4b25656ac2134",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "8fdb8fa44a82f6e706766e0305f413c3988c994a782c00e3365be43948804bdb",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "5be4ef8de16aaf1c8f836b95affc76eab72c37f3dee2452ea29409702f9e2cc1",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "13d0856141f380662eb5153f2f04165ab6fed71bf8c0c32d9b97ab7561066a98",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 46080,
+        "eligible": true
+      },
+      "item": 0,
+      "label": "skin",
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "5fd47dfbf9c54620a512c21e9cb8200d18b21e73895527277138c6be9b7f528d",
+        "arrays_sha256": "024b029881da7a1bcad5bd6e6863dcf72e47c9993f80fe8423a9cb237085394b",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "b7a25603f880d8cfc77d3f3e56b10a094c5b752bfe1faeda1eba59823d54b310",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "2d1cd525ca6d3447c7f628e6c8d30da5e4681fff04eb2d51f5050284f45f24e6",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "fb6904899806c50646a79c5e9db1456ae963f85723947d71a909e00c9e62c342",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "5be4ef8de16aaf1c8f836b95affc76eab72c37f3dee2452ea29409702f9e2cc1",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "13d0856141f380662eb5153f2f04165ab6fed71bf8c0c32d9b97ab7561066a98",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 46080,
+        "eligible": true
+      },
+      "path": "BatchedStaticWorld/Static_-9223371840544561210_0_0",
+      "stub": "MushroomHome/FoldedPeachUmbrella"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "69389ac1930972a6926621b03e6438cfb1cd8e3826d70c890234453c5925ca95",
+        "arrays_sha256": "e348ed77928a7c8ca3123a9e6329b04e52b7a2bdf210eb7c41e5b4cc0beda23f",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "3563d112b11e456cea3e421da4512dedebd9673fb0fa8b2862a7a179d608992c",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "5b601bccd0b9952f4bec400bc3f7c6851809a4731e60d7271faab3ff8e2450ee",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "47acb41e9d5a85330193391419cef3a9d1b6774ce0a95013985e06c9b21b5d62",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "8ae253279d97105f03bf040d12eef053ea918f1ccef387d367730c6b06df38b0",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "8cfe340f02530af33c515532abfb4607527c6bd3bdf4df063317a4169a9cb7a1",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 182016,
+        "eligible": true
+      },
+      "item": 1,
+      "label": "cream",
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "3db3503418e75a66575c8ae6f54af8750e4136a19aacd0a01871333ccc8ed2b4",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "1806c8b1d3c6ffbc36983d2326099008069ecc7f4619656281b1d1605db6760e",
+        "arrays_sha256": "004c73bd32106bcba2e0693fafaedb6a56d475e9ecfe06c8a4f1d94e49cc7cda",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "97d45fa0360956d75cdd76c6b7e6f0ff8c946a53d758927e19f5c9c4dded44b7",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "ce6f722861632ec86775e05c1d3cff25909f65f2a42cccc7ea07b79e1fde38ea",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "8a8db959ca020465bf227e4e1f7393f70d5ecf12156ac4637611dcbe33a9f110",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "8ae253279d97105f03bf040d12eef053ea918f1ccef387d367730c6b06df38b0",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "8cfe340f02530af33c515532abfb4607527c6bd3bdf4df063317a4169a9cb7a1",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 182016,
+        "eligible": true
+      },
+      "path": "BatchedStaticWorld/Static_-9223371979929679639_0_0",
+      "stub": "MushroomHome/ContinuousPleatedCreamUnderbody"
+    }
+  ],
+  "motion_verified": false,
+  "native_library_roundtrip_exact": true,
+  "native_storage_sha256": [
+    "9e723fa225215840c8a9fb1734a55daef0fcf36f0b8a9454918b027a9ee9ef98",
+    "aed3da22d5e555f4fb16b06c66c68045888ef4fe038e72acac6760588303518a"
+  ],
+  "neutral_proof_sha256": "9aa70d569e8813a09d42675dc44d89e8310c9c61f4ac5165318ebff04414b833",
+  "neutral_sha256": "e35b74ff3adf5f0e77dcca84ffb2ed4f73a0d08c7119b42957a44ae8c0ea36ac",
+  "original_sha256": "7d9455f72f63636f1adcce198ba9a03a73568d7224c04ddbcdcdcaefbc8bda37",
+  "other_native_resources_exact": true,
+  "overall_art_approved": false,
+  "parent_native_loader_core_test_passed": true,
+  "passed": true,
+  "performance_measured": false,
+  "production_adopted": false,
+  "provenance": {
+    "authoring_report": {
+      "bytes": 211364,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-cap-return-native01/output/report.json",
+      "sha256": "3ab85b2498285e7a2b2b70eab9cabadc11f9bf834c70e3b9bcdb7448251bce34"
+    },
+    "closed_current043_comparison": {
+      "bytes": 30805246,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-cap-return03/cap-return.json",
+      "sha256": "6ecee6c73885341e09d3884014dc82be70118ab41cf578fc6e1622f182256c17"
+    },
+    "parent_native_proof": {
+      "bytes": 206048,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mush-mac-043/baked/cap57-prebuilt-proof.json",
+      "sha256": "d6637d677ca735fce52831cf3c91a716db495eadf62ceceb66fe58a1bb3d81bd"
+    },
+    "root_shape_selection": {
+      "bytes": 1432,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-cap-return-inspection03/visual-review.json",
+      "sha256": "c3d54b99012ae24d795736dbd1091e6f025724f40659fd245fce07bc110448f0"
+    },
+    "saved_comparison_audit": {
+      "bytes": 1233,
+      "path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/review/mac043-cap-return-inspection03/audit.json",
+      "sha256": "629e846984844797a6707f6111b66d7add41dc26267e7a4803dd1a2f92e7a83e"
+    }
+  },
+  "retained_grain": 0.12,
+  "return_helper_sha256": "c63af018d81567c081606700595f2a5efe055b4eff5432cc288dd70208b8e615",
+  "runtime_loader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "schema": "mush-cap-return016-prebuilt-native-proof/1",
+  "scope": "Verified .16 prebuilt MeshLibrary, exact reconstructed current .30 baseline and current043 full-game substitution/actual rollback. Original seed/node records and all install/ownership/configuration/envelope/post-assignment rollback gates are retained. Parent loader core pass is provenance for the same unchanged core, not a claim that direct seed\u2192.16 or future044 package startup already ran. This proof is admission data; each future runtime still verifies and assigns its actual native seed/candidate resources. No constructor/material/shader/light change.",
+  "shape_crest": 0.16,
+  "shape_selected_for_next_combined_candidate": true,
+  "triangles": [
+    15360,
+    60672
+  ]
+}

@@ -1,0 +1,471 @@
+{
+  "schema": "mush-sky36-constellation-data/1",
+  "revision": "sky36-full-heavens-v1",
+  "art_approved": false,
+  "scope": "Proposed fictional constellation patterns requested by user; reusable authoring data, no progression or UI. Angles/decorative styles tunable.",
+  "coordinate_system": "Degrees clockwise from world -Z; elevation above horizon; point pairs are tangent-plane offsets scaled by proposed .10 radian then normalized.",
+  "stars": {
+    "seed": 3604839,
+    "random_count": 2400,
+    "radius_m_proposed": 120,
+    "upper_hemisphere_min_y": 0.045
+  },
+  "patterns": [
+    {
+      "name": "Wandering leaf",
+      "azimuth_deg": 0,
+      "altitude_deg": 48,
+      "points": [
+        [
+          -0.8,
+          -0.1
+        ],
+        [
+          -0.3,
+          0.55
+        ],
+        [
+          0.35,
+          0.8
+        ],
+        [
+          0.8,
+          0.2
+        ],
+        [
+          0.3,
+          -0.5
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          1,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "Little lantern",
+      "azimuth_deg": 45,
+      "altitude_deg": 65,
+      "points": [
+        [
+          -0.6,
+          0.3
+        ],
+        [
+          0,
+          0.6
+        ],
+        [
+          0.6,
+          0.3
+        ],
+        [
+          0.4,
+          -0.4
+        ],
+        [
+          -0.4,
+          -0.4
+        ],
+        [
+          0,
+          -0.85
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "name": "Drifting seed",
+      "azimuth_deg": 90,
+      "altitude_deg": 42,
+      "points": [
+        [
+          -0.8,
+          -0.5
+        ],
+        [
+          -0.4,
+          -0.1
+        ],
+        [
+          0,
+          0.2
+        ],
+        [
+          0.2,
+          0.8
+        ],
+        [
+          0.7,
+          0.5
+        ],
+        [
+          0.8,
+          -0.1
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          5
+        ]
+      ]
+    },
+    {
+      "name": "Mushroom",
+      "azimuth_deg": 135,
+      "altitude_deg": 58,
+      "points": [
+        [
+          -0.9,
+          0
+        ],
+        [
+          -0.45,
+          0.55
+        ],
+        [
+          0.1,
+          0.7
+        ],
+        [
+          0.8,
+          0.25
+        ],
+        [
+          0.4,
+          -0.05
+        ],
+        [
+          -0.2,
+          -0.1
+        ],
+        [
+          -0.15,
+          -0.8
+        ],
+        [
+          0.4,
+          -0.65
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "Quiet stream",
+      "azimuth_deg": 180,
+      "altitude_deg": 47,
+      "points": [
+        [
+          -0.9,
+          0.4
+        ],
+        [
+          -0.5,
+          -0.1
+        ],
+        [
+          0,
+          0.2
+        ],
+        [
+          0.4,
+          -0.3
+        ],
+        [
+          0.85,
+          -0.15
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "Nest",
+      "azimuth_deg": 225,
+      "altitude_deg": 62,
+      "points": [
+        [
+          -0.9,
+          0.25
+        ],
+        [
+          -0.5,
+          -0.45
+        ],
+        [
+          0.1,
+          -0.65
+        ],
+        [
+          0.7,
+          -0.2
+        ],
+        [
+          0.85,
+          0.5
+        ],
+        [
+          0.15,
+          0.2
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "Friendly trail",
+      "azimuth_deg": 270,
+      "altitude_deg": 43,
+      "points": [
+        [
+          -0.9,
+          -0.65
+        ],
+        [
+          -0.4,
+          -0.4
+        ],
+        [
+          0.1,
+          0.2
+        ],
+        [
+          0.5,
+          0.5
+        ],
+        [
+          0.85,
+          0.3
+        ],
+        [
+          0.7,
+          -0.15
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "name": "Fluffy comet",
+      "azimuth_deg": 315,
+      "altitude_deg": 70,
+      "points": [
+        [
+          -0.8,
+          -0.6
+        ],
+        [
+          -0.4,
+          -0.3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0.5,
+          0.45
+        ],
+        [
+          0.8,
+          0.1
+        ],
+        [
+          0.4,
+          -0.1
+        ]
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          2
+        ]
+      ]
+    }
+  ]
+}

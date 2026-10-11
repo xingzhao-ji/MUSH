@@ -1,0 +1,31 @@
+shader_type sky;
+#include "res://assets/environment/shared_environment.gdshaderinc"
+uniform vec4 top_color : source_color = vec4(.4,.6,.8,1.0);
+uniform vec4 horizon_color : source_color = vec4(.8,.85,.85,1.0);
+uniform vec4 ground_color : source_color = vec4(.3,.4,.3,1.0);
+uniform float night_amount = 0.0;
+uniform float rain_amount = 0.0;
+float hash3(vec3 p) {
+ p=fract(p*.1031); p+=dot(p,p.yzx+33.33); return fract((p.x+p.y)*p.z);
+}
+float noise3(vec3 p) {
+ vec3 i=floor(p); vec3 f=fract(p); f=f*f*(3.0-2.0*f);
+ return mix(mix(mix(hash3(i),hash3(i+vec3(1,0,0)),f.x),mix(hash3(i+vec3(0,1,0)),hash3(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash3(i+vec3(0,0,1)),hash3(i+vec3(1,0,1)),f.x),mix(hash3(i+vec3(0,1,1)),hash3(i+vec3(1,1,1)),f.x),f.y),f.z);
+}
+void sky() {
+ // Direction-based sky, not reference imagery or camera-facing scenery.
+ // Static cloud field avoids a per-frame radiance update from TIME/POSITION.
+ float height=max(EYEDIR.y,0.0);
+ vec3 base=mix(horizon_color.rgb,top_color.rgb,pow(height,.45));
+ if(EYEDIR.y<0.0) {
+  COLOR=mix(horizon_color.rgb,ground_color.rgb,clamp(-EYEDIR.y*2.0,0.0,1.0));
+ } else {
+  vec3 p=EYEDIR*7.0+vec3(1.7,2.8,-3.6)+(env_enabled ? env_cloud_offset : vec3(0.0));
+  float cloud=noise3(p)*.58+noise3(p*2.1)*.28+noise3(p*4.3)*.14;
+  float coverage=smoothstep(.52-rain_amount*.08,.70,cloud);
+  coverage*=smoothstep(.03,.17,height)*(1.0-night_amount*.92);
+  vec3 cloud_color=mix(vec3(.93,.90,.82),vec3(.35,.42,.48),rain_amount*.72);
+  cloud_color=mix(cloud_color,vec3(.013,.025,.075),night_amount);
+  COLOR=mix(base,cloud_color,coverage*mix(.45,.72,rain_amount));
+ }
+}

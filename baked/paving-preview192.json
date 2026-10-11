@@ -1,0 +1,114 @@
+{
+  "schema": "mush-paving-preview192/1",
+  "artifact_sha256": "6d5d78516898be3099d0496f07f02057b28b8eb944091d4b27b1018592657aa9",
+  "artifact_bytes": 641570,
+  "runtime_loader_sha256": "86df9a774a5ce12eec9b1e426d5d38ad8de84b1f5fb79ccb019b8e19cac0a87d",
+  "baseline_loader_sha256": "b469bece311013c376633b2d31200fcfbdcc3c3d848284de96981981335da337",
+  "baseline_proof_sha256": "6e006ca6f902a3f28b6d3909f8a1799cc57f6a197f59c378b0b7f49502915e51",
+  "native_mesh_reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "source194_proof_sha256": "55c1b3266d918c899f77e77097c7e883a1d8e629e756984e1cfc5a96b27d6249",
+  "native_authoring_save_reload_exact": true,
+  "expected_native_items": [
+    {
+      "all13_sha256": "bdfa216f12dc5abc46854fc9beffdb8b9a20c761cb7b92aa066e959b70926494",
+      "native_surface_blob_sha256": "8d33af9e929f23b3b48b46af1f720ed50118da020ebb5804651bb1477d41793a",
+      "rendering_server_surface_sha256": "b3a00526c716044cce4404d8560ba1b8fc85dcce7e900362ef68d60b446605e8",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000494fcabf0ad7a3bcd0d641405fea264052b81e3f1e00b940",
+      "native_buffers": {
+        "format": "34359738399",
+        "native_vertices": 4638,
+        "buffers": {
+          "vertex_data": {
+            "bytes": 92760,
+            "sha256": "cb647ead4565edd722e1b9740fa898972ec49cae97394394c67620d12a02a6c1"
+          },
+          "attribute_data": {
+            "bytes": 55656,
+            "sha256": "6795337049c0b09a6d73f8c96d74f2dd79eb9cc36f34f563776f864993816a2b"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "total_native_surface_buffer_bytes": 148416,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing."
+      }
+    },
+    {
+      "all13_sha256": "d6e581a5d77a12b6c87aa25e238fc4d896f4b3f6ff21e92a1f2f5fc1292f0aa5",
+      "native_surface_blob_sha256": "8ab4e90c64cebc1006aa8b223cadb27257863f55c97ede05fe6eaab22f7c0cb6",
+      "rendering_server_surface_sha256": "40026ad2248eca34c3e397655e969c39dfb44dda0da54a38ae051cc1c0fddc1b",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000ca3268c00ad7a3bc763e4140b28ce640afcb6d3f4b4cb940",
+      "native_buffers": {
+        "format": "34359738399",
+        "native_vertices": 3078,
+        "buffers": {
+          "vertex_data": {
+            "bytes": 61560,
+            "sha256": "74042960b273df69fee8957bd59540f1bfd770a3d5dcf347ce88941edbc02a11"
+          },
+          "attribute_data": {
+            "bytes": 36936,
+            "sha256": "962a5e1fe98c12f531bd71f78ee576d5e8c73abfcf042d61360761e12e419297"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "total_native_surface_buffer_bytes": 98496,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing."
+      }
+    },
+    {
+      "all13_sha256": "56640483125ab5d7139700d0a6dbe1b6b4818b82b5729f0bf56b1ed7f69f6bfb",
+      "native_surface_blob_sha256": "6fa527e01c97e4cbe9e61d2ab0bf0b4b1a090aefebfccc5a3c12fcbc25244570",
+      "rendering_server_surface_sha256": "615973e05850d413cb4459d2c168c7665f58e6342d45472232ab8453910d2746",
+      "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
+      "native_aabb_variant_hex": "10000000000084c0f3fdd4bc000040406666fe40e7546f3f00000041",
+      "native_buffers": {
+        "format": "34359738399",
+        "native_vertices": 9501,
+        "buffers": {
+          "vertex_data": {
+            "bytes": 190020,
+            "sha256": "e66fea5b420a93714ec55e8ce878c52da4b08fffdfc4003e35acbd2bc33aebcf"
+          },
+          "attribute_data": {
+            "bytes": 114012,
+            "sha256": "6535d2b66b0c0b3f6c0cb1a8a868e772da04f700790f65d68aa8f6c2381c6a5f"
+          },
+          "skin_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "index_data": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "total_native_surface_buffer_bytes": 304032,
+        "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing."
+      }
+    }
+  ],
+  "contact_sha256": "dd340a548d27f0e57de9e40dd01642d8a4068e3a079495bba52fb9e1f72b10ef",
+  "contact_corners": 7323,
+  "shape_configuration_sha256": "970e21c18f9ae8a7129b463fdcf6421e03df87f004881456174dde2444ca45b5",
+  "full58_acceptance": false,
+  "visual_fidelity_accepted": false,
+  "sustained_performance_verified": false,
+  "physical_mobile_tested": false,
+  "scope": "Private combined preview. Material-free194 final192/179 resource; existing nodes, materials and registered body retained. Native authoring evidence is distinct from runtime/traversal acceptance.199 near-cut aggregate failure remains open."
+}

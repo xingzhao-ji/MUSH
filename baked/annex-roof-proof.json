@@ -1,0 +1,791 @@
+{
+  "schema": "mush-annex-roof-prebuilt-proof/1",
+  "passed": true,
+  "native_candidate_passed": true,
+  "native_library_roundtrip_exact": true,
+  "original_world_restored": true,
+  "root_selected_for_next_isolated_source_checkpoint": true,
+  "artifact": "res://baked/annex-roof.res",
+  "artifact_bytes": 2255664,
+  "artifact_sha256": "5dde4fa1d6a7826fc580339b970bff75396b34a5b9abc6312666f2d6183a58f1",
+  "loader": "res://scripts/annex_roof_prebuilt.gd",
+  "loader_sha256": "03fe9729a1e0d8604fe6d8b3a8723d0868a7ac953acc74bce14b5166029bc01c",
+  "native_reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "meshes": [
+    {
+      "candidate": {
+        "aabb_sha256": "ed3ee2e289b4784d537b01263176c80f793e25a785990beb1d7b1e54eb067672",
+        "arrays_sha256": "63dcf613d242c185304ca38111b5227f439c588a502a8050800fe5690406f02f",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "58489568e6689f8df8e1cb380dfaa7342fa98d371d05d9815037b3a740b09f52",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "2d4656726f9b51a05f7eb8129a6b52b383d8ece6098611c3c616f20e6e1d66c7",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "8cc591781e36e1a753732281803430c7d7e4067beca383e4cc59a6147e9b80b7",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "89c2ae2505e45f3d2099af04c1d1fa3ad71dbd2793c586b5b24012af42b56cbf",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "290d817e98efcdb507d5cf57829ee6c62cadd7c1db228dbd6eac2e065ca887ff",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 24855,
+        "eligible": true
+      },
+      "candidate_native_surface_sha256": "c57d65c885e379bb5d1ce45fee87f3910d3321d587d8ace9299785e08ea670ab",
+      "item": 0,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "ed3ee2e289b4784d537b01263176c80f793e25a785990beb1d7b1e54eb067672",
+        "arrays_sha256": "49a13867ebd87e6c11aa39df7b00ce271dd9e60f3f831a8db4812ef82ecee3e6",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "a83d18426b8e2c2cf29433b8fcaa0715393f618210ada6d2fadf18d2ccee8b71",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "711f740b4551bffd3553676946184ad749fd9e38f4536e24ae17a9bd1799d0b9",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "6bdd30ac637bb3b21f82e9df544bc4506548b9613602d995415c0f92e777cf17",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "2730d08ae9e6439cc6c52b60ed3e71913bf646e410937bf04027793c91e0a274",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "0ea028be9757e083700c1d4498c90956dbb104b52fb637eb52503c1dc886d511",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 24864,
+        "eligible": true
+      },
+      "path": "BatchedStaticWorld/Static_-9223371995566045738_-1_-1",
+      "role": "peach_skin",
+      "stub": "MushroomHome/OpenLeftAnnex/FoldedPeachUmbrella",
+      "original_native_surface_sha256": "a38f5a987744b4105923a1260eafe10fa49a1687ba0b5c8cb10e9122da3346a1",
+      "material_ownership": {
+        "authored_stub_same_override_pointer": true,
+        "active_surface_uses_override": true,
+        "authored_stub_position": [
+          0,
+          3.1,
+          0
+        ],
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "authoring_override_aliases": [
+          "MushroomHome/OpenLeftAnnex/FoldedPeachUmbrella",
+          "MushroomHome/GrowableRightRoom/FoldedPeachUmbrella",
+          "ForestBeyondTheClearing/@Node3D@3758/FoldedPeachUmbrella",
+          "ForestBeyondTheClearing/@Node3D@3780/FoldedPeachUmbrella",
+          "ForestBeyondTheClearing/@Node3D@3802/FoldedPeachUmbrella",
+          "BatchedStaticWorld/Static_-9223371995566045738_-1_-1",
+          "BatchedStaticWorld/Static_-9223371995566045738_2_-3",
+          "BatchedStaticWorld/Static_-9223371995566045738_-2_-3"
+        ],
+        "scope": "Authoring alias inventory retained diagnostically. Runtime binds exact batch/stub override pointer and admitted native shader/node record; no global alias scan."
+      },
+      "geometry_changes": {
+        "original_triangles": 8288,
+        "candidate_triangles": 8285,
+        "triangle_delta": -3,
+        "clip_counters": {
+          "clipped_triangles": 71,
+          "coplanar_or_boundary_steps": 0,
+          "degenerate_fans_skipped": 0,
+          "input_triangles": 8288,
+          "interior_triangles": 124,
+          "native_clip_calls": 13100,
+          "new_interpolated_corners": 434,
+          "output_triangles": 8285,
+          "preserved_degenerate_outside_triangles": 112,
+          "untouched_triangles": 8093
+        },
+        "removed_native_area_m2": 0.727586007315403,
+        "untouched_all13_and_native_spans_exact": true,
+        "remaining_interior_area_m2": 0.0
+      }
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "552f443bfe63425b3ab91b481c0707b0165ae705762d5b62f2754ab946c5e0ca",
+        "arrays_sha256": "5bab7440be1ea6d70c51e3f37eacdc919f804f7072e4072015857acd5b8621d8",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "ce2b705f0ff3677e88ae3ef9b1f0670d04c37d04ebb9d3ed30a21263fadcb5c6",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "fd4820b846361c45d1cb1760d038a346df8b4b66eb47bd0208970373b06836d1",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "b23279ed51ac090256cf62608312891b79d05f47741c206ea0779bdf7eea79fa",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "ab1a06b254dd8b8ab199422e84a7ce1645544105acb032592d80eecfe485b2c4",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "e53edf17e67fd636a57ae37b8a21411d84acc3ff99c0cacab68e0e9bb3313474",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 15576,
+        "eligible": true
+      },
+      "candidate_native_surface_sha256": "5968e252248ddb30fddb85ad0e33279510846e423f728c21f4ff9621a47a74e6",
+      "item": 1,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "54241117a525b03e692ab2c1e07d9d4bc65ebb8b1e5b4dd05f83760b07afd2b8",
+        "arrays_sha256": "d1de3fdaab18d51e040d20892ed99f91a1921fb6af2ed8f703267c5e076407ee",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "7089587fe9f7e8894219569a16675cf701e7f925376d9e5b686c6b86f7d1e70c",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "18e3fd3bfda930b2e97f8c86c7465a715d8dc1ff755c902b81ae5efc3cc9803d",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "b137e0d8f2d804b04cae720a4d3c62254f60697e864b7a5374acbb3706f418b5",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "f875c82009b7d8c7c083746c64f9f4bba03c073f60283df5af18a3d7c3bdab5e",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "baccaa24d7b0cd1ccd3099c1cf667ee3122c84f7e84b996ea285909ae36712fe",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 16128,
+        "eligible": true
+      },
+      "path": "BatchedStaticWorld/Static_-9223371994592967159_-1_-1",
+      "role": "gill_backing",
+      "stub": "MushroomHome/OpenLeftAnnex/CreamGillUnderside",
+      "original_native_surface_sha256": "b3b1c64e2a835d0b4f4414b89b542844ae7ded05e05e916a44d854711ee7e9cc",
+      "material_ownership": {
+        "authored_stub_same_override_pointer": true,
+        "active_surface_uses_override": true,
+        "authored_stub_position": [
+          0,
+          3.1,
+          0
+        ],
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "authoring_override_aliases": [
+          "MushroomHome/OpenLeftAnnex/CreamGillUnderside",
+          "MushroomHome/GrowableRightRoom/CreamGillUnderside",
+          "ForestBeyondTheClearing/@Node3D@3758/CreamGillUnderside",
+          "ForestBeyondTheClearing/@Node3D@3780/CreamGillUnderside",
+          "ForestBeyondTheClearing/@Node3D@3802/CreamGillUnderside",
+          "BatchedStaticWorld/Static_-9223371994592967159_-1_-1",
+          "BatchedStaticWorld/Static_-9223371994592967159_2_-3",
+          "BatchedStaticWorld/Static_-9223371994592967159_-2_-3"
+        ],
+        "scope": "Authoring alias inventory retained diagnostically. Runtime binds exact batch/stub override pointer and admitted native shader/node record; no global alias scan."
+      },
+      "geometry_changes": {
+        "original_triangles": 5376,
+        "candidate_triangles": 5192,
+        "triangle_delta": -184,
+        "clip_counters": {
+          "clipped_triangles": 89,
+          "coplanar_or_boundary_steps": 0,
+          "degenerate_fans_skipped": 0,
+          "input_triangles": 5376,
+          "interior_triangles": 461,
+          "native_clip_calls": 36720,
+          "new_interpolated_corners": 929,
+          "output_triangles": 5192,
+          "preserved_degenerate_outside_triangles": 0,
+          "untouched_triangles": 4826
+        },
+        "removed_native_area_m2": 1.75655284082802,
+        "untouched_all13_and_native_spans_exact": true,
+        "remaining_interior_area_m2": 0.0
+      }
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "f277c4c92368690019a2580c2fd7c8743384ad9d78b278b2056a1f31668a59e0",
+        "arrays_sha256": "b6ef7bde3cd4267045be2fd2675e4194ea1230590a72b1eccbb35fbe790a5e05",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "a3369e760acf4065c49926c792d75df25ece16801d334225308b4385745b0610",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "b51c5fd7c3f83b976dab4d68b5c62ba5dd8542871c1f4c971c3b9384ab4cae6d",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "1fef6be4eb4f823c940401b539a52169a8096667b3f192629b290e610488a56e",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "f842d971e827d03c3377829755a8dc4e26a1465e42f032889dff1250efcbcc00",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "dbbf7f7e79f11d105f38c3db6afe0b2c38e173fccc6635a18df31acbbcb4a741",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 29979,
+        "eligible": true
+      },
+      "candidate_native_surface_sha256": "63a6b04aee78e0ce49e7a7f8e56859f3725762ea08ab521f66982ec4448b0ecc",
+      "item": 2,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "ce58c21f9641ab4d224aa51101e15802c9e375620b446cbe9a4de3be46667bad",
+        "arrays_sha256": "ae9625aa8232985be4a6601f16409e410226cd9d20af2df1b7f32d13a0f36b00",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "80c16c26c794e703aff0b0528dcaa96525e816b0ec8c10e43a77ef455f20e11b",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "44f5a5243f8985d8d4ed7fcf8c254bffcd8580dc4e49fe0836b1b840c2f145df",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "4308d3c676ed4e94ea5c841479da85dab3738d2fdbda0f78a5410016d1cc6327",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "e4a4a624e9355642420fcf067b82ad3be6ccf143b8f0529357cc8c05c2cec279",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "866e510c36e802e13daab891414bf3dd5c5b9d901eb488fe15f32ed8a885745a",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 32928,
+        "eligible": true
+      },
+      "path": "BatchedStaticWorld/Static_-9223371994626521592_-1_-1",
+      "role": "radial_gills",
+      "stub": "MushroomHome/OpenLeftAnnex/ForkedCurvedLamellae",
+      "original_native_surface_sha256": "d43cfa44615a564ec4a79f7eb8238766b97f02f176279f48452f688f61335c30",
+      "material_ownership": {
+        "authored_stub_same_override_pointer": true,
+        "active_surface_uses_override": true,
+        "authored_stub_position": [
+          0,
+          3.1,
+          0
+        ],
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "authoring_override_aliases": [
+          "MushroomHome/OpenLeftAnnex/ForkedCurvedLamellae",
+          "MushroomHome/GrowableRightRoom/ForkedCurvedLamellae",
+          "ForestBeyondTheClearing/@Node3D@3758/ForkedCurvedLamellae",
+          "ForestBeyondTheClearing/@Node3D@3780/ForkedCurvedLamellae",
+          "ForestBeyondTheClearing/@Node3D@3802/ForkedCurvedLamellae",
+          "BatchedStaticWorld/Static_-9223371994626521592_-1_-1",
+          "BatchedStaticWorld/Static_-9223371994626521592_2_-3",
+          "BatchedStaticWorld/Static_-9223371994626521592_-2_-3"
+        ],
+        "scope": "Authoring alias inventory retained diagnostically. Runtime binds exact batch/stub override pointer and admitted native shader/node record; no global alias scan."
+      },
+      "geometry_changes": {
+        "original_triangles": 10976,
+        "candidate_triangles": 9993,
+        "triangle_delta": -983,
+        "clip_counters": {
+          "clipped_triangles": 141,
+          "coplanar_or_boundary_steps": 0,
+          "degenerate_fans_skipped": 0,
+          "input_triangles": 10976,
+          "interior_triangles": 1281,
+          "native_clip_calls": 94370,
+          "new_interpolated_corners": 1053,
+          "output_triangles": 9993,
+          "preserved_degenerate_outside_triangles": 56,
+          "untouched_triangles": 9554
+        },
+        "removed_native_area_m2": 1.89317187264387,
+        "untouched_all13_and_native_spans_exact": true,
+        "remaining_interior_area_m2": 0.0
+      }
+    }
+  ],
+  "authoring": {
+    "source_version": "0.5.5",
+    "source_project": "/Users/xingzhaoji/Desktop/MUSH/mush-mac-055",
+    "report": {
+      "path": "review/mac055-annex-clip-candidate03/annex-clip.json",
+      "bytes": 9928795,
+      "sha256": "32e4be12cf3d6bab986a9c3112d1ef2d44b5fcfa9ee5d43cc242cf6e375e413c"
+    },
+    "receipt": {
+      "path": "review/mac055-annex-clip-candidate03/receipt.json",
+      "bytes": 536,
+      "sha256": "7247c6b2b4e1251fb35c16d2e26ad44765ab650d6027be81c145346c0182c3a0"
+    },
+    "image_decode": {
+      "path": "review/mac055-annex-clip-candidate03/image-decode.json",
+      "bytes": 2503,
+      "sha256": "70ffa1de0158050629268320ab57672464315c160ffe0c50d538e86f4058376d"
+    },
+    "root_review": {
+      "path": "review/mac055-annex-clip-candidate03/root-review.json",
+      "bytes": 2757,
+      "sha256": "c51c044c43516dce2fbec45d203e83eb06734dc76cb3eaa39eec59b7d9c41296"
+    },
+    "clip_helper_sha256": "34972d7b0c51642075eea47143d85e539d99cca3c6591a0e9d99ec48d2ba9b3d",
+    "measurement_parent_sha256": "f1fb43cc71beb2c9d3387ffbb1baba934bc28d5960eff9d6ba65ce2c2e0ce6da",
+    "native_checks": 238,
+    "native_selfchecks": 12,
+    "paired_captures": 12,
+    "cut_bottom_y": 2.65000009536743,
+    "cut_top_y": 3.13000011444092,
+    "actual_ceiling_footprint_native_sha256": "86c87921debafee39459c39705470f739c96785d3e28570dd54741ff960c109c",
+    "continuous_height_side_placement_passed": true
+  },
+  "counts": {
+    "original_triangles": 24640,
+    "candidate_triangles": 23470,
+    "triangle_delta": -1170,
+    "removed_native_surface_area_m2": 4.3773107207872926,
+    "added_draw_nodes": 0,
+    "new_colliders": 0,
+    "runtime_geometry_generation": false,
+    "perframe_work": false
+  },
+  "production_integrated": false,
+  "source056_native_verification_pending": true,
+  "final_art_approved": false,
+  "continuous_motion_verified": false,
+  "performance_measured": false,
+  "scope": "Selected native SOURCE055 offline proposal for isolated SOURCE056 integration. Three material-free mesh references only; existing node/material ownership and all collision retained. No runtime clipper, per-frame checks, global world/alias scan, movement/listening/performance or final-art claim."
+}
