@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T12:59:37.336307+00:00",
+  "prepared_utc": "2026-10-11T13:30:00.224179+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -33,12 +33,15 @@
     },
     "acceptance": {
       "passed": true,
-      "receipt": "reports/acceptance-20261011-030108-3495/result.json",
-      "receipt_sha256": "886f0ba0e8cd161eb4883ece62c3a0ab5adc92a300fd9fa74f2c717990a25ae6",
+      "receipt": "reports/acceptance-20261011-061736-25977/result.json",
+      "receipt_sha256": "3251f9b9dd6a92f94fa641274b1500fa7b4f3be62787c0dfc0407aeb4cece42e",
       "source_changes": [],
-      "generated_source_files": [],
-      "assertions": 295,
-      "scenarios": 15
+      "checks": {
+        "scenarios": 15,
+        "assertions": 295,
+        "all_passed": true,
+        "manual_acceptance": false
+      }
     },
     "ground_before": {
       "passed": true,
@@ -60,12 +63,14 @@
     },
     "environment": {
       "passed": true,
-      "receipt": "reports/environment-20261011-030535-3774/result.json",
-      "receipt_sha256": "ed9f8e084ef135a311c7792b6e736ecedd23a78f5de321f797fd0c53591b8f47",
+      "receipt": "reports/environment-20261011-061452-25791/result.json",
+      "receipt_sha256": "4d90ec18043b1371ac6d683187ccf38118679cd170774f9dc5a455dd35a02413",
       "source_changes": [],
-      "generated_source_files": [],
-      "assertions": 133,
-      "native_parameter_comparisons": null
+      "checks": {
+        "assertions": 137,
+        "all_passed": true,
+        "native_parameter_comparisons": null
+      }
     },
     "capture": {
       "passed": true,
@@ -205,7 +210,7 @@
       "independent_csv_percentiles_match": true
     }
   ],
-  "performance_budget_passed": true,
+  "performance_budget_passed": false,
   "profiling": {
     "kind": "instrumented 30-second diagnostics, no completed route loop",
     "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
@@ -275,9 +280,9 @@
   "runtime_sha256": {
     "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
     "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
-    "scripts/environment_controller.gd": "f9ddc8f0aeab0b62984b6874f04d597cc594e807f05aa574ccccb49135fb2b5e",
+    "scripts/environment_controller.gd": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8",
     "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
-    "tests/environment_controller_contract.gd": "5ef7adbf14a4edc4f0c1f164f3076200181f7d2dc447e3c5c86edfcad59d6978",
+    "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c"
   },
   "isolated_trials": [
@@ -501,5 +506,80 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Latest lower-joint120-second source night/rain route only; historical failures retained, no causal improvement or release/device acceptance."
+  "performance_budget_scope": "Current mac062 exported120-second night/rain route fails p95; historical lower-joint source pass retained. No incremental lighting cost or GPU/display timing attribution.",
+  "night_sky_fill_successor": {
+    "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
+    "day_energy": 0.05,
+    "old_night_energy": 0.18,
+    "night_energy": 0.3,
+    "added_lights": 0,
+    "added_shadow_maps": 0,
+    "extra_script_work": "Two constant property writes in the existing update",
+    "incremental_gpu_cost_measured": false,
+    "comparison_receipt": "reports/night-lighting-trial-20261011/integrated-result.json",
+    "comparison_receipt_sha256": "468712a0c17f0b849a56367416cb0285f292b6df2d552150bbd3a57f8a3ba505",
+    "paired_pngs": 10,
+    "full_png_decode_passed": true,
+    "expected_red_report": "reports/environment-20261011-061404-25715",
+    "stronger_fill_and_ambient_trials_adopted": false,
+    "art_approved": false,
+    "motion_verified": false
+  },
+  "mac062_candidate": {
+    "schema": "mush-mac062-development-candidate/1",
+    "app": "builds/mac-20261011-062242-26389/MUSH.app",
+    "zip": {
+      "path": "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-062242-26389/MUSH.zip",
+      "sha256": "47375fe41c381427b03131999690b2e263307050bbc7d75992b5e44d533b2c5c",
+      "bytes": 162619271
+    },
+    "profile": "MUSH-mac062",
+    "version": "0.6.0",
+    "source_package_receipt_sha256": "9ef6a487e2a5184039a4419262ef1ad83f6ad25230a3e9ee3b93f3ac3ceefcff",
+    "verification_receipt": "builds/mac-20261011-062242-26389/verification-20261011-062513/result.json",
+    "verification_receipt_sha256": "238125d3eed99c2951929c41723f854d5c5ab0af82a991b72ad658bf03776d1e",
+    "startup_checks_passed": 12,
+    "exported_captures_passed": 4,
+    "benchmark_passed": false,
+    "p95_ms": 19.521,
+    "p99_ms": 28.327,
+    "frames": 9438,
+    "loops": 2,
+    "stalls": 0,
+    "capture_s": 120,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "vsync": 1,
+    "gpu_timing_available": false,
+    "display_presentation_measured": false,
+    "movie": "builds/mac-20261011-062242-26389/verification-20261011-062513/clip/environment-smoke.mp4",
+    "movie_sha256": "51d0a5903c2a01422337117f3fdf70b636f4f1d509e5c656a43f8d53912281f8",
+    "movie_seconds": 3.533333,
+    "offline_fixed_fps": 30,
+    "real_time_motion_verified": false,
+    "manual_controls_verified": false,
+    "live_audio_listening": false,
+    "physical_mobile_devices_tested": false,
+    "art_approved": false,
+    "temporary_stage_removed": true,
+    "ordinary_profile_absent": true,
+    "source_runtime_sha256": {
+      "scripts/environment_controller.gd": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8",
+      "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
+      "baked/paving-lower-joints.res": "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60"
+    }
+  },
+  "generated_cache_cleanup": {
+    "receipt": "reports/cache-cleanup-20261011-0620/result.json",
+    "receipt_sha256": "1c714a6e75ad2cf5b4ffe2bc77081541bf59acaad10d3c947137f193ec6ebb83",
+    "generated_subfolders_removed": 59,
+    "inactive_projects": 28,
+    "selected_allocated_bytes": 414265344,
+    "project_hashes_exact": true,
+    "current_and_accepted_caches_untouched": true,
+    "editor_state_retained": true,
+    "transparent_trace_compression_saved_bytes": 0
+  }
 }

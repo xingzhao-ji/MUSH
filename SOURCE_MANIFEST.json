@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 3982,
-      "sha256": "4cbdabfb29f6114242a95d17e9efb85a8443a02f77c526b729adaed7046c4c05"
+      "bytes": 4054,
+      "sha256": "4077af43b5c6801be9d82763991011e23c9f89ec71b9f85e8b042e879685029c"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -379,20 +379,20 @@
       "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 2786,
-      "sha256": "43dd2369226d12917041a3e6a90171af7c2e3a9130ae29c4270acd78e228788c"
+      "bytes": 2556,
+      "sha256": "c0fea39db36250b96007f0fd59039569597314db9878e760e3dd88ec764aaf28"
     },
     "docs/STATUS.md": {
-      "bytes": 3199,
-      "sha256": "75b9b05cab1684a91cedf36e5b29c6359f707b126956f8b98c2a11ab8f1a59bf"
+      "bytes": 3354,
+      "sha256": "2b06ce2a4c313cc62deb3e7799974d60ffe44db682571a8165617c3152e9e44e"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 13954,
-      "sha256": "b0fa94c1148f8655147079f8d87bfd0e42986ff111a5d1bc2501e337c85e8596"
+      "bytes": 17655,
+      "sha256": "56cb06e86e3b2a39d7c9317a3b1f52c69623a25a578846eb46c3ddb116c8f1c1"
     },
     "docs/verification-summary.json": {
-      "bytes": 21176,
-      "sha256": "3ab172129c4330984d51fe51b764da5141f302f3ef2e984fbad97d51737bb888"
+      "bytes": 24514,
+      "sha256": "509380141b1757b3a19aaa2d6f9ce95a18e628d007960a319a7983c0f2d3e7ba"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
@@ -707,8 +707,8 @@
       "sha256": "5e462829bbe21ad79985dfc0a7addaa44f322b323c79f4104e9eaad69c92b255"
     },
     "scripts/environment_controller.gd": {
-      "bytes": 37321,
-      "sha256": "f9ddc8f0aeab0b62984b6874f04d597cc594e807f05aa574ccccb49135fb2b5e"
+      "bytes": 37497,
+      "sha256": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8"
     },
     "scripts/environment_controller.gd.uid": {
       "bytes": 20,
@@ -891,8 +891,8 @@
       "sha256": "5fc0046a0269247d153c16baec18f2d610d5f28d4a2da6d3d32629c155b5de3e"
     },
     "tests/environment_controller_contract.gd": {
-      "bytes": 20699,
-      "sha256": "5ef7adbf14a4edc4f0c1f164f3076200181f7d2dc447e3c5c86edfcad59d6978"
+      "bytes": 21589,
+      "sha256": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90"
     },
     "tests/environment_controller_contract.gd.uid": {
       "bytes": 20,
@@ -987,8 +987,8 @@
       "sha256": "cacc607fc90c2f0db837c8f145b11d001b9a528783e45253402d8c4c607070fa"
     },
     "tools/package_mac.py": {
-      "bytes": 14360,
-      "sha256": "6fce90c11860cb61840491f907f3bd3ca1e077fd05de708ec0d1a7740a11c2ba"
+      "bytes": 14867,
+      "sha256": "f07135ee972fea9487e60aa09db9de38c7ed015fd9f51929ca7524d25bbf6b8e"
     },
     "tools/verify.py": {
       "bytes": 19306,

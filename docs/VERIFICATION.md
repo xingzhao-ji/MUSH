@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The latest lower-joint source route passes the Mac frame-time limits; earlier failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac062 app fails p95; the prior lower-joint source pass and earlier failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -147,3 +147,59 @@ isolated/installed/rollback runs. The earlier baseline run's source-membership
 guard failed when a new helper appeared during execution; it remains failed
 evidence and is not a closed preservation pass. The current mac061 app contains
 the earlier surface checkpoint; this geometry successor is tested in source.
+
+## Restrained moonlit sky bounce
+
+The central environment controller now sets the existing sky fill to .05 in
+daylight and .30 at night (previous night value .18), retaining its cool tint,
+opposed direction, shadow policy and linear appearance blend. This inexpensive
+approximation adds no light, shadow map, geometry, texture or simulation. Its two
+extra native property assignments are constant work/state; incremental GPU cost
+has not been isolated. Warm practical lights illuminate nearby objects; existing
+gill/plant material emission is visual glow, with separate cool point lights
+providing nearby illumination. No emission or bloom setting changed here.
+
+Two isolated energy comparisons preceded integration. Stronger .55 fill flattened
+the clearing, while a broader ambient increase softened contrast; neither was
+adopted. The chosen .30 fill gives a subtle lift to shadowed path edges. Five
+integrated before/after camera pairs cover entrance, clearing, water, interior and
+night/rain. All ten PNGs fully decode and match native hashes. Material bindings,
+paving arrays and registered contact remain exact within each pair; the fixture
+does not hash every world mesh or establish motion quality. The provisional
+interior, thick slab fronts, water joins and overall reference fidelity remain open.
+
+Four new paused quality/day-night assertions first failed only the two night
+endpoints (.18 observed), then passed after integration: **137/137 environment
+checks**. Fresh actual-Main gameplay passes **295 assertions / 15 scenarios**.
+Local evidence: `reports/night-lighting-trial-20261011/`,
+`reports/environment-20261011-061404-25715/` (expected red),
+`reports/environment-20261011-061452-25791/` (green), and
+`reports/acceptance-20261011-061736-25977/`. Prior performance results qualify their
+recorded source, not this lighting successor; its new Mac package is checked separately.
+
+To make export room, 59 generated import/shader/export cache subfolders in 28
+inactive archived development copies were removed: **414,265,344 allocated bytes**
+selected. Editor state, current/accepted055/057 caches, source, assets, apps, saves
+and references were retained. Project-file hashes match before/after. APFS free
+space rose later; the instantaneous free-space delta is not exact attribution.
+A separate attempted transparent compression of profiling evidence saved no
+space; no replacement was adopted. Receipts: `reports/cache-cleanup-20261011-0620/`.
+
+## mac062 exported successor
+
+The isolated fresh-profile package contains the lower joint and restrained night
+fill. Source/ZIP/app checks, ad-hoc signature, 12 exported startup/effects checks,
+four fully decoded PNG captures and a 3.53-second offline in-engine clip pass.
+The export stage was removed; prior profile metadata and app/source payloads
+remain exact. The package helper now accepts an unused `macNNN` profile/bundle
+name, excludes that candidate from prior-profile guards and discovers other
+existing candidate profiles. Invalid path-like names are rejected before output
+creation; candidate-self exclusion and prior-candidate coverage were checked.
+
+Its 120-second 1920 x 1080 default-VSync night/rain route completes two loops with
+zero stalls: **9,438 frames, p95 19.521 ms, p99 28.327 ms**. Complete CSV validation
+and percentile recomputation pass, but the **16.7 ms p95 gate fails**, so the
+combined exported verification receipt is failed. This does not establish that
+the two lighting property assignments caused the difference from older runs.
+GPU timing is unavailable; display presentation, live audio, sustained manual
+controls and physical phones remain unverified. See [launch instructions](MAC-CANDIDATE.md).

@@ -4,7 +4,7 @@ A small, cozy Godot clearing to explore, plant and make a home in. This reposito
 
 ## Run
 
-Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac; the latest 120-second source route passes the frame-time limits, while broader performance acceptance remains open. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
+Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac; the current Mac development app still exceeds the p95 frame-time limit. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
 
 | Input | Action |
 | --- | --- |
@@ -40,6 +40,6 @@ See [the tested local Mac candidate](docs/MAC-CANDIDATE.md) for its launch path,
 
 ## Build and contribute
 
-Install Godot 4.7.2's export templates before using the `macOS MUSH` preset. On this Mac, `python3 tools/package_mac.py --engine /path/to/Godot` stages the current source into an ignored build directory, exports a separate `MUSH-mac061` candidate and checks its ZIP, signature and startup. It requires that candidate profile to be absent and reserves 10 GiB beyond a 2 GiB output ceiling. The script downloads nothing. It writes `builds/MUSH.zip` and uses local ad-hoc signing. The preset does not produce a notarized/store release or an iPhone build. No physical-device performance, manual controls or live listening acceptance is claimed.
+Install Godot 4.7.2's export templates before using the `macOS MUSH` preset. On this Mac, `python3 tools/package_mac.py --engine /path/to/Godot --candidate mac062` stages the current source into an ignored build directory, exports a separate `MUSH-mac062` candidate and checks its ZIP, signature and startup. Choose an unused `macNNN` candidate name. It requires that candidate profile to be absent and reserves 10 GiB beyond a 2 GiB output ceiling. The script downloads nothing. It writes `MUSH.app` and `MUSH.zip` beneath a timestamped `builds/mac-*` directory and uses local ad-hoc signing. The preset does not produce a notarized/store release or an iPhone build. No physical-device performance, manual controls or live listening acceptance is claimed.
 
 Keep baked resources and `lineage/`: they are active dependencies. Generated imports, builds, reports, credentials, private saves and user reference images are excluded from Git. [Architecture](docs/ARCHITECTURE.md), [dependencies and notices](docs/DEPENDENCIES.md), [remaining work](docs/STATUS.md) and [license scope](LICENSE.md) describe the boundaries. [AGENTS.md](AGENTS.md) provides the short development workflow.

@@ -183,6 +183,18 @@ func _run() -> void:
 	var paused_variants_exact: bool = true
 	for variant: Dictionary in controller.get_report().get("ground_material_variants",[]): paused_variants_exact = paused_variants_exact and bool(variant.protected_art_parameters_exact)
 	_check(paused_variants_exact,"Paused appearance also reaches shared ground variant art parameters without moving roots",{})
+	# The shared coordinator must own sky bounce after inherited appearance runs.
+	# Quality/reduced effects retain the same lighting, including paused changes.
+	for tier: String in ["balanced", "low"]:
+		controller.set_quality(tier)
+		for night: bool in [false, true]:
+			world.night_amount = 1.0 if night else 0.0
+			world.set_appearance(night,true,true)
+			world._apply_appearance()
+			controller._process(0.0)
+			var fill: DirectionalLight3D = world._sky_fill
+			_check(is_equal_approx(fill.light_energy,0.30 if night else 0.05) and fill.light_color.is_equal_approx(Color("a5b7db") if night else Color("c5d4df")) and is_equal_approx(world.environment.tonemap_exposure,1.0),"Shared sky bounce keeps day/night energy and tint across paused quality settings",{"quality":tier,"night":night,"energy":fill.light_energy,"color":fill.light_color.to_html()})
+	world.set_appearance(true,true,false)
 	# Composed background suspension holds appearance, not only wind clocks.
 	world.night_amount = 0.0
 	world.rain_amount = 0.0

@@ -431,10 +431,13 @@ func _apply_lighting(rain: float) -> void:
 	light.light_color = color.lerp(Color("ffb575"),_sunset*0.65)
 	light.light_energy = lerpf(1.65,0.65,night)*lerpf(1.0,0.63,rain)*lerpf(1.0,0.82,_sunset)
 	light.rotation_degrees = Vector3(lerpf(lerpf(-55.0,-27.45,night),-14.0,_sunset),lerpf(75.0,153.79,night),0.0)
-	# Rotate the retained fill with the same day/night blend; its energy/color stay inherited.
+	# Existing shadowless sky bounce: a restrained night lift reveals path edges.
+	# Own its tint/energy here so inherited appearance and quality changes agree.
 	var fill: DirectionalLight3D = world.get("_sky_fill")
 	if is_instance_valid(fill):
 		fill.rotation_degrees = Vector3(-28.0,lerpf(148.0,328.0,night),0.0)
+		fill.light_energy = lerpf(0.05,0.30,night)
+		fill.light_color = Color("c5d4df").lerp(Color("a5b7db"),night)
 	environment.ambient_light_color = Color("d9d5c7").lerp(Color("95a0c7"),night).lerp(Color("dfc2aa"),_sunset*0.30)
 	environment.ambient_light_energy = lerpf(0.18,0.30,night)
 	environment.fog_light_color = Color("d0d6c2").lerp(Color("22324c"),night).lerp(Color("647787"),rain*0.34).lerp(Color("bfa79b"),_sunset*0.35)

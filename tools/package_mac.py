@@ -23,7 +23,6 @@ import traceback
 import verify
 
 ROOT = verify.ROOT
-PROFILE = Path.home() / "Library/Application Support/MUSH-mac061"
 LIMIT = 2 * 1024**3
 APP_FILES = {"Contents/Info.plist", "Contents/PkgInfo",
              "Contents/_CodeSignature/CodeResources", "Contents/MacOS/MUSH",
@@ -45,11 +44,13 @@ def metadata(path):
             ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns", "st_flags")}
 
 
-def profile_metadata():
-    # Read only metadata of prior profiles/apps; never hydrate their payloads.
+def profile_metadata(candidate_profile):
+    # Read only metadata of prior profiles; never hydrate their payloads.
     result = {}
-    for name in ("MUSH-dev", "MUSH-mac055", "MUSH-mac057", "MUSH-mac060"):
-        base = PROFILE.parent / name
+    names = {"MUSH-dev", "MUSH-mac055", "MUSH-mac057", "MUSH-mac060"}
+    names.update(path.name for path in candidate_profile.parent.glob("MUSH-mac[0-9][0-9][0-9]"))
+    for name in sorted(names - {candidate_profile.name}):
+        base = candidate_profile.parent / name
         result[name] = None if not base.exists() else {
             str(path.relative_to(base)): metadata(path)
             for path in [base, *sorted(base.rglob("*"))]}
@@ -110,12 +111,17 @@ def main():
         raise RuntimeError("Do not disable assertions with -O or PYTHONOPTIMIZE")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", required=True, type=Path)
+    parser.add_argument("--candidate", default="mac061", help="Fresh isolated profile, for example mac062")
     args = parser.parse_args()
+    if not re.fullmatch(r"mac[0-9]{3}", args.candidate):
+        parser.error("--candidate must be mac followed by three digits")
+    profile = Path.home() / "Library/Application Support" / ("MUSH-" + args.candidate)
+    bundle_identifier = "local.mush.clearing." + args.candidate
     output = ROOT / "builds" / ("mac-" + time.strftime("%Y%m%d-%H%M%S") + "-" + str(os.getpid()))
     output.mkdir(parents=True, exist_ok=False)
     stage, app, archive = output / "stage", output / "MUSH.app", output / "MUSH.zip"
     result = {"schema": "mush-portable-mac-package/1", "passed": False, "selected": False,
-              "output": str(output), "user_directory": PROFILE.name,
+              "output": str(output), "user_directory": profile.name,
               "allocation_limit_bytes": LIMIT, "disk_reserve_bytes": verify.RESERVE,
               "live_audio_verified": False, "manual_controls_verified": False,
               "art_approved": False, "performance_accepted": False}
@@ -126,7 +132,7 @@ def main():
     def reserve():
         nonlocal peak
         free = original_reserve()
-        allocated = sum(path.stat().st_blocks * 512 for base in (output, PROFILE)
+        allocated = sum(path.stat().st_blocks * 512 for base in (output, profile)
                         if base.exists() for path in base.rglob("*") if path.is_file())
         peak = max(peak, allocated)
         if allocated > LIMIT:
@@ -143,7 +149,7 @@ def main():
 
     try:
         assert sys.platform == "darwin", "Mac packaging requires macOS"
-        assert not PROFILE.exists() and not PROFILE.is_symlink(), "Candidate mac061 profile must be absent"
+        assert not profile.exists() and not profile.is_symlink(), "Candidate profile must be absent: " + str(profile)
         verify.assert_idle()
         assert original_reserve() >= verify.RESERVE + LIMIT, "Retain 10 GiB beyond the 2 GiB candidate ceiling"
         verify.reserve = reserve
@@ -155,7 +161,7 @@ def main():
         assert template.is_file(), "Install the matching macOS template separately; this helper never downloads"
         inputs = {str(path): {"metadata": metadata(path), "sha256": verify.sha(path)} for path in (engine, template)}
         source_before = verify.source_files()
-        prior_before = profile_metadata()
+        prior_before = profile_metadata(profile)
         assert sum(row["bytes"] for row in source_before.values()) < 256 * 1024**2, "Requalify a larger source package"
         project = (ROOT / "project.godot").read_text()
         preset = (ROOT / "export_presets.cfg").read_text()
@@ -172,11 +178,11 @@ def main():
             shutil.copy2(ROOT / name, destination)
         assert stage_files(stage) == source_before
         staged_project, count = re.subn(r'^config/custom_user_dir_name="[^"]*"$',
-                                      'config/custom_user_dir_name="' + PROFILE.name + '"', project, flags=re.M)
+                                      'config/custom_user_dir_name="' + profile.name + '"', project, flags=re.M)
         assert count == 1
         (stage / "project.godot").write_text(staged_project)
         staged_preset, count = re.subn(r'^application/bundle_identifier="[^"]*"$',
-                                     'application/bundle_identifier="local.mush.clearing.mac061"', preset, flags=re.M)
+                                     'application/bundle_identifier="' + bundle_identifier + '"', preset, flags=re.M)
         assert count == 1
         (stage / "export_presets.cfg").write_text(staged_preset)
         expected = stage_files(stage)
@@ -199,7 +205,7 @@ def main():
         assert unpacked == files == archive_payload(archive)
         info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
         assert info["CFBundleExecutable"] == "MUSH"
-        assert info["CFBundleIdentifier"] == "local.mush.clearing.mac061"
+        assert info["CFBundleIdentifier"] == bundle_identifier
         assert info["CFBundleVersion"] == info["CFBundleShortVersionString"] == build_version
         assert info["LSMinimumSystemVersionByArchitecture"] == {"arm64": "14.00", "x86_64": "11.00"}
         architectures = subprocess.check_output(["/usr/bin/lipo", "-archs", str(app / "Contents/MacOS/MUSH")], text=True, timeout=30).split()
@@ -207,7 +213,7 @@ def main():
         subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(app)], check=True, capture_output=True, timeout=60)
         signature = subprocess.run(["/usr/bin/codesign", "-d", "--verbose=4", str(app)], check=True, capture_output=True, text=True, timeout=30)
         assert "Signature=adhoc" in (signature.stdout + signature.stderr).splitlines()
-        ordinary = PROFILE / "profile"
+        ordinary = profile / "profile"
         ordinary_before = None if not ordinary.exists() else {
             str(path.relative_to(ordinary)): {"metadata": metadata(path), "sha256": verify.sha(path)}
             for path in ordinary.rglob("*") if path.is_file()}
@@ -219,7 +225,7 @@ def main():
         smoke = json.loads((output / "smoke/smoke.json").read_text())
         assert smoke["passed"] is True and smoke["exported"] is True and smoke["driver"] == "metal"
         assert len(smoke["checks"]) == 12 and all(value is True for value in smoke["checks"].values())
-        assert PROFILE.is_dir(), "Expected isolated candidate profile was not created"
+        assert profile.is_dir(), "Expected isolated candidate profile was not created"
         ordinary_after = None if not ordinary.exists() else {
             str(path.relative_to(ordinary)): {"metadata": metadata(path), "sha256": verify.sha(path)}
             for path in ordinary.rglob("*") if path.is_file()}
@@ -241,7 +247,7 @@ def main():
         try:
             source_after = verify.source_files()
             result["source_payloads_exact"] = source_before is not None and source_after == source_before
-            result["prior_profiles_and_apps_metadata_exact"] = prior_before is not None and profile_metadata() == prior_before
+            result["prior_profiles_and_apps_metadata_exact"] = prior_before is not None and profile_metadata(profile) == prior_before
             verify.assert_idle()
             assert result["source_payloads_exact"] and result["prior_profiles_and_apps_metadata_exact"]
             reserve()
