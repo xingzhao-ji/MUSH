@@ -20,3 +20,13 @@ Current paving uses native ArrayMesh, MeshLibrary, resource loading and existing
 The archive retains evaluations of GodotIK, FootIKController, weather/wind add-ons, joystick/testing packages and an audio manager. They were not adopted into this repository. Rock01 was selected over the warmer, coarser Rock08 after an isolated eight-image comparison and exact material rollback. The current source also reuses it across the complete 3,078-corner front batch, including its 2,598-corner retained prefix. This changes albedo and existing shallow shader relief, not physical thickness, geometry or contact. The separate front-return geometry candidate was rejected at art review. Imported cache is about 1.9 MiB; native image readback and frame-time evidence are documented separately. Exact mobile GPU cost remains unmeasured. Stars and upstream popularity were not treated as compatibility or performance evidence.
 
 Keep [asset credits](../assets/credits.json), [audio attribution](../assets/licenses/AUDIO-CREDITS.txt), [Godot notices](../assets/licenses/GODOT-COPYRIGHT.txt) and [license scope](../LICENSE.md). User reference pixels are excluded. Generated bark/moss textures retain recorded provenance limitations; do not relabel them as CC0 or infer release clearance from this private repository.
+
+The ground-flower successor reuses the project's geometry helpers and Godot's
+ArrayMesh/MultiMesh facilities. One 9,613-byte pinned mesh replaces the stock
+flower on 119 nodes/1,430 existing instances, retaining 94 triangles per instance.
+It adds no texture, material variant, draw node, collider or custom frame loop.
+The three leaves and curved stem are stylized geometry; existing GPU wind supplies
+motion. The original five wind templates remain admitted, with one separately
+pinned successor added before scanning. Native isolation, placement, rollback and
+regression results are in VERIFICATION.md. No new package, third-party asset or
+license is introduced; GPU/mobile cost is not inferred from these counts.

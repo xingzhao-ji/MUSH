@@ -340,7 +340,16 @@ func _prepare_ground_templates() -> void:
 	_ground_factory_proof["scratch_rng_after"] = scratch_after
 	_ground_factory_proof["scratch_rng_exact"] = scratch_before==scratch_after
 	_ground_factory_proof["passed"] = valid and _ground_templates.size()==5 and live_before==live_after and scratch_before==scratch_after
-	if not _ground_factory_proof.passed: _ground_templates.clear()
+	if not _ground_factory_proof.passed:
+		_ground_templates.clear()
+		return
+	# Keep the five retained constructor proofs intact. The separately pinned
+	# startup flower is an additional template, admitted before the first scan.
+	var flower_owner: RefCounted = world.get("ground_flower") as RefCounted
+	if flower_owner != null:
+		var extra: Dictionary = flower_owner.environment_template()
+		_ground_factory_proof["flower_successor"] = {"passed":not extra.is_empty(), "artifact":flower_owner.ARTIFACT, "sha256":flower_owner.ARTIFACT_SHA}
+		if not extra.is_empty(): _ground_templates.append(extra)
 
 func _ground_match(mesh: Mesh) -> Dictionary:
 	if mesh==null: return {"passed":false,"reason":"No native mesh"}

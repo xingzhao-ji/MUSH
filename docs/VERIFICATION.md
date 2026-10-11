@@ -386,3 +386,68 @@ performance result is claimed. A second ordinary mac063 window attempt used an
 explicit on-screen position and a fresh UI-tool session; cgWindowNotFound persisted.
 Its failed receipt and exact source/profile/app guards remain recorded, and the
 owned process was reaped. No ordinary mac063 save/Continue proof was obtained.
+
+
+## Leafier ground-flower successor
+
+Ordinary startup now replaces only the byte-exact stock flower MultiMesh mesh
+with a pinned offline asset. It has a shorter curved stem, smaller upward-facing
+petals and three attached leaves. All 119 nodes/1,430 placements, their instance
+buffers, materials and shadow settings remain. Separate bouquets, vines and
+understory geometry are untouched. Original mesh pointers remain available;
+Git `8fb95d3` restores the preceding source. Artifact SHA is
+`d16b4985a881a5dc8e9ede662702514e3c1f5add6a9828f076031f06b48ffb5e`.
+
+The mesh remains 94 triangles/282 corners, with six exact root-plane corners and
+bounds inside the original envelope. Height falls from .36m to .281m before the
+existing instance scales. The resource is 9,613 bytes. It adds no texture, draw
+node, material variant, collider or custom per-frame loop. Startup loads one mesh
+and compares known native geometry during the existing node scan; temporary work
+is bounded by node count and the fixed 282-corner template. One additional cached
+wind descriptor is retained alongside the unchanged five constructor proofs.
+Existing GPU animation supplies the same wind direction, anchored base and culling
+margin. These counts are not measurements of GPU residency or fragment cost.
+
+The isolated corrected comparison passes 12 checks/eight full PNG decodes.
+Final ordinary-startup verification passes 23 checks/eight decodes, including
+fresh admission of every flower, actual pointer rollback/reinstall, unrelated
+native geometry/collider preservation and frozen material/context comparisons.
+All 38,610 unique leaf-corner samples across the 1,430 rendered placements find
+native layer1 ground: zero penetrations beyond the unchanged 5mm tolerance,
+minimum clearance 3.085mm. Twenty-seven hits on the identified overhead bridge
+are recorded and re-queried with that architectural body excluded. This proves
+sampled ground clearance, not complete blades, rocks or wind-deformed surfaces.
+It does not move the inherited flower underneath the bridge.
+
+Early attempts remain failed: downward-facing petals were corrected, and low
+leaves intersecting sloped ground were raised to real stem attachment points.
+Typed-array fixture errors were corrected. A headless placement diagnostic was
+discarded: a focused witness measured identity transforms for two distinct
+MultiMesh instances, while a direct ray at the rendered witness still found the
+same terrain. The final test requires rendered native placement diversity and
+full instance buffers. Rebuilding produces identical native channels/metadata;
+Godot's generated local resource ID varies, so byte-identical containers are not
+claimed. The adopted file itself remains hash-pinned.
+
+Fresh broader results: 137 environment checks, 32 material checks/14,867 native
+comparisons, 295 gameplay assertions/15 scenarios, and four Python runner tests
+pass. The 120-second night/rain source route passes unchanged limits: 10,181
+frames, two loops, no stalls, 1920 x 1080, default VSync; p95 16.114ms / p99
+18.069ms. These are application callback intervals, not presented-frame/GPU,
+thermal or physical-device results, and establish no causal speedup. Runtime code
+was unchanged after that route; a final fixture-only correction derives its wind
+status from the actual admission gate, and its fresh 23-check run passes.
+
+The source smoke recording has 106 decoded 1280 x 720 frames at 30 FPS, 3.533s,
+and a fully decoded AAC track. The 4,004,352-byte MP4 is retained; its 14,108,892-byte
+working AVI was removed after complete verification. It is offline smoke footage,
+including the ordinary camera after pause/resume, not continuous motion/listening
+acceptance. About 12.8 GiB remains free. No new app was exported: mac063 stays frozen
+with its earlier p95 failure. Exact receipt paths and hashes are in the summary.
+
+| Flower scope | Status |
+| --- | --- |
+| Shape, stock-instance preservation, startup wind admission | Implemented and native-tested; local shape direction reviewed in day/night/rain views |
+| Sampled ground clearance and rollback | Tested as described above; no collision geometry changed |
+| Dense, varied planting matching the reference | Still unfinished; sparse grouping and coarse neighboring leaves remain |
+| Full animated clearance, continuous motion and mobile cost | Unverified; no physical device available |

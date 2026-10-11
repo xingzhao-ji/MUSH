@@ -1,6 +1,8 @@
 extends "res://lineage/entrance52-capture03/midstory-world.gd"
 ## Same native scene and runtime values; the authoring pipeline runs before export.
 var snapshot_loaded: bool = false
+var ground_flower: RefCounted
+var ground_flower_report: Dictionary = {"passed":false}
 var paving_preview_prebuilt: RefCounted
 var paving_preview_prebuilt_report: Dictionary = {}
 var paving_surface_original: ShaderMaterial
@@ -138,6 +140,12 @@ func _ready() -> void:
 	hero_stone_prebuilt_report = HeroStonePrebuilt.install(self,HERO_STONE_PROOF_SHA)
 	if not hero_stone_prebuilt_report.get("passed",false) or not hero_stone_prebuilt_report.get("installed",false):
 		push_error("Prebuilt hero stone native ownership refused: "+str(hero_stone_prebuilt_report.get("failure","")))
+		get_tree().quit(2)
+		return
+	ground_flower = preload("res://scripts/ground_flower_prebuilt.gd").new()
+	ground_flower_report = ground_flower.install(self)
+	if not ground_flower_report.get("passed",false):
+		push_error("Ground flower native ownership refused")
 		get_tree().quit(2)
 		return
 	forest_enclosure = preload("res://scripts/forest_enclosure.gd").build(self)
@@ -360,6 +368,7 @@ func get_renderer_capabilities_report() -> Dictionary:
 	report["annex_counter_collision"] = annex_counter_report.duplicate(true)
 	report["annex_roof_prebuilt"] = annex_roof_prebuilt_report.duplicate(true)
 	report["hero_stone_prebuilt"] = hero_stone_prebuilt_report.duplicate(true)
+	report["ground_flower"] = ground_flower_report.duplicate(true)
 	report["effective_foliage_shader_provenance"] = effective_foliage_shader_provenance.duplicate(true)
 	var viewport: Viewport = get_viewport()
 	var output_size: Vector2i = Vector2i(viewport.get_texture().get_size())

@@ -203,6 +203,28 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "flower-build":
+        report = read_report(output / "native/flower.json")
+        assert report["passed"] and report["triangles"] == 94 and report["root_corners"] == 6
+        assert report["sha256"] == sha(output / "native/flower.res") and report["pinned_native_exact"]
+        assert report["channels"] == read_report(ROOT / "baked/ground-flower-proof.json")["channels"]
+        return {"native_build_and_pinned_roundtrip": True, "artifact_bytes": report["bytes"]}
+    if suite == "flower":
+        report = read_report(output / "native/flower-capture.json")
+        assert report["passed"] and len(report["checks"]) == 23 and all(c["passed"] for c in report["checks"])
+        assert report["candidate_wind_admission_verified"] and report["candidate_sha256"] == sha(ROOT / "baked/ground-flower.res")
+        assert report["fixture_sha256"] == sha(ROOT / "tests/ground_flower.gd")
+        assert len(report["inventory"]) == 119 and sum(r["instances"] for r in report["inventory"]) == 1430
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        decoded = []
+        assert len(report["views"]) == 8
+        assert {view["file"] for view in report["views"]} == {label + "-" + suffix + ".png" for label in ("close-day", "wide-day", "close-night", "close-rain") for suffix in ("before", "after")}
+        for view in report["views"]:
+            item = module.decode(output / "native" / view["file"])
+            assert view["passed"] and item["dimensions"] == [960, 960] and item["png_sha256"] == view["sha256"]
+            decoded.append(item)
+        return {"assertions": len(report["checks"]), "full_png_decodes": decoded, "motion_verified": False, "performance_measured": False}
     if suite == "gap-step":
         report = read_report(output / "native/paving-gap-step.json")
         assert report["schema"] == "mush-paving-gap-step/1"
@@ -286,7 +308,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -328,6 +350,10 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite in ("flower", "flower-build"):
+        fixture = "flower_build.gd" if args.suite == "flower-build" else "ground_flower.gd"
+        if args.suite == "flower-build": command += ["--headless"]
+        command += ["--script", "res://tests/" + fixture, "--", "--report-dir=" + str(output / "native")]
     elif args.suite in ("paving", "paving-front"):
         fixture = "paving_front_surface.gd" if args.suite == "paving-front" else "paving_surface.gd"
         command += ["--script", "res://tests/" + fixture, "--", "--report-dir=" + str(output / "native")]

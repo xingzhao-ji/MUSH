@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T16:01:57.606940+00:00",
+  "prepared_utc": "2026-10-11T16:52:04.534421+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -552,7 +552,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current front-material source120s callback route passes16.254/17.853ms; frozen mac063 predates it and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current leafier-flower source120s callback route passes16.114/18.069ms; frozen mac063 predates both source flower and front-material changes and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -1298,5 +1298,241 @@
     "passed": false,
     "reason": "cgWindowNotFound persists with explicit100,100 position and freshUI session. Owned process reaped; no ordinary save created.",
     "source_profile_app_guards_exact": true
+  },
+  "ground_flower_successor": {
+    "artifact": "baked/ground-flower.res",
+    "artifact_sha256": "d16b4985a881a5dc8e9ede662702514e3c1f5add6a9828f076031f06b48ffb5e",
+    "artifact_bytes": 9613,
+    "proof_sha256": "cf9f42a3cd17e5d1232f1fd05f8880694efcd18d775eb9f465825be371d4e4aa",
+    "nodes": 119,
+    "instances": 1430,
+    "triangles_per_instance": 94,
+    "added_triangles": 0,
+    "added_draw_nodes": 0,
+    "added_textures": 0,
+    "added_colliders": 0,
+    "new_custom_perframe_loop": false,
+    "purpose": "Shorter curved flowers with smaller heads and three attached leaves; existing placements, materials and shared root-anchored wind retained.",
+    "reuse": "Existing MUSH geometry helpers, native ArrayMesh, MultiMesh and cached environmental material variants. No new add-on or license dependency.",
+    "rollback_commit": "8fb95d39a8ec04dc06f5d6fd2a24b19cdc8f5326",
+    "checks": {
+      "import": {
+        "receipt": "reports/import-20261011-092200-56837/result.json",
+        "sha256": "437d2f44b858d2e964c3030d6b7858efee0263336ef7970e5a03dbbac36ff8d4",
+        "passed": true,
+        "checks": {
+          "import_passed": true
+        }
+      },
+      "build": {
+        "receipt": "reports/flower-build-20261011-093456-57571/result.json",
+        "sha256": "c85a8b18de4e1e09e5f0a26237f7a62fc38abdec149fb3605ae460a061478288",
+        "passed": true,
+        "checks": {
+          "native_build_and_pinned_roundtrip": true,
+          "artifact_bytes": 9613
+        }
+      },
+      "flower": {
+        "receipt": "reports/flower-20261011-094207-57850/result.json",
+        "sha256": "2d7d6b4dbaa40f68a24fb9706019a23e36ccb59ccc5ddee181fe1b4c841906eb",
+        "passed": true,
+        "checks": {
+          "assertions": 23,
+          "full_png_decodes": [
+            {
+              "bytes": 1606539,
+              "png_sha256": "2b9258b40721908d7d5baeaef67e4831d97340d8419f2c9103d1666b97caf055",
+              "rgba_sha256": "29af6ce08a2f88c1667c4a70fdc681ae114784d0d1289c4fd8da1f6082d89d04",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1612649,
+              "png_sha256": "a8ce1fdb0f527df394ba03331bc0f83a17059be0cd03ee41a1d74606bbbd0aeb",
+              "rgba_sha256": "56531f822470a6d01611121083a4494317feed058a52315cb72a05d4f649bd55",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1676426,
+              "png_sha256": "79c697dd1c981f907e337ecbc97aa5c0537485e82afd2db41dc5e81ddcecbc1e",
+              "rgba_sha256": "38a5f209aa85321d76c852af3fb4dffdefcb0720199b756f6ab1f3dcfa5e3474",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1663475,
+              "png_sha256": "4ff2e729643739101571ad45d8bef963cd37501e76b113c360c13a08fb7e16a3",
+              "rgba_sha256": "e14bbee788df8784f1e6c97b2786d27218162eba46998d45680903fe196597e0",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1331718,
+              "png_sha256": "b8385ac5bf6b8e691597fb165b867b6317b76da890068dcc16ae41bc27933b9c",
+              "rgba_sha256": "5ea06b8c7dc44ba09f9d2000942e5e079f5d20e1722136e34039be70dd7befa2",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1324260,
+              "png_sha256": "529d32199b4ff29687ebaed00952305dd12187293e7976bab9b98e280289a600",
+              "rgba_sha256": "18b5a7c34cd18628df6c4e845760013d9e429b771eee923813aa637ee6215e7d",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1476561,
+              "png_sha256": "ea7782f02dd7688cfa63eceadd8743a72695d24ce452b5e63e632aed5d5fdfa6",
+              "rgba_sha256": "94391e2db5f72b034754cfe82a595c38e3c82ce312fe83bff2498b19af2474f9",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            },
+            {
+              "bytes": 1478000,
+              "png_sha256": "f743b272d6d233443fe2bcbe6a7780a70c5da70dcad58f1caf4a8819c5b06086",
+              "rgba_sha256": "f1a92300f413ba50903bc3bce2ddde3f22602f117be4a05ed1bf0c64f7e2404d",
+              "all_crcs_checked": true,
+              "dimensions": [
+                960,
+                960
+              ]
+            }
+          ],
+          "motion_verified": false,
+          "performance_measured": false
+        }
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-093458-57575/result.json",
+        "sha256": "db5f31188fd62619bdd5c866f2e776ece893591f8a0212c49ebeaaa5137cd80a",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        }
+      },
+      "ground": {
+        "receipt": "reports/ground-20261011-093511-57587/result.json",
+        "sha256": "2364506ad4dba46dae27d3a3268a6ab523d5041c2b939498628393fe7fa34745",
+        "passed": true,
+        "checks": {
+          "assertions": 32,
+          "all_passed": true,
+          "native_parameter_comparisons": 14867
+        }
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-093519-57595/result.json",
+        "sha256": "2521a69dde622294b4730fa5d32b1528be1f45bc3a75d2e5ccb25017014d8a1e",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        }
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-093902-57773/result.json",
+        "sha256": "a55484cf026547fdb35a19f9f7a2c7aa5bd9ead479d1dd8c2455e1d5a00d5ab6",
+        "passed": true,
+        "checks": {
+          "frames": 10181,
+          "frame_p95_ms": 16.114,
+          "frame_p99_ms": 18.069,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        }
+      }
+    },
+    "support": {
+      "architectural_exclusion": "ArchedTimberBridge/@StaticBody3D@1612",
+      "bridge_occluded_corners": 27,
+      "failures": [],
+      "minimum_clearance_m": 0.00308496505022049,
+      "missing_support": 0,
+      "penetrating": 0,
+      "queries": 38610,
+      "scope": "Native layer1 rays for unique leaf vertices across all119 chunks, excluding the identified overhead bridge. Full blade/rock/wind-deformed coverage remains unverified."
+    },
+    "headless_witness": "reports/flower-headless-witness-20261011-095015/native/witness.json",
+    "headless_limitation": "Measured identity getters for two different MultiMesh instances; direct ray at the rendered witness still hits the same terrain. Headless instance queries were discarded as placement evidence.",
+    "movie": {
+      "receipt": "reports/flower-movie-20261011-094307/receipt.json",
+      "receipt_sha256": "591946798e734849262a6b711323b87947cbf43fcc0e9a5231f027b657deff95",
+      "mp4": {
+        "sha256": "e30cb47c955a1bf1e9ecc502ded9822b3eb40c299f93ea642afb62a1fd72c8a6",
+        "bytes": 4004352,
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1280,
+              "height": 720,
+              "avg_frame_rate": "30/1",
+              "nb_read_frames": "106"
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "sample_rate": "48000",
+              "channels": 2,
+              "avg_frame_rate": "0/0",
+              "nb_read_frames": "166"
+            }
+          ],
+          "format": {
+            "duration": "3.533333"
+          }
+        }
+      },
+      "working_avi_removed_after_complete_decode": true
+    },
+    "fixture_reporting_corrected_after_benchmark": true,
+    "runtime_unchanged_after_benchmark": true,
+    "python_runner_tests": 4,
+    "shape_direction_accepted": true,
+    "whole_environment_art_approved": false,
+    "continuous_motion_verified": false,
+    "live_audio_verified": false,
+    "physical_device_tested": false,
+    "packaged": false,
+    "observed_free_bytes": 13607915520
   }
 }
