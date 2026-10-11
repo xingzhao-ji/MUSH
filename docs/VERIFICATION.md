@@ -820,3 +820,26 @@ commit; no duplicate asset download was needed. Full receipts are under
 `DELIVERY.json` in its parent. UI/upload receipts are under `reports/mac064-ui/`
 and `reports/mac064-preparation/`. Launch details and open gates are in
 [MAC-CANDIDATE.md](MAC-CANDIDATE.md).
+
+
+## Paving support-envelope diagnostic
+
+A separate query-only diagnostic admits the unchanged native capsule, contact
+packet and 52-face upper-soil roof. All 15 declared near-cut points have their
+soil sheet confirmed by short native rays; none was substituted or inconclusive.
+Thirty downward `body_test_motion` queries, with both recovery modes, retain
+all 196 indexed contacts, 4–12 per query, below the capacity of16. None provides
+a qualifying sole roof-region floor contact. Of the contacts,162 classify to the
+upper stones;34 fall outside the classifier's upper regions and remain unclassified.
+Hypothetical end roots stay 40.6–146.1 mm above the sampled soil sheet. This
+supports capsule bridging over the recessed joint, not exhaustive unreachability.
+
+All56 technical-integrity checks pass; actual player pose/state/counters,
+settings, registered owner and source remain exact. No movement or teleport was
+executed, no ordinary-input follow-up was justified by an eligible query, and no
+traversal coverage is earned. The full-route gate remains failed. No runtime,
+geometry or mac064 artifact changed. Evidence:
+`reports/paving-support-envelope-20261011-133348-82387/`; reviewed fixture/runner
+are retained in `reports/perimeter-contact-development/`, with hashes in the
+compact summary. A broader reachability proof remains separate from the passing
+58 actual movement routes.

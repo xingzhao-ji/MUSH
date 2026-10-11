@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T20:29:56.938682+00:00",
+  "prepared_utc": "2026-10-11T20:35:48.041468+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -2946,5 +2946,32 @@
       "local_zip_sha256": "e2acdb066d5edc0ab285f0b55aefa0f04900478d743b353a4143c9ac815d10d4",
       "scope": "GitHub release API size/digest match local fully verified ZIP; no second asset download performed."
     }
+  },
+  "paving_support_envelope_diagnostic": {
+    "receipt": "reports/paving-support-envelope-20261011-133348-82387/receipt.json",
+    "receipt_sha256": "b75ed7adebb9cf5d309a852aabaffacb62aad48668ab87f1e5e71bc620f4898a",
+    "native_report_sha256": "74561324e12e0f2f1ab4fd05c610154d166c8834d6d73345ac0f0bbcb2545886",
+    "technical_integrity_passed": true,
+    "checks": 56,
+    "measured_stations": 15,
+    "native_queries": 30,
+    "indexed_contacts": 196,
+    "upper_stone_classified_contacts": 162,
+    "contacts_outside_classified_regions": 34,
+    "saturated_queries": 0,
+    "eligible_roof_queries": 0,
+    "hypothetical_root_above_roof_m": [
+      0.040624991059302895,
+      0.1460937261581418
+    ],
+    "player_state_settings_and_counters_exact": true,
+    "source_exact": true,
+    "full_traversal_gate_passed": false,
+    "ordinary_input_route_attempted": false,
+    "runtime_changed": false,
+    "scope": "Native query-only evidence supports capsule bridging over the sampled recessed joint. No exhaustive reachability proof, movement-coverage credit or gate waiver. Releasedmac064 unchanged.",
+    "fixture": "reports/perimeter-contact-development/paving_support_envelope_reviewed.gd",
+    "fixture_sha256": "f446fba39912f209e046d4124877aea1bd31a15cbcfa22e34cb1343bc0ec87db",
+    "runner_sha256": "9e89af0587cb5ac971854b33a095cea53cf6d40a72fc41b888b5cc50adfd71ab"
   }
 }
