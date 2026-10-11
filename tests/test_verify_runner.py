@@ -73,6 +73,22 @@ class VerificationReceipts(unittest.TestCase):
         self.assertTrue(receipt["passed"])
         self.assertEqual(receipt["source_changes"], [])
 
+    def test_duplicate_home_views_cannot_satisfy_capture_coverage(self):
+        labels = [f"{pose}-{mood}" for mood in ("day", "night") for pose in
+                  ("home2-close", "home2-wide", "home3-ground-obscured", "home3-elevated-diagnostic")]
+        for duplicate in ("pairs", "views"):
+            with self.subTest(duplicate=duplicate):
+                report = {"schema": "mush-installed-distant-home-placement/1",
+                          "passed": True, "failed": 0, "scene_restored": True,
+                          "checks": [{"passed": True}], "startup": {"passed": True, "installed": True},
+                          "pairs": [{"label": label} for label in labels],
+                          "views": [{"label": f"{label}-{state}"} for label in labels
+                                    for state in ("original", "installed")]}
+                report[duplicate][-1] = report[duplicate][0]
+                with patch.object(verify, "read_report", return_value=report):
+                    with self.assertRaisesRegex(AssertionError, f"Expected ordered home-placement {duplicate}"):
+                        verify.inspect("home-placement", Path("unused"), 120)
+
 
 if __name__ == "__main__":
     unittest.main()

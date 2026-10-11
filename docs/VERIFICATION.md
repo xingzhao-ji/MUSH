@@ -895,3 +895,68 @@ The next correction should test coherent whole-home placement on the existing
 bank after every batched part and its window light is positively mapped.
 Receipts: `reports/home2-bank-trial-20261011-140155-87764/` and
 `reports/home2-bank-trial-20261011-140519-87894/`; current mac064 stays unchanged.
+
+
+## Complete distant-home placement on existing terrain
+
+The second home previously floated4.59–4.62m above soil; the third was buried
+beneath the existing bank. A whole-home translation now places them at
+(21.25,4.68,-25.0) and(-15.5,5.2,-24.5). All18 mapped parts and the actual
+window light move coherently for each home. Existing terrain, the closest-home
+foundation, unrelated native vertices and every non-position channel stay exact.
+No new bank pedestal, material, draw node, collider, triangle or frame loop is added.
+
+The chosen approximation embeds the lower cylindrical stems in the existing rock.
+Native samples show0.0369–0.5237m burial for home2 and0.0343–0.5331m for home3;
+nine conservative window sites per home retain at least0.2625m/0.2813m clearance.
+These are sampled anchoring checks, not exhaustive whole-foot/decorative coverage
+or played-camera reachability. Home2 reads as grounded in day/night views. Home3
+is restored above the bank in an elevated diagnostic view but remains hidden by
+foliage from the retained ground camera. That art defect remains open.
+
+The compressed Godot MeshLibrary is1,941,665bytes, SHA256
+`9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf`.
+It reuses16 existing batches/239,574 corners, translating157,476 selected corners.
+The176,068-byte proof pins saved/fresh-reloaded native arrays, packed buffers,
+lightmap hints, node/material bindings, parent poses and actual window lights.
+Godot/native project helpers replace procedural construction during gameplay;
+no add-on, additional license or external dependency is introduced.
+Startup validation is linear in admitted payload bytes/corners and has temporary
+array/hash storage; retained original/candidate position payloads alone total
+5,749,776bytes before other buffers. Artifact file size is not runtime memory.
+No permanent undo owner or per-frame GDScript is added. Startup cost, incremental
+peak memory and GPU cost were not isolated. Git `b21ac33` is operational rollback;
+setting the installer's ENABLED flag false refuses startup rather than selecting
+a baseline mode. Failure-path rollback is reviewed code, not fault-injected proof.
+
+Isolation receipts retain exact native packet mapping, daytime/nighttime paired
+trials, compressed save/reload and repeated prebuilt install/restoration:
+`reports/home-packet-admission-20261011-141924-88807/`,
+`reports/home-relocation-preview-20261011-142424-89079/`,
+`reports/home-relocation-preview-20261011-142513-89150/`,
+`reports/home-relocation-preview-20261011-143337-89571/` and
+`reports/home-relocation-preview-20261011-143523-89671/`.
+Earlier oversized added-bank variants stay visually rejected; their passing
+technical checks were not used as art acceptance.
+
+Fresh actual-source import passes. `home-placement` passes14 checks and all16
+1280×720 PNGs fully decode, with8 original/installed day/night pairs and exact
+installed-state restoration. Broader gameplay295/15, environment137 and
+foundation26 checks pass; the foundation route covers156 movement ticks and23
+native trunk shapes. No source payload changed during these runs. Five verifier
+unit tests pass, including rejection of duplicated camera rows. The tightened
+ordered-label inspector rereads all16 retained images successfully; this reread
+is not another native launch. Fixture baseline/current swaps are distinct from
+injecting a loader failure.
+
+The fresh120-second source night/rain route passes unchanged16.7/33.3ms limits:
+p9516.136ms, p9918.102ms,10,079 frames,2loops,0stalls at1920×1080/default VSync.
+No causal speedup, GPU/display, thermal, listening, continuous-motion or physical
+mobile qualification follows from that result. The existing upper-soil paving
+contact-coverage gate remains failed; unchanged58 movement routes retain their
+previous evidence, not a fresh rerun. Full reference/art acceptance remains open.
+
+Receipts: `reports/home-placement-20261011-143727-89753/`,
+`reports/home-placement-regression-20261011-143849/` and
+`reports/mac065-preparation/placement-reinspection.json`; exact suite paths and
+hashes are in the compact summary. mac064 is a separate frozen older artifact.

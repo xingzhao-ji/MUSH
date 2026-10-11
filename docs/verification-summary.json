@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T20:35:48.041468+00:00",
+  "prepared_utc": "2026-10-11T21:47:56.295947+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -23,23 +23,30 @@
   },
   "checks": {
     "import": {
-      "receipt": "reports/import-20261011-110742-62460/result.json",
-      "receipt_sha256": "17a68c2bd0ef65aaa99871c6273223bdc7e67a3ffe7d35dc7431d42f79be44a5",
+      "receipt": "reports/import-20261011-143658-89723/result.json",
+      "receipt_sha256": "1708172684ffbe3aeecb629649d8ab01d97a1de7df7291ba8b761f1633d2576f",
       "passed": true,
       "checks": {
         "import_passed": true
-      }
+      },
+      "source_changes": [],
+      "generated_source_files": [
+        "scripts/distant_home_placement.gd.uid",
+        "tests/distant_home_placement.gd.uid"
+      ]
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-120000-65964/result.json",
-      "receipt_sha256": "d3f5bf86ea7e205b4cde452a984d1a326a3d3a5160d4ea12d5036025255e72fc",
+      "receipt": "reports/acceptance-20261011-143849-89828/result.json",
+      "receipt_sha256": "886988414d01372daf22ab9e5ed9b006b3154e11b9b9463f292e4dbb70d8e0eb",
       "passed": true,
       "checks": {
         "scenarios": 15,
         "assertions": 295,
         "all_passed": true,
         "manual_acceptance": false
-      }
+      },
+      "source_changes": [],
+      "generated_source_files": []
     },
     "ground_before": {
       "passed": true,
@@ -60,14 +67,16 @@
       "native_parameter_comparisons": 14867
     },
     "environment": {
-      "receipt": "reports/environment-20261011-120600-66258/result.json",
-      "receipt_sha256": "a5a8295f3bb50a7aa4e4acb2e8b5fcf0d43fab7083c327a6d667b92fe3760233",
+      "receipt": "reports/environment-20261011-144242-90132/result.json",
+      "receipt_sha256": "4c870b727f60ae1e605febbc00d169a1a6ca686ba123dbdaf0eccbbb2d40d6d9",
       "passed": true,
       "checks": {
         "assertions": 137,
         "all_passed": true,
         "native_parameter_comparisons": null
-      }
+      },
+      "source_changes": [],
+      "generated_source_files": []
     },
     "capture": {
       "passed": true,
@@ -307,6 +316,36 @@
         "pixel_visibility_verified": false,
         "motion_acceptance": false
       }
+    },
+    "home_placement": {
+      "receipt": "reports/home-placement-20261011-143727-89753/result.json",
+      "receipt_sha256": "9693e50e2cef62cba879ddf5a8fed1520dfc01dffc07a0be12961c3da6740e60",
+      "passed": true,
+      "checks": {
+        "checks": 14,
+        "full_png_decodes": 16,
+        "actual_startup_installation": true,
+        "motion_verified": false,
+        "art_approved": false,
+        "whole_foot_coverage_proved": false
+      },
+      "source_changes": [],
+      "generated_source_files": []
+    },
+    "house_foundation": {
+      "receipt": "reports/house-foundation-20261011-144257-90164/result.json",
+      "receipt_sha256": "118ff57c223603d36d8fe995b9879cadf6c3b217ef99e04a2ddcd7e972944eba",
+      "passed": true,
+      "checks": {
+        "checks": 26,
+        "movement_ticks": 156,
+        "native_trunk_shapes": 23,
+        "full_png_decodes": 12,
+        "motion_verified": false,
+        "art_approved": false
+      },
+      "source_changes": [],
+      "generated_source_files": []
     }
   },
   "benchmarks": [
@@ -402,6 +441,29 @@
         "physical_device_tested": false,
         "display_presentation_measured": false
       }
+    },
+    {
+      "receipt": "reports/benchmark-20261011-144355-90214/result.json",
+      "receipt_sha256": "fc8b1bbde93f136fe0b7e775d34beaa05a1d5b451d2281b12a1a4e55b5c311e5",
+      "passed": true,
+      "checks": {
+        "frames": 10079,
+        "frame_p95_ms": 16.136,
+        "frame_p99_ms": 18.102,
+        "route_stalls": 0,
+        "thresholds_passed": true,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "gpu_timing_available": false,
+        "physical_device_tested": false,
+        "display_presentation_measured": false
+      },
+      "source_changes": [],
+      "generated_source_files": []
     }
   ],
   "performance_budget_passed": true,
@@ -459,7 +521,8 @@
     "garden_save_overlap_validation": "O(G^2), at most 28 prior-position pairs, O(G) state",
     "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent",
     "paired_step_support": "At most two added native rays per step-support lookup; constant script state. Physics query cost remains collision-world dependent; incremental cost unisolated.",
-    "forest_backdrop": "Offline: O(V(X+Z)+XZ+I+XlogX+ZlogZ+W) work, O(XZ+I+W) storage; array-based axis dedup is bounded here. Runtime: linear byte/native-channel verification, two new draw nodes, no new custom frame loop. GPU work unisolated."
+    "forest_backdrop": "Offline: O(V(X+Z)+XZ+I+XlogX+ZlogZ+W) work, O(XZ+I+W) storage; array-based axis dedup is bounded here. Runtime: linear byte/native-channel verification, two new draw nodes, no new custom frame loop. GPU work unisolated.",
+    "distant_home_placement": "Startup-only linear native payload/channel admission and cached mesh assignment; approximately5.48MiB original/candidate position payloads plus other transient data. No added triangles/nodes/colliders/per-frame work. Peak memory and incremental timing not isolated."
   },
   "pending": [
     "physical mobile devices",
@@ -473,7 +536,7 @@
     "art/reference acceptance",
     "near-cut paving coverage",
     "aggregate full-route contact gate",
-    "other two distant-home supports and closest-home rear landscape join",
+    "home3 foliage obstruction, closest-home plain side/rear landscape join and full reference fidelity",
     "exhaustive camera/character pixel visibility beyond tested outer-tree route",
     "negative-Z background water coverage"
   ],
@@ -490,11 +553,11 @@
     "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
     "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
     "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
-    "scripts/baked_world.gd": "aaf2d63fd6a93788bb4abab95c19bbea080ff7cbe2f32e0d841cfe6ab02a3732",
+    "scripts/baked_world.gd": "16ef8020fd8d6984924bd50ab7ec2c1d757aa6800b7b4db6cb567e6bdf2ca099",
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "0de5292957494bd645c49fc9550dc2073eb1a8f8141c1906b8df216aee73a28c",
+    "tools/verify.py": "f91233a88391a3d43e5b6ae40ceb8a8d4e07e936ef0905d9a4404ef253611a3e",
     "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
     "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
     "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
@@ -510,7 +573,11 @@
     "scripts/player.gd": "a2add8e39d019ea43e1103d60d794ed8feeef85ed03266e83b1d8ef9e80ca74d",
     "scripts/closest_home_foundation.gd": "982ec712022140d8f35df69f79303a4c4f53e61ba5ece4b7d611b2cc4928febe",
     "tests/house_foundation.gd": "4b6a5163b883e04c25b11a82049bd7c838abd10b6013b72bfa325dd1f2e1c10a",
-    "assets/world/closest-home-support.res": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c"
+    "assets/world/closest-home-support.res": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c",
+    "scripts/distant_home_placement.gd": "1ff89b6cc3f9af60e5711899775363424e046a58665acccdc8c2226aad5c5906",
+    "baked/distant-home-relocation.res": "9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf",
+    "baked/distant-home-relocation-proof.json": "7064467b4e0cf2209389eb0a091c36bdcd5a8ca49e57003b6088d7a082e622e3",
+    "tests/distant_home_placement.gd": "f8096a30c733924efdef7a1cb3ddc26b00437e979ae28675374baa5895416c58"
   },
   "isolated_trials": [
     {
@@ -733,7 +800,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current source120s callback route passes16.254/18.181ms; exportedmac064 passes16.644/20.498ms, only0.056ms p95 headroom. Prior mac063 failure retained. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current home-placement source120s callback route passes16.136/18.102ms,10079frames,2loops,0stalls; frozenmac064 passes16.644/20.498ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -3080,5 +3147,160 @@
     "same_batch_crossing_limit": "Several original rock shells share each batch. Highest/next distinct projected crossings are conservative join witnesses, not an identified closed shell or physics-containment proof.",
     "trial_cost": "128triangles, one opaque draw, one static body/identical concave shape, four nodes; no per-frame work. Counts only, no measured performance.",
     "next_step": "Map every small-home native packet and its window light before testing coherent placement on the existing bank; preserve the tested closest-home foundation."
+  },
+  "distant_home_placement_successor": {
+    "implemented": true,
+    "rollback_commit": "b21ac336f5497aa57574424c20cb41f9ea117d45",
+    "homes": [
+      {
+        "original": [
+          22,
+          4.7,
+          -22
+        ],
+        "installed": [
+          21.25,
+          4.68,
+          -25
+        ]
+      },
+      {
+        "original": [
+          -15,
+          1.5,
+          -24
+        ],
+        "installed": [
+          -15.5,
+          5.2,
+          -24.5
+        ]
+      }
+    ],
+    "batches": 16,
+    "pieces": 36,
+    "lights": 2,
+    "total_corners": 239574,
+    "translated_corners": 157476,
+    "additional_triangles": 0,
+    "additional_draw_nodes": 0,
+    "additional_colliders": 0,
+    "perframe_work": false,
+    "artifact": {
+      "path": "baked/distant-home-relocation.res",
+      "bytes": 1941665,
+      "sha256": "9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf"
+    },
+    "proof": {
+      "path": "baked/distant-home-relocation-proof.json",
+      "bytes": 176068,
+      "sha256": "7064467b4e0cf2209389eb0a091c36bdcd5a8ca49e57003b6088d7a082e622e3"
+    },
+    "checks": {
+      "import": {
+        "receipt": "reports/import-20261011-143658-89723/result.json",
+        "receipt_sha256": "1708172684ffbe3aeecb629649d8ab01d97a1de7df7291ba8b761f1633d2576f",
+        "passed": true,
+        "checks": {
+          "import_passed": true
+        },
+        "source_changes": [],
+        "generated_source_files": [
+          "scripts/distant_home_placement.gd.uid",
+          "tests/distant_home_placement.gd.uid"
+        ]
+      },
+      "placement": {
+        "receipt": "reports/home-placement-20261011-143727-89753/result.json",
+        "receipt_sha256": "9693e50e2cef62cba879ddf5a8fed1520dfc01dffc07a0be12961c3da6740e60",
+        "passed": true,
+        "checks": {
+          "checks": 14,
+          "full_png_decodes": 16,
+          "actual_startup_installation": true,
+          "motion_verified": false,
+          "art_approved": false,
+          "whole_foot_coverage_proved": false
+        },
+        "source_changes": [],
+        "generated_source_files": []
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-143849-89828/result.json",
+        "receipt_sha256": "886988414d01372daf22ab9e5ed9b006b3154e11b9b9463f292e4dbb70d8e0eb",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        },
+        "source_changes": [],
+        "generated_source_files": []
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-144242-90132/result.json",
+        "receipt_sha256": "4c870b727f60ae1e605febbc00d169a1a6ca686ba123dbdaf0eccbbb2d40d6d9",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        },
+        "source_changes": [],
+        "generated_source_files": []
+      },
+      "foundation": {
+        "receipt": "reports/house-foundation-20261011-144257-90164/result.json",
+        "receipt_sha256": "118ff57c223603d36d8fe995b9879cadf6c3b217ef99e04a2ddcd7e972944eba",
+        "passed": true,
+        "checks": {
+          "checks": 26,
+          "movement_ticks": 156,
+          "native_trunk_shapes": 23,
+          "full_png_decodes": 12,
+          "motion_verified": false,
+          "art_approved": false
+        },
+        "source_changes": [],
+        "generated_source_files": []
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-144355-90214/result.json",
+        "receipt_sha256": "fc8b1bbde93f136fe0b7e775d34beaa05a1d5b451d2281b12a1a4e55b5c311e5",
+        "passed": true,
+        "checks": {
+          "frames": 10079,
+          "frame_p95_ms": 16.136,
+          "frame_p99_ms": 18.102,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        },
+        "source_changes": [],
+        "generated_source_files": []
+      }
+    },
+    "ordered_label_reinspection": {
+      "receipt": "reports/mac065-preparation/placement-reinspection.json",
+      "sha256": "b35d5b817eb4d828cdbe1c2a4bca996d83733da1ff8e43cc44e57c63e04c5a9e",
+      "passed": true
+    },
+    "verifier_unit_tests_passed": 5,
+    "whole_foot_coverage_proved": false,
+    "loader_failure_rollback_exercised": false,
+    "art_approved": false,
+    "motion_verified": false,
+    "physical_mobile_tested": false,
+    "remaining": "Home3 ground-camera foliage obstruction; broader terrain joins, reference fidelity and manual acceptance remain open.",
+    "storage_free_bytes_observed": 14439428096
   }
 }

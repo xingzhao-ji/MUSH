@@ -15,6 +15,7 @@ const PAVING_STONE: Texture2D = preload("res://assets/world/textures/rock_01_dif
 var snapshot_load_seconds: float = 0.0
 var forest_enclosure: Dictionary = {}
 var closest_home_foundation_report: Dictionary = {}
+var distant_home_placement_report: Dictionary = {}
 var _environment_foreground: bool = true
 const RENDERER_SNAPSHOT: String = "res://baked/clearing-renderer-neutral.res"
 const RENDERER_PROOF: String = "res://baked/renderer-neutral-proof.json"
@@ -165,6 +166,11 @@ func _ready() -> void:
 	closest_home_foundation_report = preload("res://scripts/closest_home_foundation.gd").install(self)
 	if not closest_home_foundation_report.get("passed",false):
 		push_error("Closest-home cached support refused: "+str(closest_home_foundation_report.get("failure","")))
+		get_tree().quit(2)
+		return
+	distant_home_placement_report = preload("res://scripts/distant_home_placement.gd").install(self,"7064467b4e0cf2209389eb0a091c36bdcd5a8ca49e57003b6088d7a082e622e3")
+	if not distant_home_placement_report.get("passed",false):
+		push_error("Cached distant-home placement refused: "+str(distant_home_placement_report.get("failure","")))
 		get_tree().quit(2)
 		return
 	# Keep the retained wind/shelter particle system. Native alpha fade removes

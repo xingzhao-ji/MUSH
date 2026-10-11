@@ -1,0 +1,4577 @@
+{
+  "artifact": "res://baked/distant-home-relocation.res",
+  "artifact_bytes": 1941665,
+  "artifact_sha256": "9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf",
+  "bake_helper_sha256": "c38c2af6f7c1cae034908cbd774cac910112f257250f23b3bdaa5ff978500075",
+  "homes": [
+    {
+      "candidate_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f0000aa418fc295400000c8c1",
+      "light": {
+        "attenuation": 1.5,
+        "candidate_global_transform_sha256": "d272f47124377bdb5b8b3808f59aa094e1719ea0a8948d440263e35e93fa3484",
+        "constants_sha256": "b20cc48f79ca3ca7130fa55bf2d563219a72e2dcb6533d110b8738017aa77442",
+        "local_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f00000000000000009a99993e",
+        "original_global_transform_sha256": "f79c6345ccb5bccaf065d8516d5f154c390eb78f719bc969dfe5e13192c00edc",
+        "parent_path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785",
+        "range": 2.79999995231628,
+        "shadow_enabled": false
+      },
+      "light_path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@OmniLight3D@3791",
+      "original_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f0000b041666696400000b0c1",
+      "path": "ForestBeyondTheClearing/@Node3D@3780"
+    },
+    {
+      "candidate_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f000078c16666a6400000c4c1",
+      "light": {
+        "attenuation": 1.5,
+        "candidate_global_transform_sha256": "d868332a7e473117d4cfce55d1021b64de1e0cf10f5a249a5c3b8d836d3c86dc",
+        "constants_sha256": "b20cc48f79ca3ca7130fa55bf2d563219a72e2dcb6533d110b8738017aa77442",
+        "local_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f00000000000000009a99993e",
+        "original_global_transform_sha256": "e580f7472eb6cad60dec81102654cd209c4014ae5ade8d0604ca095825c5a022",
+        "parent_path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807",
+        "range": 2.79999995231628,
+        "shadow_enabled": false
+      },
+      "light_path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@OmniLight3D@3813",
+      "original_transform_hex": "120000000000803f0000000000000000000000000000803f0000000000000000000000000000803f000070c10000c03f0000c0c1",
+      "path": "ForestBeyondTheClearing/@Node3D@3802"
+    }
+  ],
+  "meshes": [
+    {
+      "candidate": {
+        "aabb_sha256": "4f8e8f47c409f1cad732ea64dbf6043e0f5ab94f5b6c317b997d1d4ca16e3393",
+        "arrays_sha256": "060201f9d435c2617dce5b7b37d51d3327962c6934d81674ec3c3cde0fbd5049",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "253612c56e34f530852f1933a1f02f8e6e5e4dc862e34f78e94f9d3958273714",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "fcd097fd4fa836e61d4b12914261496cca546c4fa9c50f4c687575de0d63710c",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "c4c43b82317e0130915606ff21a0ef1ee2ea9da04cbe8099afc20946509e4df1",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "c201d6cf0db06bb06f573f622d90488f282827cd52b2ac77570319f8a12ba8d3",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "f9f968c150e1347caedac74f8c0bc8412cbbe7363c0e710c190f162021791a53",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 2016,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "0b51e3df9dd38c861abb93744240657329fce220e4b7e9c74b5d667117986fce",
+      "item": 0,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "e5b2ef368a7087b65ab80ead0fe9138e3033a4973150a4506d81778834cddbbc",
+        "arrays_sha256": "f1d6ccd607ae322f66f94a4cefa4b04cc40a01865f08903a1d58b10bcb996b54",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "b983083b210cb3f491d94c683f0032c2c1e56d0f80dafee80a514e2119dc9871",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "fcd097fd4fa836e61d4b12914261496cca546c4fa9c50f4c687575de0d63710c",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "c4c43b82317e0130915606ff21a0ef1ee2ea9da04cbe8099afc20946509e4df1",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "c201d6cf0db06bb06f573f622d90488f282827cd52b2ac77570319f8a12ba8d3",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "f9f968c150e1347caedac74f8c0bc8412cbbe7363c0e710c190f162021791a53",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 2016,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "5b611f9846b21017a8635617879c901ea7d3513ce7b72f2e258a1e95e0ef3f71",
+      "path": "BatchedStaticWorld/Static_-9223371994559412726_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "90e2f7e5136902c0faa69400fb2c03e810571f401ba6f6a621b1144a0039c17f",
+        "arrays_sha256": "e09b2b93ae6f3e9ff1da6d1c1adeb715d42ff70c37002642589e7e150904956e",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "233b723cd1adbf991a395b2198a1a41a53b2f69b6606626a03b255b98f4e4eeb",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "de4a84279b3fce5412d6334bbb56afab9d85b1637ba0ee5fcf67c3817ba1d024",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "56c0b1bd583ea48af907e669e1a5ebe557a1453be3603499152ca5ca6bc3ae55",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "ecd85ed6613c8332f408065cd1cc2329b2813a069e24ce927eef1d0bbc740008",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "ea7971e316005dca19ba273b0461c5569d990a3fdecc20996ea3bd57a11c7b63",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 4032,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "e94ee6a2a353dea40b5018933bd5f6bd822e2b769ea20511854dbfb72f50bfcc",
+      "item": 1,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "d9c65181ddb18a57266cbf8955a53c86d454f7b699f1ed183608880d3561fbf0",
+        "arrays_sha256": "c7eaf3e3cbe9f0d26118286d2ef4bfb1140c50b02d66c965f643a1a8e928dc83",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "aa00b017eff51d9ec137bdc5f9f9ba5d19f9874718b81600fd7acecf5ffbd0a4",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "de4a84279b3fce5412d6334bbb56afab9d85b1637ba0ee5fcf67c3817ba1d024",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "56c0b1bd583ea48af907e669e1a5ebe557a1453be3603499152ca5ca6bc3ae55",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "ecd85ed6613c8332f408065cd1cc2329b2813a069e24ce927eef1d0bbc740008",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "ea7971e316005dca19ba273b0461c5569d990a3fdecc20996ea3bd57a11c7b63",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 4032,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "85d174bb8f48943afafe898982b8385440bd544e04a74120826d1aa01d7c0ddf",
+      "path": "BatchedStaticWorld/Static_-9223371994559412726_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "a22d7bd66133b88bc18a6c7cdc680043ff979dbc3e8ebc4211408f318e75d6c4",
+        "arrays_sha256": "6af1ad03775c53e68ce2ecf0e54d06c08b7af0e3578b8d6fbdbe3f261b407055",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "f06b99c905c590ec08ad701c05a4fd17acc704daec364a84ecba0ae6c319f3fd",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "bb2d1cbed5f8e605a73ce2f4f7e6df1887a1b8d23716d13ddb5616a4cfae2a53",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "45c320cfe456e8a61bfd4fcca88c16b4ed57aa78177149fe306260de0a610179",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "f875c82009b7d8c7c083746c64f9f4bba03c073f60283df5af18a3d7c3bdab5e",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "baccaa24d7b0cd1ccd3099c1cf667ee3122c84f7e84b996ea285909ae36712fe",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 16128,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "669f0834161b78b31b935b2936031247272cc95e685475637e3b6309b74e72c4",
+      "item": 2,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "fa6e39edfb36bcd40fcdf3226e4a3b6f6ef0e872e09fbc5d6af1dfeae94ed525",
+        "arrays_sha256": "b431f204d484680741e11f64fd23357eacf6602038693a133ba2d3cd14bf0fbb",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "b9dde6399c249de71080ed48ebfdbabe28f18a0e65e6a8377dc75578f6873b21",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "bb2d1cbed5f8e605a73ce2f4f7e6df1887a1b8d23716d13ddb5616a4cfae2a53",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "45c320cfe456e8a61bfd4fcca88c16b4ed57aa78177149fe306260de0a610179",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "f875c82009b7d8c7c083746c64f9f4bba03c073f60283df5af18a3d7c3bdab5e",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "baccaa24d7b0cd1ccd3099c1cf667ee3122c84f7e84b996ea285909ae36712fe",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 16128,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "a258441074f8c6369f2f80d34092355dfe571c741a595bce48848303063dd757",
+      "path": "BatchedStaticWorld/Static_-9223371994592967159_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "17ac92058386f47f7614035f61963aeff336d25111d8d2f4fe5f8e6d5bdbfad7",
+        "arrays_sha256": "d7bb4627befb37dfd46b8b5dccc44419ffe559cae367ac46d72f946c3a7f648b",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "a7bd6799ab6e6501b2b9e6f6835e955b29defdb9f630f7ce27dd9c16184c41f0",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "b95e5d93f8327190d8010cd4172f25a9eebfd80e56599a2296eda66d4d6c179f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "ee47e5a7e5958a75671bbe849572dd08821d9548ceab38ffd4166bbdff892c73",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "0fcd07349b69045cc90fc5d3db5f90f59effab78b51808a76f6a7f5c8213bd0a",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "5acdedab32643b8f2d8895e841782c5fb9e1bff4bfb1f5eda9d09a49560866a3",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 32256,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "e34af26b229b42b72b06a0c6c15f60d1192e2c1bd2565615c4663906e0c71eb5",
+      "item": 3,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "69f5cbf81d90eaa76586972a8b338a7d36e469a9592341fe8524e55d182279e3",
+        "arrays_sha256": "2173ba6fb979551c3c407aa5b1223488c10efe0404b6ad9ed01fce5b071b9fae",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "815752b0b279b26adec7b830b740406b8764f0199921f24cc52bfc7d3b49e7f2",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "b95e5d93f8327190d8010cd4172f25a9eebfd80e56599a2296eda66d4d6c179f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "ee47e5a7e5958a75671bbe849572dd08821d9548ceab38ffd4166bbdff892c73",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "0fcd07349b69045cc90fc5d3db5f90f59effab78b51808a76f6a7f5c8213bd0a",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "5acdedab32643b8f2d8895e841782c5fb9e1bff4bfb1f5eda9d09a49560866a3",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 32256,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "463e2ed1943236d826e08f18f10d6cf4a76e25bcf196636347dea9543a90b9a4",
+      "path": "BatchedStaticWorld/Static_-9223371994592967159_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "5a11213ed5904653be96fd0ac3310695abe048e47496a0db23eeccb258f306a2",
+        "arrays_sha256": "3ededcd4c8d361d1716278ff79a08edef130a2cc5ea038fea217981e384c1182",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "d6740fc9295bc54945e0afda5d28db83e70a71af178f8c895dbf500fb9f169d0",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "a232de0cc453ad56a3be0870bcfd778f8bb2594db6810d1d4b1ef1659b9bf659",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "eb8873793085c128ae9096cd380f771d6104eb8fb05dcd0b41520fa1e68d20c4",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "4af0f3d27690822a82c6756a62bac68d8d6c05c6ac0769edb88c3bc2ad49773d",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "a9274e631fb636b17d6ba9b1245d318b7bf137dd08aec35bb6bad338531438ad",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 30576,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "7e14f5ec4e89b9d4504f094eb2ca0361eb4a8259217abae6dc610585cc93d164",
+      "item": 4,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "cd06985b2219ff702cd0cd57f258785506077659fa2c623575c81f463c2c56d1",
+        "arrays_sha256": "c09b1c8f24ea0ad5e9ba93d32057d74a9fea4263dd43f58559abb8ff30ef2219",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "abc83138f7359308a6a00915e3797911b610829bfc872aac62390c8ae46b8c91",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "a232de0cc453ad56a3be0870bcfd778f8bb2594db6810d1d4b1ef1659b9bf659",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "eb8873793085c128ae9096cd380f771d6104eb8fb05dcd0b41520fa1e68d20c4",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "4af0f3d27690822a82c6756a62bac68d8d6c05c6ac0769edb88c3bc2ad49773d",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "a9274e631fb636b17d6ba9b1245d318b7bf137dd08aec35bb6bad338531438ad",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 30576,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "8e88a75c0af969ff7bacaa8878a5a91c2cda051e67879f66bf90739c3d724331",
+      "path": "BatchedStaticWorld/Static_-9223371994626521592_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "45f176c383f6410d92ca6f12724945b0169eac628c884a1225bb82ef3ed9bea7",
+        "arrays_sha256": "af6816a814e7519e00df5f6ab038c1f1fb4a0826e7b96f3fca9656b27a28238b",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "cafe62ff2b42b23ca990c9c84bb6bb1fef6a064750bbe8abc81c6e8f2938ce2d",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "255c721b8f6d2c0a90b5f34acad9b3bceb0a425e97dab2c1dff31261c8f44bea",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "c337fc7070595042985bb0be98704361f0f6e1af97060633a02b183bb35746a4",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "eb0f9889a11131aaacaf25948314724fa93bfad987eac270bc35ce90a9dfaf61",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "fe6176d453feca029ccff53ecf5631f890d0a0aa6a032d706cf3a67ecea231d2",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 61152,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "434e2f1fdc23e436b766a4d6a1e5e7b6c1c25e638eb6f4a52ba4040ce6c1d809",
+      "item": 5,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "c8e18fc992969779233ba5983fe0c6e89b29370f1d6a9031c8c313f86369c41d",
+        "arrays_sha256": "ba7c5076fa300d957da885e140ddff41a9c369aa36274a865fb91d76ef95aa1a",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "2f62ea66c54e6ff464777b882632c32cd6eabceb9029d840688132d7b7981e5c",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "255c721b8f6d2c0a90b5f34acad9b3bceb0a425e97dab2c1dff31261c8f44bea",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "c337fc7070595042985bb0be98704361f0f6e1af97060633a02b183bb35746a4",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "eb0f9889a11131aaacaf25948314724fa93bfad987eac270bc35ce90a9dfaf61",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "fe6176d453feca029ccff53ecf5631f890d0a0aa6a032d706cf3a67ecea231d2",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 61152,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "a914b4a6b7a99178f7e1b72f78d384a5cf909d0ee393d7c96920679d3b4b79fb",
+      "path": "BatchedStaticWorld/Static_-9223371994626521592_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "4fe04daf4e0c01814223a611a07e29915c2863f97d3de4445d488fe899f9cf76",
+        "arrays_sha256": "b1a128d598017473f434536420fbf57fc4071dd3d30538b27fe1ff372037f6a0",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "27edbddf231e700daadd76cebb5a06a2e896a8f17aadc8d4db08572f43547d42",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "630ceb474cfdbb6162565ec39fece0abd204221cb7bf36bbb5c54af350a20c1a",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "f16a28fad6232ff6bf8da2fdf28ec9a023b53a709b6f00903568b191e3ccdcd1",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "c8b67a22ef61c14db60eaabd43f8458d4d9498afc73edf02e705ca4f912577d7",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "f7d58c605970a65785bd20322ab0896a9030e4f3337119483a1ce3afa6d56a71",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 1206,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "59615206b0edf0be45889da47c08364b4d07b40475178fa3a0f608d3d24fe39d",
+      "item": 6,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "21fe05d1f38a70de37826a7529fb0ab41891ac1a58f271f72721f3e7c1f845d7",
+        "arrays_sha256": "2c873561c9fee3604464acdddf6de78a95759cd0aa6892e54a52ba6dd37766a9",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "79871b1e81097778e2a5ff6623a7f9a9ee037d730e79109498a6e01c15dc5ef8",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "630ceb474cfdbb6162565ec39fece0abd204221cb7bf36bbb5c54af350a20c1a",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "f16a28fad6232ff6bf8da2fdf28ec9a023b53a709b6f00903568b191e3ccdcd1",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "c8b67a22ef61c14db60eaabd43f8458d4d9498afc73edf02e705ca4f912577d7",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "f7d58c605970a65785bd20322ab0896a9030e4f3337119483a1ce3afa6d56a71",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 1206,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "f40a640ef738ba01dfe5cabc49543e6c3cd03759a1a9e815634111196c53e0ae",
+      "path": "BatchedStaticWorld/Static_-9223371994693630458_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "5297a7cb5e50abdfd72197a022ceb1b786ea03880f4ed07af4c7a66377cdc07f",
+        "arrays_sha256": "db19da27de1f06fdbe76d0a2d96a9c982b36a56328778cd8f63e07737a9191de",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "e1d473079444a42a1218f9139178510971e984c3bdb8950eb99e3c21240509f5",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "5aa7a943afe85c3fb6563d9d508f8758d81d83d80400caa3a1cb909c17acbaf3",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "2308d79a3a49a4f34a19d82561a31a07dc55acdb873b024c67117048857cc64c",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "3c0fec73039073ae21aba8e9cf59ee244a8e5c5786782e85ac77364aeb0a7f06",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "3097da9866a07cd47b1f61bd2addeff4cdc542d45234b05bacf447e9af3b6614",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 2412,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "2bd2cbf6f53e959c2f441592b5d9432001d659f1b502806457c471b41e180045",
+      "item": 7,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "f5f5586f3be1ea7e53b526937acaadcb3b22d2dc6e5c72d98281faccfeaddf27",
+        "arrays_sha256": "70891e9c1ddeb47c9cad28b22c2641c2ccfaeb4931c4ead520de1f6ea9528c86",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "0b55c131e49eb2c52d4b87cda3746d7ed0dd0753c9f7689e21a3acb951c46e9b",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "5aa7a943afe85c3fb6563d9d508f8758d81d83d80400caa3a1cb909c17acbaf3",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "2308d79a3a49a4f34a19d82561a31a07dc55acdb873b024c67117048857cc64c",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "3c0fec73039073ae21aba8e9cf59ee244a8e5c5786782e85ac77364aeb0a7f06",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "3097da9866a07cd47b1f61bd2addeff4cdc542d45234b05bacf447e9af3b6614",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 2412,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "b72f785ab3aeb9be25d5cca9fd29076df858406a2adf0a89d2cd148c88d62280",
+      "path": "BatchedStaticWorld/Static_-9223371994693630458_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "daec45ea2d737afe0f0fe0bb88a540acaf9fb53472f77dbefb4e86aa8f4f90d5",
+        "arrays_sha256": "2adc67abe604ff4b6b591045b7fa644880a6ac31f553efec433b1d5e1760826b",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "0b8a50c62e42bc06040a4bcc082bd926da8ab73a76ce5e5b3c44ed7b53133548",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "313715860d1de54a54d1b5a28308b4a4b0957e6279199cb410530c94f1aec8d2",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "a0684ff6d50b39f08dc408c51dcca68fb402a0a04aff59a17bf52007363fa99a",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "8c66371e6da8dcd3d02e13f6529e87b376b6d869ba13021666427084db353a7d",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "17bc1c6309a66f564383ab52f7f431bf397ffa6845c1b590bb9a25c6d4045180",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 36,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "690e9e4829920ea4af62b56be2baec5541d7998bf507d950eb90383660b8f28c",
+      "item": 8,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "2157b94c744fbe34fa78d262efed4a3b938d1c5e84e16fb57f4e7bc8cadbadb0",
+        "arrays_sha256": "c7d9871aa766c34dc9947452466cba052eda435d25ab4a3162ab8ea959545655",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "ea655f08e385e0c53c1ee805d3d494da246ec34e1358c9eca61ca4f0fec95e04",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "313715860d1de54a54d1b5a28308b4a4b0957e6279199cb410530c94f1aec8d2",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "a0684ff6d50b39f08dc408c51dcca68fb402a0a04aff59a17bf52007363fa99a",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "8c66371e6da8dcd3d02e13f6529e87b376b6d869ba13021666427084db353a7d",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "17bc1c6309a66f564383ab52f7f431bf397ffa6845c1b590bb9a25c6d4045180",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 36,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "f21103e221ad9610fb0f9293f6d61c3a880f759761ae07f4523104005cddba37",
+      "path": "BatchedStaticWorld/Static_-9223371995196946980_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "bd3f7ac7ff0c247284b3f93c53d3cf75afee556be742ce7999003d974fc4491e",
+        "arrays_sha256": "c9746804d56b522be49ab63f76fbdb9ecb737621fc752ad8d34abfc2a271f512",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "616582298bdf9879e2732be389175d1120eaa5c431289d2ba11abcb0473180aa",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "152cf6c93e95534446b036c062a0af48bb8e52a74614a6581a60af04fadc3f1d",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "97d86ba82d85a7cfba2dae5eca9043f7f6e6d7e0cf42db7ee481b86307d2bf51",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "271b4e16fd80a2178d0ac9effc075b62b503c0d6022eda707103a7b71f2f2e48",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "e1aed938d94b4a2f5f0aa1361dd4fa5fc6876520686f22a037115751d9628334",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 72,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "59bb83ac109eba5ba68eb30935b20c21956bfddb6a243d198605dfde4c7bbf35",
+      "item": 9,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "d2b8db5a7bcdf9db10afda357374d9e9f5cf5bd173ece61ba36510ca67e53dca",
+        "arrays_sha256": "9384a73bb8568499c33fa439bfaab62703e24223f9b5325c9ed29b3ca8ac5a1a",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "34e4f8d9b64ab755206319c090d499881054779c9ae66327a906d9ed9cd44877",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "152cf6c93e95534446b036c062a0af48bb8e52a74614a6581a60af04fadc3f1d",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "97d86ba82d85a7cfba2dae5eca9043f7f6e6d7e0cf42db7ee481b86307d2bf51",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "271b4e16fd80a2178d0ac9effc075b62b503c0d6022eda707103a7b71f2f2e48",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "e1aed938d94b4a2f5f0aa1361dd4fa5fc6876520686f22a037115751d9628334",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 72,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "8234a0e43a202468a59d8d62b5fb57a2bd8c64f6bfc2a87f5242edb28db8f8f1",
+      "path": "BatchedStaticWorld/Static_-9223371995196946980_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "ebd1cb1752382c1703a9ca10a9137024ac5bb1d8324623b37eee080db197a7af",
+        "arrays_sha256": "bbf22e0213c08fd2ce2d73a7c3f57f1db0b8903b7f8d4792af1e321ca9045903",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "94820c3b3aa59d9e6f9c005a7740cd355766f51f68992aa685435890a6fca853",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "9920ea6afc11659aea55580ad4a317c82534f378bc4978455f78516ac184dc4f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "ce3d1fe17b81aea1911dca5345c9c44c6282d3284231271c0bdc92cc700d2567",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "cd28241277566f7a7f650ef9dd08a00d4a03e400f0b25c55b14bb0128fa5dbf0",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "1ed459e708b1e573df50de9144d3b44d49f663877aabb8d5c01d1831815c628f",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 5736,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "283c88be8d7686b3f95af00ca1fe253a5e34c0518a9f358985eb32011188721d",
+      "item": 10,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "f4c77c84972d70979bca37c7e74042da84c11d0dc8d22141d380045fa417a2c6",
+        "arrays_sha256": "63f4b6d5d9654e342606a16aa377c194f058923453245ba2b7b75e62effe275b",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "4959e5bdd96e528b81bb38d9e1660117509c6ef649b9aee689e5116dd9fe2a66",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "9920ea6afc11659aea55580ad4a317c82534f378bc4978455f78516ac184dc4f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "ce3d1fe17b81aea1911dca5345c9c44c6282d3284231271c0bdc92cc700d2567",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "cd28241277566f7a7f650ef9dd08a00d4a03e400f0b25c55b14bb0128fa5dbf0",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "1ed459e708b1e573df50de9144d3b44d49f663877aabb8d5c01d1831815c628f",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 5736,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "c93bbca5cc8e2b1d557b8f2ca22569ba4d5b6d111217208a4906bbef353dff29",
+      "path": "BatchedStaticWorld/Static_-9223371995230501415_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "dea6137401918db64683eb745b11723f2e64272d66194fe432c1f71911b0c455",
+        "arrays_sha256": "d1065ecae9957953a65dd76beafb69e6062ff1ee60e8b0dd068c44ce2c856429",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "035582653bfeaa1ec0ed5bb2983ca7ec3937a019189dec89174c53f421eaaee2",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "492c9db9a3930de4ad37150708a0291efd79b85f319ce8cc106207237afe0d80",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "0962b291b7e050e64565b2e1a88e761ab6b95f6b9f7311ee9d3ca7138efd4541",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "cf2bf98bc8b3a18c237182e5ebc7aebce0147fecaf7506c19971ed93570aaafc",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "c00e484348e00f7506a588a6742209f62041cb0cc7089a72f9e85395408f9488",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 4752,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "8fbfcadef7ddb9246251d25b214d5a412c70f707520be436a18b11b817794d9d",
+      "item": 11,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "7a88dedbae9abd0b0a03906fc307a58f4bbc29585b740d582ae01b16ca52389d",
+        "arrays_sha256": "04be4d8342b063a8a1b69ba52f8b37eac30d401defb2ecf840a6a0d3ace016f0",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "daadba149cd41c85209e044d004b386b06991e69c511ad6c80bc3e00128f4cf8",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "492c9db9a3930de4ad37150708a0291efd79b85f319ce8cc106207237afe0d80",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "0962b291b7e050e64565b2e1a88e761ab6b95f6b9f7311ee9d3ca7138efd4541",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "cf2bf98bc8b3a18c237182e5ebc7aebce0147fecaf7506c19971ed93570aaafc",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "c00e484348e00f7506a588a6742209f62041cb0cc7089a72f9e85395408f9488",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 4752,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "2bdb5b576360b8a9286c726267c8501fae885f69b35f206db45aabe149533a57",
+      "path": "BatchedStaticWorld/Static_-9223371995230501415_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "ce04dcc07d9a0cd56163ba143b1bd76a12af2104d813b7e9e191a97545982f0a",
+        "arrays_sha256": "0649243d23cbd40ff2e8d75ba71581a295680643c255b54ee29c182512e7558c",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "45802769bdf0f1073a9f174623dd808872e6835a581f8b38e80becaac96892ee",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "44962095a065c46b3617bb9c280c793376d2428fb715ab8d6ad7e65c5c583a4f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "8850bee30a3e3a3e66bf9f7ef8191eb1c329b64d9116acb13b1623921309a4c5",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "065cb2f9f909edd20cff9d360c569af4bda20753d333aa51ce498f587c9b5ece",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "7695fad1bca524a188ca540ed31e1d1ef1020f115c03e50858cefc8c83ef3687",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 1536,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "164b6147407f36b25cbc9eb5f35add1ad4a20a7cab2d7464d764200db2930fe5",
+      "item": 12,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "6bbf143d9666625ff1e27595de5d879402a386379cc00151720ab2df39bfa3bb",
+        "arrays_sha256": "5e752879ade5a1b43e1ca05ae5d05dea1b581f8cdb1b0ade6dc00071ed349982",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "efb71f88ee6e29e9b646916a3d1656e95f35ee4f3b44d31de8bc23cd1779e4ac",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "44962095a065c46b3617bb9c280c793376d2428fb715ab8d6ad7e65c5c583a4f",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "8850bee30a3e3a3e66bf9f7ef8191eb1c329b64d9116acb13b1623921309a4c5",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "065cb2f9f909edd20cff9d360c569af4bda20753d333aa51ce498f587c9b5ece",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "7695fad1bca524a188ca540ed31e1d1ef1020f115c03e50858cefc8c83ef3687",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 1536,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "8497d9b87bcfe9ca5062550e15e683b904b402b57171e9609a9957ee6d3800e6",
+      "path": "BatchedStaticWorld/Static_-9223371995264055848_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "1bd7fff360ac6dfdd57ec6f35a912107b8c83b07909bf915bc86e6d352b071bf",
+        "arrays_sha256": "0d45a23523f0dc3b8fa14cc95aaaa8d134c797a757416cafb407a156b13e0bc3",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "d9641d9b22f61aaf9fb6f63d724f6e1d39d95a4ace2ff736c1757f0401fcc5bc",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "f6151dd16b9137faecec5aa29e841dc70c3afbf77cc1dcb28ab12019bc1bc941",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "4bc1e367f2e22b799e164d5c301141efff7e2e2c8dd92266bbaba491e32ed69c",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "fc0f411ff4a8da7fa95b7dea4468e731214acb7c887d15e92a876040335d50dc",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "e7fd484f0439d05c2f9e18e18139cc06ffa4d0b3f51974a055e1a841d0b6b0c1",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 3072,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "d919e88c18c24f3ffee0a3a963ee2dc87a51b4523ad3d1bb72867faa8550d788",
+      "item": 13,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "2baa73af2407d45da96a003b3e515ac10246917a13130a3fa0deced52c6bafdf",
+        "arrays_sha256": "ee7a61a5092a2e4ffe76d97c70e134ca9d1cfaeec3b2642516a12d31fed7d2c5",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "aa658efe8b7752a398a231652bd4f898f139e06fd7c0ccaaa62376c3dc3b8a74",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "f6151dd16b9137faecec5aa29e841dc70c3afbf77cc1dcb28ab12019bc1bc941",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "4bc1e367f2e22b799e164d5c301141efff7e2e2c8dd92266bbaba491e32ed69c",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "fc0f411ff4a8da7fa95b7dea4468e731214acb7c887d15e92a876040335d50dc",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "e7fd484f0439d05c2f9e18e18139cc06ffa4d0b3f51974a055e1a841d0b6b0c1",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 3072,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "fe8a2d9a900cd9aacd1325d78b9f20d361a49768b59c35b1f45099a74703bb43",
+      "path": "BatchedStaticWorld/Static_-9223371995264055848_2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "373c0537d8af27adfdc32dd9caebf073fe0fde6911b2b19aba13a777e17f2ee9",
+        "arrays_sha256": "76160dfca16d28eedbf9347d308281fe64f3745dbf3dffd1673c515e29bfe23c",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "691e581c771b4b093632900b8f98ff27b5683448d93d037aa2386d676d43ba32",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "0c2aa70d1176db984c9ce1207ae10fc53e02e9005ad2bbc78ac422730a41e7f2",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "43aa41b27950198ab74847c14d584d347323d15e6a989cab64f04f00ad6736c6",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "2730d08ae9e6439cc6c52b60ed3e71913bf646e410937bf04027793c91e0a274",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "0ea028be9757e083700c1d4498c90956dbb104b52fb637eb52503c1dc886d511",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 24864,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "c1530de6055972c0b21f74270ec51b6a337602d431f509c39c326c0960968e46",
+      "item": 14,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "db93780b0b8f6ed2f78a02c32497a8debe23f4a2b7cead816aaf6eeb704d267a",
+        "arrays_sha256": "97649fa1bdee91e23778da7d2d7cb52345505d278006fee782ddf6f8c96c57be",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "c7b37fda9e35e5b73ffb89a985b10c1196f06131bb220ed46f876c11206fd91c",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "0c2aa70d1176db984c9ce1207ae10fc53e02e9005ad2bbc78ac422730a41e7f2",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "43aa41b27950198ab74847c14d584d347323d15e6a989cab64f04f00ad6736c6",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "2730d08ae9e6439cc6c52b60ed3e71913bf646e410937bf04027793c91e0a274",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "0ea028be9757e083700c1d4498c90956dbb104b52fb637eb52503c1dc886d511",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 24864,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "672ca3902d695d3399d3786d7f517be716a36399f25fab0edc64e9fbc04256b3",
+      "path": "BatchedStaticWorld/Static_-9223371995566045738_-2_-3"
+    },
+    {
+      "candidate": {
+        "aabb_sha256": "d470f16f301edd38d607987bb32d71f3e2b5762b47f6a4d200fc4b12850d97fa",
+        "arrays_sha256": "b7d1c81186e2ea4be149886bbb42ca69d3fd3a93922d3f36c76a67f95141fbb0",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "4c7453b40ca1d3e7652a4dcb81ffb5999d75ab185610ca260620f91f709dc8a5",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "85e0bcce2236d1d2e533c651fad85d1adc34611344028be986c4b9efa22e3542",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "631eeb97650f4b4571a47c3503a214aa558feec96121717d5ff5f73cc74f9ca8",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "2bbf9c7b8f2da03fce7ddb0a39fc13588b5807847342a286c210047c1f989e6f",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "44973473581767763041030aa9856ea39a4a6216e3f22d134c6d2b7c19fba873",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 49728,
+        "eligible": true
+      },
+      "candidate_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "candidate_native_surface_sha256": "07b5c6dd5f94fce3de8f91503474e3f8314358784f35f7a41fe36e902111655f",
+      "item": 15,
+      "node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [
+          true
+        ],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "original": {
+        "aabb_sha256": "bdfe8ad5e32869eb1a9d843b9180fd80844e353d1058b33ebeb018e51d40d0df",
+        "arrays_sha256": "f71ff56de809f9bcace8a691c5bad069755055dd0c97623d9f5df59534ab8842",
+        "channels": [
+          {
+            "native_type": 36,
+            "sha256": "21afc191c2dc063a1362d81dc21f8798d1bd6f8417b8c878cfd771535d53f98e",
+            "slot": 0
+          },
+          {
+            "native_type": 36,
+            "sha256": "85e0bcce2236d1d2e533c651fad85d1adc34611344028be986c4b9efa22e3542",
+            "slot": 1
+          },
+          {
+            "native_type": 32,
+            "sha256": "631eeb97650f4b4571a47c3503a214aa558feec96121717d5ff5f73cc74f9ca8",
+            "slot": 2
+          },
+          {
+            "native_type": 37,
+            "sha256": "2bbf9c7b8f2da03fce7ddb0a39fc13588b5807847342a286c210047c1f989e6f",
+            "slot": 3
+          },
+          {
+            "native_type": 35,
+            "sha256": "44973473581767763041030aa9856ea39a4a6216e3f22d134c6d2b7c19fba873",
+            "slot": 4
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 5
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 6
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 7
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 8
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 9
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 10
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 11
+          },
+          {
+            "native_type": 0,
+            "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+            "slot": 12
+          }
+        ],
+        "configuration": {
+          "blend_shape_mode": 1,
+          "blend_shapes": 0,
+          "custom_aabb_sha256": "c83ccd4bbc77bf40ac93940b7c50496e89cb8ae4a86690515e88ac6830a657ba",
+          "format": "34359738399",
+          "lods_empty": true,
+          "metadata_empty": true,
+          "metadata_sha256": "4d159113222bfeb85fbe717cc2393ee8a6a85b7ce5ac1791c4eade5e3dd6de41",
+          "primitive": 3,
+          "resource_local_to_scene": false,
+          "resource_name": "",
+          "script_null": true,
+          "shadow_mesh_null": true,
+          "surface_material_null": true,
+          "surface_name": ""
+        },
+        "corners": 49728,
+        "eligible": true
+      },
+      "original_extras_sha256": "8be77d9aea1fa1f795f59c6498bfa494fbb9f331a0f0cfbe5cac9c765b09bcc0",
+      "original_native_surface_sha256": "905e6cbc4d8144359f28356289701b8c32beee45fecdf97013352954537387f3",
+      "path": "BatchedStaticWorld/Static_-9223371995566045738_2_-3"
+    }
+  ],
+  "native_library_roundtrip_exact": true,
+  "original_world_restored": true,
+  "passed": true,
+  "preview_fixture_sha256": "2c97bfebfc3cbf53297bfdc1deb721da8561b357c72d15f81c35078488834ef1",
+  "reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
+  "root_selected_for_source_trial": true,
+  "schema": "mush-distant-home-relocation-proof/1",
+  "scope": {
+    "additional_colliders": 0,
+    "additional_draw_nodes": 0,
+    "additional_triangles": 0,
+    "art_approved": false,
+    "motion_verified": false,
+    "parents": 2,
+    "performance_measured": false,
+    "perframe_work": false,
+    "pieces": 36,
+    "whole_foot_coverage_proved": false,
+    "window_lights": 2
+  },
+  "source_snapshot_sha256": "e35b74ff3adf5f0e77dcca84ffb2ed4f73a0d08c7119b42957a44ae8c0ea36ac",
+  "stubs": [
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ade686eca50eb8aa898362c0ba4e8a677bdedb09dc497bcf64419322253b9769",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "eb385b087ff2f1a272781ab3453fd22b66d9d7b79b86dfcc4a2004a4502da29b",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "8bedcbaa05e0631ef6c680a6a058ada55d0ba69f155aaf2ffb94ca60515616bc",
+      "corners": 1536,
+      "first_corner": 1536,
+      "home": 0,
+      "item": 13,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "4d8205c3570926ffd59294457e2381fa8bee69ee8ca36c476072142cc906628e",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "eb385b087ff2f1a272781ab3453fd22b66d9d7b79b86dfcc4a2004a4502da29b",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@MeshInstance3D@3781",
+      "role": "stem",
+      "source_xyz_sha256": "e4e91b4659a15e253ac425e9bcf3d2450404bde916bf048712ead26e2bfc094b"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "097f2d929bebed725d2e364a27ce893cb1446ede5417f939e016b8e7b6920fc1",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "a22c32b3c3e2670d3da4b75a2ce549755b4a1ceea836adb71bd94914e89fd5ab",
+      "corners": 24864,
+      "first_corner": 24864,
+      "home": 0,
+      "item": 15,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "79738daf7c2db9fe6f7a0b99ff6c0bc029f93aa995878f285cb22f644636171e",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/FoldedPeachUmbrella",
+      "role": "cap",
+      "source_xyz_sha256": "e108d965bce25c45982a53a981e2d6ebaf44c1338bc88f243a97078b52f43921"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "097f2d929bebed725d2e364a27ce893cb1446ede5417f939e016b8e7b6920fc1",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "69f52a8d90a1b9525b114526276387050e1a79856c5293f6c681f6826ddcb501",
+      "corners": 16128,
+      "first_corner": 16128,
+      "home": 0,
+      "item": 3,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "79738daf7c2db9fe6f7a0b99ff6c0bc029f93aa995878f285cb22f644636171e",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/CreamGillUnderside",
+      "role": "gill-back",
+      "source_xyz_sha256": "e0a3ba1c3b71f5075cdb1639955fdd0e21fdf22c38d3b8ef6124f8411e29a961"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "097f2d929bebed725d2e364a27ce893cb1446ede5417f939e016b8e7b6920fc1",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "096809fb43d54327401c5c543f1d6f6be16eb397003bc8043f7c53561d76b613",
+      "corners": 30576,
+      "first_corner": 30576,
+      "home": 0,
+      "item": 5,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "79738daf7c2db9fe6f7a0b99ff6c0bc029f93aa995878f285cb22f644636171e",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/ForkedCurvedLamellae",
+      "role": "gill",
+      "source_xyz_sha256": "b5a20f47a9c5e3a996e15a6b7c7210598d4a2c7986844303014f7a08e59c58a5"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "61979a20d5d99bcae8749ea77d2cbf3c4c345066d4a8e4d9955b5d85cb42b724",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "66b2bd6a378335e26d8ce7058db3db8f48081ac5749f6c2fd2e98dffb1fe1cb7",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "ccc9c9a8221be8d24f7196dc77c8a639ef597a02b85054d29949866bd970daf2",
+      "corners": 1872,
+      "first_corner": 2016,
+      "home": 0,
+      "item": 1,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "17947e22c360dd8496a0934a9caabff83b5c7317bf7512752cf07050947c0c27",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "66b2bd6a378335e26d8ce7058db3db8f48081ac5749f6c2fd2e98dffb1fe1cb7",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@MeshInstance3D@3786",
+      "role": "window-glow",
+      "source_xyz_sha256": "594b0e56902e7941a83bafadf0b40d57af59993b540d75a34d89ea23279c0993"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f76b83f770d9d3bad752cd51751a1e987fef8477806ee820eb113e93952684d4",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "4852b3cca6c9d73b02bfdc3be495229d6ced42018635e1daaaf794ebdb9acd57",
+      "corners": 2304,
+      "first_corner": 2376,
+      "home": 0,
+      "item": 11,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ff44b842ccd6edc203b264cfd78fe5494f1fbc53a60aead2f34c88647a4e3def",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@MeshInstance3D@3787",
+      "role": "window-ring",
+      "source_xyz_sha256": "4e0e14a8595def73100901710264e69465dfade1df31fc4c01ab1f1ebe7ae15a"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "4754c32a2c2d0cee93b81827906d9c64e9f22d4c21115a0c42bd04caac9d73aa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "f13b0f194a0b986a6dcf9d5d488453f0ade26c5568c9989d20021f58cc102dae",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "c7ad3f8a483e55571227e64f75fc9b65063f292209bcc6501b95dec0e86c73fa",
+      "corners": 36,
+      "first_corner": 4680,
+      "home": 0,
+      "item": 11,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "3fa01f3ffc1f5dba0dd315a3ce89b1cd0bf9df7a11050d31f19b989cce62fc9b",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "f13b0f194a0b986a6dcf9d5d488453f0ade26c5568c9989d20021f58cc102dae",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@MeshInstance3D@3788",
+      "role": "window-vertical",
+      "source_xyz_sha256": "7d1aa2e4c32542827bd2a2897960332e4aacff7c0292c3ae6684a8cd7f30debc"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "b1b187ec6e9e06a9a4526a7c33d6d413a86cdf6b58dd997d038aaecb75bb9ab4",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "b75763b3148ac7fffa6d799aec7c9cf60d84655eba9bfdcd7adbd97e285441eb",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "3068f6cfa52da19da1175813b39107c6813822a9bfa8c5b0e8bfa5d09650dc94",
+      "corners": 36,
+      "first_corner": 4716,
+      "home": 0,
+      "item": 11,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "14d30f8c3c15a03df677b89e83e93cb8035f7cc16a22a387ba87e4dfeb8ce3fd",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "b75763b3148ac7fffa6d799aec7c9cf60d84655eba9bfdcd7adbd97e285441eb",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@MeshInstance3D@3789",
+      "role": "window-horizontal",
+      "source_xyz_sha256": "7f101983c19aa83e851d698e442c20612b5573c3bc631d128123d8d7948a7d4d"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "8e8ee80ec88daadb779d880e35e5b32cdd4aa5d9369c443f06692a5e406d0275",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "a0a93bfbb44c980f3686cb651d7af871205babb126414a4a617ee59009f7e4ca",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "6b8bc30bf862558ef4a38d111fd75329f9d43f339acc1f2d7b55f9f824a06518",
+      "corners": 36,
+      "first_corner": 36,
+      "home": 0,
+      "item": 9,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "4d763b3c2673598ff16764754640bbebd4aaa0f350b6b1d36804dfb4ae6af58b",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "a0a93bfbb44c980f3686cb651d7af871205babb126414a4a617ee59009f7e4ca",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3785/@MeshInstance3D@3790",
+      "role": "window-sill",
+      "source_xyz_sha256": "1d667b02d86dd510b5c0d12bb9da43d03a99b3c4694678185f685e34ece07b9b"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "d806a9ae1dcece164fe951ab1c17b22238ba1a5b7f0d90e23b9f61e90ea7317e",
+      "corners": 144,
+      "first_corner": 3888,
+      "home": 0,
+      "item": 1,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3793",
+      "role": "lantern-glow",
+      "source_xyz_sha256": "1ffc8a073d0404cf32ec8b3c74028e42c67d26cd99d047f7744aa6a58cd6c87b"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "a53b5e4544fbe463966710a5ebb93bdb85d07ecb6cf67afab0a24b4c2020b0d1",
+      "corners": 96,
+      "first_corner": 1206,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3794",
+      "role": "lantern-top",
+      "source_xyz_sha256": "98587b46b812116ecc3baa610cf6d4a96cc9fcf2fa746ab8ca781becdc1b52dc"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "c03ae9968c008503206694a240302dbd06cea1dace595dc6ce580fb0f2701e11",
+      "corners": 96,
+      "first_corner": 1302,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3795",
+      "role": "lantern-bottom",
+      "source_xyz_sha256": "bee053f7551a0a4983cf0b1957b3438eba1394685b1146487ff03026ccfc385f"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "5cdbbc1b28b1745c206895200cf27c627e7c3923b3f4867007c41296a4f7b4df",
+      "corners": 30,
+      "first_corner": 1398,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3796",
+      "role": "lantern-bar-0",
+      "source_xyz_sha256": "ad6b37406565c2829b9e1788132fcd042da76f920c2a25478cc618dd83381bec"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "753741037d7267545cd36d0db4bf406475b3374dd47a43a3edb634d3bdc3cf25",
+      "corners": 30,
+      "first_corner": 1428,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3797",
+      "role": "lantern-bar-1",
+      "source_xyz_sha256": "3c1215c15aad70935d2ad2a51c149750155bb09b0d77a15f1c0eb88a7348da95"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "5b3c456e6ca5e51a47f385a4c5bfc5d4523bc777bf2ec0d5aaaacfaba1be7ec9",
+      "corners": 30,
+      "first_corner": 1458,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3798",
+      "role": "lantern-bar-2",
+      "source_xyz_sha256": "c80beb54b33df0052fc5b9ac1dd83d53e92ac9d871dcc2a90da669c7ff8e71cc"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "e6ec6aac70f4aba0137ce39607bb58ab4ff7de72c3a0e76c717e242dcc985a8b",
+      "corners": 30,
+      "first_corner": 1488,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3799",
+      "role": "lantern-bar-3",
+      "source_xyz_sha256": "efdcd97287720e49a33b34a3b2bba587b95d3c25cf775f59c6e85a344ec2c2e5"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "b6ff68f835b364bf616d2dc072e4184db0918134e896a965ee0ef1586d0fe0fd",
+      "corners": 864,
+      "first_corner": 1518,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3800",
+      "role": "lantern-ring",
+      "source_xyz_sha256": "487de03eff73de7fdb7c11cefd6ac194cb9727fdb155810169a041ba8c415241"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ed180412d51fcb1178a3551a17a942bae36fdb905a0180db5d0bcb3201253e79",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "ee6d3bfac90f88884f91689e2d02e2000f09e591884109abffd397a39ebbe330",
+      "corners": 30,
+      "first_corner": 2382,
+      "home": 0,
+      "item": 7,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "01b0e77360f14640d356c826d12e65d93f0ec41475560e0f71825ef72680c74f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3780/@Node3D@3792/@MeshInstance3D@3801",
+      "role": "lantern-hook",
+      "source_xyz_sha256": "6af1e1c2830da71dc7c10e51f97681abebfbc4b02b98295be0fcf96a370e708b"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ec1ddb1d83749b196f4653128f2ad785089545681a6cdeb9a144510340b28a78",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "eb385b087ff2f1a272781ab3453fd22b66d9d7b79b86dfcc4a2004a4502da29b",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "b03cda1586cdbbc0f76f4d3572c1f02a592975fb1cc6303ee2e7914baf26c3e2",
+      "corners": 1536,
+      "first_corner": 0,
+      "home": 1,
+      "item": 12,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "d5a0c448092147f5dbf14fe90875920ae15f7dea88e8023c9572b070cd17b494",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "eb385b087ff2f1a272781ab3453fd22b66d9d7b79b86dfcc4a2004a4502da29b",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@MeshInstance3D@3803",
+      "role": "stem",
+      "source_xyz_sha256": "2a6f321d81fe1dc1af2659a8b8a5106a339020081c1f829c95072e8f9ae0918e"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "e42c047bf94e9d167336faac27330adb45994c9fe3bf2b2c85efb289dc7d58a2",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "17218c68c2e04dec48d1f06869d3f7c7a1470ce659bcc33cba9bef113fc6a16b",
+      "corners": 24864,
+      "first_corner": 0,
+      "home": 1,
+      "item": 14,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ff7f75f5df0840594632f07a049262637e8271e7aaf59511335113a8e245f7ee",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/FoldedPeachUmbrella",
+      "role": "cap",
+      "source_xyz_sha256": "1f57639726942471d755a06087630a8fcb9d34996696d4fb96c2b8056ed02f3b"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "e42c047bf94e9d167336faac27330adb45994c9fe3bf2b2c85efb289dc7d58a2",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "bb3e5a7582b365a954bb2f9a5695fff36c71bc247a222164618fb6d52d5ad5a3",
+      "corners": 16128,
+      "first_corner": 0,
+      "home": 1,
+      "item": 2,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ff7f75f5df0840594632f07a049262637e8271e7aaf59511335113a8e245f7ee",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/CreamGillUnderside",
+      "role": "gill-back",
+      "source_xyz_sha256": "73eb631fde7f76e99231753ff10ed944216e87528f293a45832a01f384354c75"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "e42c047bf94e9d167336faac27330adb45994c9fe3bf2b2c85efb289dc7d58a2",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "d2485c332b4d17f0712583762ceb79fbfa2eff476c380f906b469cc8181f34d6",
+      "corners": 30576,
+      "first_corner": 0,
+      "home": 1,
+      "item": 4,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ff7f75f5df0840594632f07a049262637e8271e7aaf59511335113a8e245f7ee",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "3bd11d15847f8b860cd7506bb21c0679fa98ffc9fbd2599ac86e41492ff6c480",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/ForkedCurvedLamellae",
+      "role": "gill",
+      "source_xyz_sha256": "eaca19e667549a0a747c990f1c8f47b2784f0101f8c2170b932336dbe98b9b10"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "df20a41ba9f6ba5f4c55c2e35dff5fda61151abc0e0c87bac2caccc7eccb072e",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "66b2bd6a378335e26d8ce7058db3db8f48081ac5749f6c2fd2e98dffb1fe1cb7",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "c93ef7829bfab05fc52e9abfc0be0de2053ed2e72f9a856b2b3ce28fd1c27d29",
+      "corners": 1872,
+      "first_corner": 0,
+      "home": 1,
+      "item": 0,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5a77484dba97221568b1421f3052ef35d1f4f1f82a2234d37abd7b8675ffe323",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "66b2bd6a378335e26d8ce7058db3db8f48081ac5749f6c2fd2e98dffb1fe1cb7",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@MeshInstance3D@3808",
+      "role": "window-glow",
+      "source_xyz_sha256": "be0cce665c49ce9e34daeb1da1a4d60f25950293e1efc86edabb7dffd8221c79"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "51aa1227179e7de5537ade33b5ae613cd16ecc766646474fca3525be9337f0c3",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "8efdd38e59d42750ff4972b55cea38e5931af28cbb7ac131f22c3a2f380edf67",
+      "corners": 2304,
+      "first_corner": 3360,
+      "home": 1,
+      "item": 10,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "a34837304e44338ca3b85c5e9a0ddb0030d7f7378e71c670d73a85b645969f9f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@MeshInstance3D@3809",
+      "role": "window-ring",
+      "source_xyz_sha256": "f0cb41bf1adf7dc5d946bc82af20ff21b028f0e84e0b63cc3b7e59d98af00de5"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "688ed3fa4035d6eb8b607f036f7b0b41821ee52af0473b7348b66b1d5ee4366f",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "f13b0f194a0b986a6dcf9d5d488453f0ade26c5568c9989d20021f58cc102dae",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "dbd10f52eb6bdcf7164b1ea762c6344fd90ce7c07ba1f83af40f2c6d103f75f3",
+      "corners": 36,
+      "first_corner": 5664,
+      "home": 1,
+      "item": 10,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "e8ff95695e86851a499bfd07299ae398efbd8cb695ec7f9a0f9e09de3aa4a57c",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "f13b0f194a0b986a6dcf9d5d488453f0ade26c5568c9989d20021f58cc102dae",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@MeshInstance3D@3810",
+      "role": "window-vertical",
+      "source_xyz_sha256": "a82d39f6bc190479bbc6d274b27193c8f3b40128a7b3f9083ce2b5eb1aab7973"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "c7d50dd3335ea03264ce6d3125cac32e16915f6766a55571676ba64da45ca0f0",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "b75763b3148ac7fffa6d799aec7c9cf60d84655eba9bfdcd7adbd97e285441eb",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "6452c106d4a5bc54f26d4e823ae6b88c9f860973b8060297fdda7ba5227f54c1",
+      "corners": 36,
+      "first_corner": 5700,
+      "home": 1,
+      "item": 10,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "b1aba6580f1c2669f8ffbf9dd66c11a5d97c74dc21396380782516ceccabfe73",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "b75763b3148ac7fffa6d799aec7c9cf60d84655eba9bfdcd7adbd97e285441eb",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@MeshInstance3D@3811",
+      "role": "window-horizontal",
+      "source_xyz_sha256": "ab584ebdc192f1094038a7c9b8d3ea7f2620175568d5efc9901f1d462d17502c"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "ac665820b1fe83675a0ac8ed854eedc2d52a2be3d9955a8728e9c46e604634c4",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "a0a93bfbb44c980f3686cb651d7af871205babb126414a4a617ee59009f7e4ca",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "6d8501043f745e1d1d858e0c747f41fec25336285b366fc844552243ae9dceae",
+      "corners": 36,
+      "first_corner": 0,
+      "home": 1,
+      "item": 8,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "7ec76a8934276e7379c02a768d8074c937d3be446ab2644690274da400d51b56",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "a0a93bfbb44c980f3686cb651d7af871205babb126414a4a617ee59009f7e4ca",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3807/@MeshInstance3D@3812",
+      "role": "window-sill",
+      "source_xyz_sha256": "7b79200b64fc18c3f9eb333930ede88f357daf16bf605ca8d4f5f4a037b54668"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "250b023085ffff41b1bbba7a2a67056296dcab02c0323f1ed624b742199d52d7",
+      "corners": 144,
+      "first_corner": 1872,
+      "home": 1,
+      "item": 0,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3815",
+      "role": "lantern-glow",
+      "source_xyz_sha256": "590670313a830b0e00a862c8f4c194b499c457630da8ed6050ce94eaded3d482"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "46f09609022e2df084f465d2e95655f34567fc62567a4ef040ce48e1b0ff0bab",
+      "corners": 96,
+      "first_corner": 0,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3816",
+      "role": "lantern-top",
+      "source_xyz_sha256": "00c798edf120cc1c775b6b29ee4c54e1575fbb92d8b060ef913d66f90c50fa06"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "52ce998da766cd7cb77d77b20f3bba7f543f561837fcafedec6b2fbcf359022b",
+      "corners": 96,
+      "first_corner": 96,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3817",
+      "role": "lantern-bottom",
+      "source_xyz_sha256": "222a78eda24a68bf4b0c473eb2f1a7710cca85a10be5c3259a889b952df6f37d"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "00775054b0e49123743c805babf7e91a4cc3b221037df4951b5a5c34847bc604",
+      "corners": 30,
+      "first_corner": 192,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3818",
+      "role": "lantern-bar-0",
+      "source_xyz_sha256": "2ad84650c2c7345da8913dba51bc0d9933ebc2241662fc056794d086e575e8e7"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "1383e4834fa6ac092ba90b1d1abbaf281dd7c28fe5543257a66bf74c91eafecc",
+      "corners": 30,
+      "first_corner": 222,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3819",
+      "role": "lantern-bar-1",
+      "source_xyz_sha256": "fb4a49888abf14a9324bfc7e81630c8241f9f8da72eb3c9f012752cffc38a119"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "79e8469bf2022d538b29494ee389e8a0643bce2e1dbf6eb9c41400f34a24c28e",
+      "corners": 30,
+      "first_corner": 252,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3820",
+      "role": "lantern-bar-2",
+      "source_xyz_sha256": "c1a3458da82752db8692802ffb20dfb4f28ccada0fac4b39a810f33a2c6a277e"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "33ad612885acf3e7e9f3372f7cb0b927fa0db6841bcb9607c7d4d375ac0e2ac0",
+      "corners": 30,
+      "first_corner": 282,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3821",
+      "role": "lantern-bar-3",
+      "source_xyz_sha256": "205e48057c8f9efe26ab4d53b10738b9ed83e8f46685137781c4cf79aa95e902"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "0a50225eeb18512dcecf6c6be4c71ae246e3b560e291e7c6ea9ddb76f6613cfb",
+      "corners": 864,
+      "first_corner": 312,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3822",
+      "role": "lantern-ring",
+      "source_xyz_sha256": "e6921fe302c1bccf7e22bf276a10f96d5ea25428d932c87920815cfb740c34fc"
+    },
+    {
+      "candidate_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "f41fe5a6973522eead716b8b7a4b74b3b6bd9fa77140644e7fc8f330ffba87fa",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "candidate_xyz_sha256": "08d1a78c739b0f1046a6bbb1ce568516595ead916b14b10516dec71e09be71ae",
+      "corners": 30,
+      "first_corner": 1176,
+      "home": 1,
+      "item": 6,
+      "original_node": {
+        "cast_shadow": 1,
+        "extra_cull_margin": 0.0,
+        "global_transform_sha256": "5ebd9426c9a710c2ce1f72b2c3dcf80f057da4f84afe5e8c478f2001699e1a19",
+        "layers": 1,
+        "material_class": "ShaderMaterial",
+        "overlay_null": true,
+        "shader_sha256": "30bcdcc8b07f0ced97bb088e04afa0d9d1799b9530554aebbab0309849f0bc32",
+        "surface_overrides_null": [],
+        "top_level": false,
+        "transform_sha256": "be9f301699d258d220426ad8735455710ff34570d90324037dfb901c8dc72950",
+        "visible": true
+      },
+      "path": "ForestBeyondTheClearing/@Node3D@3802/@Node3D@3814/@MeshInstance3D@3823",
+      "role": "lantern-hook",
+      "source_xyz_sha256": "bb3637513a31e485f378966d117b13c7741db528dae9c397cdf34275ed985870"
+    }
+  ]
+}

@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 5260,
-      "sha256": "fdd657f2ba42a1643f60562a925d5faf4da46d7d9c5e5be649414cfbcbc664cf"
+      "bytes": 5546,
+      "sha256": "441992497b09f3819fe69466658bef4132de3dc00ee54c8f6c10a50ff9f776a8"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -302,6 +302,14 @@
       "bytes": 64192978,
       "sha256": "7d9455f72f63636f1adcce198ba9a03a73568d7224c04ddbcdcdcaefbc8bda37"
     },
+    "baked/distant-home-relocation-proof.json": {
+      "bytes": 176068,
+      "sha256": "7064467b4e0cf2209389eb0a091c36bdcd5a8ca49e57003b6088d7a082e622e3"
+    },
+    "baked/distant-home-relocation.res": {
+      "bytes": 1941665,
+      "sha256": "9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf"
+    },
     "baked/floor-seams.res": {
       "bytes": 751461,
       "sha256": "9938115251c64982d3e8fa1e3c857a001778a914b3d74d0b88197e6fb702cc27"
@@ -407,20 +415,20 @@
       "sha256": "19e35577d62738569fbf7fda65d9c3755b39708622de4b237a607e529af8c7e9"
     },
     "docs/STATUS.md": {
-      "bytes": 5771,
-      "sha256": "9a834c83f26b612c3aa0484641e8a09794f4547ddc3704b0958a80f36e4eb050"
+      "bytes": 6271,
+      "sha256": "aecf9b58e99efa930cce01411b658c625b738ff265e2efe7f452a0ff57ae52c7"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 63291,
-      "sha256": "217bf46b44de452977f5994eac5d7860a6376bbba11c4fcdbf477cd59b1a2683"
+      "bytes": 67451,
+      "sha256": "5e5d5cd7ac091a7ea6b67a95b0d4b53cf136a9a3f6db36e3aaa59ee8de94e67b"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 139145,
-      "sha256": "7e34a1d314044a388a9a3e8f1499fab116f9202606b47321c182baaf8b152483"
+      "bytes": 146825,
+      "sha256": "34d6afcebad3f6c0cd71e1788024aa6b44e2d7e2c90d534a80ddc802ccc2d8dc"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -731,8 +739,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 30041,
-      "sha256": "aaf2d63fd6a93788bb4abab95c19bbea080ff7cbe2f32e0d841cfe6ab02a3732"
+      "bytes": 30455,
+      "sha256": "16ef8020fd8d6984924bd50ab7ec2c1d757aa6800b7b4db6cb567e6bdf2ca099"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -753,6 +761,14 @@
     "scripts/closest_home_foundation.gd.uid": {
       "bytes": 20,
       "sha256": "eb9c9b8e0aab37a79e53d4160be44c235aa2a6c343f35f3faa6d33a06994709f"
+    },
+    "scripts/distant_home_placement.gd": {
+      "bytes": 13917,
+      "sha256": "1ff89b6cc3f9af60e5711899775363424e046a58665acccdc8c2226aad5c5906"
+    },
+    "scripts/distant_home_placement.gd.uid": {
+      "bytes": 20,
+      "sha256": "79452f5e62e79589d005bfc38de22c17c8cc2e6cafff50cef3a447d55aeccd03"
     },
     "scripts/environment_controller.gd": {
       "bytes": 38028,
@@ -970,6 +986,14 @@
       "bytes": 19,
       "sha256": "5fc0046a0269247d153c16baec18f2d610d5f28d4a2da6d3d32629c155b5de3e"
     },
+    "tests/distant_home_placement.gd": {
+      "bytes": 10716,
+      "sha256": "f8096a30c733924efdef7a1cb3ddc26b00437e979ae28675374baa5895416c58"
+    },
+    "tests/distant_home_placement.gd.uid": {
+      "bytes": 20,
+      "sha256": "85b7d22e18f9f754c98721e0b9518a6895fece3b2b371ac9df483aee413bf1ab"
+    },
     "tests/environment_controller_contract.gd": {
       "bytes": 21589,
       "sha256": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90"
@@ -1163,8 +1187,8 @@
       "sha256": "d969a5b951dccb6742958bd57e3812f2e9661cf2b4f86773e8cc0cd48f43965c"
     },
     "tests/test_verify_runner.py": {
-      "bytes": 3666,
-      "sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577"
+      "bytes": 4847,
+      "sha256": "c3daeda8f82dfd023b54a2b313bf54e22bb92f6d918c301364b5376a1a7aedbf"
     },
     "tests/ui_review.gd": {
       "bytes": 14258,
@@ -1231,8 +1255,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 31286,
-      "sha256": "0de5292957494bd645c49fc9550dc2073eb1a8f8141c1906b8df216aee73a28c"
+      "bytes": 33443,
+      "sha256": "f91233a88391a3d43e5b6ae40ceb8a8d4e07e936ef0905d9a4404ef253611a3e"
     }
   }
 }

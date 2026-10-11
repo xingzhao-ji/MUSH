@@ -203,6 +203,32 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "home-placement":
+        report = read_report(output / "native/home-placement.json")
+        assert report["schema"] == "mush-installed-distant-home-placement/1"
+        assert report["passed"] and report["failed"] == 0 and report["scene_restored"]
+        assert report["checks"] and all(row["passed"] for row in report["checks"])
+        assert report["startup"]["passed"] and report["startup"]["installed"]
+        assert len(report["pairs"]) == 8 and len(report["views"]) == 16
+        labels = [f"{pose}-{mood}" for mood in ("day", "night") for pose in
+                  ("home2-close", "home2-wide", "home3-ground-obscured", "home3-elevated-diagnostic")]
+        assert [row["label"] for row in report["pairs"]] == labels, "Expected ordered home-placement pairs"
+        assert [row["label"] for row in report["views"]] == [
+            f"{label}-{state}" for label in labels for state in ("original", "installed")
+        ], "Expected ordered home-placement views"
+        assert all(row["passed"] and row["context_held"] for row in report["pairs"])
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        decoded = []
+        for view in report["views"]:
+            assert view["file"] == view["label"] + ".png"
+            item = module.decode(output / "native" / view["file"])
+            assert view["passed"] and item["dimensions"] == [1280, 720] and item["all_crcs_checked"]
+            assert item["png_sha256"] == view["png_sha256"] and item["rgba_sha256"] == view["rgba_sha256"]
+            decoded.append(item)
+        return {"checks": len(report["checks"]), "full_png_decodes": decoded,
+                "actual_startup_installation": True, "motion_verified": False,
+                "art_approved": False, "whole_foot_coverage_proved": False}
     if suite == "house-foundation":
         report = read_report(output / "native/house-support.json")
         assert report["schema"] == "mush-closest-home-foundation/1"
@@ -399,7 +425,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -441,6 +467,9 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "home-placement":
+        command += ["--resolution", "1280x720", "--script", "res://tests/distant_home_placement.gd",
+                    "--", "--benchmark", "--report-dir=" + str(output / "native")]
     elif args.suite == "house-foundation":
         command += ["--resolution", "960x960", "--script", "res://tests/house_foundation.gd",
                     "--", "--benchmark", "--report-dir=" + str(output / "native")]
