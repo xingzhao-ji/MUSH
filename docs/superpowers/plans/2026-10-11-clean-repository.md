@@ -12,10 +12,10 @@
 - [x] Import cleanly, run original gameplay assertions, native visual captures and sustained Mac benchmarks; retain all three p95 failures.
 - [x] Record storage/complexity/performance limits, licenses, provenance and rollback; scan the Git payload.
 - [x] Commit the clean source and verify a fresh local clone (import + 12 smoke checks).
-- [ ] Meet the performance condition or receive a revised development-checkpoint scope; then push a private repository and verify its remote commit/clone.
+- [x] The user explicitly authorized the as-is development upload; the private repository and remote clone were verified. Later checkpoints preserve their own measured results.
 
 Review focus: private save isolation, all runtime inheritance dependencies retained, pinned resource proofs unchanged, no reference pixels or credentials uploaded, native timing separated from phone/manual acceptance.
 
 Practices: pinned obra/superpowers planning, systematic debugging, test-first changes and fresh verification. No additional framework or global hook.
 
-Upload remains gated by the user’s performance condition. No threshold or visual-quality reduction is authorized to manufacture a pass. The private-development-checkpoint alternative has been presented for a scope decision.
+The user authorized the as-is development upload, and that authorization remains valid. Earlier performance failures stay recorded. The later lower-joint source route passes the unchanged limits; whole-game acceptance remains open.

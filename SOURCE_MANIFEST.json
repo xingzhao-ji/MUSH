@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 3491,
-      "sha256": "77ae1b0daba598a175337075ce4acd8f5b07373b1561cd7f337ed3aa69a4404e"
+      "bytes": 3982,
+      "sha256": "4cbdabfb29f6114242a95d17e9efb85a8443a02f77c526b729adaed7046c4c05"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -371,32 +371,32 @@
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
     "docs/ARCHITECTURE.md": {
-      "bytes": 5386,
-      "sha256": "dc02f5686f033ff5c63a14bd6042c0884a0d384b763543dab90b9148160c0a51"
+      "bytes": 5814,
+      "sha256": "a6ad7f8d7743be27faa331f05ed757f0bc25596aec9e11d2a55f44580d63c035"
     },
     "docs/DEPENDENCIES.md": {
       "bytes": 3636,
       "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 2649,
-      "sha256": "66d85ba7c415ea1ff86fee900ec8f10f1eb90d61cf76a800dde469d9c8ce2b1f"
+      "bytes": 2786,
+      "sha256": "43dd2369226d12917041a3e6a90171af7c2e3a9130ae29c4270acd78e228788c"
     },
     "docs/STATUS.md": {
-      "bytes": 3182,
-      "sha256": "b0bfda9647e5cafb83b0bb6bbda1f9cebcb0c81ac103ddf6484ac7501ad4fce0"
+      "bytes": 3199,
+      "sha256": "75b9b05cab1684a91cedf36e5b29c6359f707b126956f8b98c2a11ab8f1a59bf"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 10143,
-      "sha256": "b4e8ec69b84afdd77572a764af489e04a669d38a0d46334be1b83aa031d1b711"
+      "bytes": 13954,
+      "sha256": "b0fa94c1148f8655147079f8d87bfd0e42986ff111a5d1bc2501e337c85e8596"
     },
     "docs/verification-summary.json": {
-      "bytes": 14781,
-      "sha256": "b1d044a90f30e18b4abe4a1108d0bd7bfe493d732b50d596002dceda0a9360cd"
+      "bytes": 21176,
+      "sha256": "3ab172129c4330984d51fe51b764da5141f302f3ef2e984fbad97d51737bb888"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
-      "bytes": 1938,
-      "sha256": "6a31aa54e045e948648723a988e3ec91c8dcb0243710e1f96d2e877d9adf68d2"
+      "bytes": 1966,
+      "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "lineage/cap-material27-preview01/material-world.gd": {
       "bytes": 13505,
@@ -692,7 +692,7 @@
     },
     "scripts/baked_world.gd": {
       "bytes": 28045,
-      "sha256": "06df2c923142c6fe8070be6c086aea2cebc6571d5675c1a3a457c316fc446e1a"
+      "sha256": "b0b62c71bb7f3b8f6f5d07239d37db387257f1fcd78104a8d05fdaee50ec7460"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -771,8 +771,8 @@
       "sha256": "732c979d514fb66040cc3bdb0b7e2e65292b0cfed0b04b2b11e6e4e197e0f334"
     },
     "scripts/paving_preview_prebuilt.gd": {
-      "bytes": 12102,
-      "sha256": "86df9a774a5ce12eec9b1e426d5d38ad8de84b1f5fb79ccb019b8e19cac0a87d"
+      "bytes": 12436,
+      "sha256": "bbbb433d4faed98b772e15194cf392960dbe1e910133498c596d8a3b57e23e59"
     },
     "scripts/paving_preview_prebuilt.gd.uid": {
       "bytes": 19,
@@ -859,8 +859,8 @@
       "sha256": "b066d6ae6ba33407f6d531f24f29ddf4081dcca1025c644718bd545ced6537ba"
     },
     "tests/acceptance.gd": {
-      "bytes": 73591,
-      "sha256": "e185531a932e0c8df9bcb6433856e2b8cf1e51c3535862468abf7246f0aa9b6f"
+      "bytes": 73656,
+      "sha256": "734c26d565dbe741c24dd941e4a19c5323a7c41a95b5d9f3b7d00d158153f80f"
     },
     "tests/acceptance.gd.uid": {
       "bytes": 20,
@@ -947,8 +947,8 @@
       "sha256": "a10f4f113da85a0f101021ff5b302e94d213be5c2f73a62aba4697829865340d"
     },
     "tests/paving_surface.gd": {
-      "bytes": 23568,
-      "sha256": "9ef98edd2f0b59d68e6d4a221431dc1e5d80402d391d28fa06ceb2eb71624b76"
+      "bytes": 23647,
+      "sha256": "883ede736037c00f90596c7e5169f411623af5041fe020b2668a5465c3940ddb"
     },
     "tests/paving_surface.gd.uid": {
       "bytes": 20,
@@ -991,8 +991,48 @@
       "sha256": "6fce90c11860cb61840491f907f3bd3ca1e077fd05de708ec0d1a7740a11c2ba"
     },
     "tools/verify.py": {
-      "bytes": 15406,
-      "sha256": "bf0b170c3da57f44d173be624be10dd82e30132c9b1fcd7775ed8b55895a771f"
+      "bytes": 19306,
+      "sha256": "c32605e4e30e2bf5da3824bccecb69498c55a3b70385fa5876c7f4e7ea884dc6"
+    },
+    "baked/paving-lower-joints.json": {
+      "bytes": 9420,
+      "sha256": "b5d8fe6a3aa0b12806f7b9b8a5598721624ce47430395fe931ce4d7a496eebb4"
+    },
+    "baked/paving-lower-joints.res": {
+      "bytes": 641570,
+      "sha256": "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60"
+    },
+    "tests/paving_shape_build.gd": {
+      "bytes": 1258,
+      "sha256": "9ad54adda443d0a3637bc5136c0535d2f3119e311de653c6ede2cf630b1582d4"
+    },
+    "tests/paving_shape_build.gd.uid": {
+      "bytes": 20,
+      "sha256": "a71aabc68af28f65aacd32323741a489705bbf98971098d45650e20db6783b1d"
+    },
+    "tests/paving_shape_compare.gd": {
+      "bytes": 9316,
+      "sha256": "bd825304b0cd934dccfb9bd349c85aeab35ed3b5c6cfd03fe4396cc73ae7a703"
+    },
+    "tests/paving_shape_compare.gd.uid": {
+      "bytes": 19,
+      "sha256": "926c5f7675ad699033b8ca14a8d81a09c2a0c28711830211e16bd468c848b66e"
+    },
+    "tests/paving_traversal.gd": {
+      "bytes": 48448,
+      "sha256": "2f4103c64bbd7f9d4a4d6a7f97f4c0d28ac2cc09ea732405fac1f7cd89147233"
+    },
+    "tests/paving_traversal.gd.uid": {
+      "bytes": 20,
+      "sha256": "5ff01c16c44b490bf236a5c4dfe191b71122d3a516bc3c69e3c2a77e654d653a"
+    },
+    "tools/paving_shape.gd": {
+      "bytes": 37569,
+      "sha256": "10541bf76ca5d9b4854aedd88d0481c6cd5ef1ab32e91cd71fbc1f118614fb61"
+    },
+    "tools/paving_shape.gd.uid": {
+      "bytes": 19,
+      "sha256": "7213ad0f30e0cb80407d4574ae8e4e471ef8094997c8b2f74a990f31e936fb37"
     }
   }
 }

@@ -4,7 +4,7 @@ A small, cozy Godot clearing to explore, plant and make a home in. This reposito
 
 ## Run
 
-Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac; the current frame-time gate is still failing. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
+Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac; the latest 120-second source route passes the frame-time limits, while broader performance acceptance remains open. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
 
 | Input | Action |
 | --- | --- |
@@ -29,10 +29,12 @@ python3 tools/verify.py --engine /path/to/Godot --suite ground
 python3 tools/verify.py --engine /path/to/Godot --suite environment
 python3 tools/verify.py --engine /path/to/Godot --suite capture
 python3 tools/verify.py --engine /path/to/Godot --suite paving
+python3 tools/verify.py --engine /path/to/Godot --suite shape-build
+python3 tools/verify.py --engine /path/to/Godot --suite traversal
 python3 tools/verify.py --engine /path/to/Godot --suite benchmark
 ```
 
-The runner writes timestamped results beneath ignored `reports/` and compresses large JSON outputs after verified readback. Its failure paths have standard-library tests: `python3 -m unittest discover -s tests -p test_verify_runner.py`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. Captures establish pictured states, not motion or live audio quality.
+The runner writes timestamped results beneath ignored `reports/` and compresses large JSON outputs after verified readback. Its failure paths have standard-library tests: `python3 -m unittest discover -s tests -p test_verify_runner.py`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. The traversal suite currently exits with a failed upper-soil contact-coverage gate even though all 58 movement routes pass. `shape-build` creates an isolated resource under `reports/`; `shape-capture --candidate /absolute/path/to/paving-shape.res` compares it with the installed source. Captures establish pictured states, not motion or live audio quality.
 
 See [the tested local Mac candidate](docs/MAC-CANDIDATE.md) for its launch path, controls and remaining issues.
 

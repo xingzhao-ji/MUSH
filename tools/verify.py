@@ -198,6 +198,46 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "traversal":
+        report = read_report(output / "native/paving-traversal.json")
+        assert report["schema"] == "mush-paving-traversal/1"
+        assert len(report["routes"]) == 58
+        assert report["passed"] is True and report["failed"] == 0
+        assert report["assertions"] > 0 and all(row["passed"] for row in report["checks"])
+        assert report["movement_passed"] is True and report["contact_coverage_passed"] is True
+        with (output / "native/paving-traversal-ticks.csv").open(newline="") as stream:
+            rows = list(csv.DictReader(stream))
+        assert 0 < len(rows) <= 9200 and all(None not in row for row in rows)
+        return {"routes": len(report["routes"]), "assertions": report["assertions"],
+                "movement_passed": True, "contact_coverage_passed": True,
+                "coverage": report["coverage"], "recorded_ticks": len(rows),
+                "manual_controls_verified": False, "art_approved": False}
+    if suite == "shape-build":
+        report = read_report(output / "native/paving-shape.json")
+        assert report["schema"] == "mush-paving-shape-candidate/1"
+        assert report["passed"] is True and report["checks"]
+        assert all(row["passed"] for row in report["checks"])
+        return {"authoring_checks": len(report["checks"]),
+                "resource_sha256": sha(output / "native/paving-shape.res"),
+                "traversal_verified": False, "art_approved": False}
+    if suite == "shape-capture":
+        report = read_report(output / "native/paving-shape-comparison.json")
+        assert report["passed"] is True and report["failed"] == 0
+        assert report["assertions"] > 0 and all(row["passed"] for row in report["checks"])
+        assert len(report["pairs"]) == 4 and all(pair["passed"] for pair in report["pairs"])
+        assert len(report["views"]) == 8
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        decoded = []
+        for view in report["views"]:
+            assert view["passed"] and Path(view["file"]).name == view["file"]
+            item = module.decode(output / "native" / view["file"])
+            assert item["dimensions"] == [960, 960] and item["all_crcs_checked"]
+            assert item["png_sha256"] == view["png_sha256"] and item["rgba_sha256"] == view["rgba_sha256"]
+            decoded.append(item)
+        return {"assertions": report["assertions"], "full_png_decodes": decoded,
+                "motion_verified": False, "art_approved": False, "traversal_verified": False}
     if suite == "capture":
         report = read_report(output / "camera.json")
         assert report["passed"] and len(report["views"]) == 4
@@ -223,7 +263,8 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "traversal", "shape-build", "shape-capture"), required=True)
+    parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
     args = parser.parse_args()
@@ -233,6 +274,12 @@ def main():
         parser.error("Benchmark duration must be 120–600 seconds")
     if args.uncapped and args.suite != "benchmark":
         parser.error("--uncapped is a benchmark-only diagnostic")
+    if args.candidate:
+        args.candidate = args.candidate.resolve()
+        if args.suite not in ("shape-capture", "traversal") or not args.candidate.is_file() or not args.candidate.is_relative_to(ROOT / "reports"):
+            parser.error("--candidate requires shape-capture/traversal and an existing resource beneath reports/")
+    elif args.suite == "shape-capture":
+        parser.error("shape-capture requires --candidate")
     assert_idle()
     reserve()
     engine = str(Path(args.engine).resolve())
@@ -260,6 +307,14 @@ def main():
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "paving":
         command += ["--script", "res://tests/paving_surface.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "traversal":
+        command += ["--script", "res://tests/paving_traversal.gd", "--", "--report-dir=" + str(output / "native")]
+        if args.candidate:
+            command += ["--candidate=" + str(args.candidate)]
+    elif args.suite == "shape-build":
+        command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "shape-capture":
+        command += ["--script", "res://tests/paving_shape_compare.gd", "--", "--report-dir=" + str(output / "native"), "--candidate=" + str(args.candidate)]
     elif args.suite == "environment":
         command += ["--script", "res://tests/environment_controller_contract.gd", "--", "--report-dir=" + str(output)]
     else:
@@ -271,7 +326,7 @@ def main():
               "timing_mode": "uncapped_throughput_diagnostic" if args.uncapped else "default_vsync",
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     try:
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else args.duration + 120 if args.suite == "benchmark" else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

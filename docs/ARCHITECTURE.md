@@ -37,3 +37,5 @@ Cloud shade is material/albedo modulation. Rain shelter uses authored masks rath
 ## Repository boundary
 
 Track source assets, `.import` settings, `.uid` files, required baked resources, portable tests, notices and concise documentation. Ignore `.godot/`, builds, full reports, private export credentials and local environment files. Keep historical app archives and review evidence in the existing local archive, outside this repository. Do not commit the engine, export templates, private profiles or user reference-image package.
+
+The entrance preview now loads `baked/paving-lower-joints.res` through the same owner. The narrower lower joint is authored offline with existing native mesh/geometry helpers. Original192 remains available for rebuilding and Git rollback; original043 remains the runtime owner’s retained rollback. The new resource has the same encoded size, mesh/collider count and native corner counts, with no added runtime geometry work.

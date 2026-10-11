@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T10:42:25.683351+00:00",
+  "prepared_utc": "2026-10-11T12:59:37.336307+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -205,7 +205,7 @@
       "independent_csv_percentiles_match": true
     }
   ],
-  "performance_budget_passed": false,
+  "performance_budget_passed": true,
   "profiling": {
     "kind": "instrumented 30-second diagnostics, no completed route loop",
     "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
@@ -270,8 +270,7 @@
     "continuous motion quality",
     "art/reference acceptance",
     "near-cut paving coverage",
-    "aggregate full-route contact gate",
-    "remote upload and commit verification"
+    "aggregate full-route contact gate"
   ],
   "runtime_sha256": {
     "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
@@ -358,5 +357,149 @@
     "failed_initial_launcher_preserved": "receipt.json",
     "corrected_launcher_verification": "verification-20261011-043226/result.json",
     "delivery_sha256": "d74b3572c9544178e9853f746d3eaf457896fd6eb8ab03f881a6b6afe3fad0c9"
-  }
+  },
+  "lower_joint_successor": {
+    "scope": "Adopted lower joint geometry only; original192 retained. Upper geometry and controller held. Automated source verification, no new packaged app.",
+    "artifact": "baked/paving-lower-joints.res",
+    "artifact_sha256": "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60",
+    "manifest": "baked/paving-lower-joints.json",
+    "manifest_sha256": "b5d8fe6a3aa0b12806f7b9b8a5598721624ce47430395fe931ce4d7a496eebb4",
+    "rollback_source_commit": "65f716815ba15371fd3f286f7eee2939280f5774",
+    "authoring_checks": 45,
+    "added_draws": 0,
+    "added_triangles": 0,
+    "added_baked_source_bytes": 650990,
+    "benchmark_budget_passed": true,
+    "performance_improvement_attributed": false,
+    "full_contact_coverage_passed": false,
+    "full_game_acceptance": false,
+    "physical_devices_tested": false,
+    "manual_motion_accepted": false,
+    "live_audio_accepted": false,
+    "runs": {
+      "authoring": {
+        "directory": "reports/shape-build-20261011-054020-23789",
+        "receipt_sha256": "657c7e02d41228158eb53cda24381591ab56995264101fc4417ac1e89154155b",
+        "runner_passed": true,
+        "source_changes": [],
+        "native_report_sha256": "cb6b7a2f015d7abee01c2db379a6eabf9c1fb7c676b259efd59c58258fc7623d",
+        "checks": 45
+      },
+      "isolated_traversal": {
+        "directory": "reports/traversal-20261011-054031-23811",
+        "receipt_sha256": "517091d04d8018ab40efbd057f61f16724870fbd9832b4ab6f2589ed709a0d67",
+        "runner_passed": false,
+        "source_changes": [],
+        "native_report_sha256": "40d2040759b38b6b025ce49a39f8236770af144c8dfe9c942030e3ea471925fa",
+        "routes": 58,
+        "movement_passed": true,
+        "contact_coverage_passed": false,
+        "failed_checks": [
+          "Full-route actual feet/edges and moving roof/near-cut roof coverage"
+        ],
+        "callbacks": 7379,
+        "csv_bytes": 8313944,
+        "csv_sha256": "5a944c0905c9e203a6c4fb4048779e5fc666450f557fed39288e0720584573ac",
+        "owner_exact": true,
+        "baseline_restored": true,
+        "restored": true
+      },
+      "paired_capture": {
+        "directory": "reports/shape-capture-20261011-054304-23924",
+        "receipt_sha256": "0d3b184af788f4f60ea423ea9dac461d34d8b66806b90cd6c72f9bb5415deb22",
+        "runner_passed": true,
+        "source_changes": [],
+        "native_report_sha256": "fc6dc9ab4734574d5d94ddb3b3301aee17272d8ffe00c8b90d0e5d9f73463885",
+        "assertions": 11,
+        "fully_decoded_paired_PNGs": 8
+      },
+      "installed_traversal": {
+        "directory": "reports/traversal-20261011-054524-24028",
+        "receipt_sha256": "915e6858b60af2815f76ddaf5a554f80530c81332f9eea590fc467c2a62c4e91",
+        "runner_passed": false,
+        "source_changes": [],
+        "native_report_sha256": "84dc1b52267f85a4b6324130e33824fd31b5a26e59b10ad084c423a29c5a2bed",
+        "routes": 58,
+        "movement_passed": true,
+        "contact_coverage_passed": false,
+        "failed_checks": [
+          "Full-route actual feet/edges and moving roof/near-cut roof coverage"
+        ],
+        "callbacks": 7379,
+        "csv_bytes": 8313898,
+        "csv_sha256": "3afce118a73563551f5b899c70d38823790b2f425d85897f957a01d911365454",
+        "owner_exact": true,
+        "baseline_restored": false,
+        "restored": true
+      },
+      "acceptance": {
+        "directory": "reports/acceptance-20261011-054826-24318",
+        "receipt_sha256": "6b7835aef51f5d37dff4a4457a1d76f8f069d08484d569989d4711680f880e3f",
+        "runner_passed": true,
+        "source_changes": [],
+        "assertions": 295,
+        "scenarios": 15
+      },
+      "benchmark": {
+        "directory": "reports/benchmark-20261011-055221-24526",
+        "receipt_sha256": "7aafca9009ce2150c77c78ea505dcf2140a06f51692bdf5d2e75a1cba769ec4b",
+        "runner_passed": true,
+        "source_changes": [],
+        "frames": 10096,
+        "frame_p95_ms": 16.414,
+        "frame_p99_ms": 19.119,
+        "route_stalls": 0,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "capture_s": 120.0,
+        "csv_sha256": "a2daa45428410b30be9c251ec7632e444449fdba5dd02cb65119eb03aee88460",
+        "native_report_sha256": "6250761cb082fe01aafaa292b19b8a5440842dd77be2b612f863c77eb3f03a88",
+        "percentiles_independently_recomputed": true,
+        "display_presentation_measured": false,
+        "gpu_timing_available": false
+      },
+      "candidate_rollback": {
+        "directory": "reports/traversal-20261011-055453-24619",
+        "receipt_sha256": "a97951b374f9e195252c3e60a972208e0b81d785aa355c1a8e64990ad60b601b",
+        "runner_passed": false,
+        "source_changes": [],
+        "native_report_sha256": "64bd637fc25a9d150344ddcb088139f0e7e9908e601df7640b27af402d152705",
+        "routes": 58,
+        "movement_passed": true,
+        "contact_coverage_passed": false,
+        "failed_checks": [
+          "Full-route actual feet/edges and moving roof/near-cut roof coverage"
+        ],
+        "callbacks": 7379,
+        "csv_bytes": 8314801,
+        "csv_sha256": "35802d8181dc5e392e204419b4376ab7bce937f529dac5ca2cd68dc6b36504d6",
+        "owner_exact": true,
+        "baseline_restored": true,
+        "restored": true
+      }
+    },
+    "rejected_lower_trial": {
+      "artifact_sha256": "b78cf0651b0cb58ac1b1eb811d2c51f7b9fa9b691cc8468bde82a84e3f3fbe5c",
+      "native_static_checks_passed": 44,
+      "movement_passed": false,
+      "failed_leg": "ordinary_walk/diagonal_B_ascent",
+      "reports": [
+        "reports/traversal-20261011-053359-23231",
+        "reports/traversal-20261011-053612-23366",
+        "reports/traversal-20261011-053803-23623"
+      ],
+      "diagnosis": "Outer shoulder moved 5.769mm; altered steep soil ridge matched stalled contact. Revised left weighting holds registered faces1986/1988 exactly. No controller or arrival-limit change."
+    },
+    "baseline_preservation_failure": {
+      "directory": "reports/traversal-20261011-045941-21344",
+      "closed_preservation_pass": false,
+      "reason": "New author helper appeared during execution; source-membership guard failed."
+    },
+    "available_bytes_after": 12949307392
+  },
+  "performance_budget_scope": "Latest lower-joint120-second source night/rain route only; historical failures retained, no causal improvement or release/device acceptance."
 }

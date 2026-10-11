@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The sustained Mac frame-time budget remains failed.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The latest lower-joint source route passes the Mac frame-time limits; earlier failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -88,3 +88,62 @@ Its independent 120-second night/rain benchmark completes two loops without stal
 1280 x 720 offline30-FPS smoke clip is also retained and fully decoded. Offline
 video does not measure real-time motion/pacing. Live audio and sustained control
 feel remain open. See [launch instructions and artifact limits](MAC-CANDIDATE.md).
+
+## Lower entrance joint successor
+
+Only the two lower stones and their shared soil/contact vertices changed. At
+three measured sections the center joint is now 39.10–40.02 mm, previously
+99.10–100.02 mm. The upper stones and 52-triangle upper soil roof remain exact.
+The native authoring check passes 45 checks for channels, winding, seams,
+bounds, slopes, closed stones and saved-resource readback. Render/contact caps
+retain their original different triangulations; their directed boundaries and
+planar domains coincide, with a measured maximum separation bound below
+0.00000012 m.
+
+The first lower-row trial passed static geometry checks but stalled on a real
+diagonal ascent. It moved one outer shoulder by 5.77 mm, changing a steep
+shared-soil ridge. The adopted version holds those two approach triangles exact
+and passes all 58 movement routes without changing the controller, arrival
+limits or safety gates. Failed trials remain in the local reports.
+
+Both isolated and installed runs pass every movement route and contact profile.
+The full traversal suite **still fails** its separate moving upper-roof/near-cut
+contact gate: neither run records a qualifying roof contact. Native ownership,
+registered shape, settings and restoration pass. These are automated physical
+routes, not manual control-feel acceptance. Eight paired day/night/rain/wider
+PNGs pass full decoding and show the narrower lower joint; thick slab fronts,
+the upper gap and night readability remain unfinished.
+
+The successor is 641,570 bytes, exactly the previous artifact's encoded size.
+It retains 17,217 render corners, 7,323 contact corners, three existing mesh
+nodes and one registered collision shape. No geometry generation runs at
+startup or per frame. Keeping the original192 resource/proof and the new
+9,420-byte manifest adds 650,990 bytes to the source checkout. No steady-state
+memory or frame-time improvement follows from those counts.
+
+Rollback: Git checkpoint `65f7168` restores the prior192 startup and material
+state. The original192 artifact and proof are still byte-exact in `baked/`.
+The existing runtime owner's rollback continues to restore its original043
+resources; it does not switch to192. `shape-build` rebuilds the isolated
+candidate from192; native geometry is checked independently of Godot's assigned
+resource UID. `shape-capture --candidate PATH` compares that candidate with
+the currently installed source. The compact manifest retains the still-false
+full-contact, art, sustained-performance and physical-device acceptance flags.
+
+Fresh integrated gameplay passes **295/295 assertions across 15 scenarios**.
+The later 120-second night/rain source benchmark passes the unchanged
+16.7/33.3 ms p95/p99 gates: **p95 16.414 ms, p99 19.119 ms, 10,096 frames**,
+two route loops, zero stalls, 1920 x 1080, default VSync. Both percentiles were
+independently recomputed from the full CSV. This single route pass does not
+establish a causal speedup over earlier failed runs, presented-frame timing,
+GPU cost, sustained thermal behavior or mobile performance. The baked manifest's
+false acceptance flags retain its experimental release scope; measured results
+collected after baking are recorded separately here.
+
+The candidate swap path was also rerun against the newly installed successor:
+58 movement routes pass, native pointers restore exactly, and the same
+upper-roof contact gate remains failed. Source preservation passes in these
+isolated/installed/rollback runs. The earlier baseline run's source-membership
+guard failed when a new helper appeared during execution; it remains failed
+evidence and is not a closed preservation pass. The current mac061 app contains
+the earlier surface checkpoint; this geometry successor is tested in source.

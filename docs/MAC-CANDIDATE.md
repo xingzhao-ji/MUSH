@@ -1,5 +1,7 @@
 # Mac development candidate (mac061)
 
+The later lower-joint geometry successor is currently tested in source. This mac061 app contains the earlier Rock01 surface checkpoint.
+
 This experimental 0.6.0 build includes the weathered entrance-top material. It is
 launchable on the tested Apple M4 Pro Mac; overall scenery and movement quality
 remain unfinished. The retained 0.5.7 app and 0.5.5 rollback are untouched.
