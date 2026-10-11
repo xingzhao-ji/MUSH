@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T13:30:00.224179+00:00",
+  "prepared_utc": "2026-10-11T14:09:55.260679+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -32,10 +32,12 @@
       ]
     },
     "acceptance": {
+      "receipt": "reports/acceptance-20261011-070101-38714/result.json",
+      "receipt_sha256": "3a90987d3d9ec91ce7c1dd9ec5aca7da0bf5ba5beda8ff9ba285f3ef1fa2747c",
       "passed": true,
-      "receipt": "reports/acceptance-20261011-061736-25977/result.json",
-      "receipt_sha256": "3251f9b9dd6a92f94fa641274b1500fa7b4f3be62787c0dfc0407aeb4cece42e",
       "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
       "checks": {
         "scenarios": 15,
         "assertions": 295,
@@ -111,7 +113,8 @@
       "passed": true,
       "tests": 4,
       "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
-      "source_sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577"
+      "source_sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577",
+      "last_run_after_gap_step_changes": true
     },
     "fresh_local_clone": {
       "passed": true,
@@ -134,6 +137,36 @@
       "smoke_checks": 12,
       "headless": true,
       "temporary_clone_removed": true
+    },
+    "gap_step": {
+      "receipt": "reports/gap-step-20261011-065802-38548/result.json",
+      "receipt_sha256": "bbe1a6c7b403df75970a030cbe9b907877cd3e2859f76a43c06eefcd16413e13",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "routes": 4,
+        "assertions": 19,
+        "movement_passed": true,
+        "recorded_ticks": 464,
+        "native_geometry_held_exact": true,
+        "original_roof_contact_gate_waived": false,
+        "manual_controls_verified": false
+      }
+    },
+    "latest_import": {
+      "receipt": "reports/import-20261011-065744-38505/result.json",
+      "receipt_sha256": "4dd70b02b6914c3da6283fff8caf24247258cb09c1c7c7e3acd45c7314b587b6",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [
+        "tests/native_paired_support.gd.uid"
+      ],
+      "source_preservation_failed": false,
+      "checks": {
+        "import_passed": true
+      }
     }
   },
   "benchmarks": [
@@ -210,7 +243,7 @@
       "independent_csv_percentiles_match": true
     }
   ],
-  "performance_budget_passed": false,
+  "performance_budget_passed": true,
   "profiling": {
     "kind": "instrumented 30-second diagnostics, no completed route loop",
     "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
@@ -256,13 +289,15 @@
     "final_strict_payloads_reread": 628,
     "final_strict_payloads_match": true,
     "final_hydration_ctime_deltas": 2,
-    "final_payload_receipt_sha256": "12d9a8200160b2d19eb10bf4b3508c6ee2a8cfc64aa160399f325c4a73624b38"
+    "final_payload_receipt_sha256": "12d9a8200160b2d19eb10bf4b3508c6ee2a8cfc64aa160399f325c4a73624b38",
+    "available_bytes_after_gap_step": 12433690624
   },
   "complexity": {
     "material_forwarding": "O(VU), V <= 32; O(V) copied values array removed for O(1) iteration state",
     "garden_placement_rebuild": "O(G), G <= 8",
     "garden_save_overlap_validation": "O(G^2), at most 28 prior-position pairs, O(G) state",
-    "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent"
+    "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent",
+    "paired_step_support": "At most two added native rays per step-support lookup; constant script state. Physics query cost remains collision-world dependent; incremental cost unisolated."
   },
   "pending": [
     "physical mobile devices",
@@ -283,7 +318,11 @@
     "scripts/environment_controller.gd": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8",
     "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
     "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
-    "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c"
+    "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c",
+    "lineage/entrance48-player-step-proposal02/player.gd": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c",
+    "tests/paving_traversal.gd": "95c07775b0990c759521f16a1d477ac73260cca86923aa7b18f982adaa7bc4b5",
+    "tests/paving_gap_step.gd": "dbb433ae6f3dd35b43a13f8a720d0da92f235c3fa965bd7400658ab2b7d48e22",
+    "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591"
   },
   "isolated_trials": [
     {
@@ -506,7 +545,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current mac062 exported120-second night/rain route fails p95; historical lower-joint source pass retained. No incremental lighting cost or GPU/display timing attribution.",
+  "performance_budget_scope": "Latest source120-second night/rain callback timing passes p95/p99; frozen mac062 app retains failed p95. No causal speedup, GPU/display or mobile attribution.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -581,5 +620,117 @@
     "current_and_accepted_caches_untouched": true,
     "editor_state_retained": true,
     "transparent_trace_compression_saved_bytes": 0
+  },
+  "paving_step_successor": {
+    "scope": "Native bounded tagged-step support correction in source only; frozen mac062 app not rebuilt. Full contact/art/manual acceptance remains open.",
+    "rollback_commit": "9502353f65532261e2803e8f96a2b92962645ea3",
+    "baseline_red": {
+      "receipt": "reports/gap-step-20261011-065621-38405/result.json",
+      "receipt_sha256": "81466f324df547173cd0a345c5f68b6242c2f3ca2bd14b65cf23939d37fbb6e6",
+      "passed": false,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": null
+    },
+    "regression_green": {
+      "receipt": "reports/gap-step-20261011-065802-38548/result.json",
+      "receipt_sha256": "bbe1a6c7b403df75970a030cbe9b907877cd3e2859f76a43c06eefcd16413e13",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "routes": 4,
+        "assertions": 19,
+        "movement_passed": true,
+        "recorded_ticks": 464,
+        "native_geometry_held_exact": true,
+        "original_roof_contact_gate_waived": false,
+        "manual_controls_verified": false
+      }
+    },
+    "native_regression_sha256": "001e39558d98cd64561eafa6a05a808b3f8778c9feacee20cc4bf3644abde672",
+    "movement_routes": 4,
+    "fixture_checks": 16,
+    "native_fixture_cases": 10,
+    "completed_steps": 2,
+    "aborted_steps": 0,
+    "max_applied_rise_m": 0.178466796875,
+    "full_traversal": {
+      "receipt": "reports/traversal-20261011-065834-38593/result.json",
+      "receipt_sha256": "9d2024ba71c23e65a414999a59c188269933fa4f8115fd26f087ad8a7faf1f67",
+      "passed": false,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": null
+    },
+    "native_traversal_sha256": "13ce9fa8f0e06110fe825cc6892fa5af97531e3fa8f4ce538899bf926cab7dc0",
+    "original_movement_routes": 58,
+    "original_movement_passed": true,
+    "original_contact_coverage_passed": false,
+    "original_callbacks": 7377,
+    "original_failed_checks": [
+      "Full-route actual feet/edges and moving roof/near-cut roof coverage"
+    ],
+    "source_benchmark": {
+      "receipt": "reports/benchmark-20261011-070544-38955/result.json",
+      "receipt_sha256": "b78f0ac7b8a665976482a301bb56fee572401f076be5c1e8ae74daf87c3aeeea",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "frames": 10012,
+        "frame_p95_ms": 16.389,
+        "frame_p99_ms": 18.439,
+        "route_stalls": 0,
+        "thresholds_passed": true,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "gpu_timing_available": false,
+        "physical_device_tested": false,
+        "display_presentation_measured": false
+      }
+    },
+    "native_geometry_changed": false,
+    "new_dependencies": false,
+    "motion_capture": {
+      "receipt": "reports/gap-step-motion-20261011/result.json",
+      "receipt_sha256": "8d105f266f0ccbf5c854e3612eeb854a6a5719fd7ff1b92c5092d2a66704104d",
+      "passed": true,
+      "source_exact": true,
+      "file": "paving-gap-walk.mp4",
+      "sha256": "d8ef87d3d692a4afd83ce0f9cd0a87222e582fa291f462c1576251d20e01dff9",
+      "bytes": 11470564,
+      "frames": 275,
+      "duration_seconds": 9.166666666666666,
+      "probe": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "275"
+      },
+      "full_decode_passed": true,
+      "audio": false,
+      "temporary_avi_removed_bytes": 42573204,
+      "sequential_frames_inspected": [
+        90,
+        135,
+        180,
+        225
+      ],
+      "continuous_motion_quality_verified": false,
+      "real_time_performance": false
+    },
+    "diagnostic_directory": "reports/upper-roof-reachability-20261011",
+    "isolated_triangulator_integrated": false,
+    "physical_devices_tested": false
   }
 }

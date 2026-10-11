@@ -5,6 +5,10 @@ lower paving joint and restrained moonlit sky fill. It launches on the tested
 Apple M4 Pro Mac. Scenery, controls and performance remain unfinished; the
 accepted 0.5.7 app and 0.5.5 rollback are retained.
 
+The source has since gained a tested narrow-joint stepping fix. That fix is not
+in this mac062 app yet; run `project.godot` in Godot 4.7.2 to try the newer source.
+The newer source benchmark does not qualify this frozen app.
+
 Double-click `builds/mac-20261011-062242-26389/MUSH.app`, or run:
 
 ```sh

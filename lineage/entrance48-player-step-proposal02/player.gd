@@ -236,6 +236,28 @@ func _step48_landing_contact(query: Dictionary, body: CollisionObject3D, shape: 
 		floor_contact = true
 	return floor_contact
 
+func _step48_support_at(feet: Vector3, depth: float, body: CollisionObject3D, direction: Vector3) -> Dictionary:
+	var center := _support_at(feet, depth)
+	if not center.is_empty() and center.get("collider") != body: return center
+	# A capsule can straddle a joint with recessed soil or a steep inner return.
+	# Require walkable native support on BOTH sides, on the same tagged shape.
+	# This only proposes support; the complete capsule sweeps still decide motion.
+	if not _step48_inside(body, feet) or _outside_playable(feet) or _over_water(feet): return center
+	var side := Vector3(-direction.z, 0.0, direction.x) * (_capsule.radius * 0.5)
+	if side.length_squared() < 0.0001: return center
+	var left := _support_at(feet - side, depth)
+	var right := _support_at(feet + side, depth)
+	if left.is_empty() or right.is_empty(): return center
+	if left.get("collider") != body or right.get("collider") != body or int(left.get("shape", -1)) != int(right.get("shape", -1)): return center
+	if not center.is_empty() and int(center.get("shape", -1)) != int(left.get("shape", -1)): return center
+	var left_point: Vector3 = left["position"]
+	var right_point: Vector3 = right["position"]
+	if not _step48_inside(body, left_point) or not _step48_inside(body, right_point) or absf(left_point.y - right_point.y) > 0.02: return center
+	var selected: Dictionary = left if left_point.y >= right_point.y else right
+	if not center.is_empty() and (center["position"] as Vector3).y >= (selected["position"] as Vector3).y: return center
+	_step48_stats["paired_supports"] = int(_step48_stats.get("paired_supports", 0)) + 1
+	return selected
+
 func _step48_begin(delta: float, direction: Vector3) -> bool:
 	var planar: Vector3 = Vector3(velocity.x,0.0,velocity.z)
 	var obstruction: Dictionary = _step48_motion(global_transform,planar*delta,true)
@@ -253,14 +275,14 @@ func _step48_begin(delta: float, direction: Vector3) -> bool:
 		blocker = body
 	if blocker == null: return _step48_decline("no_steep_tagged_front")
 	if not _step48_inside(blocker,global_position) or not _step48_inset_clear(global_position): return _step48_decline("unsafe_start_or_bounds")
-	var current_support: Dictionary = _support_at(global_position,0.22)
+	var current_support: Dictionary = _step48_support_at(global_position,0.22,blocker,direction)
 	var current_body: CollisionObject3D = current_support.get("collider") as CollisionObject3D
 	if current_support.is_empty() or not is_instance_valid(current_body) or current_body.collision_layer != 1: return _step48_decline("starting_support_not_world_floor")
 	var start_support: Vector3 = current_support["position"] as Vector3
 	# An actual ray proposes the top/shape; all three full-capsule sweeps still
 	# have to approve the complete route. No authored scalar-height shortcut.
 	var top_probe: Vector3 = global_position+direction*STEP48_LOOKAHEAD+Vector3.UP*STEP48_MAX_RISE
-	var proposed_support: Dictionary = _support_at(top_probe,STEP48_MAX_RISE+STEP48_DOWN_EXTRA)
+	var proposed_support: Dictionary = _step48_support_at(top_probe,STEP48_MAX_RISE+STEP48_DOWN_EXTRA,blocker,direction)
 	var proposed_body: CollisionObject3D = proposed_support.get("collider") as CollisionObject3D
 	if proposed_support.is_empty() or proposed_body != blocker: return _step48_decline("tagged_top_ray_missing")
 	var proposed_point: Vector3 = proposed_support["position"] as Vector3
@@ -293,7 +315,7 @@ func _step48_begin(delta: float, direction: Vector3) -> bool:
 		if landing_shape >= 0 and int(contact["shape"]) != landing_shape: return _step48_decline("mixed_landing_shapes")
 		landing_shape = int(contact["shape"])
 	var goal: Vector3 = future.origin + (down_query["travel"] as Vector3)
-	var support: Dictionary = _support_at(goal,0.22)
+	var support: Dictionary = _step48_support_at(goal,0.22,blocker,direction)
 	var landed_body: CollisionObject3D = support.get("collider") as CollisionObject3D
 	if support.is_empty() or landed_body != blocker or int(support.get("shape",-1)) != landing_shape or int(proposed_support.get("shape",-1)) != landing_shape: return _step48_decline("goal_ray_not_same_body_shape")
 	var support_point: Vector3 = support["position"] as Vector3
@@ -327,7 +349,7 @@ func _step54_try_early_landing() -> bool:
 	var rise: float = goal.y-_step48_start.y
 	if Vector2(travel.x,travel.z).length()>STEP48_POSE_TOLERANCE or goal.y>global_position.y or rise<STEP48_MIN_RISE or rise>STEP48_MAX_RISE+STEP48_POSE_TOLERANCE: return false
 	if not _step48_inside(_step48_body,goal) or not _step48_inset_clear(goal): return false
-	var support: Dictionary = _support_at(goal,0.22)
+	var support: Dictionary = _step48_support_at(goal,0.22,_step48_body,_step48_direction)
 	if support.is_empty() or support.get("collider")!=_step48_body or int(support.get("shape",-1))!=_step48_shape: return false
 	_step48_goal = goal
 	_step48_phase = "down"
@@ -405,7 +427,7 @@ func _step48_observe(delta: float, before: Vector3) -> void:
 		_step48_cancel("actual_motion_blocked")
 		return
 	if _step48_phase == "down" and is_on_floor():
-		var support: Dictionary = _support_at(global_position,0.22)
+		var support: Dictionary = _step48_support_at(global_position,0.22,_step48_body,_step48_direction)
 		var body: CollisionObject3D = support.get("collider") as CollisionObject3D
 		var valid: bool = not support.is_empty() and body==_step48_body and int(support.get("shape",-1))==_step48_shape and get_floor_normal().y>=FLOOR_COS and _step48_inset_clear(global_position)
 		if not valid:

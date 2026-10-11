@@ -198,6 +198,24 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "gap-step":
+        report = read_report(output / "native/paving-gap-step.json")
+        assert report["schema"] == "mush-paving-gap-step/1"
+        assert report["passed"] is True and report["failed"] == 0
+        assert len(report["routes"]) == 4 and all(row["passed"] for row in report["routes"])
+        assert report["checks"] and all(row["passed"] for row in report["checks"])
+        assert report["movement_passed"] and report["owner_exact"] and report["restored"]
+        assert report["callbacks_exact"] and not report["fatal"]
+        assert report["support_fixtures"]["passed"] and len(report["support_fixtures"]["cases"]) == 10
+        trace = output / "native/paving-traversal-ticks.csv"
+        assert sha(trace) == report["trace_sha256"]
+        with trace.open(newline="") as stream:
+            rows = list(csv.DictReader(stream))
+        assert len(rows) == report["callbacks"] and 0 < len(rows) <= 9200
+        assert all(None not in row and None not in row.values() for row in rows)
+        return {"routes": 4, "assertions": report["assertions"], "movement_passed": True,
+                "recorded_ticks": len(rows), "native_geometry_held_exact": True,
+                "original_roof_contact_gate_waived": False, "manual_controls_verified": False}
     if suite == "traversal":
         report = read_report(output / "native/paving-traversal.json")
         assert report["schema"] == "mush-paving-traversal/1"
@@ -263,7 +281,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "traversal", "shape-build", "shape-capture"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "traversal", "gap-step", "shape-build", "shape-capture"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -311,6 +329,8 @@ def main():
         command += ["--script", "res://tests/paving_traversal.gd", "--", "--report-dir=" + str(output / "native")]
         if args.candidate:
             command += ["--candidate=" + str(args.candidate)]
+    elif args.suite == "gap-step":
+        command += ["--script", "res://tests/paving_gap_step.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-build":
         command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-capture":

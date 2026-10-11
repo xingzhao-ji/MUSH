@@ -203,3 +203,61 @@ combined exported verification receipt is failed. This does not establish that
 the two lighting property assignments caused the difference from older runs.
 GPU timing is unavailable; display presentation, live audio, sustained manual
 controls and physical phones remain unverified. See [launch instructions](MAC-CANDIDATE.md).
+
+## Narrow-joint step support
+
+The actual player could remain grounded but stop against an upper stone when
+walking through the center joint. A repeated native diagnostic held the exact
+pose for 247 input ticks: the center proposal ray hit an 87.35-degree inner
+return, while rays 14 cm to either side reached walkable stone tops. A slightly
+different approach instead hit low soil at the center and proposed too little
+lift. Full-capsule clearance correctly refused that route.
+
+The existing tagged-step controller now considers both lateral supports at
+starting, proposed and landing support checks. Both must be walkable, within
+the tagged bounds, on the same body/shape and within 20 mm in height. A higher
+pair may replace a lower center hit only on that same body/shape. Native
+up/ahead/down capsule sweeps, every landing contact, the 20 cm rise limit,
+clearance and cancellation rules still decide movement. General hover/safe-save
+support queries are unchanged. Meshes, registered collider and materials are
+held exact. This reuses Godot physics and adds at most two ray requests per
+step-support lookup with constant script state; native query cost depends on
+the collision world. Incremental CPU cost was not isolated. No asset/dependency
+or per-frame simulation system was added.
+
+The four-route regression fails on the original controller and passes with the
+fix: slow/full ascent and descent, two completed steps, no aborts, maximum
+measured step rise 0.17847 m. The integrated suite passes 19 checks plus all
+16 fixture checks across ten native support cases, including missing sides,
+different bodies/shapes, excessive side-height difference and preserved center
+identity. Shared setup was extracted from the existing traversal fixture; its
+original arrival limits and full contact gate are unchanged.
+
+Fresh original traversal passes all 58 movement routes, with 7,377 callbacks.
+It still fails exactly one of 165 checks: moving upper-roof/near-cut support.
+The separate diagnostic reaches the back of that region but the capsule rests
+on the next step edge, 116 mm above the center soil. The earlier 82 mm endpoint
+clearance failure and a small steep soil edge remain recorded. Paired stepping
+is not roof-contact evidence or a repair to those visual/geometry issues.
+
+Fresh broader gameplay passes 295 assertions across 15 scenarios. The source
+120-second night/rain benchmark passes unchanged 16.7/33.3 ms limits:
+**p95 16.389 ms / p99 18.439 ms**, 10,012 frames, two loops and no stalls,
+1920 × 1080, default VSync. Percentiles are recomputed from the CSV. This is
+one source callback-timing result, not a causal speedup, GPU/presentation,
+thermal or physical-mobile result. The frozen mac062 app retains its own failed
+p95 measurement and does not yet contain this controller fix.
+
+`reports/gap-step-motion-20261011/paving-gap-walk.mp4` retains 275 decoded frames
+at 1280 × 720 and 30 FPS (9.1667 seconds). The same regression and native
+fixtures pass during capture. Four extracted frames were inspected; continuous
+motion quality and real-time/manual control feel remain unverified. The fully
+decoded MP4 is 11,470,564 bytes; its 42,573,204-byte temporary AVI was removed.
+Source preservation passes for the successful suites and the retained failed
+baseline/coverage runs. No device or live-audio acceptance is claimed.
+
+Rollback: checkpoint `9502353` restores the prior controller/test source. The
+unchanged mac062, accepted 0.5.7 and 0.5.5 rollback apps remain available. An
+unused roof-triangulation experiment stays under ignored reports and was not
+integrated. Thick upper fronts, upper gap, soil-contact coverage and whole-game
+art acceptance remain open. Exact receipts/hashes are in the compact summary.

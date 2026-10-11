@@ -103,7 +103,7 @@ var total_upper: Dictionary = {}
 
 func _initialize() -> void: _run.call_deferred()
 
-func _run() -> void:
+func _setup() -> bool:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--report-dir="): output = arg.trim_prefix("--report-dir=")
 		if arg.begins_with("--candidate="): candidate_path = arg.trim_prefix("--candidate=")
@@ -111,11 +111,11 @@ func _run() -> void:
 	output = output.simplify_path()
 	if output.is_empty() or not output.is_absolute_path() or not output.begins_with(reports + "/") or DirAccess.dir_exists_absolute(output) or FileAccess.file_exists(output):
 		push_error("Traversal requires a new --report-dir= directory beneath res://reports/")
-		quit(2); return
-	if DirAccess.make_dir_recursive_absolute(output) != OK: quit(2); return
+		quit(2); return false
+	if DirAccess.make_dir_recursive_absolute(output) != OK: quit(2); return false
 	var scene := load("res://main.tscn") as PackedScene
 	if not _check("Real Main and native rendered display", scene != null and DisplayServer.get_name() != "headless"):
-		_finish(); return
+		_finish(); return false
 	game = scene.instantiate() as Node3D
 	game.set_script(TraversalGame)
 	root.add_child(game)
@@ -124,7 +124,7 @@ func _run() -> void:
 	player = game.get("player") as CurrentPlayer
 	owner = game.world.get("paving_preview_prebuilt") as RefCounted
 	if not _check("Real startup and installed preview owner", game.get("environment_controller") != null and player != null and owner != null and game.world.snapshot_loaded and bool(owner.call("verify", game.world, true))):
-		_finish(); return
+		_finish(); return false
 	body = owner.get("_body") as StaticBody3D
 	shape = owner.get("_shape_new") as ConcavePolygonShape3D
 	shape_index = int(owner.get("_shape_index"))
@@ -143,23 +143,23 @@ func _run() -> void:
 	ready = ready and player.collision_layer == 2 and player.collision_mask == 21 and is_equal_approx(player.floor_max_angle, deg_to_rad(35.0)) and is_equal_approx(player.floor_snap_length, .18) and is_equal_approx(player.safe_margin, .003) and Engine.physics_ticks_per_second == 60 and Engine.time_scale == 1.0
 	ready = ready and body != null and shape != null and shape_index >= 0 and door != null and door.collision_layer != 0 and PhysicsServer3D.body_get_shape_count(door.get_rid()) > 0 and str(game.store.directory).begins_with("user://verification/paving_traversal_")
 	if not _check("Current unchanged capsule, 35-degree floor, physical open door, 60Hz and unique QA profile", ready):
-		_finish(); return
+		_finish(); return false
 	settings_before = var_to_bytes(_settings())
 	owner_before = _owner_identity()
 	if not _check("Exact current registered contact and roof authority", _qualify_contacts()):
-		_finish(); return
+		_finish(); return false
 	for raw: String in LOWER_FEET: lower_feet.append(_foot(raw))
 	for raw: String in UPPER_FEET: upper_feet.append(_foot(raw))
 	if not candidate_path.is_empty():
 		if not _check("Candidate native artifact, explicit mapping/feet/roof/cut authority", _admit_candidate(reports)):
-			_finish(); return
+			_finish(); return false
 		_set_candidate(true)
 		for _i: int in range(30): await physics_frame; await process_frame
 		owner_before = _owner_identity()
 		if not _check("Candidate registered on the same body and classification qualified", _candidate_binding_exact() and _qualify_contacts()):
-			_finish(); return
+			_finish(); return false
 	csv = FileAccess.open(output.path_join("paving-traversal-ticks.csv"), FileAccess.WRITE)
-	if not _check("Fresh bounded CSV opened", csv != null): _finish(); return
+	if not _check("Fresh bounded CSV opened", csv != null): _finish(); return false
 	csv.store_csv_line(PackedStringArray(["serial", "physics_frame", "delta", "label", "requested_input", "observed_input", "position_f32_hex", "velocity_f32_hex", "displacement_f32_hex", "floor", "ceiling", "state", "step_phase", "enabled", "require_release", "paused", "safe_position_f32_hex", "contacts_json"]))
 	observer = PostPlayerObserver.new()
 	observer.name = "PavingPostPlayerObserver"
@@ -168,6 +168,10 @@ func _run() -> void:
 	previous_position = player.global_position
 	previous_frame = Engine.get_physics_frames()
 	root.add_child(observer)
+	return true
+
+func _run() -> void:
+	if not await _setup(): return
 	var pose := player.global_position
 	var yaw: float = player.get("camera_yaw")
 	started = Time.get_ticks_usec(); movement_start_tick = ticks

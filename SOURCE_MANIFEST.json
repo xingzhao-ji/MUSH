@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 4054,
-      "sha256": "4077af43b5c6801be9d82763991011e23c9f89ec71b9f85e8b042e879685029c"
+      "bytes": 4238,
+      "sha256": "cf2fec06fe9ae1c0279b365bf1d629fd3611112a0e42e9270a5dc66b66c0990b"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -379,20 +379,20 @@
       "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 2556,
-      "sha256": "c0fea39db36250b96007f0fd59039569597314db9878e760e3dd88ec764aaf28"
+      "bytes": 2782,
+      "sha256": "5be15e028b1ade702c2a668953ddf9c3fb4384d90c57f683a9eb5f9f83dedf14"
     },
     "docs/STATUS.md": {
-      "bytes": 3354,
-      "sha256": "2b06ce2a4c313cc62deb3e7799974d60ffe44db682571a8165617c3152e9e44e"
+      "bytes": 3551,
+      "sha256": "3f0586427deb01dddace9ddec8ace8b647fc4fc1a4d3ee8a40023c01c005eee6"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 17655,
-      "sha256": "56cb06e86e3b2a39d7c9317a3b1f52c69623a25a578846eb46c3ddb116c8f1c1"
+      "bytes": 21393,
+      "sha256": "adb264be0c82a23170a7b51841956445ce98dad9fbf279a7ec28b8178baa552b"
     },
     "docs/verification-summary.json": {
-      "bytes": 24514,
-      "sha256": "509380141b1757b3a19aaa2d6f9ce95a18e628d007960a319a7983c0f2d3e7ba"
+      "bytes": 30405,
+      "sha256": "feeb5ec6bdd886835b8c2d881225c902d234ab9ff2a7f9a3e0efacc9c80a6e65"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
@@ -415,8 +415,8 @@
       "sha256": "a7360920a7f8fbb5e1ab83c8cca17d5d90694c173b2971b7d3ed559959f5eee8"
     },
     "lineage/entrance48-player-step-proposal02/player.gd": {
-      "bytes": 24281,
-      "sha256": "2a8053b52286948bd09245b2cd0faec8585c81535afe5dc3028e982de579d2bd"
+      "bytes": 26044,
+      "sha256": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c"
     },
     "lineage/entrance48-player-step-proposal02/player.gd.uid": {
       "bytes": 20,
@@ -991,8 +991,8 @@
       "sha256": "f07135ee972fea9487e60aa09db9de38c7ed015fd9f51929ca7524d25bbf6b8e"
     },
     "tools/verify.py": {
-      "bytes": 19306,
-      "sha256": "c32605e4e30e2bf5da3824bccecb69498c55a3b70385fa5876c7f4e7ea884dc6"
+      "bytes": 20753,
+      "sha256": "11e35f429cd70c15f09607ac1c43257f1ff8a68d584a43dd207628fdc4149f2e"
     },
     "baked/paving-lower-joints.json": {
       "bytes": 9420,
@@ -1019,8 +1019,8 @@
       "sha256": "926c5f7675ad699033b8ca14a8d81a09c2a0c28711830211e16bd468c848b66e"
     },
     "tests/paving_traversal.gd": {
-      "bytes": 48448,
-      "sha256": "2f4103c64bbd7f9d4a4d6a7f97f4c0d28ac2cc09ea732405fac1f7cd89147233"
+      "bytes": 48570,
+      "sha256": "95c07775b0990c759521f16a1d477ac73260cca86923aa7b18f982adaa7bc4b5"
     },
     "tests/paving_traversal.gd.uid": {
       "bytes": 20,
@@ -1033,6 +1033,22 @@
     "tools/paving_shape.gd.uid": {
       "bytes": 19,
       "sha256": "7213ad0f30e0cb80407d4574ae8e4e471ef8094997c8b2f74a990f31e936fb37"
+    },
+    "tests/native_paired_support.gd": {
+      "bytes": 10089,
+      "sha256": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591"
+    },
+    "tests/native_paired_support.gd.uid": {
+      "bytes": 20,
+      "sha256": "0c06b22b0081106b713b70a01fc74fe55fcf6d3d0fc7827e186ff4ad64e2fa94"
+    },
+    "tests/paving_gap_step.gd": {
+      "bytes": 4216,
+      "sha256": "dbb433ae6f3dd35b43a13f8a720d0da92f235c3fa965bd7400658ab2b7d48e22"
+    },
+    "tests/paving_gap_step.gd.uid": {
+      "bytes": 20,
+      "sha256": "32a7822f90be7e0a6959589bfc188e93f15d9d6e25026c7f54de65f834ad3d2c"
     }
   }
 }
