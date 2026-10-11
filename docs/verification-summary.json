@@ -4,12 +4,14 @@
   "prepared_utc": "2026-10-11T10:42:25.683351+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
-    "uploaded": false,
+    "uploaded": true,
     "pack_kib_observed": 36685,
     "pack_mib_observed": 35.8251953125,
     "baseline_commit": "7b4efb1",
     "allocation_change_commit": "ee6c62d",
-    "manifest": "SOURCE_MANIFEST.json (contains this summary; excluded from its own hash list)"
+    "manifest": "SOURCE_MANIFEST.json (contains this summary; excluded from its own hash list)",
+    "verified_remote_baseline": "08c418783d97e805ac30461aebf872837c5045d1",
+    "url": "https://github.com/xingzhao-ji/MUSH"
   },
   "engine": {
     "version": "4.7.2.stable.official.ed1daf0bf",
@@ -116,6 +118,16 @@
       "headless": true,
       "remote_clone": false,
       "source_unchanged": true,
+      "temporary_clone_removed": true
+    },
+    "fresh_github_clone": {
+      "passed": true,
+      "receipt": "reports/github-upload-20261011-040307/result.json",
+      "receipt_sha256": "45f275b3243b38618a5e2c4b0937a14f64506a9448c596940b7fb4c5d723fae7",
+      "commit": "08c418783d97e805ac30461aebf872837c5045d1",
+      "tracked_files": 242,
+      "smoke_checks": 12,
+      "headless": true,
       "temporary_clone_removed": true
     }
   },
@@ -288,5 +300,63 @@
       "temporary_clone_removed": true,
       "scene_visual_acceptance": false
     }
-  ]
+  ],
+  "paving_surface_successor": {
+    "scope": "Integrated top-material change; no whole-game approval",
+    "isolated": "reports/paving-20261011-041912-8615/result.json",
+    "integrated": "reports/paving-20261011-042252-8906/result.json",
+    "acceptance": "reports/acceptance-20261011-042339-8965/result.json",
+    "benchmark": "reports/benchmark-20261011-042706-9101/result.json",
+    "assertions": 19,
+    "paired_pngs": 8,
+    "gameplay_assertions": 295,
+    "benchmark_passed": false,
+    "p95_ms": 18.476,
+    "p99_ms": 19.446,
+    "frames": 7172,
+    "route_loops": 2,
+    "route_stalls": 0,
+    "manual_controls_verified": false,
+    "motion_verified": false,
+    "physical_device_tested": false,
+    "receipt_hashes": {
+      "isolated": "445db7bdf565bcaf7049bf92c63f92534ff5b34f3bdc9059a324afeb297ad4f5",
+      "integrated": "e88913508e32ea4218e9e3b8c2bdb2f75ba223ab8590004332c9c0cd6f5aa3f8",
+      "acceptance": "da22359200bca2499f510aff40f1ffaaf9b1c3bf8b809b8e683828da87a6bd4b",
+      "benchmark": "f893086354a9a27e25919e0ab57458a7276113a577bb7c4c059b297ba26b441b"
+    }
+  },
+  "mac061_candidate": {
+    "schema": "mush-mac061-development-candidate/1",
+    "app": "builds/mac-20261011-042956-9202/MUSH.app",
+    "zip": "builds/mac-20261011-042956-9202/MUSH.zip",
+    "zip_bytes": 162431790,
+    "zip_sha256": "3312638c15cd51824a5538c6e118271781db3499423a164b3544349a81f875ae",
+    "profile": "MUSH-mac061",
+    "version": "0.6.0",
+    "universal_binary": true,
+    "tested_architecture": "arm64",
+    "ad_hoc_signature_verified": true,
+    "startup_checks_passed": 12,
+    "exported_captures_passed": 4,
+    "normal_save_continue_observed": true,
+    "benchmark_passed": false,
+    "p95_ms": 18.522,
+    "p99_ms": 19.447,
+    "frames": 7173,
+    "loops": 2,
+    "stalls": 0,
+    "movie": "builds/mac-20261011-042956-9202/clip-20261011-043652/environment-smoke.mp4",
+    "movie_seconds": 3.533333,
+    "movie_bytes": 2198115,
+    "movie_offline_fixed_fps": 30,
+    "movie_not_realtime_performance": true,
+    "art_approved": false,
+    "live_audio_listening": false,
+    "physical_devices_tested": false,
+    "temporary_stage_removed": true,
+    "failed_initial_launcher_preserved": "receipt.json",
+    "corrected_launcher_verification": "verification-20261011-043226/result.json",
+    "delivery_sha256": "d74b3572c9544178e9853f746d3eaf457896fd6eb8ab03f881a6b6afe3fad0c9"
+  }
 }

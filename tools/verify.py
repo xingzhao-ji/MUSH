@@ -176,6 +176,28 @@ def inspect(suite, output, duration, expected_vsync=1):
                 "vsync": report["vsync"],
                 "gpu_timing_available": report["gpu_timing_available"],
                 "physical_device_tested": False, "display_presentation_measured": False}
+    if suite == "paving":
+        report = read_report(output / "native/paving-surface.json")
+        assert report["passed"] is True and report["failed"] == 0 and report["assertions"] > 0
+        assert all(row["passed"] for row in report["checks"])
+        for key in ("geometry_unchanged", "collision_unchanged", "material_rollback_exact", "source_material_unchanged"):
+            assert report[key] is True, key
+        labels = ["close-day", "close-night", "wide-day", "close-rain"]
+        assert [pair["label"] for pair in report["pairs"]] == labels
+        assert all(pair["passed"] and pair["context_held"] for pair in report["pairs"])
+        assert [view["label"] for view in report["views"]] == [label + "-" + suffix for label in labels for suffix in ("before", "after")]
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        decoded = []
+        for view in report["views"]:
+            assert view["passed"] and view["file"] == view["label"] + ".png"
+            item = module.decode(output / "native" / view["file"])
+            assert item["dimensions"] == [960, 960] and item["all_crcs_checked"]
+            assert item["png_sha256"] == view["png_sha256"] and item["rgba_sha256"] == view["rgba_sha256"]
+            decoded.append(item)
+        return {"assertions": report["assertions"], "full_png_decodes": decoded,
+                "motion_verified": False, "art_approved": False, "performance_measured": False}
     if suite == "capture":
         report = read_report(output / "camera.json")
         assert report["passed"] and len(report["views"]) == 4
@@ -201,7 +223,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving"), required=True)
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
     args = parser.parse_args()
@@ -236,6 +258,8 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "paving":
+        command += ["--script", "res://tests/paving_surface.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "environment":
         command += ["--script", "res://tests/environment_controller_contract.gd", "--", "--report-dir=" + str(output)]
     else:

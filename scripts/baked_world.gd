@@ -3,6 +3,9 @@ extends "res://lineage/entrance52-capture03/midstory-world.gd"
 var snapshot_loaded: bool = false
 var paving_preview_prebuilt: RefCounted
 var paving_preview_prebuilt_report: Dictionary = {}
+var paving_surface_original: ShaderMaterial
+var paving_surface_report: Dictionary = {"passed":false}
+const PAVING_STONE: Texture2D = preload("res://assets/world/textures/rock_01_diff_1k.jpg")
 var snapshot_load_seconds: float = 0.0
 var forest_enclosure: Dictionary = {}
 var _environment_foreground: bool = true
@@ -79,6 +82,12 @@ func _ready() -> void:
 	plaster_arch_prebuilt_report = plaster_arch_prebuilt.install(self,PLASTER_ARCH_PROOF_SHA)
 	if not plaster_arch_prebuilt_report.get("passed",false) or not _apply_plaster_grain042():
 		push_error("Combined plaster cache/grain native ownership refused: "+str(plaster_arch_prebuilt_report.get("failure","")))
+		get_tree().quit(2)
+		return
+	# Install the single surface fork before geometry owners capture material
+	# pointers. Shared environment discovery later binds the installed material.
+	if not _apply_paving_surface():
+		push_error("Paving stone surface binding refused")
 		get_tree().quit(2)
 		return
 	paving_collar_prebuilt = PavingCollarPrebuilt.new()
@@ -216,6 +225,24 @@ func _hide_path_backing049() -> bool:
 	backing.hide()
 	path_backing_report = {"passed":not backing.visible,"node":path,"faces_sha256":digest,"retained_triangles":27,"visible":backing.visible,"approximation":"Existing moss terrain exposed between unchanged stones; decorative backing retained but hidden.","collision_changed":false,"new_draws":0,"performance_measured":false}
 	return not backing.visible
+
+func _apply_paving_surface() -> bool:
+	var node := get_node_or_null(PavingCollarPrebuilt.PATHS[0]) as MeshInstance3D
+	if node == null or not node.material_override is ShaderMaterial or PAVING_STONE.get_size() != Vector2(1024,1024): return false
+	var original := node.material_override as ShaderMaterial
+	if original.shader == null or original.shader.resource_path != "res://assets/world/tactile.gdshader": return false
+	var blend: Variant = original.get_shader_parameter("surface_blend")
+	if blend != null and float(blend) != 0.0: return false
+	var selected := original.duplicate(false) as ShaderMaterial
+	if selected == null or selected.shader != original.shader: return false
+	selected.set_shader_parameter("surface_albedo",PAVING_STONE)
+	selected.set_shader_parameter("surface_blend",0.60)
+	selected.set_shader_parameter("surface_scale",2.0/3.0)
+	selected.set_shader_parameter("surface_triplanar",false)
+	paving_surface_original = original
+	node.material_override = selected
+	paving_surface_report = {"passed":node.material_override == selected,"texture":PAVING_STONE.resource_path,"blend":0.60,"repeat_meters":1.5,"original_material_retained":true,"added_materials":1,"added_draw_nodes":0,"geometry_changed":false,"collision_changed":false,"perframe_script_work":false,"approximation":"One planar albedo sample and existing albedo-derived shallow shading relief; no geometric displacement.","physical_device_tested":false}
+	return bool(paving_surface_report.passed)
 
 func _apply_plaster_grain042() -> bool:
 	# One shared material; geometry was admitted at original grain.35 first.

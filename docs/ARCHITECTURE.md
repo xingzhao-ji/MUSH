@@ -6,7 +6,7 @@
 
 ## World resources
 
-`scripts/baked_world.gd` loads the renderer-neutral clearing and installs prebuilt cap, plaster, paving, floor, soil and roof resources through existing owners. Loaders verify pinned payloads and preserve original references for rollback. The combined preview swaps existing mesh/shape references; it adds no paving body or per-frame geometry generation.
+`scripts/baked_world.gd` loads the renderer-neutral clearing and installs prebuilt cap, plaster, paving, floor, soil and roof resources through existing owners. Loaders verify pinned payloads and preserve original references for rollback. The combined preview swaps existing mesh/shape references; it adds no paving body or per-frame geometry generation. A single entrance-top material fork now adds the reviewed Rock01 albedo at startup, before both paving owners capture the selected material. The original material remains available, other aliases keep their original references, and ordinary environmental discovery handles clock/cloud/wetness forwarding. This adds one static material and one planar texture sample, with no geometry, physics, per-frame script loop or additional draw node.
 
 Both `baked/clearing.res` and `baked/clearing-renderer-neutral.res` are required by the current startup proof. Their roughly 64 MB sizes do not justify deleting one: startup hashes the retained original and derived resource. Proof JSON may contain historical workstation paths as provenance; those records are not instructions to load external source files. Do not rewrite a proof merely to remove historical metadata.
 

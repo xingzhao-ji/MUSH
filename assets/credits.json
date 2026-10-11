@@ -168,6 +168,19 @@
       },
       "notice": "assets/licenses/AUDIO-CREDITS.txt",
       "scope": "Native MP3 and AudioStreamRandomizer reuse; five variations, no surface classifier. Physical device cost and human listening pending."
+    },
+    {
+      "id": "polyhaven-rock01-paving",
+      "title": "Rock 01",
+      "author": "Rob Tuytel / Poly Haven",
+      "source": "https://polyhaven.com/a/rock_01",
+      "license": "CC0-1.0",
+      "notice": "assets/licenses/POLY-HAVEN-STONE.txt",
+      "file": "assets/world/textures/rock_01_diff_1k.jpg",
+      "bytes": 688083,
+      "sha256": "0b5f0418eb1e686190c5d33bb54c400b1f9ed58813b5e34aa5e573a5197302b5",
+      "status": "Adopted for the entrance top surface after isolated native paired capture/rollback checks; overall reference fidelity remains unaccepted.",
+      "scope": "One unmodified 1K albedo, Godot-generated mipmaps. No third-party executable code or live service."
     }
   ],
   "reference": {

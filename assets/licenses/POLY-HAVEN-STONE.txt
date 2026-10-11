@@ -1,0 +1,15 @@
+Rock 01 diffuse texture — Rob Tuytel / Poly Haven
+Source: https://polyhaven.com/a/rock_01
+Download: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_01/rock_01_diff_1k.jpg
+License: CC0 1.0 Universal
+https://polyhaven.com/license
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Retained asset: assets/world/textures/rock_01_diff_1k.jpg
+Dimensions: 1024 x 1024
+Bytes: 688083
+SHA256: 0b5f0418eb1e686190c5d33bb54c400b1f9ed58813b5e34aa5e573a5197302b5
+Canonical author/license rechecked October 11, 2026.
+
+Unmodified JPEG; native Godot mipmap import. Paving top material uses a 60% blend at a 1.5-meter repeat. No Poly Haven code, API client, website images,
+normal/displacement map, or live network dependency is included.

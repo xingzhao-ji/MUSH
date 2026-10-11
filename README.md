@@ -28,13 +28,16 @@ python3 tools/verify.py --engine /path/to/Godot --suite acceptance
 python3 tools/verify.py --engine /path/to/Godot --suite ground
 python3 tools/verify.py --engine /path/to/Godot --suite environment
 python3 tools/verify.py --engine /path/to/Godot --suite capture
+python3 tools/verify.py --engine /path/to/Godot --suite paving
 python3 tools/verify.py --engine /path/to/Godot --suite benchmark
 ```
 
 The runner writes timestamped results beneath ignored `reports/` and compresses large JSON outputs after verified readback. Its failure paths have standard-library tests: `python3 -m unittest discover -s tests -p test_verify_runner.py`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. Captures establish pictured states, not motion or live audio quality.
 
+See [the tested local Mac candidate](docs/MAC-CANDIDATE.md) for its launch path, controls and remaining issues.
+
 ## Build and contribute
 
-Install Godot 4.7.2's export templates before using the `macOS MUSH` preset. It writes `builds/MUSH.zip` and uses local ad-hoc signing. The preset does not produce a notarized/store release or an iPhone build. No physical-device performance, manual controls or live listening acceptance is claimed.
+Install Godot 4.7.2's export templates before using the `macOS MUSH` preset. On this Mac, `python3 tools/package_mac.py --engine /path/to/Godot` stages the current source into an ignored build directory, exports a separate `MUSH-mac061` candidate and checks its ZIP, signature and startup. It requires that candidate profile to be absent and reserves 10 GiB beyond a 2 GiB output ceiling. The script downloads nothing. It writes `builds/MUSH.zip` and uses local ad-hoc signing. The preset does not produce a notarized/store release or an iPhone build. No physical-device performance, manual controls or live listening acceptance is claimed.
 
 Keep baked resources and `lineage/`: they are active dependencies. Generated imports, builds, reports, credentials, private saves and user reference images are excluded from Git. [Architecture](docs/ARCHITECTURE.md), [dependencies and notices](docs/DEPENDENCIES.md), [remaining work](docs/STATUS.md) and [license scope](LICENSE.md) describe the boundaries. [AGENTS.md](AGENTS.md) provides the short development workflow.

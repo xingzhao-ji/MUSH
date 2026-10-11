@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The sustained Mac frame-time budget remains failed.** No GitHub upload or release acceptance is claimed here. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The sustained Mac frame-time budget remains failed.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -47,6 +47,44 @@ The unchanged post-cleanup guard passed 628 strict records and verified all 230 
 
 ## Open acceptance
 
-Physical iPhone/iPad/Android tests, an installable IPA, exported-app performance, live listening, manual movement/camera comfort, continuous motion quality and final art/reference fidelity remain pending. Near-cut paving contact coverage, the aggregate full-route contact gate, thick dark slab fronts, broad moss gaps, night readability, shadow/contact quality and water joins remain open. The character remains provisional.
+Physical iPhone/iPad/Android tests, an installable IPA, live listening, sustained manual movement/camera comfort, continuous real-time motion quality and final art/reference fidelity remain pending. Near-cut paving contact coverage, the aggregate full-route contact gate, thick dark slab fronts, broad moss gaps, night readability, shadow/contact quality and water joins remain open. The character remains provisional.
 
-Local receipts are under `reports/`; archive cleanup receipts are under the retained `mobile-transition/review/storage-cleanup253/` archive. `SOURCE_MANIFEST.json` binds the portable tracked payload (excluding itself). Local Git commits retain the baseline and the narrow allocation change for rollback; remote verification is pending.
+Local receipts are under `reports/`; archive cleanup receipts are under the retained `mobile-transition/review/storage-cleanup253/` archive. `SOURCE_MANIFEST.json` binds the portable tracked payload (excluding itself). Local Git commits retain the baseline and the narrow allocation change for rollback; remote baseline `08c4187` was independently cloned, all 242 files matched, and import plus 12 headless startup checks passed.
+
+## Entrance stone surface successor
+
+The Rock01 top material was isolated before integration, then tested again through
+actual startup. Both runs pass 19 native checks and eight fully decoded paired
+960-square PNGs (day, night, rain and wider daylight). Mesh channels, registered
+collision shape/RID, other material aliases and frozen pair context stay exact.
+Both comparison materials receive live environmental updates; restoring the actual
+installed material pointer revalidates the paving owner. An initial fixture-only
+Dictionary type-inference error is retained as a failed run, then corrected.
+
+Fresh integrated gameplay passes **295 assertions / 15 scenarios**. The integrated
+120-second night/rain route completes two loops without stalls at 1920 x 1080:
+**p95 18.476 ms, p99 19.446 ms, 7,172 frames**. The unchanged 16.7 ms p95 gate
+still fails. These are callback intervals, not presented-frame/GPU measurements;
+no speedup or zero-cost claim follows from comparison with earlier runs.
+
+Source JPEG: 688,083 bytes. Imported cache: about 1.97 MB. Native RGB image plus
+10 mip levels: 4,194,303 bytes (CPU readback, not GPU residency). The existing
+shader adds one planar sample and albedo-derived shading relief; vertices,
+collision, draw-node count and gameplay physics are unchanged. The weathered
+surface improves the smooth manufactured appearance, while thick dark fronts,
+wide gaps, night readability and reference fidelity remain open.
+
+## Packaged Mac successor
+
+The separate mac061 development app is exported with a new save directory and
+verified ad-hoc signature. Corrected normal bundle launch passes 12 exported
+startup/effects checks; the previously excluded capture hook now produces all
+four decoded PNGs. Native UI observation covers new game, glow, pause, night/rain
+selection, Save & quit, relaunch and Continue restoring the saved appearance.
+Both ordinary sessions exit 0; prior profiles and source remain unchanged.
+
+Its independent 120-second night/rain benchmark completes two loops without stalls:
+7,173 frames, **p95 18.522 ms / p99 19.447 ms**, still failing p95. A 3.53-second
+1280 x 720 offline30-FPS smoke clip is also retained and fully decoded. Offline
+video does not measure real-time motion/pacing. Live audio and sustained control
+feel remain open. See [launch instructions and artifact limits](MAC-CANDIDATE.md).

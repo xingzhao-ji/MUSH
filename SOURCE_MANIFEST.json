@@ -19,12 +19,12 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 2973,
-      "sha256": "de25a4d0ee40f3c15d0c7ef72ec5ef805389cee996be4b876e27e07bb2f54e00"
+      "bytes": 3491,
+      "sha256": "77ae1b0daba598a175337075ce4acd8f5b07373b1561cd7f337ed3aa69a4404e"
     },
     "export_presets.cfg": {
-      "bytes": 1151,
-      "sha256": "0f9a838149062170a406b5e9f98e3434143345a84aa105497101d466699a23a0"
+      "bytes": 1136,
+      "sha256": "bb1183a940a427228ec1330d673bc9f71679c3c527c891bd1303b3d78cf527dc"
     },
     "main.tscn": {
       "bytes": 177,
@@ -43,8 +43,8 @@
       "sha256": "154eb61003b141a571570cc99b00427f95ca55d027205936a0908fee113cdbee"
     },
     "assets/credits.json": {
-      "bytes": 8005,
-      "sha256": "d8fb0211b7a02d2a64538ef556ba15b6beb316bee7e6c21750858a6ecfa3abf5"
+      "bytes": 8700,
+      "sha256": "9fbf1394f60f561bd441bbe59a320de86ec623ae6d52485f5ad45f2f81531d30"
     },
     "assets/door.wav": {
       "bytes": 24298,
@@ -174,6 +174,10 @@
       "bytes": 608,
       "sha256": "b49aa9c56b04528b95913de13e506a0f7c5e807b9925db9bfef86af1f91120db"
     },
+    "assets/licenses/POLY-HAVEN-STONE.txt": {
+      "bytes": 736,
+      "sha256": "61a5609b7e4959da60270a163e4e53bafaa446674ffb6fc3bf63303a9b2f7337"
+    },
     "assets/world/clearing_sky.gdshader": {
       "bytes": 1598,
       "sha256": "adef9d9596cd4a2469457667e6aefe15e064e1086038254d397f03fe6ffec017"
@@ -274,6 +278,14 @@
       "bytes": 995,
       "sha256": "4869a6f599588e50bd7527a759ac56b3e54ea8a54a79d7387038babd3d0fc0f3"
     },
+    "assets/world/textures/rock_01_diff_1k.jpg": {
+      "bytes": 688083,
+      "sha256": "0b5f0418eb1e686190c5d33bb54c400b1f9ed58813b5e34aa5e573a5197302b5"
+    },
+    "assets/world/textures/rock_01_diff_1k.jpg.import": {
+      "bytes": 968,
+      "sha256": "6503393dab0b344a93f4b8acd7fb5f0600989f21b4ecb495119b3160ac3a5290"
+    },
     "baked/annex-roof-proof.json": {
       "bytes": 29961,
       "sha256": "e32310b1768d34ec781ec175b14be5a786dab18c18b1dcbc8cf617c1f645b6d1"
@@ -359,24 +371,28 @@
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
     "docs/ARCHITECTURE.md": {
-      "bytes": 4946,
-      "sha256": "6d1644eb5111c6b57b84083656157f1f44d4886a368090519de47d80aaf16aef"
+      "bytes": 5386,
+      "sha256": "dc02f5686f033ff5c63a14bd6042c0884a0d384b763543dab90b9148160c0a51"
     },
     "docs/DEPENDENCIES.md": {
-      "bytes": 3087,
-      "sha256": "aa250688c658159100b4d9d68fd26d8ae677add2b43798eb5b5656d17f627886"
+      "bytes": 3636,
+      "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
+    },
+    "docs/MAC-CANDIDATE.md": {
+      "bytes": 2649,
+      "sha256": "66d85ba7c415ea1ff86fee900ec8f10f1eb90d61cf76a800dde469d9c8ce2b1f"
     },
     "docs/STATUS.md": {
-      "bytes": 2719,
-      "sha256": "0c4edf00e4f0718103e582f66f3ab2bbd2db0bb0e0fd6629ac40495291e06d2c"
+      "bytes": 3182,
+      "sha256": "b0bfda9647e5cafb83b0bb6bbda1f9cebcb0c81ac103ddf6484ac7501ad4fce0"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 7660,
-      "sha256": "29ac034449d48d39ac5037009db8c2342d2b6e980ba4c9b6d893156fb94b56f7"
+      "bytes": 10143,
+      "sha256": "b4e8ec69b84afdd77572a764af489e04a669d38a0d46334be1b83aa031d1b711"
     },
     "docs/verification-summary.json": {
-      "bytes": 11873,
-      "sha256": "19087d2c14a694f677b9d524a2f1a98fbcab553a96e3b4c08d0cc0d14cc16c56"
+      "bytes": 14781,
+      "sha256": "b1d044a90f30e18b4abe4a1108d0bd7bfe493d732b50d596002dceda0a9360cd"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1938,
@@ -675,8 +691,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 26113,
-      "sha256": "f5c806d1a795be1c9d029253101a1d5357a24f940324a4aedb85dbfb4e41080c"
+      "bytes": 28045,
+      "sha256": "06df2c923142c6fe8070be6c086aea2cebc6571d5675c1a3a457c316fc446e1a"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -930,6 +946,14 @@
       "bytes": 20,
       "sha256": "a10f4f113da85a0f101021ff5b302e94d213be5c2f73a62aba4697829865340d"
     },
+    "tests/paving_surface.gd": {
+      "bytes": 23568,
+      "sha256": "9ef98edd2f0b59d68e6d4a221431dc1e5d80402d391d28fa06ceb2eb71624b76"
+    },
+    "tests/paving_surface.gd.uid": {
+      "bytes": 20,
+      "sha256": "c154acd7b0b03c7e7d7608a12bcb62087e89882fefc380839b2de7356a3c32ee"
+    },
     "tests/smoke.gd": {
       "bytes": 2637,
       "sha256": "3b62802fcfccd4e4b5c3a20d48d6d807567627f0fd6a4a23eec0ea993f624b2a"
@@ -962,9 +986,13 @@
       "bytes": 3240,
       "sha256": "cacc607fc90c2f0db837c8f145b11d001b9a528783e45253402d8c4c607070fa"
     },
+    "tools/package_mac.py": {
+      "bytes": 14360,
+      "sha256": "6fce90c11860cb61840491f907f3bd3ca1e077fd05de708ec0d1a7740a11c2ba"
+    },
     "tools/verify.py": {
-      "bytes": 13675,
-      "sha256": "bce85418668d74faf52480bf440edd5f53a812cfa12ceae3fc8d46f7810e83dd"
+      "bytes": 15406,
+      "sha256": "bf0b170c3da57f44d173be624be10dd82e30132c9b1fcd7775ed8b55895a771f"
     }
   }
 }
