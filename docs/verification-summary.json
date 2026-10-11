@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T18:24:55.720821+00:00",
+  "prepared_utc": "2026-10-11T19:11:11.359939+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -31,8 +31,8 @@
       }
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-111453-63122/result.json",
-      "receipt_sha256": "79b683d8b9f4c0e56f681d300a2fc51d11ea5293a605a943dad19e34b5d5bf69",
+      "receipt": "reports/acceptance-20261011-120000-65964/result.json",
+      "receipt_sha256": "d3f5bf86ea7e205b4cde452a984d1a326a3d3a5160d4ea12d5036025255e72fc",
       "passed": true,
       "checks": {
         "scenarios": 15,
@@ -60,8 +60,8 @@
       "native_parameter_comparisons": 14867
     },
     "environment": {
-      "receipt": "reports/environment-20261011-111227-62890/result.json",
-      "receipt_sha256": "94114312b716fe78941a1ee573693a974096c524f050d9e88f7f11d59146f73a",
+      "receipt": "reports/environment-20261011-120600-66258/result.json",
+      "receipt_sha256": "a5a8295f3bb50a7aa4e4acb2e8b5fcf0d43fab7083c327a6d667b92fe3760233",
       "passed": true,
       "checks": {
         "assertions": 137,
@@ -275,6 +275,38 @@
         "art_approved": false,
         "performance_measured": false
       }
+    },
+    "outer_tree": {
+      "receipt": "reports/outer-tree-20261011-115903-65910/result.json",
+      "receipt_sha256": "9f589b63ab1671db92cceb1f7048211e66eca291b86a924e1127422034daf66e",
+      "passed": true,
+      "checks": {
+        "checks": 17,
+        "contact_checks": 19,
+        "camera_frames": 225,
+        "blocked_bone_frames": 0,
+        "camera_overlaps": 0,
+        "movement_ticks": 855,
+        "outer_contact_checks": 6,
+        "pixel_visibility_verified": false,
+        "motion_acceptance": false
+      }
+    },
+    "outer_tree_60": {
+      "receipt": "reports/outer-tree-60-20261011-115931/receipt.json",
+      "receipt_sha256": "0820145c2468239cb896ae97b3fce5cbf24adcaea1841927a5b2132d180c46b4",
+      "passed": true,
+      "checks": {
+        "checks": 17,
+        "contact_checks": 19,
+        "camera_frames": 450,
+        "blocked_bone_frames": 0,
+        "camera_overlaps": 0,
+        "movement_ticks": 855,
+        "outer_contact_checks": 6,
+        "pixel_visibility_verified": false,
+        "motion_acceptance": false
+      }
     }
   },
   "benchmarks": [
@@ -349,6 +381,27 @@
       "native_report_sha256": "630e497b85e8de35bd57bde2d47212c4d506fbbfd349b481ce5df2a39dcdd593",
       "csv_sha256": "be3102f942df7b12293b05858848bae75629c307aa51aee48977b05989327117",
       "independent_csv_percentiles_match": true
+    },
+    {
+      "receipt": "reports/benchmark-20261011-120622-66372/result.json",
+      "receipt_sha256": "8a2542d0abb2ff705dfa3475b399c208f6ce05a9d8748d746c33fca3c1ac685a",
+      "passed": true,
+      "checks": {
+        "frames": 10121,
+        "frame_p95_ms": 16.163,
+        "frame_p99_ms": 18.067,
+        "route_stalls": 0,
+        "thresholds_passed": true,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "gpu_timing_available": false,
+        "physical_device_tested": false,
+        "display_presentation_measured": false
+      }
     }
   ],
   "performance_budget_passed": true,
@@ -421,7 +474,7 @@
     "near-cut paving coverage",
     "aggregate full-route contact gate",
     "distant-house grounding on east-tree route",
-    "close-tree camera/character pixel visibility",
+    "exhaustive camera/character pixel visibility beyond tested outer-tree route",
     "negative-Z background water coverage"
   ],
   "runtime_sha256": {
@@ -437,11 +490,11 @@
     "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
     "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
     "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
-    "scripts/baked_world.gd": "75a05a8ddb5c64b6f39f04d74ab5255bcf032f07ea3c1127923cb694a234f5f9",
+    "scripts/baked_world.gd": "7addc3b73bd6f3439edc8e73129d05613c4727fbf75fe8490634221b345ad849",
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "231cb8d0109b3ede44c9865889ca94be0b2a2b5c1db77c038c2a251a3be201b5",
+    "tools/verify.py": "1e1c385123c10d2bcf9b534a21c34b4be4c02ced4f9b8a1d7bd9b9f360ade029",
     "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
     "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
     "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
@@ -449,7 +502,11 @@
     "scripts/forest_enclosure.gd": "10b6423e3a4667cd81749eaf194a45096bca92d1076a1a68b8a4878f8a688983",
     "scripts/air_capsule_guard.gd": "7e8185f41d9e916962e47d20249720175aaa7a184b22de42272a8bb99658f603",
     "tests/forest_layers.gd": "a29866c5b57657f0de34eb798d13aa421eb07fa7b1606a89c958d4f3d67b4242",
-    "tests/forest_trunk_contacts.gd": "4f46b344407692666fb1e6ef127c7d4f469ad3a99a9df4a0895b549220b7c534"
+    "tests/forest_trunk_contacts.gd": "4f46b344407692666fb1e6ef127c7d4f469ad3a99a9df4a0895b549220b7c534",
+    "scripts/outer_tree_contact.gd": "29fc84ef200775ad7c606edde7850977291ad89fff536878cd8fd6445a302348",
+    "tests/outer_tree_camera.gd": "b71e53a058a5ce062923b9909447d90f2c7fe46059deb3328c59ff4fa14d260e",
+    "tests/outer_trunk_contacts.gd": "b067fc975ecfb3f86cd1c867c39659217669f7ff2e308d1f4d3cf446970729d2",
+    "tests/bark_camera_probe.gd": "7e61df152d86098a5caa002c4bb3de79adae3e9fb95a1713efd4fbd27368a8d6"
   },
   "isolated_trials": [
     {
@@ -672,7 +729,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current mixed-height forest/contact source120s callback route passes16.259/17.788ms; frozen mac063 predates this source and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current outer-tree source120s callback route passes16.163/18.067ms with brief concurrent cache hashing; frozen mac063 predates it and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -2209,5 +2266,156 @@
     "prior_decoder_failure": "reports/storage-report-import-cache/initial-decode-failure.json",
     "latest_free_bytes": 12795142144,
     "reserve_bytes": 10737418240
+  },
+  "outer_tree_successor": {
+    "purpose": "Close the reproduced original noncollidable trunk that obscured the character during the east-route turn.",
+    "rollback_commit": "99361336dfc77a2e3cb204a0c848b2787a55a92e",
+    "reuse": "Existing Godot CylinderShape3D and forest cylinder convention; no dependency.",
+    "native_packet_sha256": "83ee726ad28f038147f016f3e2c54b821a32e8b5e56201d7ef2d149ba86ffe66",
+    "source_corners": 216,
+    "added_bodies": 1,
+    "added_shapes": 3,
+    "added_nodes": 4,
+    "added_render_geometry": 0,
+    "per_frame_scripts": 0,
+    "maximum_conservative_segment_shell_m": 0.177336782217026,
+    "shell_scope": "Whole-segment radial bound, not measured clearance at feet.",
+    "startup_complexity": "O(V) time and temporary packet storage for fixed V=216; fixed three native static shapes. Native physics cost not isolated.",
+    "checks": {
+      "outer_tree": {
+        "receipt": "reports/outer-tree-20261011-115903-65910/result.json",
+        "receipt_sha256": "9f589b63ab1671db92cceb1f7048211e66eca291b86a924e1127422034daf66e",
+        "passed": true,
+        "checks": {
+          "checks": 17,
+          "contact_checks": 19,
+          "camera_frames": 225,
+          "blocked_bone_frames": 0,
+          "camera_overlaps": 0,
+          "movement_ticks": 855,
+          "outer_contact_checks": 6,
+          "pixel_visibility_verified": false,
+          "motion_acceptance": false
+        }
+      },
+      "outer_tree_60": {
+        "receipt": "reports/outer-tree-60-20261011-115931/receipt.json",
+        "receipt_sha256": "0820145c2468239cb896ae97b3fce5cbf24adcaea1841927a5b2132d180c46b4",
+        "passed": true,
+        "checks": {
+          "checks": 17,
+          "contact_checks": 19,
+          "camera_frames": 450,
+          "blocked_bone_frames": 0,
+          "camera_overlaps": 0,
+          "movement_ticks": 855,
+          "outer_contact_checks": 6,
+          "pixel_visibility_verified": false,
+          "motion_acceptance": false
+        }
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-120600-66258/result.json",
+        "receipt_sha256": "a5a8295f3bb50a7aa4e4acb2e8b5fcf0d43fab7083c327a6d667b92fe3760233",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        }
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-120000-65964/result.json",
+        "receipt_sha256": "d3f5bf86ea7e205b4cde452a984d1a326a3d3a5160d4ea12d5036025255e72fc",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        }
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-120622-66372/result.json",
+        "receipt_sha256": "8a2542d0abb2ff705dfa3475b399c208f6ce05a9d8748d746c33fca3c1ac685a",
+        "passed": true,
+        "checks": {
+          "frames": 10121,
+          "frame_p95_ms": 16.163,
+          "frame_p99_ms": 18.067,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        }
+      }
+    },
+    "benchmark_condition": "Read-only historical import-cache hashing briefly overlapped; no controlled cost/speedup comparison.",
+    "movie": {
+      "receipt": "reports/outer-tree-movie-20261011-120845/receipt.json",
+      "receipt_sha256": "b37ed984c8caf4562378154f8f34adf5fb917c779b5f38d3f59b0b08d0b0d5d5",
+      "sha256": "5f5ea0e880959f79f6ac798f6f109e07c76b7ee4506e63d0b9401ac1a1b4943b",
+      "bytes": 31011622,
+      "probe": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "643"
+      },
+      "frames": 643,
+      "duration_seconds": 21.433333333333334,
+      "audio": false,
+      "full_decode_passed": true,
+      "scope": "Silent offline30FPS; sequential still review, no continuous-motion/manual/live-audio acceptance.",
+      "working_avi_bytes_removed": 82970932,
+      "working_avi_removed_after_complete_decode": true
+    },
+    "samples": {
+      "receipt": "reports/outer-tree-movie-20261011-120845/sequential-samples.json",
+      "receipt_sha256": "641be76dba99d47bc26115afc2b030d6ff6c776ccced0fae5482bdb97402b26d",
+      "count": 7,
+      "reviewed_times_seconds": [
+        3,
+        7,
+        11,
+        14,
+        15,
+        18,
+        20
+      ],
+      "formerly_blocked_turn_character_visible_in_sample": true
+    },
+    "failed_baseline": "reports/tree-camera-20261011-114509/",
+    "failed_convex_movement": "reports/outer-tree-20261011-115100-65432/",
+    "isolation_pass": "reports/tree-camera-20261011-115831/",
+    "house_inventory": {
+      "receipt": "reports/tree-inventory-20261011-114719/receipt.json",
+      "receipt_sha256": "8f62f3f979fcefca005ebbb86e32d61e2759fad3b43fbc836e1b3e1c1fcb8969",
+      "exact_matched_stems": 3,
+      "first_house_support_gap_m": [
+        1.91847658,
+        1.94773197
+      ],
+      "second_house_support_gap_m": [
+        4.59238243,
+        4.62305117
+      ],
+      "third_house_top_rock_overlap_unverified": true,
+      "foundations_fixed": false
+    },
+    "new_app_exported": false,
+    "all_tree_coverage": false,
+    "full_pixel_visibility_verified": false,
+    "continuous_motion_verified": false,
+    "physical_device_tested": false,
+    "art_approved": false
   }
 }

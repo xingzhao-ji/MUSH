@@ -157,6 +157,10 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	forest_enclosure = preload("res://scripts/forest_enclosure.gd").build(self)
+	if not preload("res://scripts/outer_tree_contact.gd").install(self):
+		push_error("Outer trunk native contact ownership refused")
+		get_tree().quit(2)
+		return
 	# Keep the retained wind/shelter particle system. Native alpha fade removes
 	# distracting close-camera streaks without changing capacity or physics.
 	var rain_material: BaseMaterial3D = rain_particles.draw_pass_1.surface_get_material(0) as BaseMaterial3D

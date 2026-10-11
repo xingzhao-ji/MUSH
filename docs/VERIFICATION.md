@@ -600,3 +600,69 @@ exported. mac063 predates these changes and retains its measured p95 failure.
 | Foreground tree obstruction and distant-house foundation | Visible defects retained for the next correction |
 | Full reference fidelity, shadows/contact, manual motion/audio | Still unfinished or unverified |
 | Current export and physical-device testing | Pending; no device is connected |
+
+## Legacy outer-trunk contact correction
+
+The recorded foreground obstruction came from an original noncollidable trunk,
+not the four newly solid middle-layer stems. The reproduced baseline records
+19 frames with both head and body bone-center rays blocked by native bark.
+Three `CylinderShape3D` segments now enclose its exact 216 native bark corners,
+using the existing forest's smooth static-cylinder convention. A pinned packet
+hash admits the known baked owner; rendering and ordinary camera/controller
+settings are unchanged. One body, three shapes and four nodes are added, with
+no new render geometry, texture, material, dependency or per-frame script.
+Startup work/state is bounded by those 216 corners. Native physics cost has not
+been isolated. The maximum conservative whole-segment radial shell is 17.74 cm;
+this is not a measured gap at the player's feet. Unsafe-support metadata keeps
+the caps out of ordinary support, Float support and recovery-site selection.
+
+The earlier three-convex-shape trial corrected camera occlusion but failed real
+lateral movement: zero sliding displacement. Its failed receipt is retained at
+`reports/outer-tree-20261011-115100-65432/`. The cylinder successor slides 1.1055 m
+laterally and retains approach obstruction, retreat, every-tick no-overlap,
+no unwanted paving step and unsafe-cap refusal. No controller workaround was added.
+
+The integrated `outer-tree` suite passes 17 integration/camera checks, 19 existing
+trunk checks and six new contact checks across 855 movement ticks. At fixed
+30/60 rendered FPS, respectively 225/450 east-route camera samples show zero
+simultaneous head/body bark blockage, lens overlap, full fading or behind-camera
+targets. These are sampled native bone-center rays and lens queries, not
+whole-image visibility or exhaustive path/frustum coverage. Removing and
+reinstalling the owned body preserves other mesh/material/contact bindings.
+The diagnostic reads raw native surface arrays and indices: Godot's
+`Mesh.get_faces()` delegates to `TriangleMesh`, which snaps vertices; applying
+that snap before versus after batch transforms caused earlier identity failures.
+Exact raw-array matching fixes the diagnostic without weakening its equality.
+
+Fresh broader runs pass 137 environment assertions and 295 gameplay assertions
+across 15 scenarios. Four Python runner failure tests pass. The 120-second
+night/rain route passes unchanged limits at 1920 x 1080/default VSync:
+**p95 16.163 ms / p99 18.067 ms**, 10,121 frames, two loops and zero stalls.
+Read-only hashing of historical import caches briefly overlapped this run;
+this is an observed route result, not a controlled cost/speedup comparison.
+GPU/presentation, thermal and physical-device performance remain unmeasured.
+
+The new silent offline30-FPS recording contains 643 fully decoded 1280 x 720
+frames (21.433 seconds), with seven decoded samples at 3, 7, 11, 14, 15, 18 and
+20 seconds. The sampled formerly blocked turn now shows the character; the
+unsupported home and unfinished background remain visible. Its MP4 is
+31,011,622 bytes. The working AVI was removed only after complete decode and
+source/stat/hash verification. Source and fixtures stayed exact during native
+runs and capture. Continuous motion, manual controls and live listening remain
+unverified. No app was exported; mac063 still predates these source changes.
+
+The separate native house survey matches all three rendered stem packets
+exactly. The nearest home has sampled support gaps of 1.918–1.948 m; the second
+has 4.592–4.623 m. The third already meets some rock/moss below its base, but
+queries starting at base height cannot rule out rock penetrating above it.
+Foundations remain open; preserve the reference's elevated homes and rock ledges.
+Other original visual-only trunks also remain outside this single-tree fix.
+
+Evidence: `reports/outer-tree-20261011-115903-65910/`,
+`reports/outer-tree-60-20261011-115931/`,
+`reports/environment-20261011-120600-66258/`,
+`reports/acceptance-20261011-120000-65964/`,
+`reports/benchmark-20261011-120622-66372/`,
+`reports/outer-tree-movie-20261011-120845/` and
+`reports/tree-inventory-20261011-114719/`. Exact receipt hashes are in the compact
+summary. Rollback: Git `9936133`.

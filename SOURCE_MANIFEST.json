@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 4839,
-      "sha256": "19e26e2b68facc129ce63363580bbff2bef55a8f31e13124f2cb8c5a0d0ba95e"
+      "bytes": 5028,
+      "sha256": "977f7a561a5742e0d56145303f40a35a4fd305a15f108a8d653373126f8c46d0"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -403,20 +403,20 @@
       "sha256": "2ab1e6e6fa65d9cd324bcace61d11d9d6a9c6a251c2e9f0a07e223f090ee1e36"
     },
     "docs/STATUS.md": {
-      "bytes": 4187,
-      "sha256": "42f4a5285e5438762825b9d0f320e4e8bba41c3272997b7062fa28310f60d93c"
+      "bytes": 4451,
+      "sha256": "8c2340a9a2eaf348689ea2c8100774d689cb1c330412322373d48bc872b8c743"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 44238,
-      "sha256": "5edee4e0b612f66c7220ac427075f071630cfa5b1a600a0c148918e2b6177a46"
+      "bytes": 48478,
+      "sha256": "8bde33a250fe91aa44fd5068834ba61fba06732d2d579bdfb6d41eefe412b9a0"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 87111,
-      "sha256": "b460681a66569d7133e8cf75c1fe70f30eb2bae7e43da4849333c66c3c681686"
+      "bytes": 94944,
+      "sha256": "8157527458787b2837ee568b173df06db753ca28e66b664a58ea3c2cf116307f"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -727,8 +727,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 29530,
-      "sha256": "75a05a8ddb5c64b6f39f04d74ab5255bcf032f07ea3c1127923cb694a234f5f9"
+      "bytes": 29691,
+      "sha256": "7addc3b73bd6f3439edc8e73129d05613c4727fbf75fe8490634221b345ad849"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -813,6 +813,14 @@
     "scripts/mobile_stick.gd.uid": {
       "bytes": 20,
       "sha256": "96e3999d2fa0de4497113faea71636a8edac52041591fac816f7b1ebd995ebf7"
+    },
+    "scripts/outer_tree_contact.gd": {
+      "bytes": 2773,
+      "sha256": "29fc84ef200775ad7c606edde7850977291ad89fff536878cd8fd6445a302348"
+    },
+    "scripts/outer_tree_contact.gd.uid": {
+      "bytes": 20,
+      "sha256": "ef001e9ea644dc5f1e80575a17252088d7e83b99f99225b80d11d2b9cb0f8a00"
     },
     "scripts/paving_collar_prebuilt.gd": {
       "bytes": 19861,
@@ -917,6 +925,14 @@
     "tests/acceptance.gd.uid": {
       "bytes": 20,
       "sha256": "58f17e4f11a03eea8b6ef820482ce3e7ac301ce6d4dfae6cdabb5bd18cd4169b"
+    },
+    "tests/bark_camera_probe.gd": {
+      "bytes": 6376,
+      "sha256": "7e61df152d86098a5caa002c4bb3de79adae3e9fb95a1713efd4fbd27368a8d6"
+    },
+    "tests/bark_camera_probe.gd.uid": {
+      "bytes": 20,
+      "sha256": "1c2da64bf46012bd95c90e2ccf0dd20a73e508348e65e36f1e8975b281ef4f19"
     },
     "tests/benchmark.gd": {
       "bytes": 13031,
@@ -1054,6 +1070,22 @@
       "bytes": 20,
       "sha256": "0c06b22b0081106b713b70a01fc74fe55fcf6d3d0fc7827e186ff4ad64e2fa94"
     },
+    "tests/outer_tree_camera.gd": {
+      "bytes": 10314,
+      "sha256": "b71e53a058a5ce062923b9909447d90f2c7fe46059deb3328c59ff4fa14d260e"
+    },
+    "tests/outer_tree_camera.gd.uid": {
+      "bytes": 20,
+      "sha256": "008027f95ad1cfc5bb3d1213b263f9cef840f02e38af7a2ac2b31c63efc81e42"
+    },
+    "tests/outer_trunk_contacts.gd": {
+      "bytes": 12842,
+      "sha256": "b067fc975ecfb3f86cd1c867c39659217669f7ff2e308d1f4d3cf446970729d2"
+    },
+    "tests/outer_trunk_contacts.gd.uid": {
+      "bytes": 20,
+      "sha256": "b934283ab700ccdbed31f0d175859060317f8090a4444aab7e76fd15dbe46428"
+    },
     "tests/paving_front_surface.gd": {
       "bytes": 556,
       "sha256": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073"
@@ -1179,8 +1211,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 27246,
-      "sha256": "231cb8d0109b3ede44c9865889ca94be0b2a2b5c1db77c038c2a251a3be201b5"
+      "bytes": 29171,
+      "sha256": "1e1c385123c10d2bcf9b534a21c34b4be4c02ced4f9b8a1d7bd9b9f360ade029"
     }
   }
 }

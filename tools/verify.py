@@ -203,6 +203,30 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "outer-tree":
+        report = read_report(output / "native/contacts.json")
+        assert report["schema"] == "mush-outer-tree-contact/1"
+        assert report["passed"] and report["failed"] == 0
+        assert report["checks"] and all(row["passed"] for row in report["checks"])
+        camera = report["camera_diagnostic"]
+        assert camera["diagnostic_integrity"] and camera["original_bodies_restored"]
+        assert camera["rows"] and camera["blocked_head_and_body_frames"] == 0
+        assert camera["overlapping_lens_frames"] == 0
+        contacts = report["contacts"]
+        assert contacts["passed"] and len(contacts["cases"]) == 4
+        assert all(row["passed"] for row in contacts["checks"])
+        assert sum(case[phase]["ticks"] for case in contacts["cases"]
+                   for phase in ["approach", "slide", "retreat"]) == 684
+        outer = report["outer_contacts"]
+        assert outer["passed"] and all(row["passed"] for row in outer["checks"])
+        assert all(outer[key] for key in ("endpoint_restored", "controller_settings_exact",
+                                         "collision_bindings_exact", "native_cylinder_geometry_exact"))
+        assert sum(outer["case"][phase]["ticks"] for phase in ["approach", "slide", "retreat"]) == 171
+        assert camera["faded_or_behind_frames"] == 0
+        return {"checks": len(report["checks"]), "contact_checks": len(contacts["checks"]),
+                "camera_frames": len(camera["rows"]), "blocked_bone_frames": 0,
+                "camera_overlaps": 0, "movement_ticks": 855, "outer_contact_checks": len(outer["checks"]),
+                "pixel_visibility_verified": False, "motion_acceptance": False}
     if suite == "forest-layers":
         report = read_report(output / "native/forest-layers.json")
         assert report["passed"] and all(row["passed"] for row in report["checks"])
@@ -350,7 +374,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -392,6 +416,9 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "outer-tree":
+        command += ["--fixed-fps", "30", "--script", "res://tests/outer_tree_camera.gd",
+                    "--", "--benchmark", "--report-dir=" + str(output / "native")]
     elif args.suite == "forest-layers":
         command += ["--script", "res://tests/forest_layers.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite in ("forest", "forest-build"):
