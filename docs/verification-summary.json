@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T17:40:40.463549+00:00",
+  "prepared_utc": "2026-10-11T18:24:55.720821+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -23,24 +23,23 @@
   },
   "checks": {
     "import": {
+      "receipt": "reports/import-20261011-110742-62460/result.json",
+      "receipt_sha256": "17a68c2bd0ef65aaa99871c6273223bdc7e67a3ffe7d35dc7431d42f79be44a5",
       "passed": true,
-      "receipt": "reports/import-20261011-025903-3228/result.json",
-      "receipt_sha256": "0771bc9965d7898f11b1c8d78ab25655d9bd42f91af372db3f9c0d9c3a5fdef7",
-      "source_changes": [],
-      "generated_source_files": [
-        "tests/ground_material_sync.gd.uid"
-      ]
+      "checks": {
+        "import_passed": true
+      }
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-103010-60300/result.json",
+      "receipt": "reports/acceptance-20261011-111453-63122/result.json",
+      "receipt_sha256": "79b683d8b9f4c0e56f681d300a2fc51d11ea5293a605a943dad19e34b5d5bf69",
       "passed": true,
       "checks": {
         "scenarios": 15,
         "assertions": 295,
         "all_passed": true,
         "manual_acceptance": false
-      },
-      "receipt_sha256": "8881793769788c23316080e3b8d68e9e42f653abc32a2955bdfaca0f4670fe05"
+      }
     },
     "ground_before": {
       "passed": true,
@@ -61,14 +60,14 @@
       "native_parameter_comparisons": 14867
     },
     "environment": {
-      "receipt": "reports/environment-20261011-102939-60275/result.json",
+      "receipt": "reports/environment-20261011-111227-62890/result.json",
+      "receipt_sha256": "94114312b716fe78941a1ee573693a974096c524f050d9e88f7f11d59146f73a",
       "passed": true,
       "checks": {
         "assertions": 137,
         "all_passed": true,
         "native_parameter_comparisons": null
-      },
-      "receipt_sha256": "24f428534f812751768e973fe0164eb8c854decda2ff1e34f15364a0a5d79496"
+      }
     },
     "capture": {
       "passed": true,
@@ -109,9 +108,10 @@
       "passed": true,
       "tests": 4,
       "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
-      "source_sha256": "c3cfd50a313a5c4656c8b07a12a57789a0595447c7cb9e8da384b82e44aee539",
+      "source_sha256": "231cb8d0109b3ede44c9865889ca94be0b2a2b5c1db77c038c2a251a3be201b5",
       "last_run_after_gap_step_changes": true,
-      "last_run_after_forest_changes": true
+      "last_run_after_forest_changes": true,
+      "last_run_after_forest_layers_changes": true
     },
     "fresh_local_clone": {
       "passed": true,
@@ -159,6 +159,122 @@
         "import_passed": true
       },
       "receipt_sha256": "3ff354b5066ba0f7c0d4e771572e08fcc0fb4ddb316877254a03a41667e17347"
+    },
+    "forest_layers": {
+      "receipt": "reports/forest-layers-20261011-111312-62944/result.json",
+      "receipt_sha256": "aa94ad2e934f508a76847eb2023ba490b17fcda90240d4a641922fe0fc9ad3b5",
+      "passed": true,
+      "checks": {
+        "assertions": 28,
+        "full_png_decodes": [
+          {
+            "bytes": 1751825,
+            "png_sha256": "8a7e7ff5fe1fe37ea38083822d77751929aa4b1c10bb78636715eb3fcb4f5c13",
+            "rgba_sha256": "2e28f51ba50180dc186f1a6c26535ad6fd542abbcf991bf4f5f761ea7e40d501",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1787945,
+            "png_sha256": "ac05d4fc9409315c9715947f8846a7a88f496888821c20a3565820c757645a4c",
+            "rgba_sha256": "c45f17733143eed632cf2eec579739ef7d48aea9849d6faf32c96ac9e95f8fce",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1741204,
+            "png_sha256": "c8f2c4a4c02cfb84a71e676454da8c5af57a9cc6b61c81f7e9cba6a997b055a8",
+            "rgba_sha256": "6154d8e94ab1b98ed6ed37691abe1865adc70dd6bfddc4a14ff4c18e63b9b990",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1791658,
+            "png_sha256": "5be88e0db3daaaab3f16b7373681776e419099948fcbbf5383c531fcc4707c2f",
+            "rgba_sha256": "38337bafb5bc6562b794a29d70acf7c8539cb1930ac5cc8beb1f2a915f0b808c",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1574780,
+            "png_sha256": "b29555baafcf19002550a3a7a808d7c33fda0d256ab666eb369bea35ecd32435",
+            "rgba_sha256": "edb8c33a57e725781eef10808e250fb8bcea0542c5954ab07f1cda47a743b72f",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1571257,
+            "png_sha256": "ff9fe16d6b5efce1d9cafd470a455a3c88b753763a5fe38e62e5d499ae67101d",
+            "rgba_sha256": "3aa71aea2a4294248dfa88050c7f2ef467c992b71174fccb32b9c89c61421f60",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1538964,
+            "png_sha256": "3d0807eb255e2cd1ef5d8898d437847657caa2801fbe927c910c13c348596edc",
+            "rgba_sha256": "910f367733818251492a2b430ef969b80eb0cda52da13828b93cbca53bc5f960",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1554713,
+            "png_sha256": "e586e7fc396df9b9e74d6c2c6e89037a85080c9f762d85bbb6d51209ebc2a52b",
+            "rgba_sha256": "67faa8ded88ef0001867f0ad0b9edac183dd28bc34a5ea038bb2b976558841dc",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1562136,
+            "png_sha256": "bbf404f57534db4a2754e0b6aa7eaeab3c536a65790d01350f5849e9c697d202",
+            "rgba_sha256": "d2ce706f74c18ab911445e879573fc13c6ee54a871fb5b3d8021e4ec20ace0c3",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          },
+          {
+            "bytes": 1595073,
+            "png_sha256": "4f2b1c68ed73e39815b7a0e9bbb2fb0518c6dd295304d28f282c9173eac7581d",
+            "rgba_sha256": "61576568eddb6713f14055a4413d8a7efef2d9bf8d18e2b9646a4a4332c70ed8",
+            "all_crcs_checked": true,
+            "dimensions": [
+              1280,
+              720
+            ]
+          }
+        ],
+        "camera_poses": 36,
+        "trunk_contact_cases": 4,
+        "contact_assertions": 19,
+        "motion_verified": false,
+        "art_approved": false,
+        "performance_measured": false
+      }
     }
   },
   "benchmarks": [
@@ -303,7 +419,10 @@
     "continuous motion quality",
     "art/reference acceptance",
     "near-cut paving coverage",
-    "aggregate full-route contact gate"
+    "aggregate full-route contact gate",
+    "distant-house grounding on east-tree route",
+    "close-tree camera/character pixel visibility",
+    "negative-Z background water coverage"
   ],
   "runtime_sha256": {
     "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
@@ -322,11 +441,15 @@
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "c3cfd50a313a5c4656c8b07a12a57789a0595447c7cb9e8da384b82e44aee539",
+    "tools/verify.py": "231cb8d0109b3ede44c9865889ca94be0b2a2b5c1db77c038c2a251a3be201b5",
     "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
     "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
     "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
-    "tests/forest_backdrop_build.gd": "57b99ae49188d61966fdb7adcb92e7cf57e84c1f48dae4c4de047fcbaa87a793"
+    "tests/forest_backdrop_build.gd": "57b99ae49188d61966fdb7adcb92e7cf57e84c1f48dae4c4de047fcbaa87a793",
+    "scripts/forest_enclosure.gd": "10b6423e3a4667cd81749eaf194a45096bca92d1076a1a68b8a4878f8a688983",
+    "scripts/air_capsule_guard.gd": "7e8185f41d9e916962e47d20249720175aaa7a184b22de42272a8bb99658f603",
+    "tests/forest_layers.gd": "a29866c5b57657f0de34eb798d13aa421eb07fa7b1606a89c958d4f3d67b4242",
+    "tests/forest_trunk_contacts.gd": "4f46b344407692666fb1e6ef127c7d4f469ad3a99a9df4a0895b549220b7c534"
   },
   "isolated_trials": [
     {
@@ -549,7 +672,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current terrain/stream source120s callback route passes16.130/18.029ms; frozen mac063 predates this source and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current mixed-height forest/contact source120s callback route passes16.259/17.788ms; frozen mac063 predates this source and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -1799,5 +1922,292 @@
     "packaged": false,
     "observed_free_bytes": 13002567680,
     "remaining": "Bare distant hills/repeated trunks, layered forest and full reference fidelity. Current mac063 is frozen and does not contain this change."
+  },
+  "forest_layers_successor": {
+    "purpose": "Layer the existing forest and make four reachable main stems solid, with native camera-margin compensation.",
+    "reuse": "Existing native MultiMesh, CylinderShape3D, SpringArm3D and shared foliage materials; no new dependency or license.",
+    "rollback_commit": "843886cbfacb8e9bac8c846a6601c4ee09f03f6e",
+    "candidate": {
+      "additional_draw_nodes": 55,
+      "art_approved": false,
+      "canopy_clusters": 210,
+      "height_cohorts": [
+        13,
+        9,
+        8
+      ],
+      "height_scales": [
+        0.34,
+        0.55,
+        1.0
+      ],
+      "maximum_trunk_collision_shell_m": 0.0626741913171402,
+      "new_colliders": 4,
+      "new_collision_shapes": 20,
+      "new_playable_area": false,
+      "reference_layout": false,
+      "schema": "mush-forest-middle-layer/1",
+      "seed": 530052,
+      "shared_existing_wind_material": true,
+      "spatial_chunk_size_m": 8.0,
+      "stream_root_shifted": 1,
+      "trees": 30,
+      "trunk_segments": 240
+    },
+    "instances": 450,
+    "triangles": 208920,
+    "prior_draw_nodes": 56,
+    "current_draw_nodes": 55,
+    "native_leaf_corner_samples": 246750,
+    "leaf_high_corners": 117859,
+    "leaf_ray_queries": 128891,
+    "channel_gap_samples": 2904,
+    "soil_penetrations": 0,
+    "unexpected_leaf_misses": 0,
+    "minimum_sampled_leaf_soil_clearance_m": 0.174238801002502,
+    "root_queries": 30,
+    "wind_jacobian_lower": 0.96498212006564,
+    "leaf_scope": "Native rest corners plus analytic wind/cull bound, not GPU deformation readback; channel classification does not prove water below each point.",
+    "camera_inset_m": 0.05,
+    "maximum_ordinary_lens_distance_m": 3.75,
+    "camera_engine_source": "https://raw.githubusercontent.com/godotengine/godot/ed1daf0bf/scene/3d/physics/spring_arm_3d.cpp",
+    "camera_poses": 36,
+    "trunk_camera_query_hits_max": 0,
+    "movement_ticks": 684,
+    "trunk_contact_cases": 4,
+    "contact_assertions": 19,
+    "capsule_overlap_checked_each_tick": true,
+    "checks": {
+      "import": {
+        "receipt": "reports/import-20261011-110742-62460/result.json",
+        "receipt_sha256": "17a68c2bd0ef65aaa99871c6273223bdc7e67a3ffe7d35dc7431d42f79be44a5",
+        "passed": true,
+        "checks": {
+          "import_passed": true
+        }
+      },
+      "forest_layers": {
+        "receipt": "reports/forest-layers-20261011-111312-62944/result.json",
+        "receipt_sha256": "aa94ad2e934f508a76847eb2023ba490b17fcda90240d4a641922fe0fc9ad3b5",
+        "passed": true,
+        "checks": {
+          "assertions": 28,
+          "full_png_decodes": [
+            {
+              "bytes": 1751825,
+              "png_sha256": "8a7e7ff5fe1fe37ea38083822d77751929aa4b1c10bb78636715eb3fcb4f5c13",
+              "rgba_sha256": "2e28f51ba50180dc186f1a6c26535ad6fd542abbcf991bf4f5f761ea7e40d501",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1787945,
+              "png_sha256": "ac05d4fc9409315c9715947f8846a7a88f496888821c20a3565820c757645a4c",
+              "rgba_sha256": "c45f17733143eed632cf2eec579739ef7d48aea9849d6faf32c96ac9e95f8fce",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1741204,
+              "png_sha256": "c8f2c4a4c02cfb84a71e676454da8c5af57a9cc6b61c81f7e9cba6a997b055a8",
+              "rgba_sha256": "6154d8e94ab1b98ed6ed37691abe1865adc70dd6bfddc4a14ff4c18e63b9b990",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1791658,
+              "png_sha256": "5be88e0db3daaaab3f16b7373681776e419099948fcbbf5383c531fcc4707c2f",
+              "rgba_sha256": "38337bafb5bc6562b794a29d70acf7c8539cb1930ac5cc8beb1f2a915f0b808c",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1574780,
+              "png_sha256": "b29555baafcf19002550a3a7a808d7c33fda0d256ab666eb369bea35ecd32435",
+              "rgba_sha256": "edb8c33a57e725781eef10808e250fb8bcea0542c5954ab07f1cda47a743b72f",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1571257,
+              "png_sha256": "ff9fe16d6b5efce1d9cafd470a455a3c88b753763a5fe38e62e5d499ae67101d",
+              "rgba_sha256": "3aa71aea2a4294248dfa88050c7f2ef467c992b71174fccb32b9c89c61421f60",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1538964,
+              "png_sha256": "3d0807eb255e2cd1ef5d8898d437847657caa2801fbe927c910c13c348596edc",
+              "rgba_sha256": "910f367733818251492a2b430ef969b80eb0cda52da13828b93cbca53bc5f960",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1554713,
+              "png_sha256": "e586e7fc396df9b9e74d6c2c6e89037a85080c9f762d85bbb6d51209ebc2a52b",
+              "rgba_sha256": "67faa8ded88ef0001867f0ad0b9edac183dd28bc34a5ea038bb2b976558841dc",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1562136,
+              "png_sha256": "bbf404f57534db4a2754e0b6aa7eaeab3c536a65790d01350f5849e9c697d202",
+              "rgba_sha256": "d2ce706f74c18ab911445e879573fc13c6ee54a871fb5b3d8021e4ec20ace0c3",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1595073,
+              "png_sha256": "4f2b1c68ed73e39815b7a0e9bbb2fb0518c6dd295304d28f282c9173eac7581d",
+              "rgba_sha256": "61576568eddb6713f14055a4413d8a7efef2d9bf8d18e2b9646a4a4332c70ed8",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            }
+          ],
+          "camera_poses": 36,
+          "trunk_contact_cases": 4,
+          "contact_assertions": 19,
+          "motion_verified": false,
+          "art_approved": false,
+          "performance_measured": false
+        }
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-111227-62890/result.json",
+        "receipt_sha256": "94114312b716fe78941a1ee573693a974096c524f050d9e88f7f11d59146f73a",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        }
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-111453-63122/result.json",
+        "receipt_sha256": "79b683d8b9f4c0e56f681d300a2fc51d11ea5293a605a943dad19e34b5d5bf69",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        }
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-111844-63374/result.json",
+        "receipt_sha256": "bc494ac425956709a3d6d470c9c186e6db51e959b06c894a39f8ac2a34863422",
+        "passed": true,
+        "checks": {
+          "frames": 10025,
+          "frame_p95_ms": 16.259,
+          "frame_p99_ms": 17.788,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        }
+      }
+    },
+    "movie": {
+      "receipt": "reports/forest-layers-movie-20261011-112134/receipt.json",
+      "receipt_sha256": "b77a9c1f0ebcaf907b4e121c1a18f377717c3a5d2f4cc0663073c2edb5ac8417",
+      "sha256": "50a53ab5d5a672cfbef167f5752ccee7470815fb953d528f084cb022a1e259fb",
+      "bytes": 24437874,
+      "probe": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "514"
+      },
+      "frames": 514,
+      "duration_seconds": 17.133333333333333,
+      "audio": false,
+      "full_decode_passed": true,
+      "scope": "Silent offline30FPS native recording; continuous motion/manual controls/live audio unverified. Node-visible observer is not pixel-visibility proof.",
+      "capture_owner_checks": 9,
+      "working_avi_bytes_removed": 64711348,
+      "working_avi_removed_after_complete_decode": true
+    },
+    "art_review": {
+      "bounded_layering_improvement": true,
+      "whole_reference_accepted": false,
+      "residuals": [
+        "regular side-view foliage band",
+        "some distant windows obscured",
+        "apparently unsupported distant house on east-tree route",
+        "close-tree foreground obscures character during one recorded turn",
+        "distant negative-Z channel water coverage unverified",
+        "provisional character and shadows/contact unfinished"
+      ]
+    },
+    "prior_failures_retained": [
+      "reports/height-capture-20261011-104416",
+      "reports/height-probe-capture-20261011-104545",
+      "reports/height-adjusted-probe-capture-20261011-104657",
+      "reports/height-solid-capture-20261011-105942",
+      "reports/height-solid2-capture-20261011-110047",
+      "reports/forest-layers-movie-20261011-112114"
+    ],
+    "isolation_pass": "reports/height-margin-capture-20261011-110424",
+    "initial_integrated_pass": "reports/forest-layers-20261011-111052-62593",
+    "new_app_exported": false,
+    "physical_device_tested": false,
+    "motion_accepted": false,
+    "live_audio_accepted": false
+  },
+  "storage_report_import_cleanup": {
+    "receipt": "reports/storage-report-import-cache/receipt.json",
+    "receipt_sha256": "58c287133c92dc659a313148284f74853ee040f2d43d951853cfc9c030f786a4",
+    "passed": true,
+    "original_png_full_decodes": 227,
+    "derived_files_removed": 454,
+    "allocated_bytes_removed": 244547584,
+    "observed_free_bytes_change": 243798016,
+    "source_exact": true,
+    "unselected_cache_exact": true,
+    "sentinel": "reports/.gdignore",
+    "sentinel_only_tracked_report_file": true,
+    "restore": "Original PNGs/import settings retained. Godot can regenerate these derived report-image textures from a nonignored directory. Game assets and shaders were excluded.",
+    "prior_decoder_failure": "reports/storage-report-import-cache/initial-decode-failure.json",
+    "latest_free_bytes": 12795142144,
+    "reserve_bytes": 10737418240
   }
 }

@@ -203,6 +203,25 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "forest-layers":
+        report = read_report(output / "native/forest-layers.json")
+        assert report["passed"] and all(row["passed"] for row in report["checks"])
+        assert len(report["camera"]) == 36 and all(row["passed"] for row in report["camera"])
+        contacts = report["clearance"]["contacts"]
+        assert contacts["passed"] and len(contacts["cases"]) == 4
+        assert report["clearance"]["root_queries"] == 30 and report["clearance"]["leaf_penetrations"] == 0
+        assert report["inventories"]["trial"]["instances"] == 450 and report["inventories"]["trial"]["draw_nodes"] == 55
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        assert {v["file"] for v in report["views"]} == {label + "-" + suffix + ".png" for label in ("home-day", "side-day", "reverse-day", "home-night", "home-rain") for suffix in ("before", "after")}
+        decoded = []
+        for view in report["views"]:
+            item = module.decode(output / "native" / view["file"])
+            assert view["passed"] and item["dimensions"] == [1280, 720] and item["png_sha256"] == view["sha256"]
+            decoded.append(item)
+        return {"assertions": len(report["checks"]), "full_png_decodes": decoded,
+                "camera_poses": 36, "trunk_contact_cases": 4, "contact_assertions": len(contacts["checks"]),
+                "motion_verified": False, "art_approved": False, "performance_measured": False}
     if suite == "forest-build":
         report = read_report(output / "native/backdrop-build.json")
         assert report["passed"] and report["seam_vertices"] == 202
@@ -331,7 +350,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -373,6 +392,8 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "forest-layers":
+        command += ["--script", "res://tests/forest_layers.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite in ("forest", "forest-build"):
         fixture = "forest_backdrop_build.gd" if args.suite == "forest-build" else "forest_backdrop.gd"
         if args.suite == "forest-build": command += ["--headless"]

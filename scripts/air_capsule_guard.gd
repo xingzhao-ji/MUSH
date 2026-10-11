@@ -42,3 +42,15 @@ func _air_room_refused() -> bool:
 		feedback.emit("Float needs a little more room here.")
 		_blocked_notice = 2.5
 	return false
+
+
+func _build_camera() -> void:
+	super._build_camera()
+	# The pinned engine's explicit-shape SpringArm path ignores its margin.
+	# A native child offset supplies the intended 5cm inset without another cast
+	# or per-frame solver. The same Camera3D and its fade/controls remain in use.
+	var carrier:=Node3D.new()
+	carrier.name="ShapeCastCameraMargin"
+	_spring_arm.add_child(carrier)
+	_camera.reparent(carrier,false)
+	_camera.position=Vector3(0,0,-.05)

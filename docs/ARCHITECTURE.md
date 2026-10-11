@@ -63,3 +63,38 @@ storage is O(XZ + I + W), with W the retained water channels. This bounded autho
 work does not run during ordinary startup. Encoded size and triangle counts are
 not GPU-memory measurements. The fresh complete-scene benchmark passes, but it
 does not isolate the extra terrain/water fragment cost or establish a speedup.
+
+## Forest layers and camera margin
+
+The existing native forest constructor keeps seed 530052 and the same 450
+instances/208,920 triangles, grouped into 8 m MultiMesh chunks. Height groups
+(13 low, nine medium, eight tall) change transforms rather than assets. Root
+positions remain anchored; one former river root moves to the east bank. Native
+meshes and shared foliage wind materials are reused. There are 55 draw nodes,
+previously 56. The existing shadow-off policy for this supplementary layer is
+retained; this does not qualify near-player tree shadow/contact quality.
+
+Four reachable main stems gain five static CylinderShape3D segments each. They
+follow the visible segment pose without nonuniform physics scaling. The circular
+cylinder conservatively encloses the octagonal taper with at most a 6.27 cm shell;
+branches/crowns remain visual. Existing unsafe-support metadata blocks Float and
+safe-save support. Native broad-phase/query work depends on scene contents; no
+per-leaf body or script simulation is added. Construction uses expected
+O(T + I + S) work and O(T + I + S) temporary/retained state for T trees, I placed
+instances and S cylinder shapes; those counts are fixed here at 30, 450 and 20.
+No forest geometry construction runs per frame. Foliage pixel coverage and shadow
+cost elsewhere still require the complete-scene measurement.
+
+The pinned Godot shape-based SpringArm implementation omits its margin subtraction.
+The inherited sphere cast stays in use; a single child carrier places the existing
+Camera3D 5 cm inward. Native transform propagation supplies this constant offset,
+with O(1) added scene state and no extra custom per-frame cast or solver. Maximum
+ordinary camera distance becomes 3.75 m; manual comfort and full-frustum clearance
+remain separate from sampled sphere/ray tests. Git `843886c` is the complete prior
+layout/camera/collider rollback; `build(world, true)` supplies the unchanged visual
+reference layout only for paired verification, not an independent gameplay mode.
+
+`reports/.gdignore` prevents test screenshots from becoming imported game textures.
+Only that sentinel is tracked under reports; generated results remain ignored.
+Removing its regenerable image cache does not change runtime texture quality or
+establish a memory/frame-time improvement.

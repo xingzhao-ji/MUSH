@@ -4,7 +4,7 @@ October 11, 2026. The portable development copy imports and passes its fresh gam
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
-## Fresh checks
+## Initial clean-repository checks (historical)
 
 | Check | Result | Scope |
 | --- | --- | --- |
@@ -506,3 +506,97 @@ retains its recorded p95 failure. Exact receipt hashes are in the compact summar
 | Sampled perimeter camera and broad gameplay | Tested at 24 sphere poses and 15 gameplay scenarios |
 | Layered forest art and full reference fidelity | Still unfinished |
 | Continuous motion, live audio, current export and devices | Pending; no physical device connected |
+
+
+## Mixed-height forest and trunk/camera contact
+
+The existing 30-tree layer now uses 13 low, nine medium and eight tall trees.
+Native meshes, materials and RNG draw order are retained; 450 placed instances
+and 208,920 triangles are unchanged. Spatial batches fall from 56 to 55. Moving
+one seeded root onto the east bank clears its previous water placement. The
+reviewed paired views give the home more foliage at middle height; entrance and
+bridge readability remain. The side view still forms a regular foliage band,
+some background windows are more obscured, and reference fidelity is unfinished.
+
+Four previously pass-through reachable stems now use 20 static native cylinder
+shapes. Their transforms and dimensions match the rendered main-stem segments;
+the conservative shell extends at most 6.27 cm beyond the tapered octagonal
+surface. Branches, crowns and distant stems remain visual. Existing unsafe-support
+metadata prevents these caps from becoming Float support or saved recovery sites.
+No gameplay force or paving-step tag was added. Git `843886c` restores the prior
+layout, collider and camera state; the reference constructor also reproduces the
+preceding native chunk-buffer fingerprint for matched images.
+
+An isolated contact test exposed three camera intersections among 36 poses.
+The exact [pinned Godot SpringArm implementation](https://raw.githubusercontent.com/godotengine/godot/ed1daf0bf/scene/3d/physics/spring_arm_3d.cpp)
+applies its configured margin in the ray branch but not the explicit-shape branch.
+A native carrier now offsets the same Camera3D inward by 5 cm, retaining the
+sphere cast and existing fade/controls. This makes the unobstructed lens distance
+3.75 m instead of 3.80 m. It adds one Node3D and no custom per-frame query or solver.
+The corrected isolated and integrated camera checks pass. Saturated overlap
+queries are refused; the fresh twelve trunk-pose queries each returned zero hits.
+
+The final integrated `forest-layers` run passes 28 checks, 19 contact assertions
+and ten fully decoded 1280 x 720 paired PNGs. Ground checks cover 246,750 unique
+placed leaf corners: 117,859 exceed the terrain's global maximum; 128,891 are
+ray-tested, of which 2,904 lie in the authored river gap above the nominal water
+height. There are no unexpected misses or soil penetrations; minimum sampled
+soil clearance is 17.42 cm. All 30 root bases meet the soil. Finite transforms,
+native bounds and a conservative analytic wind/culling bound pass. This is not
+GPU-deformed surface readback or proof of water beneath every channel sample.
+The distant negative-Z channel beyond the original water end remains unverified.
+
+Actual CharacterBody traversal supplies 684 approach/slide/retreat physics ticks
+across all four stems. Every tick checks the actual capsule for penetration;
+native obstruction/deflection, safe retreat, no unwanted step, support refusal
+and restored endpoint/settings all pass. Camera checks cover 24 existing
+perimeter poses and 12 trunk approaches; all four new trunks shorten the native
+spring arm when expected. These sampled routes do not cover every hover, camera
+or full-frustum path. Earlier low-crown penetration, submerged-root, fixture
+lifetime and camera-overlap failures remain preserved as failed evidence.
+
+## Prevent repeated screenshot imports
+
+`reports/.gdignore` now keeps verification images out of Godot's asset importer.
+It is the only tracked file under that directory. The targeted cleanup fully
+decoded 227 original PNGs, then removed 454 matching generated texture/cache files
+with 244,547,584 allocated bytes (233.22 MiB). Original images, import settings,
+source, game textures, shaders and other caches were preserved and checked.
+Observed free space increased by 243,798,016 bytes; this is not exclusive APFS
+attribution. Godot can regenerate those textures from the retained images in a
+nonignored directory. The first RGB8 decoder attempt failed before deletion;
+the retained successor uses full ffmpeg decoding. The 10 GiB reserve still applies.
+
+Fresh broader checks pass 137 environment assertions, 295 gameplay assertions
+across 15 scenarios (including indoor/fast-turn camera tests), and four Python
+runner tests. The current 120-second night/rain route records 10,025 frames,
+two loops and zero stalls at 1920 x 1080/default VSync: **p95 16.259 ms / p99
+17.788 ms**, within the unchanged 16.7/33.3 ms limits. CSV percentiles are recomputed
+by the runner. Runtime source stays unchanged through these checks. This does not
+isolate collider/foliage cost or establish a causal speedup, GPU/display,
+thermal or physical-device performance. The environment run predates only the
+final camera-test saturation guard; no runtime implementation changed afterward.
+
+A new ordinary-camera in-engine recording reuses the four real contact routes
+with the character animation and gust environment active. Its nine capture-owner
+checks and 19 contact assertions pass. All 514 frames fully decode at 1280 x 720,
+30 FPS (17.133 seconds). The retained silent MP4 is 24,437,874 bytes; its 64,711,348-
+byte working AVI was removed after full decode and exact source/stat/hash checks.
+The initial Vector2/Vector2i capture-fixture parser failure remains failed evidence.
+Four sequential samples are retained at 3, 7, 11 and 15 seconds. These reveal a
+distant mushroom house that looks unsupported from the east-tree route, plus a
+close-tree view that obscures the character during the turn. The capture observer
+checks node visibility/current-camera ownership, not pixel visibility: its pass
+does not waive those visual defects. Continuous motion, real-time pacing and
+live listening remain unverified. About 12 GiB remains free; no new app was
+exported. mac063 predates these changes and retains its measured p95 failure.
+
+| Current forest/contact scope | Status |
+| --- | --- |
+| Mixed tree heights, grounded roots and sampled leaf clearance | Implemented, reviewed in paired views and native-tested |
+| Four stem colliders and unsafe-support behavior | Tested in 684 actual movement ticks; other branches/crowns remain visual |
+| Fixed 5 cm camera inset | Tested at 36 static poses and broader gameplay locations; full path/frustum coverage remains open |
+| Local frame-time route and report-cache cleanup | Measured as above; no mobile or isolated speedup claim |
+| Foreground tree obstruction and distant-house foundation | Visible defects retained for the next correction |
+| Full reference fidelity, shadows/contact, manual motion/audio | Still unfinished or unverified |
+| Current export and physical-device testing | Pending; no device is connected |
