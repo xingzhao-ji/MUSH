@@ -371,12 +371,12 @@
       "sha256": "0c4edf00e4f0718103e582f66f3ab2bbd2db0bb0e0fd6629ac40495291e06d2c"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 7219,
-      "sha256": "8530c9f51a48691095e41aeae6d1fb58783329c5fe951476ac9930df6290a5ef"
+      "bytes": 7660,
+      "sha256": "29ac034449d48d39ac5037009db8c2342d2b6e980ba4c9b6d893156fb94b56f7"
     },
     "docs/verification-summary.json": {
-      "bytes": 10987,
-      "sha256": "9bf82d13c58da56839c34f2122c8868e17493d038c1671a5e1f6d80d03a307e7"
+      "bytes": 11873,
+      "sha256": "19087d2c14a694f677b9d524a2f1a98fbcab553a96e3b4c08d0cc0d14cc16c56"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1938,

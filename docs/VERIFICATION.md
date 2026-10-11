@@ -33,6 +33,8 @@ Short 30-second script/native profiling runs are diagnostics only, include instr
 
 A separate **20.984-second Metal System Trace** reported Godot-attributed **Active GPU intervals covering 96.28%** of its window, with nominal thermal state. Queue latency was verified separately against 40,011 matched events. This is active-interval coverage, not hardware occupancy/utilization or a sustained pass. CPU encoding intervals cover 26.55%; no presented-handler records or semantic render-pass labels were available. The trace supports substantial GPU-side work, but identifies no proven redundant draw/pass that can safely be removed. It is not a reason to lower visual quality or the existing limit.
 
+A subsequent isolated shader trial added a uniform early return when cloud-shadow strength is exactly zero at night. It preserved the finite scene expression but still failed the same 120-second budget: **p95 18.855 ms, p99 21.159 ms**, two loops and no stalls. No useful improvement was established; the trial was **not adopted**. Its patch/CSV/receipts are retained locally, and its disposable source clone was removed after hash checks.
+
 The material-forwarding change removes a temporary O(V) values array, with V <= 32, while preserving O(VU) forwarding work. Native parity passes. **No measured frame-rate improvement is claimed.** Further performance work must preserve scenery and use fresh measurements.
 
 ## Storage verification

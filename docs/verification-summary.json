@@ -268,5 +268,25 @@
     "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
     "tests/environment_controller_contract.gd": "5ef7adbf14a4edc4f0c1f164f3076200181f7d2dc447e3c5c86edfcad59d6978",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c"
-  }
+  },
+  "isolated_trials": [
+    {
+      "name": "night cloud-shadow zero-strength early return",
+      "adopted": false,
+      "budget_passed": false,
+      "base_commit": "acfe3b1811bb560d6192b5eac71ba1972e2dd5e4",
+      "receipt": "reports/night-dapple-trial-20261011-034749/result.json",
+      "receipt_sha256": "6f80c3cce0ea7425a55a07a7a3cf1ad9b0d8ce5e7330f663cd720ec85e03e88a",
+      "patch_sha256": "384156f83a3445519509f5125f07076c17782b5bb8dd0df5af826f1109af9f4c",
+      "native_report_sha256": "4fabfdcd5dc0d0bc0883aa4212bb041b3b4b9d3b5d40774d6e3fc65f937a4906",
+      "csv_sha256": "d511679b1c493cbc7875072681e3d99305771636303ab74486d9602658103f2f",
+      "capture_s": 120,
+      "frame_p95_ms": 18.855,
+      "frame_p99_ms": 21.159,
+      "route_loops_completed": 2,
+      "route_stalls": 0,
+      "temporary_clone_removed": true,
+      "scene_visual_acceptance": false
+    }
+  ]
 }
