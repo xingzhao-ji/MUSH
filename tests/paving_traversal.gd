@@ -143,7 +143,7 @@ func _setup() -> bool:
 	var door: StaticBody3D = game.world.get("door_body") as StaticBody3D
 	var ready: bool = player.get_script() == CurrentPlayer and player.is_physics_processing() and player.can_process() and player.enabled and not paused and player.is_on_floor() and player.state == "Grounded" and bool(player.call("_valid_safe_position", player.global_position))
 	ready = ready and capsule_node != null and not capsule_node.disabled and capsule_node.shape is CapsuleShape3D and capsule_node.shape == player.get("_capsule") and PhysicsServer3D.body_get_shape_count(player.get_rid()) == 1 and PhysicsServer3D.body_get_shape(player.get_rid(), 0) == capsule_node.shape.get_rid()
-	ready = ready and player.collision_layer == 2 and player.collision_mask == 21 and is_equal_approx(player.floor_max_angle, deg_to_rad(35.0)) and is_equal_approx(player.floor_snap_length, .18) and is_equal_approx(player.safe_margin, .003) and Engine.physics_ticks_per_second == 60 and Engine.time_scale == 1.0
+	ready = ready and player.collision_layer == 2 and player.collision_mask == 21 and is_equal_approx(player.floor_max_angle, deg_to_rad(35.0)) and is_equal_approx(player.floor_snap_length, .18) and is_equal_approx(player.safe_margin, .005) and Engine.physics_ticks_per_second == 60 and Engine.time_scale == 1.0
 	ready = ready and body != null and shape != null and shape_index >= 0 and door != null and door.collision_layer != 0 and PhysicsServer3D.body_get_shape_count(door.get_rid()) > 0 and str(game.store.directory).begins_with("user://verification/paving_traversal_")
 	if not _check("Current unchanged capsule, 35-degree floor, physical open door, 60Hz and unique QA profile", ready):
 		_finish(); return false

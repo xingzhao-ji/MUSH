@@ -79,7 +79,8 @@ func _ready() -> void:
 	floor_stop_on_slope = true
 	floor_constant_speed = true
 	max_slides = 6
-	safe_margin = 0.003
+	# 5 mm native recovery margin closes the reproduced millimetre trunk overlap.
+	safe_margin = 0.005
 	_capsule = CapsuleShape3D.new()
 	_capsule.height = 0.95
 	_capsule.radius = 0.28

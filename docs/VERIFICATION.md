@@ -721,3 +721,67 @@ Evidence and the frozen candidate remain at
 `reports/perimeter-contact-development/house_support_trial_v6.gd`. The nearest
 home's foundation and the other two homes remain open. Keep house elevation and
 existing materials, and refine the rock silhouette before integration.
+
+
+## Closest-home foundation and native contact margin
+
+The installed v12 rock closes the measured ground gap beneath the closest
+background home while retaining its authored elevation, native house mesh and
+shared materials. The cached resource is 6,771 bytes, 160 triangles/480 corners,
+one render node and one matching concave static shape (four nodes total). It
+reuses the existing deterministic rock authoring and `stone_light`; no texture,
+shader, dependency or per-frame script was added. Startup validation scans fixed
+native vertex packets, O(V) work/temporary arrays. GPU/physics cost is not isolated.
+The large plain side rock, rear landscape join and other two homes remain open.
+
+The isolated v10 support passed local tests, but broader traversal found nine
+fully faded west-corridor camera samples. v12 narrows/shifts the lower west face;
+the camera regression clears. An intermediate shifted-foot topology failure
+remains recorded. The original 3 mm character margin also reproduced about
+1.07 mm of overlap with an existing outer trunk. Native traces show ground/trunk
+contact composition changing after active foundation registration, without a
+foundation contact; the engine-internal cause is unproved. Removing the support
+passes; a separate 5 mm native-margin trial passes with it installed. Production
+now uses 5 mm. Speeds, capsule, slopes, stepping and overlap thresholds are held.
+[Godot's pinned CharacterBody source](https://github.com/godotengine/godot/blob/ed1daf0bf/scene/3d/physics/character_body_3d.cpp)
+passes this existing parameter to grounded motion/recovery. The reported 4.0713 mm
+motion depth is the overall result, not a per-contact measurement, as confirmed
+by [KinematicCollision3D](https://github.com/godotengine/godot/blob/ed1daf0bf/scene/3d/physics/kinematic_collision_3d.cpp).
+
+Fresh integrated results:
+
+- Foundation: 26 checks, 156 movement ticks, 23 native trunk-shape guards,
+  six camera poses and 12 fully decoded paired day/night PNGs. Actual installed
+  render/contact arrays, original mesh/material/physics identities and RNG pass.
+  The MultiMesh underlying mesh identity is now included. Its first test edit
+  misplaced the known live-sky visibility slot; that failed receipt remains,
+  followed by the corrected strict pass. Full poses/visibility are held per pair;
+  only 51 known camera/time-following sky rows are qualified across phases.
+- Trunks: 855 movement ticks at both 30 and 60 rendered FPS, with 225/450 sampled
+  camera rows and zero blocked bone centers/lens overlaps. These are native
+  sample checks, not whole-image/exhaustive visibility or manual feel approval.
+- Paving: all 58 movement routes and 7,337 callbacks pass. 164/165 assertions pass;
+  the sole aggregate upper-soil/near-cut moving-contact gate still fails, with
+  zero roof credit and zero ambiguous classifications. Four separate gap routes
+  pass 20 assertions and 533 ticks. No movement/contact gate was weakened.
+- Environment: 137/137; broader gameplay: 295/295 across 15 scenarios.
+- 120-second night/rain source route: **p95 16.254 / p99 18.181 ms**, 10,079 frames,
+  two loops, zero stalls, 1920 x 1080/default VSync. Unchanged 16.7/33.3 ms limits
+  pass. No controlled speedup, GPU/presentation, thermal or mobile claim follows.
+
+The new silent offline30-FPS movie has 643 decoded 1280 x 720 frames (21.433 s),
+30,065,733 bytes. Seven sequential samples fully decode; 14/15/18-second frames
+were reviewed and show the support and visible character. Continuous motion and
+live listening remain unverified. The temporary AVI was removed only after full
+MP4 decode and source/stat/hash readback. A first RGB sample was refused by the
+RGBA checker; explicit RGBA extraction is the retained passing successor.
+
+Receipts: `reports/house-foundation-20261011-131416-70722/`,
+`outer-tree-20261011-130500-70072/`, `outer-tree-60-20261011-131725/`,
+`gap-step-20261011-130611-70129/`, `traversal-20261011-131513-70801/`,
+`environment-20261011-130627-70155/`, `acceptance-20261011-130641-70165/`,
+`benchmark-20261011-131028-70406/` and `outer-tree-movie-20261011-131745/`,
+all beneath `reports/`. Full hashes and failed-trial paths are in the compact
+summary. Runtime stayed unchanged during these checks; the later fixture-only
+identity check has its own passing run. Rollback: Git `e7482ce`. No new app is
+claimed by this source checkpoint.

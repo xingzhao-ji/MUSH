@@ -203,6 +203,31 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "house-foundation":
+        report = read_report(output / "native/house-support.json")
+        assert report["schema"] == "mush-closest-home-foundation/1"
+        assert report["passed"] and report["failed"] == 0
+        assert report["checks"] and all(row["passed"] for row in report["checks"])
+        assert report["geometry"]["passed"] and report["contacts"]["passed"]
+        assert report["geometry"]["nearby_tree_contacts"]["passed"]
+        assert len(report["camera"]) == 6 and all(row["passed"] for row in report["camera"])
+        assert len(report["views"]) == 12 and len(report["pairs"]) == 6
+        assert all(row["passed"] for row in report["pairs"]) and report["actual_added_node_removal"]
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        decoded = []
+        for view in report["views"]:
+            item = module.decode(output / "native" / view["file"])
+            assert view["passed"] and item["dimensions"] == [960, 960] and item["all_crcs_checked"]
+            assert item["png_sha256"] == view["png_sha256"] and item["rgba_sha256"] == view["rgba_sha256"]
+            decoded.append(item)
+        artifact = report["artifact"]
+        path = output / "native" / artifact["file"]
+        assert artifact["passed"] and artifact["all13_config_buffers_reload_exact"]
+        assert path.stat().st_size == artifact["bytes"] and sha(path) == artifact["sha256"]
+        return {"checks": len(report["checks"]), "movement_ticks": sum(report["contacts"][p]["ticks"] for p in ("approach", "slide", "retreat")),
+                "native_trunk_shapes": len(report["geometry"]["nearby_tree_contacts"]["shapes"]),
+                "full_png_decodes": decoded, "motion_verified": False, "art_approved": False}
     if suite == "outer-tree":
         report = read_report(output / "native/contacts.json")
         assert report["schema"] == "mush-outer-tree-contact/1"
@@ -374,7 +399,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -416,6 +441,9 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "house-foundation":
+        command += ["--resolution", "960x960", "--script", "res://tests/house_foundation.gd",
+                    "--", "--benchmark", "--report-dir=" + str(output / "native")]
     elif args.suite == "outer-tree":
         command += ["--fixed-fps", "30", "--script", "res://tests/outer_tree_camera.gd",
                     "--", "--benchmark", "--report-dir=" + str(output / "native")]

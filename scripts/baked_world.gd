@@ -14,6 +14,7 @@ var paving_front_surface_report: Dictionary = {"passed":false}
 const PAVING_STONE: Texture2D = preload("res://assets/world/textures/rock_01_diff_1k.jpg")
 var snapshot_load_seconds: float = 0.0
 var forest_enclosure: Dictionary = {}
+var closest_home_foundation_report: Dictionary = {}
 var _environment_foreground: bool = true
 const RENDERER_SNAPSHOT: String = "res://baked/clearing-renderer-neutral.res"
 const RENDERER_PROOF: String = "res://baked/renderer-neutral-proof.json"
@@ -159,6 +160,11 @@ func _ready() -> void:
 	forest_enclosure = preload("res://scripts/forest_enclosure.gd").build(self)
 	if not preload("res://scripts/outer_tree_contact.gd").install(self):
 		push_error("Outer trunk native contact ownership refused")
+		get_tree().quit(2)
+		return
+	closest_home_foundation_report = preload("res://scripts/closest_home_foundation.gd").install(self)
+	if not closest_home_foundation_report.get("passed",false):
+		push_error("Closest-home cached support refused: "+str(closest_home_foundation_report.get("failure","")))
 		get_tree().quit(2)
 		return
 	# Keep the retained wind/shelter particle system. Native alpha fade removes

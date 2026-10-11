@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T19:31:05.431104+00:00",
+  "prepared_utc": "2026-10-11T20:20:20.275582+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -473,7 +473,7 @@
     "art/reference acceptance",
     "near-cut paving coverage",
     "aggregate full-route contact gate",
-    "distant-house grounding on east-tree route",
+    "other two distant-home supports and closest-home rear landscape join",
     "exhaustive camera/character pixel visibility beyond tested outer-tree route",
     "negative-Z background water coverage"
   ],
@@ -485,16 +485,16 @@
     "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c",
     "lineage/entrance48-player-step-proposal02/player.gd": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c",
-    "tests/paving_traversal.gd": "fb6bfbb73a2df34d517e12c3f89a3b9f482b57714dcc03bff99e19370dad3e9b",
+    "tests/paving_traversal.gd": "7383ac28bd9fe09359f803bc5ca9b97c1a3c40b75772d1fd2e2889f9d2ba0bf1",
     "tests/paving_gap_step.gd": "1660465a81770845cfd76f978fbbee0cbb9d18bdb2c3092a336d0887e81329b2",
     "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
     "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
     "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
-    "scripts/baked_world.gd": "7addc3b73bd6f3439edc8e73129d05613c4727fbf75fe8490634221b345ad849",
+    "scripts/baked_world.gd": "aaf2d63fd6a93788bb4abab95c19bbea080ff7cbe2f32e0d841cfe6ab02a3732",
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "1e1c385123c10d2bcf9b534a21c34b4be4c02ced4f9b8a1d7bd9b9f360ade029",
+    "tools/verify.py": "0de5292957494bd645c49fc9550dc2073eb1a8f8141c1906b8df216aee73a28c",
     "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
     "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
     "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
@@ -506,7 +506,11 @@
     "scripts/outer_tree_contact.gd": "29fc84ef200775ad7c606edde7850977291ad89fff536878cd8fd6445a302348",
     "tests/outer_tree_camera.gd": "b71e53a058a5ce062923b9909447d90f2c7fe46059deb3328c59ff4fa14d260e",
     "tests/outer_trunk_contacts.gd": "b067fc975ecfb3f86cd1c867c39659217669f7ff2e308d1f4d3cf446970729d2",
-    "tests/bark_camera_probe.gd": "7e61df152d86098a5caa002c4bb3de79adae3e9fb95a1713efd4fbd27368a8d6"
+    "tests/bark_camera_probe.gd": "7e61df152d86098a5caa002c4bb3de79adae3e9fb95a1713efd4fbd27368a8d6",
+    "scripts/player.gd": "a2add8e39d019ea43e1103d60d794ed8feeef85ed03266e83b1d8ef9e80ca74d",
+    "scripts/closest_home_foundation.gd": "982ec712022140d8f35df69f79303a4c4f53e61ba5ece4b7d611b2cc4928febe",
+    "tests/house_foundation.gd": "4b6a5163b883e04c25b11a82049bd7c838abd10b6013b72bfa325dd1f2e1c10a",
+    "assets/world/closest-home-support.res": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c"
   },
   "isolated_trials": [
     {
@@ -729,7 +733,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current outer-tree source120s callback route passes16.163/18.067ms with brief concurrent cache hashing; frozen mac063 predates it and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current closest-home foundation/5 mm margin source120s callback route passes16.254/18.181ms; frozen mac063 predates it and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -2480,5 +2484,221 @@
     "performance_measured": false,
     "motion_verified": false,
     "other_homes_open": true
+  },
+  "closest_home_foundation_successor": {
+    "purpose": "Support the closest elevated background home with a cached rock ledge, preserving native house geometry and the west camera corridor. Other two homes/rear joins remain open.",
+    "rollback_commit": "e7482ce2dceb515482919994bb47873851aebfd9",
+    "artifact": {
+      "file": "assets/world/closest-home-support.res",
+      "bytes": 6771,
+      "sha256": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c",
+      "native_surface_sha256": "2fc214efe2246c2951afd4210cd2cb539a6451e6e00fd24c324f4258e03098e3"
+    },
+    "reuse": "Existing deterministic rock-point authoring, shared stone_light, cached Godot ArrayMesh and native ConcavePolygonShape3D; no dependency, texture, shader or per-frame code.",
+    "triangles": 160,
+    "corners": 480,
+    "added_render_nodes": 1,
+    "added_static_bodies": 1,
+    "added_shapes": 1,
+    "added_nodes": 4,
+    "complexity": "Startup scans the fixed native source packet and cached vertices: O(V) work/temporary arrays; no per-frame GDScript. Native shape-build/render/physics cost not isolated.",
+    "safe_margin_m": {
+      "previous": 0.003,
+      "current": 0.005
+    },
+    "margin_reason": "Default margin reproduced ~1.07 mm selected-trunk overlap after unrelated static-body registration; 5 mm isolated trial and fresh broader native tests pass. No foundation contact recorded; engine-internal cause unproved.",
+    "checks": {
+      "foundation": {
+        "receipt": "reports/house-foundation-20261011-131416-70722/result.json",
+        "receipt_sha256": "ce46a6aec84dd5389da29246597d6e9c84d01e6c51ba63862ce348218689fc05",
+        "passed": true,
+        "checks": {
+          "checks": 26,
+          "movement_ticks": 156,
+          "native_trunk_shapes": 23,
+          "full_png_decodes": 12,
+          "motion_verified": false,
+          "art_approved": false
+        }
+      },
+      "outer_tree_30": {
+        "receipt": "reports/outer-tree-20261011-130500-70072/result.json",
+        "receipt_sha256": "4f7daf0cdac0b1ad6a9e92395155de140c95880aa2b787da1b90e4d073f895fd",
+        "passed": true,
+        "checks": {
+          "checks": 17,
+          "contact_checks": 19,
+          "camera_frames": 225,
+          "blocked_bone_frames": 0,
+          "camera_overlaps": 0,
+          "movement_ticks": 855,
+          "outer_contact_checks": 6,
+          "pixel_visibility_verified": false,
+          "motion_acceptance": false
+        }
+      },
+      "outer_tree_60": {
+        "receipt": "reports/outer-tree-60-20261011-131725/receipt.json",
+        "receipt_sha256": "c984234bf8ebeb81a0c023a88c08866151326559c0ec9a0fb5e9cf49a17a0dc2",
+        "passed": true,
+        "checks": {
+          "checks": 17,
+          "contact_checks": 19,
+          "camera_frames": 450,
+          "blocked_bone_frames": 0,
+          "camera_overlaps": 0,
+          "movement_ticks": 855,
+          "outer_contact_checks": 6,
+          "pixel_visibility_verified": false,
+          "motion_acceptance": false
+        }
+      },
+      "gap_step": {
+        "receipt": "reports/gap-step-20261011-130611-70129/result.json",
+        "receipt_sha256": "ea13f6f06de0f4130031774f28e7dc8adb9a966ae61d2dbe2deff9c01c227b02",
+        "passed": true,
+        "checks": {
+          "routes": 4,
+          "assertions": 20,
+          "movement_passed": true,
+          "recorded_ticks": 533,
+          "native_geometry_held_exact": true,
+          "original_roof_contact_gate_waived": false,
+          "manual_controls_verified": false
+        }
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-130627-70155/result.json",
+        "receipt_sha256": "3f596527ddc16be5620aee3fac6985ac8dcbb7a6510565efc6bda3026db87c20",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        }
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-130641-70165/result.json",
+        "receipt_sha256": "0260d95a06b8e0a57f2092a4314290b8e4a313df835f1b7a2a385f31ffe3f512",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        }
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-131028-70406/result.json",
+        "receipt_sha256": "a8fc62c6f9500d1834b3b3affc0bfd390d1cbaa794ed914148ef828415ea282f",
+        "passed": true,
+        "checks": {
+          "frames": 10079,
+          "frame_p95_ms": 16.254,
+          "frame_p99_ms": 18.181,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        }
+      },
+      "traversal": {
+        "receipt": "reports/traversal-20261011-131513-70801/result.json",
+        "receipt_sha256": "8544c9b0420772d93f836bd4dad5d3fb808fbf3022d04c180984c13404fd0225",
+        "passed": false,
+        "checks": {
+          "assertions": 165,
+          "failed": 1,
+          "movement_passed": true,
+          "contact_coverage_passed": false,
+          "restored": true,
+          "owner_exact": true,
+          "callback_count": 7337,
+          "coverage": {
+            "ambiguous": 0,
+            "center_near_cut_ticks": 322,
+            "lower_edge": [
+              1.9073486328125e-06,
+              2.74864828497812e-06
+            ],
+            "lower_soil": 1027,
+            "lower_stone": [
+              1263,
+              1132
+            ],
+            "moving_near_cut_roof": 0,
+            "moving_roof": 0,
+            "runup_speed": 0.550000011920929,
+            "upper_edge": [
+              0.00595647329464555,
+              0.00171656347811222
+            ],
+            "upper_roof_support": 0,
+            "upper_stone": [
+              2245,
+              2084
+            ]
+          },
+          "routes": 58
+        }
+      }
+    },
+    "movie": {
+      "receipt": "reports/outer-tree-movie-20261011-131745/receipt.json",
+      "receipt_sha256": "d50d3451d3c383843286df3836612c42aef2f68551e3b78788ef3a74de57a4c2",
+      "sha256": "6c5d1c49424bf09c0909fe9a6411a8d6da83ba2bef37b5989faf9297c28039fc",
+      "bytes": 30065733,
+      "probe": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "643"
+      },
+      "frames": 643,
+      "duration_seconds": 21.433333333333334,
+      "audio": false,
+      "full_decode_passed": true,
+      "scope": "Silent offline30FPS, fully decoded; seven sequential samples, three reviewed at14/15/18s. Not continuous motion, manual controls or live listening acceptance."
+    },
+    "samples": {
+      "receipt": "reports/outer-tree-movie-20261011-131745/samples-rgba/sequential-samples.json",
+      "receipt_sha256": "b5d3f47c6937b2100d1a77f2482454ddc83dbcfcebb048b0b8d49064e4db9c81",
+      "count": 7,
+      "reviewed_times_seconds": [
+        14,
+        15,
+        18
+      ]
+    },
+    "failed_trials": {
+      "v10_camera_and_outer_overlap": "reports/outer-tree-20261011-125123-69255/",
+      "v11_shifted_foot_topology": "reports/house-support-20261011-125440/",
+      "v12_at_3mm": "reports/outer-tree-20261011-125745-69659/",
+      "stronger_fixture_sky_slot_error": "reports/house-foundation-20261011-131306-70623/"
+    },
+    "diagnostics": {
+      "default_3mm": "reports/outer-overlap-diagnostic-20261011-130241/",
+      "remove_foundation": "reports/outer-overlap-diagnostic-20261011-130324/",
+      "explicit_5mm": "reports/outer-overlap-diagnostic-20261011-130356/"
+    },
+    "art_limits": [
+      "Large plain side rock",
+      "Rear landscape join",
+      "Other two distant homes"
+    ],
+    "all_homes_fixed": false,
+    "art_approved": false,
+    "continuous_motion_verified": false,
+    "physical_device_tested": false,
+    "new_app_exported": false,
+    "post_verification_fixture_change": "Only three whitespace-only lines cleaned after native verification; every nonblank line remains exact."
   }
 }

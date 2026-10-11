@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 5028,
-      "sha256": "977f7a561a5742e0d56145303f40a35a4fd305a15f108a8d653373126f8c46d0"
+      "bytes": 5226,
+      "sha256": "43683c6d54d8321f5acde508eed61b80f72e57051fcf4ebe91f748df8950ef10"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -173,6 +173,10 @@
     "assets/world/clearing_sky.gdshader.uid": {
       "bytes": 20,
       "sha256": "8dc957d569265911e72d6eb0e6a3af6b2902439c552326ea5be4b0050026d069"
+    },
+    "assets/world/closest-home-support.res": {
+      "bytes": 6771,
+      "sha256": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c"
     },
     "assets/world/fireflies-source.tres": {
       "bytes": 287,
@@ -403,20 +407,20 @@
       "sha256": "2ab1e6e6fa65d9cd324bcace61d11d9d6a9c6a251c2e9f0a07e223f090ee1e36"
     },
     "docs/STATUS.md": {
-      "bytes": 4658,
-      "sha256": "c486b2eef670543f3d6ba814b9060e1519d1b76230bee8157d8ab2ba48c7d7ac"
+      "bytes": 4941,
+      "sha256": "23abd13d071880f69ec35218a6db3516d7deeaaa8f22629fbdd5130ba834b090"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 52106,
-      "sha256": "69ed24a8566574bdb36d2599d3ddaba60182799061a6b23d2575503e638f3422"
+      "bytes": 56483,
+      "sha256": "635735442c0a806bb493595774328a0d57a9b414ea387b60886394ae6ab62de8"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 98410,
-      "sha256": "10f8703a633ac8916d588844be2e3a3e23bcd7eb47b09a4e7f4cfe877fb5033b"
+      "bytes": 107111,
+      "sha256": "f65ec34da1b9fe4122873bf2c750dd7625548e32b428ec5f34bb34d52c5d5b61"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -727,8 +731,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 29691,
-      "sha256": "7addc3b73bd6f3439edc8e73129d05613c4727fbf75fe8490634221b345ad849"
+      "bytes": 30041,
+      "sha256": "aaf2d63fd6a93788bb4abab95c19bbea080ff7cbe2f32e0d841cfe6ab02a3732"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -741,6 +745,14 @@
     "scripts/cap57_prebuilt.gd.uid": {
       "bytes": 20,
       "sha256": "5e462829bbe21ad79985dfc0a7addaa44f322b323c79f4104e9eaad69c92b255"
+    },
+    "scripts/closest_home_foundation.gd": {
+      "bytes": 6328,
+      "sha256": "982ec712022140d8f35df69f79303a4c4f53e61ba5ece4b7d611b2cc4928febe"
+    },
+    "scripts/closest_home_foundation.gd.uid": {
+      "bytes": 20,
+      "sha256": "eb9c9b8e0aab37a79e53d4160be44c235aa2a6c343f35f3faa6d33a06994709f"
     },
     "scripts/environment_controller.gd": {
       "bytes": 38028,
@@ -863,8 +875,8 @@
       "sha256": "f011a3bb2d5fcaf63b03003d910dabfcae8a2d36176192f78b8fca855cea51be"
     },
     "scripts/player.gd": {
-      "bytes": 35478,
-      "sha256": "37ec29dee0a4085f65b8f102fdd26a60a42078f42c7f23a6fdac13cbd749c104"
+      "bytes": 35557,
+      "sha256": "a2add8e39d019ea43e1103d60d794ed8feeef85ed03266e83b1d8ef9e80ca74d"
     },
     "scripts/player.gd.uid": {
       "bytes": 19,
@@ -1030,6 +1042,14 @@
       "bytes": 20,
       "sha256": "d47cccbe392b7753f3d4b87c00a0b71f4bcfcf93aa1cf6b14697d9fe2ac7714c"
     },
+    "tests/house_foundation.gd": {
+      "bytes": 39271,
+      "sha256": "4b6a5163b883e04c25b11a82049bd7c838abd10b6013b72bfa325dd1f2e1c10a"
+    },
+    "tests/house_foundation.gd.uid": {
+      "bytes": 20,
+      "sha256": "2c366d56fb7e604feed9ff63df0348422a40f2c03f98c4da12c80db06c59fbac"
+    },
     "tests/mobile_environment_capture.gd": {
       "bytes": 9037,
       "sha256": "508711a034b53c9b7ac82945dd7b26e89300470069a8701b9cedb007f991d603"
@@ -1128,7 +1148,7 @@
     },
     "tests/paving_traversal.gd": {
       "bytes": 51541,
-      "sha256": "fb6bfbb73a2df34d517e12c3f89a3b9f482b57714dcc03bff99e19370dad3e9b"
+      "sha256": "7383ac28bd9fe09359f803bc5ca9b97c1a3c40b75772d1fd2e2889f9d2ba0bf1"
     },
     "tests/paving_traversal.gd.uid": {
       "bytes": 20,
@@ -1211,8 +1231,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 29171,
-      "sha256": "1e1c385123c10d2bcf9b534a21c34b4be4c02ced4f9b8a1d7bd9b9f360ade029"
+      "bytes": 31286,
+      "sha256": "0de5292957494bd645c49fc9550dc2073eb1a8f8141c1906b8df216aee73a28c"
     }
   }
 }
