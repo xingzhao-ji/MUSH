@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T19:16:21.146134+00:00",
+  "prepared_utc": "2026-10-11T19:31:05.431104+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -2458,5 +2458,27 @@
     },
     "archive_report_compression_applied": false,
     "runtime_optimization_claimed": false
+  },
+  "closest_home_support_rejected_trial": {
+    "receipt": "reports/house-support-20261011-122900/receipt.json",
+    "receipt_sha256": "7858742b1e74567a448fe1da7ca27aa36da9716fa500ff6678bba05ffe712884",
+    "native_passed": true,
+    "adopted": false,
+    "art_approved": false,
+    "reason": "Regular outline, horizontal bands and near-vertical sides read as a cylindrical pedestal, not a natural rock ledge.",
+    "checks": 23,
+    "native_triangles": 128,
+    "movement_ticks": 171,
+    "camera_poses": 6,
+    "decoded_paired_pngs": 12,
+    "artifact_bytes": 3345,
+    "artifact_sha256": "c6f41e3a4341587904e29bb9c9356617dcc035c455d329b6b828e10506a8868e",
+    "fixture": "reports/perimeter-contact-development/house_support_trial_v6.gd",
+    "fixture_sha256": "1ea4eb45ae1e89a1ee9bcd32eac748dd79cb7d86a1e31d28200889dbf9c43139",
+    "source_exact": true,
+    "helpers_exact": true,
+    "performance_measured": false,
+    "motion_verified": false,
+    "other_homes_open": true
   }
 }

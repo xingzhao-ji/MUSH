@@ -698,3 +698,26 @@ compression or source refactor was needed for this recovery.
 Receipts: `reports/perimeter-contact-development/storage-import-cache-audit.json`
 and `storage-cleanup-outer-tree-01/` beneath the same directory. The cleanup changes
 only historical generated caches; it supplies no runtime performance claim.
+
+## Closest-home support trial — not adopted
+
+An isolated 128-triangle stone support passes 23 native checks, 171 actual
+approach/slide/retreat ticks, six camera poses and 12 fully decoded paired
+day/night PNGs. The 3,345-byte material-free resource reloads with all native
+channels/configuration/buffers exact. Original static owners, house geometry,
+materials and RNG are preserved; 51 known sky poses/visibility values follow
+the camera/time across phases and are held exactly within each frozen pair.
+The ground-footprint check uses local, power-of-two-scaled native polygon
+clipping and double-scalar area arithmetic, preserving its original thresholds.
+The pinned [Godot implementation](https://raw.githubusercontent.com/godotengine/godot/ed1daf0bf/core/math/geometry_2d.cpp)
+uses five decimal places for polygon clipping. Earlier fixture precision, null
+resource, inherited-name and live-sky preservation failures remain retained.
+
+The support was **rejected at visual review**: its regular outline, horizontal
+bands and near-vertical sides read as a cylindrical pedestal, not a natural
+reference rock ledge. It is not installed, exported or performance-qualified.
+Evidence and the frozen candidate remain at
+`reports/house-support-20261011-122900/`; the reusable isolated fixture is
+`reports/perimeter-contact-development/house_support_trial_v6.gd`. The nearest
+home's foundation and the other two homes remain open. Keep house elevation and
+existing materials, and refine the rock silhouette before integration.
