@@ -843,3 +843,36 @@ geometry or mac064 artifact changed. Evidence:
 are retained in `reports/perimeter-contact-development/`, with hashes in the
 compact summary. A broader reachability proof remains separate from the passing
 58 actual movement routes.
+
+
+## Report compaction and distant-home inspection
+
+A bounded path-preserving cleanup compressed 316 historical JSON reports after
+a three-copy native pilot and full target/parent admission. All 316 logical
+payload hashes match an independent reread; the 165 immediate-parent membership
+and non-target entry guards pass. Source payloads stay exact. Allocated report
+storage fell by **917,540,864 bytes (875.04 MiB)**. The execution observed
+2,575,949,824 more available bytes; a later sample showed15,574,646,784 bytes
+(14.50 GiB) free. Delayed APFS accounting prevents exclusive attribution.
+
+Paths, contents, mode, owner, mtime and ordinary xattrs are preserved. Inode,
+ctime, birthtime and compression/allocation metadata intentionally changed.
+The compressed manifest retains the original metadata; verified decompression
+can restore the logical files but cannot reconstruct those identity timestamps.
+Unique assets, sources, references, saves and apps were outside the target set.
+Receipts: `reports/storage-report-compaction-20261011-134407/`.
+
+The unchanged scene also passes a 20-owner,195-site native geometry inventory
+and six fully decoded day/night captures. Queries retain every raw-triangle
+crossing from above each owner's maximum Y, avoiding the former base-start ray
+limitation. The closest home's installed ledge overlaps its base by6 mm. The
+second home has only soil4.592–4.623 m below its base. The third home has existing
+rock/moss3.141–4.054 m above its base and is hidden in the captured views.
+These are confirmed scenery defects; no home or bank was modified or accepted.
+
+The first fixture failed on a Script.resource_path access before scene startup;
+its receipt stays failed. The successor corrects that access and explicitly
+separates ordinary saves/settings from generated log rotation/cache. Source,
+ordinary save/settings payloads, mesh/material/body ownership and RNG stay exact.
+Evidence: `reports/house-bank-inventory-20261011-134645-84240/`. The fixed cameras
+are diagnostic views, not played-camera, movement or performance acceptance.

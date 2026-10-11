@@ -2973,5 +2973,56 @@
     "fixture": "reports/perimeter-contact-development/paving_support_envelope_reviewed.gd",
     "fixture_sha256": "f446fba39912f209e046d4124877aea1bd31a15cbcfa22e34cb1343bc0ec87db",
     "runner_sha256": "9e89af0587cb5ac971854b33a095cea53cf6d40a72fc41b888b5cc50adfd71ab"
+  },
+  "historical_report_compaction_successor": {
+    "passed": true,
+    "manifest": "reports/storage-report-compaction-20261011-134407/manifest.json.gz",
+    "manifest_sha256": "645d4fe9951a06e816ac7318dfe74d64e9320de5b132f549f2de7ab28c312935",
+    "receipt": "reports/storage-report-compaction-20261011-134407/execution-01/receipt.json.gz",
+    "receipt_sha256": "d80bafe15210a385f18661c5db1f038efd1059941e6666fa81cf248c993dfec9",
+    "independent_readback_sha256": "61ddd2b62b20e61328363b36a056b5d56482d84198ad82b1590f7c0cc69939b2",
+    "files": 316,
+    "immediate_parent_guards": 165,
+    "all_payload_hashes_exact": true,
+    "source_payloads_exact": true,
+    "allocated_bytes_reduced": 917540864,
+    "observed_free_space_delta_bytes": 2575949824,
+    "later_free_bytes": 15574646784,
+    "free_space_exclusively_attributed": false,
+    "admitted_metadata_changes": [
+      "inode",
+      "ctime",
+      "birthtime",
+      "filesystem compression flag/xattrs",
+      "allocated blocks"
+    ],
+    "rollback": "Verified ditto --noclone --nohfsCompression sibling and atomic replacement; original inode/ctime/birthtime cannot be restored."
+  },
+  "distant_home_bank_inventory": {
+    "passed": true,
+    "source_revision": "7ea30ea",
+    "receipt": "reports/house-bank-inventory-20261011-134645-84240/receipt.json",
+    "receipt_sha256": "15f69e4e865ec87ff117f3b1db3792c83169cbb0ef90c4d54ed5b931eda0b597",
+    "native_report": "reports/house-bank-inventory-20261011-134645-84240/native/house-bank-inventory.json.gz",
+    "native_report_sha256": "5e98c06ec8127de08a840e350d2988cf2ba1ab7690bfaad527783a1f8b73cfad",
+    "owners": 20,
+    "homes": 3,
+    "sites": 195,
+    "checks": 157,
+    "decoded_pngs": 6,
+    "source_and_ordinary_saves_exact": true,
+    "geometry_changed": false,
+    "colliders_added": 0,
+    "home1_top_penetration_m": 0.00600004196166992,
+    "home2_soil_gap_m": [
+      4.59238243103027,
+      4.62305116653442
+    ],
+    "home3_highest_surface_above_base_m": [
+      3.140740275383,
+      4.05435264110565
+    ],
+    "scope": "Ordered raw native triangles; all crossings from above owner maximum Y. Highest surfaces do not prove support or acceptable intersection. Home3 is obscured/buried; home2 is unsupported. Fixed diagnostic camera views, not played poses or motion/performance acceptance.",
+    "prior_failure": "reports/house-bank-inventory-20261011-134611-84181/receipt.json; fixture Script.resource_path parse error and expected engine log rotation in overbroad profile snapshot. Successor fixes fixture and explicitly scopes ordinary save/settings separately from engine-generated logs/cache."
   }
 }
