@@ -3376,5 +3376,23 @@
     "delivery_sha256": "c114a3e862ab28e5cd5e3fcbe6e851d5b58a23a2a80deefc8af4ab26d19bdf55",
     "storage_free_bytes_observed": 13494681600
   },
-  "source_performance_budget_passed": true
+  "source_performance_budget_passed": true,
+  "build_import_exclusion": {
+    "receipt": "reports/build-import-exclusion-20261011-164816/receipt.json",
+    "receipt_sha256": "61e2146d6016c4601ef4de81110823fb0cdc29e7daaff58dac778353454e1d04",
+    "passed": true
+  },
+  "mac065_diagnostic_repeat": {
+    "receipt": "reports/mac065-export-repeat-20261011-150637/receipt.json",
+    "receipt_sha256": "85dc24d9d47a8b4c308c99f91a872c5947a008aa099a937bc7497c9cf6848c19",
+    "passed": false,
+    "csv_metrics_validated_before_threshold_failure": true,
+    "thresholds_passed": false,
+    "frames": 7167,
+    "frame_p95_ms": 18.46,
+    "frame_p99_ms": 19.674,
+    "route_loops_completed": 2,
+    "route_stalls": 0,
+    "csv_sha256": "c795c7d8254dd34047dd54ae3907439de4b17d06dd667d0fa1e1607b12bd2da6"
+  }
 }

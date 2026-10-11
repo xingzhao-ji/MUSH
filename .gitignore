@@ -4,7 +4,8 @@
 __pycache__/
 *.pyc
 # Builds, measurements and private export credentials
-builds/
+builds/*
+!builds/.gdignore
 reports/*
 !reports/.gdignore
 *.app/

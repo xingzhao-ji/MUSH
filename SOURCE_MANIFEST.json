@@ -7,8 +7,8 @@
       "sha256": "fd49fdac6984dc8684911a7365b72d49c57e88511fb44d43be5964c6469956fa"
     },
     ".gitignore": {
-      "bytes": 257,
-      "sha256": "1200f64be4abc09942032acead970102e22a87e002f294599cc8811680c207a5"
+      "bytes": 276,
+      "sha256": "67bc65cfe5643a0ebeac4dc586353ffecc2e05faf9dc26489928f2a3c63523a2"
     },
     "AGENTS.md": {
       "bytes": 2192,
@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 5544,
-      "sha256": "af706a577b912f1275ff395c205a3e46260745f8884985b056fdda42d7537cb9"
+      "bytes": 5588,
+      "sha256": "5727262f3576e857fd35f00bfe6ea8d3826958eb3e944c7659d39b63b00c18e0"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -402,6 +402,10 @@
       "bytes": 1357,
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
+    "builds/.gdignore": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
     "docs/ARCHITECTURE.md": {
       "bytes": 10782,
       "sha256": "67efa99112ba018253084ace705745b2d985c4f95d4dcfd5c59b90295111245f"
@@ -415,20 +419,20 @@
       "sha256": "0c14197e8e207bc505b90d675554cb120291389dcf95c415a21b1ca16c81a7d3"
     },
     "docs/STATUS.md": {
-      "bytes": 6563,
-      "sha256": "87f541f9fa396b854d9b5d06d1620f7f0c28080695ee2ce60639f09f377bb5fa"
+      "bytes": 6878,
+      "sha256": "b2238e3da448a6854056cdb1cc9f4f309b65f154d1e837f665ed978766842d88"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 69728,
-      "sha256": "161ad86c806cec3a90af9e8ab9448ed8a5ba441be068e008968a0f19dabf56e5"
+      "bytes": 71073,
+      "sha256": "51ba9bc30b452ef8c6f64cdc9a618433a676cb8127667faba804fcd5aa511761"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 150202,
-      "sha256": "b10680129a1af5f7d91606863f9668644b74bc39dd49b51cc43a2d9be3d6d00e"
+      "bytes": 150955,
+      "sha256": "c8c36ba8f8dfa61cdfce4ebabe5056e373791763c72ef70108e7dc1932abe61d"
     },
     "export_presets.cfg": {
       "bytes": 1136,

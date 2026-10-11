@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac064 app and source pass their recorded routes. Earlier failed results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The latest mac065 app fails its p95 route budget, including an unchanged repeat; the separately recorded source route passes. Earlier results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -996,3 +996,23 @@ commit-tag binding; no duplicate asset download was needed. Receipts and
 `reports/mac065-preparation/`. Launch notes and remaining work are in
 [MAC-CANDIDATE.md](MAC-CANDIDATE.md). Full art, manual play, listening and physical
 mobile acceptance remain open.
+
+## Build import exclusion and mac065 diagnostic repeat
+
+A tracked `builds/.gdignore` now excludes local exports and their test captures
+from editor import scanning, using the existing reports-folder pattern. Fresh
+Godot import passes; the asset index contains zero build directories after having
+46 before. All 301 existing build files retain exact bytes, mode and modification
+time. Other build outputs remain Git-ignored. No caches, captures or apps were
+deleted, and no reclaimed bytes or runtime speedup are claimed. This prevents
+unnecessary future import work. Rollback is Git `b0fb964`. Receipt:
+`reports/build-import-exclusion-20261011-164816/receipt.json`.
+
+One unchanged mac065 diagnostic repeat, with exclusive engine ownership and
+recorded power/OS activity, also fails the existing p95 budget: **18.460 ms**
+(p99 19.674 ms), 7,167 frames, two loops and zero stalls over 120 seconds at
+1920 × 1080/default VSync. CSV metrics validate independently before threshold
+failure. Source, prior profiles, ordinary save, app and ZIP preservation pass.
+AC power and no reported OS thermal warnings were recorded; this is not thermal
+qualification or proof of a cause. No additional rerun was used to seek a pass.
+Receipt: `reports/mac065-export-repeat-20261011-150637/receipt.json`.
