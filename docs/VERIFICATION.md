@@ -666,3 +666,35 @@ Evidence: `reports/outer-tree-20261011-115903-65910/`,
 `reports/outer-tree-movie-20261011-120845/` and
 `reports/tree-inventory-20261011-114719/`. Exact receipt hashes are in the compact
 summary. Rollback: Git `9936133`.
+
+## Historical imported-cache duplicates
+
+The authorized cleanup removed only 113 historical `.godot/imported` directories:
+3,390 files, each matching the retained combined238 canonical cache by name,
+length and SHA-256. Selected allocated bytes totaled 1,210,810,368 (1.128 GiB).
+All payloads and metadata were rechecked before removal, with file-descriptor
+path handling, symlink refusal and per-directory quarantine. The 30-file canonical
+copy remains exact and can restore the cache payloads. Original file modes and
+mtimes are retained in the audit; inode/ctime identity cannot be restored.
+
+The final guard passes 35,207 non-target entries in the affected historical
+projects. It checks metadata for all entries and hashes ordinary local source/
+control files up to 1 MiB; it does not rehash every large historical asset.
+Editor state, source, assets, references, saves, apps, archives and unique evidence
+were excluded from removal. All 303 current tracked payloads also remain exact
+against the committed source manifest. Seven temporary-fixture safeguard checks
+exercise the cleanup helper; they are separate from the actual cleanup receipt.
+
+Available space was 12,451,028,992 bytes before removal and 12,440,399,872 at the
+immediate sample. That first sample showed no reclaimed space. After delayed
+accounting and lossless gzip compaction of the cleanup's own preflight receipt,
+the later sample is **13,640,122,368 bytes (12.70 GiB)**, an observed increase of
+1,189,093,376 bytes. APFS sharing/delayed accounting and other activity prevent
+exclusive attribution. The 12 GiB export preflight is met at this sample; it must
+be checked again when exporting. The retained 18,404,635-byte preflight payload
+fully rereads from its 2,232,885-byte gzip with the same SHA-256. No further archive
+compression or source refactor was needed for this recovery.
+
+Receipts: `reports/perimeter-contact-development/storage-import-cache-audit.json`
+and `storage-cleanup-outer-tree-01/` beneath the same directory. The cleanup changes
+only historical generated caches; it supplies no runtime performance claim.

@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T19:11:11.359939+00:00",
+  "prepared_utc": "2026-10-11T19:16:21.146134+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -2417,5 +2417,46 @@
     "continuous_motion_verified": false,
     "physical_device_tested": false,
     "art_approved": false
+  },
+  "historical_import_cache_cleanup": {
+    "receipt": "reports/perimeter-contact-development/storage-cleanup-outer-tree-01/receipt.json",
+    "receipt_sha256": "5d55aa088232dcfb52e98c350a0c4192aad90df4a67c25920ea5b815ad8185f6",
+    "passed": true,
+    "removed_directories": 113,
+    "removed_files": 3390,
+    "selected_allocated_bytes": 1210810368,
+    "protected_entries": 35207,
+    "canonical_payload_and_metadata_exact": true,
+    "preservation_scope": "Metadata for all 35,207 non-target entries, plus hashes of ordinary local source/control files <=1 MiB; not every large historical asset rehashed. Current 303 tracked payloads manifest-exact.",
+    "canonical_path": "/Users/xingzhaoji/Desktop/MUSH/mobile-transition/build-stage/mac060-combined238/project/.godot/imported",
+    "audit": {
+      "receipt": "reports/perimeter-contact-development/storage-import-cache-audit.json",
+      "receipt_sha256": "f31ae6df69f02021ba5f6dabc04fbc0ef4f3888db707efc10871191666edf8ca"
+    },
+    "reviewed_script_sha256": "8b8b0d19b9a8fb3833340983846284947c8e498bba797b03684dc3276a1ea4c0",
+    "helper_tests": {
+      "receipt": "reports/perimeter-contact-development/storage-cleanup-draft-unit-receipt.json",
+      "receipt_sha256": "a322384dc3f6abcbc3f68bb7e2ae8be489441bbe1446e05e1f01fb7db9b1b041"
+    },
+    "late_space": {
+      "receipt": "reports/perimeter-contact-development/storage-cleanup-outer-tree-01/late-space-sample.json",
+      "receipt_sha256": "419bf692ee5c308043105bc188e42365b36b98b613ca28e051830af2f72868a3",
+      "schema": "mush-storage-late-space-sample/1",
+      "sample_unix": 1791746143.376592,
+      "free_bytes_before": 12451028992,
+      "immediate_free_bytes_after": 12440399872,
+      "later_free_bytes": 13640122368,
+      "later_observed_delta": 1189093376,
+      "export_12gib_preflight_met": true,
+      "reserve_10gib_met": true,
+      "receipt_compaction_logical_payloads_exact": true,
+      "attribution": "Later observed free-space sample after duplicate-cache removal and lossless compaction of this cleanup preflight. APFS sharing/delayed accounting and concurrent activity prevent exclusive attribution."
+    },
+    "receipt_compaction": {
+      "receipt": "reports/perimeter-contact-development/storage-cleanup-outer-tree-01/receipt-compaction.json",
+      "receipt_sha256": "22bb7d36cb7c979bbb2a5b7a1a22056cdc9674bee2248a0d9e327627566e635e"
+    },
+    "archive_report_compression_applied": false,
+    "runtime_optimization_claimed": false
   }
 }
