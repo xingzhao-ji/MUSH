@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac063 app fails p95; the current source passes its recorded route. Earlier results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The current mac064 app and source pass their recorded routes. Earlier failed results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -785,3 +785,38 @@ all beneath `reports/`. Full hashes and failed-trial paths are in the compact
 summary. Runtime stayed unchanged during these checks; the later fixture-only
 identity check has its own passing run. Rollback: Git `e7482ce`. No new app is
 claimed by this source checkpoint.
+
+
+## mac064 packaged and uploaded checkpoint
+
+The current source checkpoint `e934f37` is exported as a separate mac064 app.
+Packaging, 12 exported startup/effects checks, four fully decoded captures,
+strict ad-hoc signature and exact app/ZIP payload checks pass. The new profile
+is `MUSH-mac064`; original profiles and source stay exact. Peak sampled owned
+allocation was 806,232,064 bytes, below the 2 GiB ceiling. Verified temporary
+export staging was removed; accepted/rollback apps and unique evidence remain.
+
+The exported 120-second night/rain route passes unchanged limits:
+**p95 16.644 ms / p99 20.498 ms**, 9,946 frames, two loops, zero stalls,
+1920 x 1080/default VSync. Percentiles were independently recomputed from the
+complete CSV. Its p95 headroom is only .056 ms; no controlled speedup,
+GPU/presentation, sustained thermal or mobile qualification is claimed.
+The 106-frame offline30-FPS clip fully decodes at1280 x 720 (3.533 seconds),
+with a decoded AAC track. Neither continuous real-time motion nor listening
+is established. Day/night exported stills were inspected; final art remains open.
+
+The ordinary app reaches CLEARING_READY and is listed as running by CUA, but
+window inspection returns `cgWindowNotFound`. Its owned PID81837 was terminated
+and reaped after exact command verification. The failed result remains; no
+ordinary save was created or Save/Continue pass transferred from older mac061.
+Source, prior profiles and the app remain exact during this attempt.
+
+The private [mac064 prerelease](https://github.com/xingzhao-ji/MUSH/releases/tag/mac064)
+contains the 162,744,174-byte ZIP, SHA256
+`e2acdb066d5edc0ab285f0b55aefa0f04900478d743b353a4143c9ac815d10d4`.
+The GitHub release API independently reports matching size/digest and target
+commit; no duplicate asset download was needed. Full receipts are under
+`builds/mac-20261011-132118-71306/verification-20261011-132315-81595/`, with
+`DELIVERY.json` in its parent. UI/upload receipts are under `reports/mac064-ui/`
+and `reports/mac064-preparation/`. Launch details and open gates are in
+[MAC-CANDIDATE.md](MAC-CANDIDATE.md).
