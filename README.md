@@ -4,7 +4,7 @@ A small, cozy Godot clearing to explore, plant and make a home in. This reposito
 
 ## Run
 
-Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The qualified desktop configuration is Forward+/Metal on a Mac. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
+Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac; the current frame-time gate is still failing. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
 
 | Input | Action |
 | --- | --- |
@@ -26,11 +26,12 @@ Python 3 and the matching Godot executable are required. Close the game/editor b
 python3 tools/verify.py --engine /path/to/Godot --suite import
 python3 tools/verify.py --engine /path/to/Godot --suite acceptance
 python3 tools/verify.py --engine /path/to/Godot --suite ground
+python3 tools/verify.py --engine /path/to/Godot --suite environment
 python3 tools/verify.py --engine /path/to/Godot --suite capture
 python3 tools/verify.py --engine /path/to/Godot --suite benchmark
 ```
 
-The runner writes timestamped results beneath ignored `reports/`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. Captures establish pictured states, not motion or live audio quality.
+The runner writes timestamped results beneath ignored `reports/` and compresses large JSON outputs after verified readback. Its failure paths have standard-library tests: `python3 -m unittest discover -s tests -p test_verify_runner.py`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. Captures establish pictured states, not motion or live audio quality.
 
 ## Build and contribute
 

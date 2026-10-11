@@ -1,0 +1,242 @@
+{
+  "schema": "mush-clean-verification-summary/1",
+  "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
+  "prepared_utc": "2026-10-11T10:33:46.307793+00:00",
+  "git": {
+    "private_remote_target": "xingzhao-ji/MUSH",
+    "uploaded": false,
+    "pack_kib_observed": 36685,
+    "pack_mib_observed": 35.8251953125,
+    "baseline_commit": "7b4efb1",
+    "allocation_change_commit": "ee6c62d",
+    "manifest": "SOURCE_MANIFEST.json (contains this summary; excluded from its own hash list)"
+  },
+  "engine": {
+    "version": "4.7.2.stable.official.ed1daf0bf",
+    "sha256": "c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf",
+    "renderer": "forward_plus",
+    "driver": "metal",
+    "device": "Apple M4 Pro Mac, 48 GiB RAM",
+    "audio_driver": "Dummy"
+  },
+  "checks": {
+    "import": {
+      "passed": true,
+      "receipt": "reports/import-20261011-025903-3228/result.json",
+      "receipt_sha256": "0771bc9965d7898f11b1c8d78ab25655d9bd42f91af372db3f9c0d9c3a5fdef7",
+      "source_changes": [],
+      "generated_source_files": [
+        "tests/ground_material_sync.gd.uid"
+      ]
+    },
+    "acceptance": {
+      "passed": true,
+      "receipt": "reports/acceptance-20261011-030108-3495/result.json",
+      "receipt_sha256": "886f0ba0e8cd161eb4883ece62c3a0ab5adc92a300fd9fa74f2c717990a25ae6",
+      "source_changes": [],
+      "generated_source_files": [],
+      "assertions": 295,
+      "scenarios": 15
+    },
+    "ground_before": {
+      "passed": true,
+      "receipt": "reports/ground-20261011-025929-3297/result.json",
+      "receipt_sha256": "70e469248cf756f0fc21955f58e1355706bfcb6187f24dd7f2ea2599960471c9",
+      "source_changes": [],
+      "generated_source_files": [],
+      "assertions": 32,
+      "native_parameter_comparisons": 14867
+    },
+    "ground_after": {
+      "passed": true,
+      "receipt": "reports/ground-20261011-030036-3434/result.json",
+      "receipt_sha256": "53b26e986784ade8178951d3d525bc6b3435f612fb8d3767532ae1f9e10e7dd0",
+      "source_changes": [],
+      "generated_source_files": [],
+      "assertions": 32,
+      "native_parameter_comparisons": 14867
+    },
+    "environment": {
+      "passed": true,
+      "receipt": "reports/environment-20261011-030535-3774/result.json",
+      "receipt_sha256": "ed9f8e084ef135a311c7792b6e736ecedd23a78f5de321f797fd0c53591b8f47",
+      "source_changes": [],
+      "generated_source_files": [],
+      "assertions": 133,
+      "native_parameter_comparisons": null
+    },
+    "capture": {
+      "passed": true,
+      "receipt": "reports/capture-20261011-030622-3810/result.json",
+      "receipt_sha256": "43f3a7e656fc76f4cc487dc558fd1ff7c22cc0acdbc70473a594427297188999",
+      "source_changes": [],
+      "generated_source_files": [],
+      "motion_verified": false,
+      "art_approved": false,
+      "images": [
+        {
+          "file": "day.png",
+          "png_sha256": "813179873508412eee452a0bdcbd4a9869940bb70fd0c3cd440ebc6d7f39c33e",
+          "rgba_sha256": "9e347b89f10d178565c9359b0859c0cbe02e65d3c48a1f8901699180315cef67"
+        },
+        {
+          "file": "night.png",
+          "png_sha256": "c3553f86bf9bf1085b7ee00eef3e7b140cbc2a9c96b62cd5810c107a4315ab09",
+          "rgba_sha256": "6de3c79cabd8ec195171384484cd0e6e81a9dd2c8d29d50b321f49c5e527c0e3"
+        },
+        {
+          "file": "entrance-day.png",
+          "png_sha256": "c39d0f0ab96497ca7e0ef5f117741e39bbb69b323fbcc2ab29ef6cdcdf2a2db7",
+          "rgba_sha256": "5be3e5ac29a42389cbd544c98773bd5bd24c54311fd4d80ee1948584ea1532b4"
+        },
+        {
+          "file": "entrance-night.png",
+          "png_sha256": "131688671c505f515e582957dd17d514054eacccae9ce0c619875148c5b06b6c",
+          "rgba_sha256": "b1bba186eb13c3bae520d4e8a01461be3e4c6ac84241881211f67d3bbd1d7105"
+        }
+      ],
+      "image_dimensions": [
+        960,
+        960
+      ]
+    },
+    "runner_failure_paths": {
+      "passed": true,
+      "tests": 4,
+      "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
+      "source_sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577"
+    }
+  },
+  "benchmarks": [
+    {
+      "condition": "default_vsync",
+      "passed": false,
+      "capture_s": 120.0,
+      "frames": 7133,
+      "frame_p95_ms": 18.768,
+      "frame_p99_ms": 21.097,
+      "limits_ms": [
+        16.7,
+        33.3
+      ],
+      "failed_gate": "p95",
+      "route_loops_completed": 2,
+      "route_stalls": 0,
+      "output_resolution": [
+        1920,
+        1080
+      ],
+      "gpu_timing_available": false,
+      "native_report": "reports/benchmark-20261011-030749-3862/worst-1.json",
+      "native_report_sha256": "45fd5025bf947f78c6af821233e73b15f30944fdc26a15ab60a520d1181572f7",
+      "csv_sha256": "5eb8e7597263a956034d5a7a1783806c265030e32f80622281a45b41ee06a1a0",
+      "independent_csv_percentiles_match": true
+    },
+    {
+      "condition": "uncapped_diagnostic",
+      "passed": false,
+      "capture_s": 120.0,
+      "frames": 9285,
+      "frame_p95_ms": 17.903,
+      "frame_p99_ms": 20.77,
+      "limits_ms": [
+        16.7,
+        33.3
+      ],
+      "failed_gate": "p95",
+      "route_loops_completed": 2,
+      "route_stalls": 0,
+      "output_resolution": [
+        1920,
+        1080
+      ],
+      "gpu_timing_available": false,
+      "native_report": "reports/benchmark-20261011-031227-4052/worst-1.json",
+      "native_report_sha256": "b1d55bb83a297654eff3f435148d0c42409679dd0815980084a4dd9312b3fb72",
+      "csv_sha256": "78079191ab203e3ba5bddba3984a8d3e8f373426001948dce4150260fef27c52",
+      "independent_csv_percentiles_match": true
+    },
+    {
+      "condition": "matched_window_default_vsync",
+      "passed": false,
+      "capture_s": 120.0,
+      "frames": 6808,
+      "frame_p95_ms": 23.716,
+      "frame_p99_ms": 27.853,
+      "limits_ms": [
+        16.7,
+        33.3
+      ],
+      "failed_gate": "p95",
+      "route_loops_completed": 2,
+      "route_stalls": 0,
+      "output_resolution": [
+        1920,
+        1080
+      ],
+      "gpu_timing_available": false,
+      "native_report": "reports/benchmark-20261011-031555-4183/worst-1.json",
+      "native_report_sha256": "630e497b85e8de35bd57bde2d47212c4d506fbbfd349b481ce5df2a39dcdd593",
+      "csv_sha256": "be3102f942df7b12293b05858848bae75629c307aa51aee48977b05989327117",
+      "independent_csv_percentiles_match": true
+    }
+  ],
+  "performance_budget_passed": false,
+  "profiling": {
+    "kind": "instrumented 30-second diagnostics, no completed route loop",
+    "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
+    "script_profile_receipt_sha256": "d35a6aa0264e2f8b656f50d21c833ef5062f1def073c45fb63c823108892dbf6",
+    "gpu_profile": "reports/gpu-profile-20261011-032507/diagnostic.json",
+    "gpu_profile_receipt_sha256": "f3338794c5afd4b687bcf8739e0323ef359534848acc4ee927905757d1edc626",
+    "gpu_timing_available": false,
+    "measured_improvement_claimed": false,
+    "script_observation": "Later emitted samples mostly around 1 ms; startup spikes and instrumentation present; not whole-game CPU/GPU attribution.",
+    "native_sample_physical_footprint": "approximately 1.9G, distinct from Godot static-memory metric"
+  },
+  "storage": {
+    "archive_summary_sha256": "3956a97f38fc1ccda6426e692c8c65a56995f1d37a0008f0f23002ecf83b5b62",
+    "available_bytes_before_cleanup": 10547183616,
+    "available_bytes_later": 18721767424,
+    "observed_difference_bytes": 8174583808,
+    "old_extracted_apps_removed": 25,
+    "retained_zip_payloads_verified": 25,
+    "large_json_files_losslessly_compacted": 842,
+    "all_compacted_sha256_rereads_passed": true,
+    "allocated_report_bytes_reduced": 8447594496,
+    "post_cleanup_guard_passed": true,
+    "strict_records_checked": 628,
+    "protected_metadata_records": 48150,
+    "ctime_only_deltas_outside_targets": 10,
+    "ctime_cause_established": false,
+    "source243_230_payloads_match": true,
+    "free_space_delta_exclusive_attribution": false
+  },
+  "complexity": {
+    "material_forwarding": "O(VU), V <= 32; O(V) copied values array removed for O(1) iteration state",
+    "garden_placement_rebuild": "O(G), G <= 8",
+    "garden_save_overlap_validation": "O(G^2), at most 28 prior-position pairs, O(G) state",
+    "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent"
+  },
+  "pending": [
+    "physical mobile devices",
+    "IPA/installable iPhone build",
+    "exported-app performance",
+    "GPU/display-presentation timing",
+    "thermal performance",
+    "live audio listening/balance",
+    "manual movement/camera feel",
+    "continuous motion quality",
+    "art/reference acceptance",
+    "near-cut paving coverage",
+    "aggregate full-route contact gate",
+    "remote upload and commit verification"
+  ],
+  "runtime_sha256": {
+    "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
+    "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
+    "scripts/environment_controller.gd": "f9ddc8f0aeab0b62984b6874f04d597cc594e807f05aa574ccccb49135fb2b5e",
+    "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
+    "tests/environment_controller_contract.gd": "5ef7adbf14a4edc4f0c1f164f3076200181f7d2dc447e3c5c86edfcad59d6978",
+    "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c"
+  }
+}

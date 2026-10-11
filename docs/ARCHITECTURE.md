@@ -19,8 +19,9 @@ These are source-level bounds, not GPU or device measurements. Let `N` be geomet
 | Baked startup and proofs | O(B) byte validation plus engine deserialization | Kept out of the frame loop; rollback retains original resources. |
 | Environment update | O(M + P + F + VU) script work per active frame | Fixed uniform set per material; V <= 32. Rendering cost depends on the submitted scene. |
 | Environment discovery | Scene traversal plus first-seen mesh/channel checks and instance admission | Cached mesh identities avoid repeating native channel comparison every frame; discovery and update are distinct costs. |
-| Garden placement and rebuilding | O(G) validation/rebuild work and O(G) plant state | G <= 8; a spatial index would add machinery without removing a present scaling problem. Placement also performs one native ray query. |
-| Paw presentation | Two grounded ray queries and two bounded pose adjustments per physics tick; O(1) script state | Native query cost is scene-dependent. One sampled plane per foot does not establish whole-foot terrain conformity. |
+| Garden placement and rebuilding | O(G) placement/rebuild work and O(G) plant state | G <= 8; placement also performs one native ray query. |
+| Save validation of garden overlap | O(G²) pair comparisons and O(G) positions/ID storage | The cap of 8 plants limits the nested overlap check to 28 pairs; no unbounded garden growth. |
+| Paw presentation | Two grounded ray queries, up to four sphere-support evaluations and two bounded pose adjustments per physics tick; O(1) script state | Native query cost is scene-dependent. One sampled plane per foot does not establish whole-foot terrain conformity. |
 | Report/storage checks | Linear in bytes hashed | Measurements belong in ignored reports, with compact summaries retained in documentation. |
 
 CPU complexity does not prove good frame pacing. Transparency, shadows, particles and resolution can dominate GPU time even when script loops are bounded. [VERIFICATION.md](VERIFICATION.md) records measured observations and limits.

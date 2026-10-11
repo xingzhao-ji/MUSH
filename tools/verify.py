@@ -6,6 +6,7 @@ or a shipped save profile. Captures are stills; Dummy audio is not listening.
 """
 import argparse
 import csv
+import gzip
 import hashlib
 import importlib.util
 import json
@@ -20,6 +21,9 @@ import sys
 import time
 import traceback
 
+if sys.flags.optimize:
+    raise RuntimeError("Verification requires Python assertions; do not use -O or PYTHONOPTIMIZE")
+
 ROOT = Path(__file__).resolve().parents[1]
 RESERVE = 10 * 1024**3
 IGNORED = {".git", ".godot", "reports", "builds", "__pycache__"}
@@ -33,10 +37,41 @@ def sha(path):
     return digest.hexdigest()
 
 
+def read_report(path):
+    if path.exists():
+        return json.loads(path.read_text())
+    with gzip.open(str(path) + ".gz", "rt") as stream:
+        return json.load(stream)
+
+
+def compact_reports(output):
+    """Compress only this run's large JSON outputs, with full byte readback."""
+    receipts = []
+    for path in sorted(output.rglob("*.json")):
+        if path.stat().st_size < 1024**2:
+            continue
+        raw = path.read_bytes()
+        encoded = gzip.compress(raw, compresslevel=6, mtime=0)
+        if len(encoded) >= len(raw):
+            continue
+        target = path.with_suffix(path.suffix + ".gz")
+        with target.open("xb") as stream:
+            stream.write(encoded)
+        assert gzip.decompress(target.read_bytes()) == raw
+        assert path.read_bytes() == raw
+        receipts.append({"file": str(path.relative_to(output)), "bytes": len(raw),
+                         "gzip_bytes": len(encoded), "sha256": hashlib.sha256(raw).hexdigest()})
+        path.unlink()
+    return receipts
+
+
 def source_files():
     files = {}
     for folder, dirs, names in os.walk(ROOT, followlinks=False):
         dirs[:] = sorted(d for d in dirs if d not in IGNORED)
+        for directory in dirs:
+            if (Path(folder) / directory).is_symlink():
+                raise RuntimeError(f"Unexpected source directory symlink: {Path(folder) / directory}")
         for name in sorted(names):
             path = Path(folder) / name
             if path.is_symlink():
@@ -99,11 +134,11 @@ def run(command, output, label, timeout):
     return result
 
 
-def inspect(suite, output, duration):
+def inspect(suite, output, duration, expected_vsync=1):
     if suite == "import":
         return {"import_passed": True}
     if suite == "acceptance":
-        report = json.loads((output / "acceptance.json").read_text())
+        report = read_report(output / "acceptance.json")
         cases = report["tests"]
         checks = [c for case in cases for c in case["assertions"]]
         assert len(cases) == 15 and len(checks) >= 295
@@ -112,7 +147,7 @@ def inspect(suite, output, duration):
         return {"scenarios": len(cases), "assertions": len(checks), "all_passed": True,
                 "manual_acceptance": False}
     if suite == "benchmark":
-        report = json.loads((output / "worst-1.json").read_text())
+        report = read_report(output / "worst-1.json")
         with (output / "worst-1.csv").open(newline="") as stream:
             rows = list(csv.DictReader(stream))
         assert rows and len(rows) == report["frames"]
@@ -129,13 +164,20 @@ def inspect(suite, output, duration):
         assert abs(p99 - report["frame_p99_ms"]) < .00002
         assert report["scenario"] == "worst" and report["capture_s"] == duration
         assert report["route_stalls"] == 0
-        assert p95 <= report["limit_p95_ms"] and p99 <= report["limit_p99_ms"]
+        assert report["traversal_measurement_valid"] is True and report["route_loops_completed"] > 0
+        assert report["resolution_valid"] is True and report["render_resolution"] == [1920, 1080]
+        assert report["vsync"] == expected_vsync
+        assert report["limit_p95_ms"] == 16.7 and report["limit_p99_ms"] == 33.3
+        assert p95 <= 16.7 and p99 <= 33.3
         return {"frames": len(frames), "frame_p95_ms": p95, "frame_p99_ms": p99,
                 "route_stalls": 0, "thresholds_passed": True,
+                "route_loops_completed": report["route_loops_completed"],
+                "render_resolution": report["render_resolution"],
+                "vsync": report["vsync"],
                 "gpu_timing_available": report["gpu_timing_available"],
                 "physical_device_tested": False, "display_presentation_measured": False}
     if suite == "capture":
-        report = json.loads((output / "camera.json").read_text())
+        report = read_report(output / "camera.json")
         assert report["passed"] and len(report["views"]) == 4
         spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
         module = importlib.util.module_from_spec(spec)
@@ -148,21 +190,27 @@ def inspect(suite, output, duration):
             assert item["png_sha256"] == view["png_sha256"] and item["rgba_sha256"] == view["rgba_sha256"]
             decoded.append(item)
         return {"full_png_decodes": decoded, "motion_verified": False, "art_approved": False}
-    report = json.loads((output / "native/ground-material-sync.json").read_text())
-    assert report["passed"] is True
-    return report
+    filename = "environment-contract.json" if suite == "environment" else "native/ground-material-sync.json"
+    report = read_report(output / filename)
+    assert report["passed"] is True and report["assertions"] > 0 and report["failed"] == 0
+    assert all(row["passed"] for row in report["checks"])
+    return {"assertions": report["assertions"], "all_passed": True,
+            "native_parameter_comparisons": report.get("native_parameter_comparisons")}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment"), required=True)
     parser.add_argument("--duration", type=int, default=120)
+    parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
     args = parser.parse_args()
     if not args.engine or not Path(args.engine).is_file():
         parser.error("Pass --engine PATH to Godot 4.7.2")
     if not 120 <= args.duration <= 600:
         parser.error("Benchmark duration must be 120–600 seconds")
+    if args.uncapped and args.suite != "benchmark":
+        parser.error("--uncapped is a benchmark-only diagnostic")
     assert_idle()
     reserve()
     engine = str(Path(args.engine).resolve())
@@ -179,20 +227,33 @@ def main():
     command = [engine, "--path", str(ROOT), "--audio-driver", "Dummy"]
     if sys.platform == "darwin":
         command += ["--rendering-driver", "metal", "--rendering-method", "forward_plus"]
+    if args.uncapped:
+        command += ["--disable-vsync", "--max-fps", "0"]
+    if args.suite == "benchmark":
+        # Match the prior qualified benchmark's initial native window extent.
+        command += ["--windowed", "--resolution", "1920x1080"]
     if args.suite == "import":
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite == "environment":
+        command += ["--script", "res://tests/environment_controller_contract.gd", "--", "--report-dir=" + str(output)]
     else:
         flag = {"acceptance": "--verify", "benchmark": "--benchmark", "capture": "--capture"}[args.suite]
         command += ["--", flag, "--report-dir", str(output)]
         if args.suite == "benchmark":
             command += ["--scenario", "worst", "--warmup", "5", "--duration", str(args.duration)]
     result = {"suite": args.suite, "engine": version, "engine_sha256": sha(Path(engine)),
+              "timing_mode": "uncapped_throughput_diagnostic" if args.uncapped else "default_vsync",
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     try:
         result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else args.duration + 120 if args.suite == "benchmark" else 180)
-        result["checks"] = inspect(args.suite, output, args.duration)
+        result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
+        result["passed"] = True
+    except BaseException:
+        result["failure"] = traceback.format_exc()
+    # A failed native check must still close the preservation audit.
+    try:
         after = source_files()
         changed = [name for name in before if after.get(name) != before[name]]
         added = sorted(set(after) - set(before))
@@ -200,10 +261,15 @@ def main():
         result["generated_source_files"] = added
         assert not changed, changed
         assert not added or args.suite == "import" and all(name.endswith(".uid") for name in added), added
-        result["passed"] = True
     except BaseException:
-        result["failure"] = traceback.format_exc()
+        result["passed"] = False
+        result["preservation_failure"] = traceback.format_exc()
     result["source_files_before"] = before
+    try:
+        result["compacted_reports"] = compact_reports(output)
+    except BaseException:
+        result["passed"] = False
+        result["compaction_failure"] = traceback.format_exc()
     result["available_bytes_after"] = shutil.disk_usage(ROOT).free
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"passed": result["passed"], "suite": args.suite, "output": str(output),

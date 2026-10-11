@@ -14,6 +14,7 @@ func _ready() -> void:
 	# Desktop input isolation applies only to explicit automated sessions.
 	if "--verify" in OS.get_cmdline_user_args() or "--benchmark" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args():
 		get_window().unfocusable = true
+	if "--verify" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args():
 		get_window().mouse_passthrough = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_input()

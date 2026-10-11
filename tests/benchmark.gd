@@ -26,6 +26,7 @@ var target_resolution:=Vector2i(1920,1080)
 var save_ms:float=0
 var rss_samples:Array=[]
 var pipeline_draw_at_start:float=0
+var pacing_at_start:Dictionary={}
 
 func _ready() -> void:
 	game=get_parent()
@@ -87,7 +88,12 @@ func _ready() -> void:
 	last_tick=Time.get_ticks_usec()
 	start_memory=Performance.get_monitor(Performance.MEMORY_STATIC)
 	pipeline_draw_at_start=Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)
+	pacing_at_start=_pacing_state()
 	print("BENCHMARK_STARTED ",scenario," repetition=",repetition," warmup=",warmup," capture=",duration)
+
+func _pacing_state() -> Dictionary:
+	var screen: int = DisplayServer.window_get_current_screen()
+	return {"screen":screen,"refresh_hz":DisplayServer.screen_get_refresh_rate(screen),"max_fps":Engine.max_fps,"low_processor_usage_mode":OS.low_processor_usage_mode,"vsync":DisplayServer.window_get_vsync_mode(),"unfocusable":game.get_window().unfocusable,"mouse_passthrough":game.get_window().mouse_passthrough}
 
 func _physics_process(delta:float) -> void:
 	if not is_instance_valid(game) or raw==null: return
@@ -185,6 +191,8 @@ func _finish() -> void:
 	result["pipeline_draw_compilations_after_start"]=Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)-pipeline_draw_at_start
 	result["build_fingerprint"]=_build_fingerprint()
 	result["route_loops_completed"]=route_loops_completed
+	result["pacing_at_start"]=pacing_at_start
+	result["pacing_at_end"]=_pacing_state()
 	result["traversal_measurement_valid"]=stalls==0 and route_loops_completed>0
 	var report:=FileAccess.open(output.path_join("%s-%d.json"%[scenario,repetition]),FileAccess.WRITE)
 	report.store_string(JSON.stringify(result,"\t"))

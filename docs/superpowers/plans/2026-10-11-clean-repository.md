@@ -8,11 +8,13 @@
 
 - [x] Verify old app archives before removing extracted duplicates; losslessly compact reports and read back every payload.
 - [x] Curate current243 source into a separate repository; restore normal windows, portable exports and existing portable captures.
-- [ ] Inspect hot paths and implement only a narrow justified optimization, with regression tests.
-- [ ] Import cleanly, run original gameplay assertions, native visual captures and a sustained Mac benchmark.
-- [ ] Record storage/complexity/performance limits, licenses, provenance and rollback; scan the Git payload.
+- [x] Inspect hot paths and implement only a narrow justified optimization, with regression tests.
+- [x] Import cleanly, run original gameplay assertions, native visual captures and sustained Mac benchmarks; retain all three p95 failures.
+- [x] Record storage/complexity/performance limits, licenses, provenance and rollback; scan the Git payload.
 - [ ] Commit and push a private repository; verify remote commit and clean checkout.
 
 Review focus: private save isolation, all runtime inheritance dependencies retained, pinned resource proofs unchanged, no reference pixels or credentials uploaded, native timing separated from phone/manual acceptance.
 
 Practices: pinned obra/superpowers planning, systematic debugging, test-first changes and fresh verification. No additional framework or global hook.
+
+Upload remains gated by the user’s performance condition. No threshold or visual-quality reduction is authorized to manufacture a pass. The private-development-checkpoint alternative has been presented for a scope decision.

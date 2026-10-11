@@ -43,7 +43,7 @@ func _run() -> void:
 		var one: bool = saved == OK and frame.get_size() == Vector2i(960,960) and game.player.is_on_floor() and game.world.snapshot_loaded and not game.world._m37_active()
 		passed = passed and one
 		views.append({"file":filename,"passed":one,"rgba_sha256":hash.finish().hex_encode(),"png_sha256":FileAccess.get_sha256(output.path_join(filename)),"camera_position":[camera.position.x,camera.position.y,camera.position.z],"target":[target.x,target.y,target.z],"vertical_fov":camera.fov,"night_amount":game.world.night_amount,"rain_amount":game.world.rain_amount,"lighting":game._review_lighting_state(),"player_floor":game.player.is_on_floor()})
-	var report := {"schema":"mush-portable-scene-native-capture/1","passed":passed,"build":"0.6.0","native_export":not OS.has_feature("editor"),"snapshot_sha256":FileAccess.get_sha256("res://baked/clearing.res"),"source_stage":"mac060","forest_middle_layer":game.world.forest_enclosure,"motion_disabled_for_comparison":true,"art_approved":false,"renderer_capabilities":game.world.get_renderer_capabilities_report(),"views":views}
+	var report := {"schema":"mush-portable-scene-native-capture/1","passed":passed,"build":"0.6.0","native_export":not OS.has_feature("editor"),"snapshot_sha256":FileAccess.get_sha256("res://baked/clearing.res"),"source_stage":"mac060","forest_middle_layer":game.world.forest_enclosure,"world_living_motion_disabled":true,"environmental_shader_motion_frozen":false,"art_approved":false,"renderer_capabilities":game.world.get_renderer_capabilities_report(),"views":views}
 	var file := FileAccess.open(output.path_join("camera.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"\t"))
 	file.close()
