@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 5546,
-      "sha256": "441992497b09f3819fe69466658bef4132de3dc00ee54c8f6c10a50ff9f776a8"
+      "bytes": 5544,
+      "sha256": "af706a577b912f1275ff395c205a3e46260745f8884985b056fdda42d7537cb9"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -411,24 +411,24 @@
       "sha256": "2f192b37ef775aee4cc7904c0d08fc4f83e0bb875a36726c5b08330043226635"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 3322,
-      "sha256": "19e35577d62738569fbf7fda65d9c3755b39708622de4b237a607e529af8c7e9"
+      "bytes": 3274,
+      "sha256": "0c14197e8e207bc505b90d675554cb120291389dcf95c415a21b1ca16c81a7d3"
     },
     "docs/STATUS.md": {
-      "bytes": 6271,
-      "sha256": "aecf9b58e99efa930cce01411b658c625b738ff265e2efe7f452a0ff57ae52c7"
+      "bytes": 6563,
+      "sha256": "87f541f9fa396b854d9b5d06d1620f7f0c28080695ee2ce60639f09f377bb5fa"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 67451,
-      "sha256": "5e5d5cd7ac091a7ea6b67a95b0d4b53cf136a9a3f6db36e3aaa59ee8de94e67b"
+      "bytes": 69728,
+      "sha256": "161ad86c806cec3a90af9e8ab9448ed8a5ba441be068e008968a0f19dabf56e5"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 146825,
-      "sha256": "34d6afcebad3f6c0cd71e1788024aa6b44e2d7e2c90d534a80ddc802ccc2d8dc"
+      "bytes": 150202,
+      "sha256": "b10680129a1af5f7d91606863f9668644b74bc39dd49b51cc43a2d9be3d6d00e"
     },
     "export_presets.cfg": {
       "bytes": 1136,

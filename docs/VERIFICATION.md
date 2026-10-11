@@ -899,31 +899,31 @@ Receipts: `reports/home2-bank-trial-20261011-140155-87764/` and
 
 ## Complete distant-home placement on existing terrain
 
-The second home previously floated4.59–4.62m above soil; the third was buried
+The second home previously floated 4.59–4.62 m above soil; the third was buried
 beneath the existing bank. A whole-home translation now places them at
-(21.25,4.68,-25.0) and(-15.5,5.2,-24.5). All18 mapped parts and the actual
+(21.25, 4.68, -25.0) and (-15.5, 5.2, -24.5). All 18 mapped parts and the actual
 window light move coherently for each home. Existing terrain, the closest-home
 foundation, unrelated native vertices and every non-position channel stay exact.
 No new bank pedestal, material, draw node, collider, triangle or frame loop is added.
 
 The chosen approximation embeds the lower cylindrical stems in the existing rock.
-Native samples show0.0369–0.5237m burial for home2 and0.0343–0.5331m for home3;
-nine conservative window sites per home retain at least0.2625m/0.2813m clearance.
+Native samples show 0.0369–0.5237 m burial for home2 and 0.0343–0.5331 m for home3;
+nine conservative window sites per home retain at least 0.2625 m / 0.2813 m clearance.
 These are sampled anchoring checks, not exhaustive whole-foot/decorative coverage
 or played-camera reachability. Home2 reads as grounded in day/night views. Home3
 is restored above the bank in an elevated diagnostic view but remains hidden by
 foliage from the retained ground camera. That art defect remains open.
 
-The compressed Godot MeshLibrary is1,941,665bytes, SHA256
+The compressed Godot MeshLibrary is 1,941,665 bytes, SHA256
 `9fd28d80133aedc92364afff0afe3aaa255f9ae43638864989731357ce3fd1bf`.
-It reuses16 existing batches/239,574 corners, translating157,476 selected corners.
-The176,068-byte proof pins saved/fresh-reloaded native arrays, packed buffers,
+It reuses 16 existing batches/239,574 corners, translating 157,476 selected corners.
+The 176,068-byte proof pins saved/fresh-reloaded native arrays, packed buffers,
 lightmap hints, node/material bindings, parent poses and actual window lights.
 Godot/native project helpers replace procedural construction during gameplay;
 no add-on, additional license or external dependency is introduced.
 Startup validation is linear in admitted payload bytes/corners and has temporary
 array/hash storage; retained original/candidate position payloads alone total
-5,749,776bytes before other buffers. Artifact file size is not runtime memory.
+5,749,776 bytes before other buffers. Artifact file size is not runtime memory.
 No permanent undo owner or per-frame GDScript is added. Startup cost, incremental
 peak memory and GPU cost were not isolated. Git `b21ac33` is operational rollback;
 setting the installer's ENABLED flag false refuses startup rather than selecting
@@ -939,24 +939,60 @@ trials, compressed save/reload and repeated prebuilt install/restoration:
 Earlier oversized added-bank variants stay visually rejected; their passing
 technical checks were not used as art acceptance.
 
-Fresh actual-source import passes. `home-placement` passes14 checks and all16
-1280×720 PNGs fully decode, with8 original/installed day/night pairs and exact
-installed-state restoration. Broader gameplay295/15, environment137 and
-foundation26 checks pass; the foundation route covers156 movement ticks and23
+Fresh actual-source import passes. `home-placement` passes 14 checks and all 16
+1280×720 PNGs fully decode, with 8 original/installed day/night pairs and exact
+installed-state restoration. Broader gameplay 295/15, environment 137 and
+foundation 26 checks pass; the foundation route covers 156 movement ticks and 23
 native trunk shapes. No source payload changed during these runs. Five verifier
 unit tests pass, including rejection of duplicated camera rows. The tightened
-ordered-label inspector rereads all16 retained images successfully; this reread
+ordered-label inspector rereads all 16 retained images successfully; this reread
 is not another native launch. Fixture baseline/current swaps are distinct from
 injecting a loader failure.
 
-The fresh120-second source night/rain route passes unchanged16.7/33.3ms limits:
-p9516.136ms, p9918.102ms,10,079 frames,2loops,0stalls at1920×1080/default VSync.
+The fresh 120-second source night/rain route passes unchanged 16.7/33.3 ms limits:
+p95 16.136 ms, p99 18.102 ms, 10,079 frames, two loops, zero stalls at 1920 × 1080/default VSync.
 No causal speedup, GPU/display, thermal, listening, continuous-motion or physical
 mobile qualification follows from that result. The existing upper-soil paving
-contact-coverage gate remains failed; unchanged58 movement routes retain their
+contact-coverage gate remains failed; unchanged 58 movement routes retain their
 previous evidence, not a fresh rerun. Full reference/art acceptance remains open.
 
 Receipts: `reports/home-placement-20261011-143727-89753/`,
 `reports/home-placement-regression-20261011-143849/` and
 `reports/mac065-preparation/placement-reinspection.json`; exact suite paths and
 hashes are in the compact summary. mac064 is a separate frozen older artifact.
+
+
+## mac065 export and authorized as-is upload
+
+The universal mac065 app packages source `1777353bef29cdf3b9d4b7250121a7ed36d12c8c`
+with a fresh `MUSH-mac065` save profile. All 12 exported startup checks, four fully
+decoded still captures, strict ad-hoc signature and exact ZIP readback pass. Only
+arm64 ran. Source, prior profiles, ordinary candidate slot and app payloads remain
+exact across verification. No ordinary candidate save was created. The owned
+processes exited and were reaped; temporary export staging was removed.
+
+The exported 120-second night/rain route completes 9,622 frames, two loops and
+zero stalls at 1920 × 1080/default VSync, but **fails p95**: 17.524 ms against
+16.7 ms. p99 is 22.847 ms against 33.3 ms. The CSV metrics validate before the
+threshold assertion; the receipt stays failed. The passing source result and
+frozen mac064 result do not waive this failure or prove its cause. No repeat was
+run just to obtain a pass. Upload as-is is explicitly authorized by the user.
+
+The offline in-engine clip fully decodes as 106 H.264 frames, 1280 × 720 at 30 FPS,
+3.533 seconds, with stereo 48 kHz AAC. Its 3,595,003-byte MP4 has SHA256
+`d815d59996d8c5055d59d802263a6527516c1bb4c2f3342ca005636e614bc782`.
+The intermediate AVI was removed only after counted-frame/audio/full-decode
+checks. It is not real-time pacing, manual motion or speaker-playback evidence.
+Ordinary mac065 UI was not exercised; prior mac064 `cgWindowNotFound` remains
+recorded, and older mac061 Save/Continue observation does not qualify mac065.
+
+The private [mac065 prerelease](https://github.com/xingzhao-ji/MUSH/releases/tag/mac065)
+contains the 164,449,080-byte ZIP, SHA256
+`1ccec56f30c9d1ff464a7322eb876c175c3668f497b75de340bbbbd7a8fde1b9`.
+The GitHub API independently confirms asset size/digest, exact release text and
+commit-tag binding; no duplicate asset download was needed. Receipts and
+`DELIVERY.json` live under `builds/mac-20261011-144832-90462/`; export tests are in
+`verification-20261011-145024-979/`, and upload checks in
+`reports/mac065-preparation/`. Launch notes and remaining work are in
+[MAC-CANDIDATE.md](MAC-CANDIDATE.md). Full art, manual play, listening and physical
+mobile acceptance remain open.

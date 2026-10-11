@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T21:47:56.295947+00:00",
+  "prepared_utc": "2026-10-11T21:56:07.065107+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -466,7 +466,7 @@
       "generated_source_files": []
     }
   ],
-  "performance_budget_passed": true,
+  "performance_budget_passed": false,
   "profiling": {
     "kind": "instrumented 30-second diagnostics, no completed route loop",
     "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
@@ -800,7 +800,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current home-placement source120s callback route passes16.136/18.102ms,10079frames,2loops,0stalls; frozenmac064 passes16.644/20.498ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current source120s callback route passes16.136/18.102ms; exportedmac065 fails p95 at17.524ms, p99 22.847ms,9622frames,2loops,0stalls. Frozenmac064 pass and mac063 failure retained. As-is upload authorized; no gate waived or cause proved. No GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -3302,5 +3302,79 @@
     "physical_mobile_tested": false,
     "remaining": "Home3 ground-camera foliage obstruction; broader terrain joins, reference fidelity and manual acceptance remain open.",
     "storage_free_bytes_observed": 14439428096
-  }
+  },
+  "mac065_candidate": {
+    "schema": "mush-mac065-development-candidate/1",
+    "app": "builds/mac-20261011-144832-90462/MUSH.app",
+    "zip": {
+      "path": "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-144832-90462/MUSH.zip",
+      "sha256": "1ccec56f30c9d1ff464a7322eb876c175c3668f497b75de340bbbbd7a8fde1b9",
+      "bytes": 164449080
+    },
+    "profile": "MUSH-mac065",
+    "version": "0.6.0",
+    "source_commit": "1777353bef29cdf3b9d4b7250121a7ed36d12c8c",
+    "source_package_receipt_sha256": "c1daa31c3e288f4cc48ab2c469067e144f01020b6e727fa7e87d2bdf1553cf2d",
+    "verification_receipt": "builds/mac-20261011-144832-90462/verification-20261011-145024-979/result.json",
+    "verification_receipt_sha256": "860dcde949ab0e9f6e10ffba8025434ef4e69a2a360939cba33332bfe2e719aa",
+    "startup_checks_passed": 12,
+    "exported_captures_passed": 4,
+    "signature_strict_adhoc": true,
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "physically_run_architectures": [
+      "arm64"
+    ],
+    "benchmark_passed": false,
+    "csv_metrics_validated_before_threshold_failure": true,
+    "thresholds_passed": false,
+    "frames": 9622,
+    "frame_p95_ms": 17.524,
+    "frame_p99_ms": 22.847,
+    "route_loops_completed": 2,
+    "route_stalls": 0,
+    "csv_sha256": "311a0c29e0c3b8380564d0c9525cce04949fa75bfc590425aa8e877ea7de8123",
+    "capture_s": 120,
+    "render_resolution": [
+      1920,
+      1080
+    ],
+    "vsync": 1,
+    "gpu_timing_available": false,
+    "physical_device_tested": false,
+    "display_presentation_measured": false,
+    "movie": "builds/mac-20261011-144832-90462/verification-20261011-145024-979/clip/environment-smoke.mp4",
+    "movie_sha256": "d815d59996d8c5055d59d802263a6527516c1bb4c2f3342ca005636e614bc782",
+    "movie_bytes": 3595003,
+    "movie_frames": 106,
+    "movie_seconds": 3.533333333333333,
+    "offline_fixed_fps": 30,
+    "real_time_motion_verified": false,
+    "manual_controls_verified": false,
+    "ordinary_ui_verified": false,
+    "ordinary_ui_scope": "Not attempted on mac065; mac064 native UI access failed with cgWindowNotFound. No prior Save/Continue observation transferred.",
+    "live_audio_listening": false,
+    "physical_mobile_devices_tested": false,
+    "art_approved": false,
+    "temporary_stage_removed": true,
+    "peak_sampled_owned_allocated_bytes": 810754048,
+    "ordinary_profile_absent": true,
+    "uploaded_as_is_authorized": true,
+    "known_issues": [
+      "Exported p95 frame-time threshold failed (17.524 ms >16.7 ms)",
+      "Home3 ground-camera foliage obstruction",
+      "Separate paving contact-coverage gate remains failed",
+      "Terrain joins, paving fronts, provisional character/interior, reference fidelity",
+      "Manual controls/motion, current ordinary Save/Continue, live listening and physical phones unverified"
+    ],
+    "uploaded": true,
+    "url": "https://github.com/xingzhao-ji/MUSH/releases/tag/mac065",
+    "upload_receipt": "reports/mac065-preparation/upload-verification.json",
+    "upload_receipt_sha256": "7e96fd3bbba1e0a6cc1508927d2a9e2c171be74538754a3af06fa898445bb817",
+    "delivery_sha256": "c114a3e862ab28e5cd5e3fcbe6e851d5b58a23a2a80deefc8af4ab26d19bdf55",
+    "storage_free_bytes_observed": 13494681600
+  },
+  "source_performance_budget_passed": true
 }
