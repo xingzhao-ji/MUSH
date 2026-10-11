@@ -451,3 +451,58 @@ with its earlier p95 failure. Exact receipt paths and hashes are in the summary.
 | Sampled ground clearance and rollback | Tested as described above; no collision geometry changed |
 | Dense, varied planting matching the reference | Still unfinished; sparse grouping and coarse neighboring leaves remain |
 | Full animated clearance, continuous motion and mobile cost | Unverified; no physical device available |
+
+
+## Terrain-edge and stream successor
+
+The previous terrain stopped before several perimeter trees. Two prebuilt opaque
+soil meshes now cover that exposed edge, using the existing material; the same
+stream node continues north through a shallow distant valley. Paired day, night,
+rain, side and reverse views show ground behind the roots and a connected water
+surface. Bare hills and repeated tall trunks remain unfinished scenery. This is
+an extension of the visual background, with no new playable terrain or physics.
+The source before this change is Git `2a9b6f6`; retained mesh pointers also provide
+runtime rollback. No add-on, new texture or shader was introduced.
+
+The three compressed meshes total 49,715 bytes. Added geometry is 2,688 soil and
+528 water triangles, with two additional draw nodes. The native build/save/load
+check passes all channels, winding, finite values, valid indices and zero unused
+vertices. All 13 original stream array/index prefixes are exact. Its original
+material, transform and unique audio alias remain; a 20mm culling margin covers
+both bounded wave terms. Startup loads/verifies assets, with no new custom frame
+loop. Additional render cost is included in the scene benchmark, not isolated.
+
+Final rendered verification passes 19 checks and ten complete 1280 x 720 PNG
+decodes. All 202 original soil render seams are exact. The original colliders have
+inherited coordinate rounding: maximum matched difference is 0.0706mm, below the
+unchanged 0.1mm correspondence limit. No old body or playable boundary changed.
+Eight actual player perimeter positions at three camera pitches each pass native
+camera checks. All 24 actual 0.14m camera-sphere poses, including five over the
+added soil, return no intersection with exact query-only terrain triangles at
+1mm margin. That test geometry is removed afterward. These samples do not prove
+every possible camera path.
+
+Fresh broader checks pass: 137 environmental assertions, 295 gameplay assertions
+across 15 scenarios, and four Python runner tests. The 120-second night/rain route
+records 10,127 frames, two loops and no stalls at 1920 x 1080/default VSync:
+**p95 16.130ms / p99 18.029ms**, within the unchanged 16.7/33.3ms limits.
+These are callback intervals, not presented-frame/GPU, thermal or physical-device
+measurements. No runtime code changed after the benchmark. Earlier rejected
+white-wedge geometry, collision-coordinate assumptions, water-edge selection and
+fixture parser attempts remain recorded as failures.
+
+The source smoke clip fully decodes 106 frames at 30 FPS (3.533s), 1280 x 720, plus
+AAC audio. The retained MP4 is 4,139,652 bytes. Its 14,101,842-byte working AVI was
+removed only after full decode and exact source/stat/hash checks. The clip starts
+from a gusty side view; pause/resume restores the ordinary camera. This offline
+recording does not qualify real-time motion or live listening. About 12.1 GiB
+remains free. No app was exported: mac063 remains frozen before this change and
+retains its recorded p95 failure. Exact receipt hashes are in the compact summary.
+
+| Terrain scope | Status |
+| --- | --- |
+| Exposed-edge coverage and stream continuity | Implemented; inspected in ten paired day/night/rain images |
+| Native seams, geometry, original physics and water alias | Tested; original pointers retained for rollback |
+| Sampled perimeter camera and broad gameplay | Tested at 24 sphere poses and 15 gameplay scenarios |
+| Layered forest art and full reference fidelity | Still unfinished |
+| Continuous motion, live audio, current export and devices | Pending; no physical device connected |

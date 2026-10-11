@@ -1,0 +1,138 @@
+{
+  "draw_nodes": 2,
+  "files": [
+    {
+      "arrays_sha256": "d7de696bd6e3c5f728ec84e9843a2d732c9218b463811cfca2d13d88dd646752",
+      "bounds": "[P: (-64.0, -0.06476, -64.0), S: (71.8, 4.465115, 133.0)]",
+      "bytes": 21108,
+      "channels": [
+        "6d978e0bb590f5c2da120edcde12d9a360d8c3dc063d9888d3a1b691abff5115",
+        "6f9ebe25a4af3010a56891fe1555e570393637850936afbe675a58e1399c7337",
+        "8d58761b0f545d97ded4671a420aeeef401a8bdc4a02bf00de0ab3f3084105c9",
+        "fc468e9d48d52b23d9402fa040b71113494f1df5736dcb164c48b56d4705e241",
+        "b9d766f250a42eeca83a7b0c8933b976a522b57dca53d306e422bcdf16b6ed00",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "2087d0f94faaaba6030227494d5cc69cd2c9b5540398a69249685c70c7692593"
+      ],
+      "file": "forest-ground-west.res",
+      "geometry": {
+        "minimum_area": 0.993750095367432,
+        "minimum_winding_dot": 0.976317882537842,
+        "passed": true,
+        "unused_vertices": 0,
+        "vertices": 910
+      },
+      "sha256": "6e98be61d497bd54bf16c43a7d9b06edc14083cea042b54d716649d7d9b6ee54",
+      "triangles": 1548
+    },
+    {
+      "arrays_sha256": "17c6a67f7433c8c5297755b6f5a7c6adbd84f41e77ed6e946354f940a7a937bb",
+      "bounds": "[P: (10.2, -0.064791, -64.0), S: (54.8, 4.228839, 133.0)]",
+      "bytes": 15649,
+      "channels": [
+        "8f00f0f021dfda25120ef460d67cfb177cab11915e81c609d002004f39a7a4e0",
+        "eff1f38a0ed3142bf37f100071f40dc5dd5c2ae29258316efc26f1f1af98f0f9",
+        "35e5a614b5de10462011a294721b0582215aa6f2eee0007e0dab656752a09b3b",
+        "88ae8275684b33193bfd36c5b7fc4bf95c9ca8a7f3fac919afac3f34d2631e78",
+        "d267e93279b29db407fdc70ee27a84441b43b9a480b8949ead31b92683b9a873",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "38ce82af8d5c2e3560f59c3a43e07fc8e385c10d4c7f7757b5b01d0953903f14"
+      ],
+      "file": "forest-ground-east.res",
+      "geometry": {
+        "minimum_area": 0.986666679382324,
+        "minimum_winding_dot": 0.965742886066437,
+        "passed": true,
+        "unused_vertices": 0,
+        "vertices": 672
+      },
+      "sha256": "0dca87b5ed55ce562193d829146b5cc045f82c6ab177f346c8abffc4bd3e6e97",
+      "triangles": 1140
+    },
+    {
+      "arrays_sha256": "0695d62651b9c70cf572be538cf9c6db008ab81c946cab543b8fc644ebbd5229",
+      "bounds": "[P: (-1.19, 0.0, -24.99997), S: (2.38, 0.00001, 93.99997)]",
+      "bytes": 12958,
+      "channels": [
+        "fc80dc7381d21b0c4e4aab73aea2af9d54518e07929a36080a7e46cb83a4d89c",
+        "77a449daec2586ce3237b9519b7d124eaa741fbcfb4fb12dbf459c733da4c7ab",
+        "ff990e219add263b014f3a205a8ec9cbdd2f631317022134b2e54f345fc7951a",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "f9b7c2c47f2a213e31afb1b9ba73a3c26f203aa6433b7b05166404d2bdf17bc7",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "a93263942e00ef5f705356762ede742cf83a76180c1f4977d5c7c51cbdb2a068"
+      ],
+      "file": "forest-stream.res",
+      "geometry": {
+        "minimum_area": 0.0615940615534782,
+        "minimum_winding_dot": 1.0,
+        "passed": true,
+        "unused_vertices": 0,
+        "vertices": 1442
+      },
+      "sha256": "a71d9208e4fcf106ba5f136a6a4b07efd264e1aca7f22c582cfe7c89b7f0ebc1",
+      "triangles": 2460
+    }
+  ],
+  "meshes": [
+    {
+      "bounds": "[P: (-64.0, -0.06476, -64.0), S: (71.8, 4.465115, 133.0)]",
+      "render_seam_exact": true,
+      "seam_native_points": 118,
+      "triangles": 1548,
+      "vertices": 910
+    },
+    {
+      "bounds": "[P: (10.2, -0.064791, -64.0), S: (54.8, 4.228839, 133.0)]",
+      "render_seam_exact": true,
+      "seam_native_points": 84,
+      "triangles": 1140,
+      "vertices": 672
+    }
+  ],
+  "new_colliders": 0,
+  "passed": true,
+  "seam_vertices": 202,
+  "soil_arrays_sha256": "d7db053201c76ef0fc9e0de38e936d84b90b6a7ebc9aa4280c5bb295346b7bbc",
+  "triangles": 2688,
+  "water_added_triangles": 528,
+  "water_added_vertices": 308,
+  "water_node": "UnbrokenStream/@MeshInstance3D@1796",
+  "water_original_vertices": 1134,
+  "water_prefix_channels": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "water_source_arrays_sha256": "dfa3e5d50842f769e6a7fee3dfd21f12d8eba7abff30bbad459f2e193c3d826b",
+  "water_source_path": "UnbrokenStream/@MeshInstance3D@1796",
+  "water_source_transform": "[X: (1.0, 0.0, 0.0), Y: (0.0, 1.0, 0.0), Z: (0.0, 0.0, 1.0), O: (9.0, -0.16, 1.0)]"
+}

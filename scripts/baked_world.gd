@@ -1,6 +1,8 @@
 extends "res://lineage/entrance52-capture03/midstory-world.gd"
 ## Same native scene and runtime values; the authoring pipeline runs before export.
 var snapshot_loaded: bool = false
+var forest_backdrop: RefCounted
+var forest_backdrop_report: Dictionary={"passed":false}
 var ground_flower: RefCounted
 var ground_flower_report: Dictionary = {"passed":false}
 var paving_preview_prebuilt: RefCounted
@@ -146,6 +148,12 @@ func _ready() -> void:
 	ground_flower_report = ground_flower.install(self)
 	if not ground_flower_report.get("passed",false):
 		push_error("Ground flower native ownership refused")
+		get_tree().quit(2)
+		return
+	forest_backdrop=preload("res://scripts/forest_backdrop_prebuilt.gd").new()
+	forest_backdrop_report=forest_backdrop.install(self)
+	if not forest_backdrop_report.get("passed",false):
+		push_error("Forest backdrop native ownership refused")
 		get_tree().quit(2)
 		return
 	forest_enclosure = preload("res://scripts/forest_enclosure.gd").build(self)
@@ -369,6 +377,7 @@ func get_renderer_capabilities_report() -> Dictionary:
 	report["annex_roof_prebuilt"] = annex_roof_prebuilt_report.duplicate(true)
 	report["hero_stone_prebuilt"] = hero_stone_prebuilt_report.duplicate(true)
 	report["ground_flower"] = ground_flower_report.duplicate(true)
+	report["forest_backdrop"] = forest_backdrop_report.duplicate(true)
 	report["effective_foliage_shader_provenance"] = effective_foliage_shader_provenance.duplicate(true)
 	var viewport: Viewport = get_viewport()
 	var output_size: Vector2i = Vector2i(viewport.get_texture().get_size())

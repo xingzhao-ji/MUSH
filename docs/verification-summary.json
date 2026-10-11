@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T16:52:04.534421+00:00",
+  "prepared_utc": "2026-10-11T17:40:40.463549+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -32,18 +32,15 @@
       ]
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-085334-55185/result.json",
-      "receipt_sha256": "cf7b6ced0ef259b9eabbb4f78f7eca5882f42cbfbe823248cbc8244245783c38",
+      "receipt": "reports/acceptance-20261011-103010-60300/result.json",
       "passed": true,
-      "source_changes": [],
-      "generated_source_files": [],
-      "source_preservation_failed": false,
       "checks": {
         "scenarios": 15,
         "assertions": 295,
         "all_passed": true,
         "manual_acceptance": false
-      }
+      },
+      "receipt_sha256": "8881793769788c23316080e3b8d68e9e42f653abc32a2955bdfaca0f4670fe05"
     },
     "ground_before": {
       "passed": true,
@@ -64,15 +61,14 @@
       "native_parameter_comparisons": 14867
     },
     "environment": {
+      "receipt": "reports/environment-20261011-102939-60275/result.json",
       "passed": true,
-      "receipt": "reports/environment-20261011-061452-25791/result.json",
-      "receipt_sha256": "4d90ec18043b1371ac6d683187ccf38118679cd170774f9dc5a455dd35a02413",
-      "source_changes": [],
       "checks": {
         "assertions": 137,
         "all_passed": true,
         "native_parameter_comparisons": null
-      }
+      },
+      "receipt_sha256": "24f428534f812751768e973fe0164eb8c854decda2ff1e34f15364a0a5d79496"
     },
     "capture": {
       "passed": true,
@@ -113,8 +109,9 @@
       "passed": true,
       "tests": 4,
       "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
-      "source_sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577",
-      "last_run_after_gap_step_changes": true
+      "source_sha256": "c3cfd50a313a5c4656c8b07a12a57789a0595447c7cb9e8da384b82e44aee539",
+      "last_run_after_gap_step_changes": true,
+      "last_run_after_forest_changes": true
     },
     "fresh_local_clone": {
       "passed": true,
@@ -156,17 +153,12 @@
       }
     },
     "latest_import": {
-      "receipt": "reports/import-20261011-085121-54958/result.json",
-      "receipt_sha256": "60574f9614adca3befb2eba42b0d47679bcd01c1ebec858466a03b9167274ea3",
+      "receipt": "reports/import-20261011-102254-59832/result.json",
       "passed": true,
-      "source_changes": [],
-      "generated_source_files": [
-        "tests/paving_front_surface.gd.uid"
-      ],
-      "source_preservation_failed": false,
       "checks": {
         "import_passed": true
-      }
+      },
+      "receipt_sha256": "3ff354b5066ba0f7c0d4e771572e08fcc0fb4ddb316877254a03a41667e17347"
     }
   },
   "benchmarks": [
@@ -297,7 +289,8 @@
     "garden_placement_rebuild": "O(G), G <= 8",
     "garden_save_overlap_validation": "O(G^2), at most 28 prior-position pairs, O(G) state",
     "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent",
-    "paired_step_support": "At most two added native rays per step-support lookup; constant script state. Physics query cost remains collision-world dependent; incremental cost unisolated."
+    "paired_step_support": "At most two added native rays per step-support lookup; constant script state. Physics query cost remains collision-world dependent; incremental cost unisolated.",
+    "forest_backdrop": "Offline: O(V(X+Z)+XZ+I+XlogX+ZlogZ+W) work, O(XZ+I+W) storage; array-based axis dedup is bounded here. Runtime: linear byte/native-channel verification, two new draw nodes, no new custom frame loop. GPU work unisolated."
   },
   "pending": [
     "physical mobile devices",
@@ -315,7 +308,7 @@
   "runtime_sha256": {
     "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
     "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
-    "scripts/environment_controller.gd": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8",
+    "scripts/environment_controller.gd": "f0046cfdc0750eab2e0cb68ce282f223c949035537566c91e4fd5ea85d4a4734",
     "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
     "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c",
@@ -325,11 +318,15 @@
     "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
     "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
     "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
-    "scripts/baked_world.gd": "cea575504ca62d583a2c88ba5cad6eb120e1ef38d30a69dc7a740c75419d174c",
+    "scripts/baked_world.gd": "75a05a8ddb5c64b6f39f04d74ab5255bcf032f07ea3c1127923cb694a234f5f9",
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "5395cdc780b17c06b358031b73d88d230253abd9c69524cdc6a2cb9c8f4885f3"
+    "tools/verify.py": "c3cfd50a313a5c4656c8b07a12a57789a0595447c7cb9e8da384b82e44aee539",
+    "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
+    "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
+    "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
+    "tests/forest_backdrop_build.gd": "57b99ae49188d61966fdb7adcb92e7cf57e84c1f48dae4c4de047fcbaa87a793"
   },
   "isolated_trials": [
     {
@@ -552,7 +549,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current leafier-flower source120s callback route passes16.114/18.069ms; frozen mac063 predates both source flower and front-material changes and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "Current terrain/stream source120s callback route passes16.130/18.029ms; frozen mac063 predates this source and still fails p95 at18.049ms. No causal speedup/GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -1534,5 +1531,273 @@
     "physical_device_tested": false,
     "packaged": false,
     "observed_free_bytes": 13607915520
+  },
+  "forest_backdrop_successor": {
+    "purpose": "Cover exposed terrain edges behind perimeter trees and continue the same stream into the distance.",
+    "reuse": "Native Godot ArrayMesh, existing soil/water materials and shader/environment/audio bindings. No add-on, new texture or license dependency.",
+    "rollback_commit": "2a9b6f67d680ca56832a775b43a8ca65c5e4f4bb",
+    "proof": "baked/forest-backdrop-proof.json",
+    "proof_sha256": "1a93a125e97e1a708847e67dd543c1788f8319eae30091e93aeb242eb28a0ed2",
+    "artifacts": [
+      {
+        "file": "forest-ground-west.res",
+        "bytes": 21108,
+        "sha256": "6e98be61d497bd54bf16c43a7d9b06edc14083cea042b54d716649d7d9b6ee54",
+        "arrays_sha256": "d7de696bd6e3c5f728ec84e9843a2d732c9218b463811cfca2d13d88dd646752",
+        "triangles": 1548
+      },
+      {
+        "file": "forest-ground-east.res",
+        "bytes": 15649,
+        "sha256": "0dca87b5ed55ce562193d829146b5cc045f82c6ab177f346c8abffc4bd3e6e97",
+        "arrays_sha256": "17c6a67f7433c8c5297755b6f5a7c6adbd84f41e77ed6e946354f940a7a937bb",
+        "triangles": 1140
+      },
+      {
+        "file": "forest-stream.res",
+        "bytes": 12958,
+        "sha256": "a71d9208e4fcf106ba5f136a6a4b07efd264e1aca7f22c582cfe7c89b7f0ebc1",
+        "arrays_sha256": "0695d62651b9c70cf572be538cf9c6db008ab81c946cab543b8fc644ebbd5229",
+        "triangles": 2460
+      }
+    ],
+    "asset_bytes": 49715,
+    "added_draw_nodes": 2,
+    "added_triangles": 3216,
+    "added_colliders": 0,
+    "runtime_geometry_generation": false,
+    "custom_perframe_work": false,
+    "playable_bounds_changed": false,
+    "native_seam_points": 202,
+    "maximum_inherited_collision_rounding_m": 7.05936618032865e-05,
+    "water_original_prefix_channels": 13,
+    "water_added_vertices": 308,
+    "water_added_indices": 1584,
+    "water_node_and_material_retained": true,
+    "water_wave_cull_margin_m": 0.020001,
+    "checks": {
+      "import": {
+        "receipt": "reports/import-20261011-102254-59832/result.json",
+        "sha256": "3ff354b5066ba0f7c0d4e771572e08fcc0fb4ddb316877254a03a41667e17347",
+        "passed": true,
+        "checks": {
+          "import_passed": true
+        }
+      },
+      "build": {
+        "receipt": "reports/forest-build-20261011-102329-59890/result.json",
+        "sha256": "4ed31d742973288907a869dc0a555962264195e370bde33c2511e68bb71d383b",
+        "passed": true,
+        "checks": {
+          "native_build_roundtrip_and_water_prefix": true,
+          "meshes": 3
+        }
+      },
+      "forest": {
+        "receipt": "reports/forest-20261011-102820-60177/result.json",
+        "sha256": "b242acf2611df980338e02406136a3cb491d1f3ca3f181337a959a492c0f02a7",
+        "passed": true,
+        "checks": {
+          "assertions": 19,
+          "full_png_decodes": [
+            {
+              "bytes": 1731699,
+              "png_sha256": "c802f811dc59fd7026e2dd9ed0a0f70174edb0e3be3e1ebb451a8024d65f5cf6",
+              "rgba_sha256": "e4e6613d4fcb22c97c6f02744d5f80f1f8902e04e74ccbb240e26cae0633eb6a",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1748347,
+              "png_sha256": "c64121dc688584b050c57eca0f91ba636059edaab44ff3f18dc4385e80a9b1ab",
+              "rgba_sha256": "62e1e6ce67f8edb1a7ff6ee3f87aaebd7f995d5028b75850579ba92f2c22cad1",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1678947,
+              "png_sha256": "d34bfa9c168e17bad7351b4884c76b3beba393e47240c19c8a3ac9bcbdd20c6b",
+              "rgba_sha256": "336f94ad20b67d22a5800984e0ea4f2fb8853a36ad2292617ab4085204faeea2",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1739665,
+              "png_sha256": "72c375059332f9409a67170cb839f8f25e825ca587d205943f226ff7e7d9b6b7",
+              "rgba_sha256": "5dcaab27f3af472234f856a17868bca328896fa4523da1f8c9d87469268291f0",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1471816,
+              "png_sha256": "602e778c3b288e66a62211cb5ce52578a943ea1f77316b2b3a63a19977a28d73",
+              "rgba_sha256": "b85de321958c666ef2eb837c870ef0697dabdafd4a218bb6ff589d1d161fbce6",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1565592,
+              "png_sha256": "0b9be5b8fb26c92528f6b8394226db59d256f5e58b76f9b07f94edda18b84a65",
+              "rgba_sha256": "7fb4cabc9e4155c4f3c471c43577d3a9e4cb3f6e8fece80652223fc9bf5fc1c7",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1522645,
+              "png_sha256": "141986cc05d3970e69f4670b87db8ef9022bf9be0c3a7ea9deab70f98f437944",
+              "rgba_sha256": "5c5341c215499bd1fee3acb921400f70050ec0b97c4d2d34cae944e22a6571cc",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1531399,
+              "png_sha256": "4830b584e4db0b93c989990ce83c92a20782f36f3ede77308ba0ce81ccf4dbfb",
+              "rgba_sha256": "d8e7b75efae52aa3156c77d0530e0fcf0adb5fa35f2ee9c5ebe42fe38219862f",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1549759,
+              "png_sha256": "fc22555ef4551e0ae833846c52b4d22fcfa77dcaead3ebff0e73bac19a99ca45",
+              "rgba_sha256": "c6a7110cd61028a8ee2d7496ae9816745bd83a69f4e0ace23cd56a369c601ee3",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            },
+            {
+              "bytes": 1564999,
+              "png_sha256": "cf7a9c0c05f04e0c400437bc03905e9a892728203f33d8c643b79dfdb99a31d9",
+              "rgba_sha256": "ba72e3717d0c8ec75c354c6244480fa859cc0f418e487e6e2220070e1a66af0a",
+              "all_crcs_checked": true,
+              "dimensions": [
+                1280,
+                720
+              ]
+            }
+          ],
+          "camera_poses": 24,
+          "motion_verified": false,
+          "performance_measured": false
+        }
+      },
+      "environment": {
+        "receipt": "reports/environment-20261011-102939-60275/result.json",
+        "sha256": "24f428534f812751768e973fe0164eb8c854decda2ff1e34f15364a0a5d79496",
+        "passed": true,
+        "checks": {
+          "assertions": 137,
+          "all_passed": true,
+          "native_parameter_comparisons": null
+        }
+      },
+      "acceptance": {
+        "receipt": "reports/acceptance-20261011-103010-60300/result.json",
+        "sha256": "8881793769788c23316080e3b8d68e9e42f653abc32a2955bdfaca0f4670fe05",
+        "passed": true,
+        "checks": {
+          "scenarios": 15,
+          "assertions": 295,
+          "all_passed": true,
+          "manual_acceptance": false
+        }
+      },
+      "benchmark": {
+        "receipt": "reports/benchmark-20261011-103355-60528/result.json",
+        "sha256": "71ba2c1af8ebb9890bcf7786689af837df43a3ab88d1a04d116da5cddbfc72b7",
+        "passed": true,
+        "checks": {
+          "frames": 10127,
+          "frame_p95_ms": 16.13,
+          "frame_p99_ms": 18.029,
+          "route_stalls": 0,
+          "thresholds_passed": true,
+          "route_loops_completed": 2,
+          "render_resolution": [
+            1920,
+            1080
+          ],
+          "vsync": 1,
+          "gpu_timing_available": false,
+          "physical_device_tested": false,
+          "display_presentation_measured": false
+        }
+      }
+    },
+    "camera_poses": 24,
+    "camera_sphere_radius_m": 0.14,
+    "camera_query_margin_m": 0.001,
+    "camera_sphere_intersections": 0,
+    "camera_poses_over_added_soil": 5,
+    "python_runner_tests": 4,
+    "movie": {
+      "receipt": "reports/forest-movie-20261011-103851/receipt.json",
+      "receipt_sha256": "c49eb3a3f70d828c4dc43b6ebac5b801f4706db9a25e3b89522ae2f04d4ebba8",
+      "mp4": {
+        "sha256": "3546de72c62687f1c6a56ae0c3187c8921cba91a7d3f184d8513de7ded14f515",
+        "bytes": 4139652,
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1280,
+              "height": 720,
+              "avg_frame_rate": "30/1",
+              "nb_read_frames": "106"
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "sample_rate": "48000",
+              "channels": 2,
+              "avg_frame_rate": "0/0",
+              "nb_read_frames": "166"
+            }
+          ],
+          "format": {
+            "duration": "3.533333"
+          }
+        }
+      },
+      "working_avi_bytes": 14101842,
+      "working_avi_removed_after_complete_decode": true
+    },
+    "runtime_unchanged_after_benchmark": true,
+    "terrain_coverage_direction_accepted": true,
+    "whole_environment_art_approved": false,
+    "continuous_motion_verified": false,
+    "live_audio_verified": false,
+    "physical_device_tested": false,
+    "packaged": false,
+    "observed_free_bytes": 13002567680,
+    "remaining": "Bare distant hills/repeated trunks, layered forest and full reference fidelity. Current mac063 is frozen and does not contain this change."
   }
 }

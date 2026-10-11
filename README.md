@@ -29,6 +29,8 @@ python3 tools/verify.py --engine /path/to/Godot --suite ground
 python3 tools/verify.py --engine /path/to/Godot --suite environment
 python3 tools/verify.py --engine /path/to/Godot --suite flower-build
 python3 tools/verify.py --engine /path/to/Godot --suite flower
+python3 tools/verify.py --engine /path/to/Godot --suite forest-build
+python3 tools/verify.py --engine /path/to/Godot --suite forest
 python3 tools/verify.py --engine /path/to/Godot --suite capture
 python3 tools/verify.py --engine /path/to/Godot --suite paving
 python3 tools/verify.py --engine /path/to/Godot --suite paving-front

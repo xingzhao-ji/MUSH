@@ -39,3 +39,27 @@ Cloud shade is material/albedo modulation. Rain shelter uses authored masks rath
 Track source assets, `.import` settings, `.uid` files, required baked resources, portable tests, notices and concise documentation. Ignore `.godot/`, builds, full reports, private export credentials and local environment files. Keep historical app archives and review evidence in the existing local archive, outside this repository. Do not commit the engine, export templates, private profiles or user reference-image package.
 
 The entrance preview now loads `baked/paving-joints.res` through the same owner. Both narrowed joints are authored offline with existing native mesh/geometry helpers. The 52-face upper soil patch refits shared boundaries and locally retriangulates three faces through Godot Geometry2D; render and contact triangles match. The small authoring validator uses O(T² + E²) pair checks for triangle/edge counts T and E, with linear stored mesh channels. These checks run during authoring/admission, never in the frame loop. Seven existing scalar geometry predicates were reused; no add-on or runtime framework was added. Original192 remains available for rebuilding and Git rollback; original043 remains the runtime owner’s retained rollback. The new resource has the same encoded size, mesh/collider count and native corner counts, with no added runtime geometry work.
+
+
+## Distant terrain and stream
+
+After the existing soil and flower owners, startup loads three pinned ArrayMesh
+resources (49,715 encoded bytes). Two coarse opaque soil meshes meet 202 exact
+native render boundary points and extend beyond the recovery bounds. They reuse
+the original soil material, receive existing lighting and do not cast added
+shadows. The existing stream node receives a mesh with 528 additional triangles;
+all 13 original native channel/index prefixes, its material, transform and audio
+identity are preserved. Its culling margin covers the shader's bounded 20mm wave.
+Original water pointers and margins remain available for rollback. No collider or
+playable bound changes; the existing player recovery remains authoritative.
+
+This adds two draw nodes and 3,216 triangles overall, no new textures, shaders or
+custom per-frame loop. Loading and native-channel verification are linear in the
+bytes examined. The author runs offline: boundary scanning is O(V(X+Z)) in the
+worst case because it deduplicates axis samples with small array lookups; grid
+construction is O(XZ), indexing/compaction O(I), and sorting O(X log X + Z log Z).
+V is source vertices, X/Z are axis samples, and I is generated indices. Temporary
+storage is O(XZ + I + W), with W the retained water channels. This bounded authoring
+work does not run during ordinary startup. Encoded size and triangle counts are
+not GPU-memory measurements. The fresh complete-scene benchmark passes, but it
+does not isolate the extra terrain/water fragment cost or establish a speedup.

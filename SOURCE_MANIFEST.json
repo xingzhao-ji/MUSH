@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 4439,
-      "sha256": "f5ff71e411182c9bb3ca31d74841b4c72937987f34daef10f27cbfbf9288ac09"
+      "bytes": 4571,
+      "sha256": "4a34fcbe52c0a3c26c4410d7dd97267564110250a1e33ced9d81cbdf0d697905"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -302,6 +302,22 @@
       "bytes": 751461,
       "sha256": "9938115251c64982d3e8fa1e3c857a001778a914b3d74d0b88197e6fb702cc27"
     },
+    "baked/forest-backdrop-proof.json": {
+      "bytes": 5915,
+      "sha256": "1a93a125e97e1a708847e67dd543c1788f8319eae30091e93aeb242eb28a0ed2"
+    },
+    "baked/forest-ground-east.res": {
+      "bytes": 15649,
+      "sha256": "0dca87b5ed55ce562193d829146b5cc045f82c6ab177f346c8abffc4bd3e6e97"
+    },
+    "baked/forest-ground-west.res": {
+      "bytes": 21108,
+      "sha256": "6e98be61d497bd54bf16c43a7d9b06edc14083cea042b54d716649d7d9b6ee54"
+    },
+    "baked/forest-stream.res": {
+      "bytes": 12958,
+      "sha256": "a71d9208e4fcf106ba5f136a6a4b07efd264e1aca7f22c582cfe7c89b7f0ebc1"
+    },
     "baked/foundation-grown-right.res": {
       "bytes": 22861,
       "sha256": "7fc5b92b7e6e334434c7cf4d23f1e00a0280947fde7a61ef7e1c8d615e855524"
@@ -375,8 +391,8 @@
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
     "docs/ARCHITECTURE.md": {
-      "bytes": 6916,
-      "sha256": "a735090d13f5c43c2c9b0f143f0699cdb13512d951b844848017253a053e81dc"
+      "bytes": 8476,
+      "sha256": "66ecf644b920e91bc03c68817541745b1f3171a5cef7e0171eee563b66e72be4"
     },
     "docs/DEPENDENCIES.md": {
       "bytes": 4790,
@@ -387,20 +403,20 @@
       "sha256": "2ab1e6e6fa65d9cd324bcace61d11d9d6a9c6a251c2e9f0a07e223f090ee1e36"
     },
     "docs/STATUS.md": {
-      "bytes": 5036,
-      "sha256": "5ac439ecb1345fd51894f9a30729a35272c96e31a8e3f7d260b26cb3fa5bb2dc"
+      "bytes": 5604,
+      "sha256": "d8e76217c46079234acd4e06fda4416168ee9005a31a8285c1304b3f0a72da57"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 33956,
-      "sha256": "4bd4c1ca4c170b901cf29f2bec4ec6f3d809b2bf2798d5d9e51784da68b78458"
+      "bytes": 37574,
+      "sha256": "a96fedf4ec47ac6f403c51b025ab07f3ad8ea151e25210cf04ee5a3ee8ff436d"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 61061,
-      "sha256": "39778b494fb316e8b01f75bc1edad97252461c3aed9779b65064f12252a906bf"
+      "bytes": 71381,
+      "sha256": "49cc5dd48d6dac07e769db60a03a20159094cec13816a584556c9d226b7b2dbc"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -707,8 +723,8 @@
       "sha256": "82d60d9c2e4a69af0348ef8c63b7c93af2db66fcdb373e4ee2ae53a66f6dd356"
     },
     "scripts/baked_world.gd": {
-      "bytes": 29105,
-      "sha256": "ebb9b386110fdf4e4797899c7562f5df50cf70856cd807072559c901f614b2e3"
+      "bytes": 29530,
+      "sha256": "75a05a8ddb5c64b6f39f04d74ab5255bcf032f07ea3c1127923cb694a234f5f9"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -737,6 +753,14 @@
     "scripts/floor_prebuilt.gd.uid": {
       "bytes": 20,
       "sha256": "1087ce428b705e174de6cdc865fc04a9204c6a98a24ef39ad86c564718f564c4"
+    },
+    "scripts/forest_backdrop_prebuilt.gd": {
+      "bytes": 3808,
+      "sha256": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197"
+    },
+    "scripts/forest_backdrop_prebuilt.gd.uid": {
+      "bytes": 19,
+      "sha256": "2babb2c130cd44e1838e34df03dcc9eb456a95c434d141bd50e569923fe3d0bb"
     },
     "scripts/forest_enclosure.gd": {
       "bytes": 4938,
@@ -930,6 +954,22 @@
       "bytes": 20,
       "sha256": "9a2ef54c09192489310a96601b0acb47828cbc1d490ebf6eaa5f6072284dbe35"
     },
+    "tests/forest_backdrop.gd": {
+      "bytes": 12584,
+      "sha256": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab"
+    },
+    "tests/forest_backdrop.gd.uid": {
+      "bytes": 20,
+      "sha256": "c85721cd08720f4b3de0d389bbf95a2f061a49bc62670b06a9482267f4798ef2"
+    },
+    "tests/forest_backdrop_build.gd": {
+      "bytes": 5046,
+      "sha256": "57b99ae49188d61966fdb7adcb92e7cf57e84c1f48dae4c4de047fcbaa87a793"
+    },
+    "tests/forest_backdrop_build.gd.uid": {
+      "bytes": 20,
+      "sha256": "05f27706776ed0913385f010a1e2f62495875d75ffb34af58093dd89d3016dd1"
+    },
     "tests/ground_flower.gd": {
       "bytes": 13700,
       "sha256": "5829441afeddd9827af0c7cfd7af1d46f2a3687e6f6fdb1337b6b19e14f4f128"
@@ -1078,6 +1118,14 @@
       "bytes": 20,
       "sha256": "a8f50c71decc20204f4c1d157cfbf9a18377f3af63ebb163a41e4eaa89c40e1b"
     },
+    "tools/author_forest_backdrop.gd": {
+      "bytes": 7557,
+      "sha256": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9"
+    },
+    "tools/author_forest_backdrop.gd.uid": {
+      "bytes": 19,
+      "sha256": "1243a47ff70d276d41b0ba6ce161599937502b47427029cd53f89937db18dc34"
+    },
     "tools/check_png.py": {
       "bytes": 3240,
       "sha256": "cacc607fc90c2f0db837c8f145b11d001b9a528783e45253402d8c4c607070fa"
@@ -1111,8 +1159,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 23378,
-      "sha256": "f95fcd18b41c754a50be18bcc816641ef9a36ba1a603bcc1d3fd52412139ba53"
+      "bytes": 25513,
+      "sha256": "c3cfd50a313a5c4656c8b07a12a57789a0595447c7cb9e8da384b82e44aee539"
     }
   }
 }

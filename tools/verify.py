@@ -203,6 +203,29 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "performance_measured": False}
+    if suite == "forest-build":
+        report = read_report(output / "native/backdrop-build.json")
+        assert report["passed"] and report["seam_vertices"] == 202
+        assert report["water_prefix_channels"] == [True] * 13 and len(report["files"]) == 3
+        for row in report["files"]:
+            assert row["pinned_native_exact"] and row["geometry"]["passed"]
+            assert row["sha256"] == sha(output / "native" / row["file"])
+        return {"native_build_roundtrip_and_water_prefix": True, "meshes": 3}
+    if suite == "forest":
+        report = read_report(output / "native/forest.json")
+        assert report["passed"] and len(report["checks"]) == 19 and all(c["passed"] for c in report["checks"])
+        assert len(report["camera"]) == 24 and all(c["passed"] and c["sphere_hits"] == 0 and c["sphere_radius"] >= .1399 for c in report["camera"])
+        assert report["native"]["seams"] == 202 and report["native"]["missing"] == 0
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        assert {v["file"] for v in report["views"]} == {label + "-" + suffix + ".png" for label in ("home-day", "side-day", "reverse-day", "home-night", "home-rain") for suffix in ("before", "after")}
+        decoded = []
+        for view in report["views"]:
+            item = module.decode(output / "native" / view["file"])
+            assert view["passed"] and item["dimensions"] == [1280, 720] and item["png_sha256"] == view["sha256"]
+            decoded.append(item)
+        return {"assertions": len(report["checks"]), "full_png_decodes": decoded,
+                "camera_poses": 24, "motion_verified": False, "performance_measured": False}
     if suite == "flower-build":
         report = read_report(output / "native/flower.json")
         assert report["passed"] and report["triangles"] == 94 and report["root_corners"] == 6
@@ -308,7 +331,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build"), required=True)
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -350,6 +373,10 @@ def main():
         command += ["--headless", "--editor", "--import", "--quit"]
     elif args.suite == "ground":
         command += ["--script", "res://tests/ground_material_sync.gd", "--", "--report-dir=" + str(output / "native")]
+    elif args.suite in ("forest", "forest-build"):
+        fixture = "forest_backdrop_build.gd" if args.suite == "forest-build" else "forest_backdrop.gd"
+        if args.suite == "forest-build": command += ["--headless"]
+        command += ["--script", "res://tests/" + fixture, "--", "--report-dir=" + str(output / "native")]
     elif args.suite in ("flower", "flower-build"):
         fixture = "flower_build.gd" if args.suite == "flower-build" else "ground_flower.gd"
         if args.suite == "flower-build": command += ["--headless"]
