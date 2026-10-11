@@ -876,3 +876,22 @@ separates ordinary saves/settings from generated log rotation/cache. Source,
 ordinary save/settings payloads, mesh/material/body ownership and RNG stay exact.
 Evidence: `reports/house-bank-inventory-20261011-134645-84240/`. The fixed cameras
 are diagnostic views, not played-camera, movement or performance acceptance.
+
+
+Two isolated home2 support variants pass16 native checks each and12 fully
+decoded paired PNGs each, including closed finite geometry, nondegenerate UVs,
+finite unit/orthogonal tangents, all64 stem sites, full soil-foot burial, guarded
+rear crossing witnesses, resource round-trip and actual trial removal. The
+first precursor failed a rear witness and remains failed. Both passing variants
+are **visually rejected and not integrated**: they replace the floating gap with
+an oversized plain pedestal/wall. Some fixed wide views are obscured by trees
+or leaves; the final elevated rear view is diagnostic, not a played pose.
+
+Each temporary variant uses128triangles, one shared opaque stone material, one
+identical concave shape and four nodes, with no per-frame work. Those counts do
+not establish frame-time cost. Player traversal, camera clearance and continuous
+motion were not exercised. Source and ordinary saves/settings remain exact.
+The next correction should test coherent whole-home placement on the existing
+bank after every batched part and its window light is positively mapped.
+Receipts: `reports/home2-bank-trial-20261011-140155-87764/` and
+`reports/home2-bank-trial-20261011-140519-87894/`; current mac064 stays unchanged.

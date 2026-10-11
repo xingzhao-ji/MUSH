@@ -3024,5 +3024,61 @@
     ],
     "scope": "Ordered raw native triangles; all crossings from above owner maximum Y. Highest surfaces do not prove support or acceptable intersection. Home3 is obscured/buried; home2 is unsupported. Fixed diagnostic camera views, not played poses or motion/performance acceptance.",
     "prior_failure": "reports/house-bank-inventory-20261011-134611-84181/receipt.json; fixture Script.resource_path parse error and expected engine log rotation in overbroad profile snapshot. Successor fixes fixture and explicitly scopes ordinary save/settings separately from engine-generated logs/cache."
+  },
+  "home2_bank_isolated_trials": {
+    "adopted": false,
+    "rows": [
+      {
+        "receipt": "reports/home2-bank-trial-20261011-140017-87660/receipt.json",
+        "receipt_sha256": "e41cc93c1434ea655b6de48ccd55b871a7026a3115987cbc8a3e65c8cd95068e",
+        "native_report_sha256": "8ceb7057c910deee4f399cbe0cbfe7e9c26e13e1036eca5cb1ae174efd92f8e5",
+        "technical_passed": false,
+        "checks": 7,
+        "decoded_pngs": 0,
+        "source_exact": true,
+        "ordinary_save_settings_exact": true,
+        "triangles": 128,
+        "artifact_bytes": null,
+        "artifact_sha256": null,
+        "decision": "Failed: one conservative rear crossing interval too thin for the two100mm margins; source/settings exact, no captures/artifact.",
+        "adopted": false,
+        "movement_camera_performance_verified": false
+      },
+      {
+        "receipt": "reports/home2-bank-trial-20261011-140155-87764/receipt.json",
+        "receipt_sha256": "ab8c0679e806b065e0772c745fc2a2a88428c02d00525287984e1ca26a5f69f3",
+        "native_report_sha256": "2432445f17af956610b6d166b83ffdf089b1ecee37fdd5545bab4d9ea7feb96d",
+        "technical_passed": true,
+        "checks": 16,
+        "decoded_pngs": 12,
+        "source_exact": true,
+        "ordinary_save_settings_exact": true,
+        "triangles": 128,
+        "artifact_bytes": 5317,
+        "artifact_sha256": "e40de2fe4a3055e6c84229ba7913be7ca22ab595611d2cc1338f95197adbe15d",
+        "decision": "Native checks pass; visually rejected tall plain pedestal. Wide and rear cameras obscured.",
+        "adopted": false,
+        "movement_camera_performance_verified": false
+      },
+      {
+        "receipt": "reports/home2-bank-trial-20261011-140519-87894/receipt.json",
+        "receipt_sha256": "caf7e89cdfa71ce32a4e881fc02be7b2b41f975403454496febab8d6c9561a75",
+        "native_report_sha256": "e474225b54f749e71cffb8238e93a6155088f1b7db459b03636f4ca005667423",
+        "technical_passed": true,
+        "checks": 16,
+        "decoded_pngs": 12,
+        "source_exact": true,
+        "ordinary_save_settings_exact": true,
+        "triangles": 128,
+        "artifact_bytes": 5265,
+        "artifact_sha256": "162c6f4cc6a533b55a2cd9ab82708c57ae9a287199cd383b851166ce9b629112",
+        "decision": "Native checks pass; wider upper ledge still visually rejected as oversized plain rock. Elevated rear view shows join, wide view obscured by leaves.",
+        "adopted": false,
+        "movement_camera_performance_verified": false
+      }
+    ],
+    "same_batch_crossing_limit": "Several original rock shells share each batch. Highest/next distinct projected crossings are conservative join witnesses, not an identified closed shell or physics-containment proof.",
+    "trial_cost": "128triangles, one opaque draw, one static body/identical concave shape, four nodes; no per-frame work. Counts only, no measured performance.",
+    "next_step": "Map every small-home native packet and its window light before testing coherent placement on the existing bank; preserve the tested closest-home foundation."
   }
 }
