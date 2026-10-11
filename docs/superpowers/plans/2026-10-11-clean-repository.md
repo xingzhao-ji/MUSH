@@ -11,7 +11,8 @@
 - [x] Inspect hot paths and implement only a narrow justified optimization, with regression tests.
 - [x] Import cleanly, run original gameplay assertions, native visual captures and sustained Mac benchmarks; retain all three p95 failures.
 - [x] Record storage/complexity/performance limits, licenses, provenance and rollback; scan the Git payload.
-- [ ] Commit and push a private repository; verify remote commit and clean checkout.
+- [x] Commit the clean source and verify a fresh local clone (import + 12 smoke checks).
+- [ ] Meet the performance condition or receive a revised development-checkpoint scope; then push a private repository and verify its remote commit/clone.
 
 Review focus: private save isolation, all runtime inheritance dependencies retained, pinned resource proofs unchanged, no reference pixels or credentials uploaded, native timing separated from phone/manual acceptance.
 

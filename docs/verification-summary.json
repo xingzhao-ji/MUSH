@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T10:33:46.307793+00:00",
+  "prepared_utc": "2026-10-11T10:42:25.683351+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": false,
@@ -105,6 +105,18 @@
       "tests": 4,
       "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
       "source_sha256": "89d102e213266e53dfb8afdb91e95746f5aa81924ce365c478001a0c2adc7577"
+    },
+    "fresh_local_clone": {
+      "passed": true,
+      "receipt": "reports/fresh-checkout-20261011-033501/result.json",
+      "receipt_sha256": "6a48dab289877f160c0484dcc42683ba9c47aab0ca4bc0dcfd8cb45b20de2e86",
+      "commit": "8a3852064a6d9a994436accc2471fcbf79a06bae",
+      "tracked_files": 242,
+      "smoke_checks": 12,
+      "headless": true,
+      "remote_clone": false,
+      "source_unchanged": true,
+      "temporary_clone_removed": true
     }
   },
   "benchmarks": [
@@ -191,7 +203,19 @@
     "gpu_timing_available": false,
     "measured_improvement_claimed": false,
     "script_observation": "Later emitted samples mostly around 1 ms; startup spikes and instrumentation present; not whole-game CPU/GPU attribution.",
-    "native_sample_physical_footprint": "approximately 1.9G, distinct from Godot static-memory metric"
+    "native_sample_physical_footprint": "approximately 1.9G, distinct from Godot static-memory metric",
+    "metal_trace": {
+      "analysis": "reports/metal-trace-20261011-032752/analysis.json",
+      "analysis_sha256": "b9b81979f949203a41579f1ea7e662519267d09037494104f67b301a1aaf933e",
+      "duration_s": 20.98418188,
+      "godot_active_gpu_interval_coverage_percent": 96.2762878082717,
+      "cpu_encoding_interval_coverage_percent": 26.553127855371027,
+      "hardware_utilization_counter": false,
+      "sustained_qualification": false,
+      "thermal_state_during_short_trace": "Nominal",
+      "presented_handler_records": 0,
+      "specific_redundant_draw_proven": false
+    }
   },
   "storage": {
     "archive_summary_sha256": "3956a97f38fc1ccda6426e692c8c65a56995f1d37a0008f0f23002ecf83b5b62",
@@ -209,7 +233,13 @@
     "ctime_only_deltas_outside_targets": 10,
     "ctime_cause_established": false,
     "source243_230_payloads_match": true,
-    "free_space_delta_exclusive_attribution": false
+    "free_space_delta_exclusive_attribution": false,
+    "final_strict_metadata_guard_passed": false,
+    "final_strict_guard_failure": "iCloud-offloaded UID; no gate waived",
+    "final_strict_payloads_reread": 628,
+    "final_strict_payloads_match": true,
+    "final_hydration_ctime_deltas": 2,
+    "final_payload_receipt_sha256": "12d9a8200160b2d19eb10bf4b3508c6ee2a8cfc64aa160399f325c4a73624b38"
   },
   "complexity": {
     "material_forwarding": "O(VU), V <= 32; O(V) copied values array removed for O(1) iteration state",
@@ -221,7 +251,7 @@
     "physical mobile devices",
     "IPA/installable iPhone build",
     "exported-app performance",
-    "GPU/display-presentation timing",
+    "per-presented-frame GPU/display timing",
     "thermal performance",
     "live audio listening/balance",
     "manual movement/camera feel",

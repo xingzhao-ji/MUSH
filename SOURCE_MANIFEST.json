@@ -371,16 +371,16 @@
       "sha256": "0c4edf00e4f0718103e582f66f3ab2bbd2db0bb0e0fd6629ac40495291e06d2c"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 5999,
-      "sha256": "30bad5524819ee158448f2d63e5650950aaf1003d2a17ef1a95f9bd012aa41dd"
+      "bytes": 7219,
+      "sha256": "8530c9f51a48691095e41aeae6d1fb58783329c5fe951476ac9930df6290a5ef"
     },
     "docs/verification-summary.json": {
-      "bytes": 9591,
-      "sha256": "7381ae7f10e5d8a051bec53578e08ca73fe73f7209f1124813606b2e19b228c3"
+      "bytes": 10987,
+      "sha256": "9bf82d13c58da56839c34f2122c8868e17493d038c1671a5e1f6d80d03a307e7"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
-      "bytes": 1779,
-      "sha256": "318b2953dbcbc71ce7dbb07b99d74866b385bb8705bebc4da12995e7b87e8dc8"
+      "bytes": 1938,
+      "sha256": "6a31aa54e045e948648723a988e3ec91c8dcb0243710e1f96d2e877d9adf68d2"
     },
     "lineage/cap-material27-preview01/material-world.gd": {
       "bytes": 13505,
