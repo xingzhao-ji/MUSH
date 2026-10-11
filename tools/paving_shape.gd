@@ -1,7 +1,13 @@
 extends RefCounted
 ## Offline-only candidate. No world assignments, runtime factory or archive paths.
-## Narrow the lower central joint; retain the upper stones and all existing triangles.
+## Isolated trial: retain the adopted lower joint and narrow the upper joint.
+## Retriangulate only the exact 52-face soil roof with matching render/contact.
 ## Original192 remains untouched. The caller owns a fresh output directory and tests.
+const Roof = preload("res://tools/paving_upper_roof.gd")
+var roof_result: Dictionary = {}
+var roof_points := PackedVector3Array()
+const ROOF_RENDER_START := 3113 * 3
+const ROOF_RENDER_END := 3165 * 3
 const Reader = preload("res://scripts/cap57_prebuilt.gd")
 const Owner = preload("res://scripts/paving_collar_prebuilt.gd")
 const INPUT := "res://baked/paving-preview192.res"
@@ -80,15 +86,18 @@ func _span(polygon: PackedVector2Array,z: float) -> PackedFloat64Array:
 	return PackedFloat64Array(xs)
 
 func _dx(stone: int,p: Vector2) -> float:
-	# Only the two lower stones: retain the upper row and its roof topology.
+	# Both joints narrow; upper-right front taper retains its original steep toe.
 	# Constant inner offsets retain the existing irregular contours. The X-only
 	# transition is checked against unchanged orientation and slope gates.
-	if stone>=2: return 0.0
-	var left: bool=stone==0
+	var left: bool=stone%2==0
 	# Hold the rear outer shoulders: moving one by 5.8mm changed the shared
 	# soil ridge and stalled the real diagonal-ascent route in the first trial.
 	var weight: float=clampf((p.x+.60)/.15,0.0,1.0) if left else clampf((.25-p.x)/.25,0.0,1.0)
-	return .030*weight*(1.0 if left else -1.0)
+	# Preserve both front toes so narrowing the inner joint does not expand
+	# the capsule's first contact into the previously safe lower-row approach.
+	if stone==2: weight*=clampf((7.77-p.y)/.115,0.0,1.0)
+	if stone==3: weight*=clampf((7.73-p.y)/.13,0.0,1.0)
+	return (.030 if stone<2 else .045)*weight*(1.0 if left else -1.0)
 
 func _gather(source: Array,indices: PackedInt32Array) -> Array:
 	var result: Array=source.duplicate(true)
@@ -236,9 +245,13 @@ func _patch(item: int) -> ArrayMesh:
 		var key:=_key(points[i])
 		if point_map.has(key): points[i]=point_map[key]
 		if _key(points[i])!=key: moved[i]=true
+	if item==2:
+		for i: int in range(roof_points.size()):
+			points[ROOF_RENDER_START+i]=roof_points[i]
+			if _key(points[ROOF_RENDER_START+i])!=_key(before[ROOF_RENDER_START+i]): moved[ROOF_RENDER_START+i]=true
 	for i: int in range(0,points.size(),3):
 		if moved.has(i) or moved.has(i+1) or moved.has(i+2):
-			if not _triangle_ok(before.slice(i,i+3),points.slice(i,i+3)):
+			if not (item==2 and i>=ROOF_RENDER_START and i<ROOF_RENDER_END) and not _triangle_ok(before.slice(i,i+3),points.slice(i,i+3)):
 				_check(false,"Changed native triangle inversion/area/25degree refusal",{"item":item,"triangle":i/3,"before":str(before.slice(i,i+3)),"after":str(points.slice(i,i+3)),"old_normal":str((before[i+2]-before[i]).cross(before[i+1]-before[i])),"new_normal":str((points[i+2]-points[i]).cross(points[i+1]-points[i]))})
 				return null
 			for j: int in range(3): changed.append(i+j)
@@ -300,7 +313,8 @@ func _verify_geometry(meshes: Array[ArrayMesh],old_contact: PackedVector3Array,n
 		if old_contact.slice(i,i+3).to_byte_array()!=new_contact.slice(i,i+3).to_byte_array():
 			changed_faces+=1
 			var same_surface: bool=changed_render.has(_tri_key(new_contact.slice(i,i+3))) or (old_caps.has(i/3) and new_caps.has(i/3))
-			var match_ok: bool=_triangle_ok(old_contact.slice(i,i+3),new_contact.slice(i,i+3)) and same_surface
+			var is_roof: bool=i>=2387*3 and i<2439*3
+			var match_ok: bool=(is_roof or _triangle_ok(old_contact.slice(i,i+3),new_contact.slice(i,i+3))) and same_surface
 			contact_exact=contact_exact and match_ok
 			if not match_ok and unmatched.size()<4: unmatched.append({"face":i/3,"old":str(old_contact.slice(i,i+3)),"new":str(new_contact.slice(i,i+3)),"orientation_ok":_triangle_ok(old_contact.slice(i,i+3),new_contact.slice(i,i+3)),"render_triangle_match":changed_render.has(_tri_key(new_contact.slice(i,i+3))),"source_triangle_matched":original_render.has(_tri_key(old_contact.slice(i,i+3))),"all_candidate_vertices_on_render":render_vertices.has(_key(new_contact[i])) and render_vertices.has(_key(new_contact[i+1])) and render_vertices.has(_key(new_contact[i+2]))})
 	return _check(finite and min_area>0.0 and planes_exact and closed and contact_exact and changed_faces>0,"Finite native channels/nonzero triangles, unchanged central planes, closed seams and changed contact/render agreement",{"finite_channels":finite,"contact_exact":contact_exact,"unmatched_contact_faces":unmatched,"minimum_render_triangle_area_m2":min_area,"four_native_central_planes_retained":planes_exact,"closed_stones":closed,"changed_contact_faces":changed_faces,"unchanged_contact_corners":new_contact.size()-changed_faces*3,"unchanged_UV_channels_outside_changed_triangles":true,"UV_check_scope":"Raw complement held; changed UV uses native worldXZ. Original native UV metadata is retained."})
@@ -352,6 +366,7 @@ func _seams(meshes: Array[ArrayMesh],new_feet: Array[PackedVector2Array]) -> boo
 	var source: PackedVector3Array=arrays[2][Mesh.ARRAY_VERTEX]; var candidate: PackedVector3Array=meshes[2].surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	var shared_exact:=true; var outside_clear:=true; var tested:=0; var max_overlap:=0.0
 	for i: int in range(source.size()):
+		if i>=ROOF_RENDER_START and i<ROOF_RENDER_END: continue
 		if point_map.has(_key(source[i])): shared_exact=shared_exact and _key(candidate[i])==_key(point_map[_key(source[i])])
 	for i: int in range(0,source.size(),3):
 		if source.slice(i,i+3).to_byte_array()==candidate.slice(i,i+3).to_byte_array(): continue
@@ -363,34 +378,32 @@ func _seams(meshes: Array[ArrayMesh],new_feet: Array[PackedVector2Array]) -> boo
 			for polygon: PackedVector2Array in Geometry2D.intersect_polygons(new_poly,new_feet[stone]): new_overlap+=_area(polygon)
 			# Existing visual collars intentionally overlap a stone's projected footprint.
 			# Every formerly exterior soil triangle must remain outside its new foot.
-			if old_overlap<=.00000001:
+			if (i>=ROOF_RENDER_START and i<ROOF_RENDER_END) or old_overlap<=.00000001:
 				tested+=1; max_overlap=maxf(max_overlap,new_overlap); outside_clear=outside_clear and new_overlap<=.00000001
 	return _check(shared_exact and outside_clear and tested>0,"Actual soil shared incidences exact and no new exterior-soil/stone overlap",{"outside_triangle_foot_checks":tested,"maximum_new_exterior_overlap_m2":max_overlap,"shared_point_mapping_exact":shared_exact,"projected_area_limit_m2":.00000001,"existing_collars_projected_inside_foot_are_retained":true})
 
 func _contact_proof(before: PackedVector3Array,after: PackedVector3Array) -> Dictionary:
 	var indices: Array[int]=[]; var faces: Array[int]=[]; var kept_before:=PackedVector3Array(); var kept_after:=PackedVector3Array()
+	var nonroof_mapping:=true; var roof_moved: Array[int]=[]
 	for i: int in range(before.size()):
+		var is_roof: bool=i>=2387*3 and i<2439*3
+		if not is_roof: nonroof_mapping=nonroof_mapping and _key(after[i])==_key(point_map.get(_key(before[i]),before[i]))
 		if _key(before[i])!=_key(after[i]):
 			indices.append(i)
 			var face: int=i/3
 			if not face in faces: faces.append(face)
+			if is_roof: roof_moved.append(i)
 		else: kept_before.append(before[i]); kept_after.append(after[i])
-	var roof_before:=before.slice(2387*3,2439*3); var roof_after:=after.slice(2387*3,2439*3); var roof_moved: Array[int]=[]
-	var roof_kept_before:=PackedVector3Array(); var roof_kept_after:=PackedVector3Array(); var mapped:=true
-	for i: int in range(roof_before.size()):
-		mapped=mapped and _key(roof_after[i])==_key(point_map.get(_key(roof_before[i]),roof_before[i]))
-		if _key(roof_before[i])!=_key(roof_after[i]): roof_moved.append(2387*3+i)
-		else: roof_kept_before.append(roof_before[i]); roof_kept_after.append(roof_after[i])
+	var roof_before:=before.slice(2387*3,2439*3); var roof_after:=after.slice(2387*3,2439*3)
 	var held: bool=kept_before.to_byte_array()==kept_after.to_byte_array()
-	var roof_held: bool=roof_kept_before.to_byte_array()==roof_kept_after.to_byte_array()
-	var passed: bool=held and mapped and roof_held and _sha(roof_before.to_byte_array())==ROOF52_SHA
-	_check(passed,"Complete native contact mapping and source/candidate roof52 attribution")
-	return {"passed":passed,"moved_corner_indices":indices,"changed_face_indices":faces,"source_XYZ_hex":before.to_byte_array().hex_encode(),"candidate_XYZ_hex":after.to_byte_array().hex_encode(),"unchanged_complement_exact":held,"unchanged_complement_sha256":_sha(kept_before.to_byte_array()),"roof52":{"passed":passed,"face_range":[2387,2439],"source_sha256":ROOF52_SHA,"candidate_sha256":_sha(roof_after.to_byte_array()),"source_XYZ_hex":roof_before.to_byte_array().hex_encode(),"candidate_XYZ_hex":roof_after.to_byte_array().hex_encode(),"moved_corner_indices":roof_moved,"unchanged_complement_exact":roof_held,"same_face_slots_and_order":true,"actual_source_to_candidate_mapping_exact":mapped}}
+	var passed: bool=held and nonroof_mapping and roof_result.passed and roof_after.to_byte_array()==roof_points.to_byte_array() and _sha(roof_before.to_byte_array())==ROOF52_SHA
+	_check(passed,"Exact nonroof native mapping and retriangulated roof52 correspondence")
+	return {"passed":passed,"moved_corner_indices":indices,"changed_face_indices":faces,"source_XYZ_hex":before.to_byte_array().hex_encode(),"candidate_XYZ_hex":after.to_byte_array().hex_encode(),"unchanged_complement_exact":held,"unchanged_complement_sha256":_sha(kept_before.to_byte_array()),"nonroof_source_to_candidate_mapping_exact":nonroof_mapping,"roof52":{"passed":passed,"face_range":[2387,2439],"render_corner_range":[ROOF_RENDER_START,ROOF_RENDER_END],"source_sha256":ROOF52_SHA,"candidate_sha256":_sha(roof_after.to_byte_array()),"source_XYZ_hex":roof_before.to_byte_array().hex_encode(),"candidate_XYZ_hex":roof_after.to_byte_array().hex_encode(),"moved_corner_indices":roof_moved,"same_face_slots_and_order":false,"actual_source_to_candidate_mapping_exact":false,"topology_replaced":true,"topology_evidence":roof_result.evidence}}
 
 func build(output_dir: String) -> Dictionary:
 	if called: return {"passed":false,"failure":"One-call candidate consumed"}
 	called=true
-	report={"schema":"mush-paving-shape-candidate/1","passed":false,"checks":[],"failures":[],"source_artifact_sha256":INPUT_SHA,"source_manifest_sha256":MANIFEST_SHA,"provenance":PROVENANCE,"geometry_generated_offline":true,"world_assignments":0,"added_triangles":0,"added_draws":0,"art_accepted":false,"traversal_verified":false,"performance_measured":false,"scope":"Two selected lower stones, exact shared soil-hole/collar points and matching existing contact vertices. Upper stones and roof retained byte-exact; the four-stone attempt remains rejected. Native triangle count/order and all unselected records held. Lower-row joint-narrowing candidate; no new battered return topology, lowered walking levels or upper-roof changes."}
+	report={"schema":"mush-paving-shape-candidate/2","passed":false,"checks":[],"failures":[],"source_artifact_sha256":INPUT_SHA,"source_manifest_sha256":MANIFEST_SHA,"provenance":PROVENANCE,"geometry_generated_offline":true,"world_assignments":0,"added_triangles":0,"added_draws":0,"art_accepted":false,"traversal_verified":false,"performance_measured":false,"scope":"Four narrowed stone joints; adopted lower geometry retained. Upper soil roof retriangulated with exact native render/contact triangles. Outer32 and diagonal approach ridge retained. No new draw nodes, triangles, lowered stone top planes or runtime generator. Isolated candidate; walking/art/performance unaccepted."}
 	var version:=Engine.get_version_info()
 	if not _check([version.major,version.minor,version.patch]==[4,7,2] and output_dir.is_absolute_path() and DirAccess.dir_exists_absolute(output_dir) and not FileAccess.file_exists(output_dir.path_join("paving-shape.res")) and not FileAccess.file_exists(output_dir.path_join("paving-shape.json")),"Godot4.7.2/create-only caller output directory"): return report
 	if not _check(FileAccess.get_sha256(INPUT)==INPUT_SHA and FileAccess.get_sha256(MANIFEST)==MANIFEST_SHA,"Current192 source/proof pins exact"): return report
@@ -407,6 +420,21 @@ func build(output_dir: String) -> Dictionary:
 	var before:=old_shape.get_faces(); var shape_config: Dictionary=owner.call("_shape_configuration",old_shape)
 	if not _check(before.size()==7323 and _sha(before.to_byte_array())==proof.contact_sha256 and _sha(var_to_bytes(shape_config))==proof.shape_configuration_sha256,"Current native contact/config exact"): return report
 	if not _admit_stones() or not _map_stones(): return report
+	var source_roof:=before.slice(2387*3,2439*3)
+	if not _check(_sha((arrays[2][Mesh.ARRAY_VERTEX] as PackedVector3Array).slice(ROOF_RENDER_START,ROOF_RENDER_END).to_byte_array())==ROOF52_SHA,"Exact source roof render/contact block correspondence"): return report
+	var colors: Dictionary={}; var attributes: PackedByteArray=_layout(source_meshes[2]).attribute_data
+	for face: int in [44,45,47]:
+		for corner: int in range(3):
+			var index: int=ROOF_RENDER_START+face*3+corner
+			colors[attributes.slice(index*12,index*12+4).hex_encode()]=true
+	if not _check(colors.size()==1,"Retriangulated local roof patch has one exact native RGBA8",{"colors":colors.keys()}): return report
+	roof_result=Roof.new().build(source_roof,point_map)
+	if not _check(roof_result.get("passed",false),"Native replacement roof topology",roof_result.get("evidence",{})): return report
+	if not _check(roof_result.evidence.interior_authoring_25_degrees_passed and roof_result.evidence.topology.no_new_steep_coverage_over_source_walkable_within_area_limit,"Native roof walking slope region preservation",{"interior_violations":roof_result.evidence.candidate_quality.interior_25_degree_violations,"new_steep_over_source_walkable_area_m2":roof_result.evidence.topology.new_steep_over_source_walkable_area_m2}): return report
+	roof_points=roof_result.triangles
+	refit_controls=roof_result.controls
+	var source_controls:=_xyz(CUT_CONTROLS)
+	for i: int in range(2): point_map[_key(source_controls[i])]=refit_controls[i]
 	var meshes: Array[ArrayMesh]=[]
 	for item: int in range(3):
 		var mesh:=_patch(item)
@@ -416,6 +444,7 @@ func build(output_dir: String) -> Dictionary:
 	for i: int in range(contact.size()):
 		var key:=_key(contact[i])
 		if point_map.has(key): contact[i]=point_map[key]
+	for i: int in range(roof_points.size()): contact[2387*3+i]=roof_points[i]
 	var approach_held:=true
 	for face: int in [1986,1988]:
 		approach_held=approach_held and before.slice(face*3,face*3+3).to_byte_array()==contact.slice(face*3,face*3+3).to_byte_array()
@@ -444,9 +473,7 @@ func build(output_dir: String) -> Dictionary:
 		for z: float in ([8.0,8.2,8.5] if pair==0 else [7.0,7.3,7.6]):
 			var left:=_span(new_feet[0],z); var right:=_span(new_feet[1],z); var gap: float=right[0]-left[1] if left.size()==2 and right.size()==2 else -1.0
 			gaps.append({"pair":pair,"z":z,"before_m":_span(feet[pair*2+1],z)[0]-_span(feet[pair*2],z)[1],"after_m":gap})
-			if pair==0:
-				if not _check(gap>=.030 and gap<=.050,"Actual lower candidate foot joint30–50mm at declared section",gaps[-1]): return report
-			elif not _check(new_feet[0].to_byte_array()==feet[2].to_byte_array() and new_feet[1].to_byte_array()==feet[3].to_byte_array(),"Upper foot geometry retained byte-exact",gaps[-1]): return report
+			if not _check(gap>=.030 and gap<=.050,"Actual candidate foot joint30–50mm at declared section",gaps[-1]): return report
 	if not _seams(meshes,all_new_feet): return report
 	var outside:=_xyz(OUTER32); var controls:=_xyz(CUT_CONTROLS)
 	# The corrected 32-station boundary includes an extra station before the
@@ -471,7 +498,7 @@ func build(output_dir: String) -> Dictionary:
 	roundtrip=roundtrip and old_shape.get_faces().to_byte_array()==before.to_byte_array()
 	if not _check(roundtrip,"Fresh native arrays/config/AABB/buffers/contact roundtrip and source immutability"): return report
 	candidate_library=loaded
-	report.merge({"passed":true,"gaps":gaps,"manifest":{"original":originals,"candidate":records,"original_contact_sha256":_sha(before.to_byte_array()),"contact_sha256":_sha(contact.to_byte_array()),"contact_corners":contact.size(),"contact_mapping":contact_proof,"roof52":contact_proof.roof52,"feet":foot_rows,"outside_upper_roof_source_XYZ_hex":OUTER32,"outside_upper_roof_candidate_XYZ_hex":OUTER32,"cut_controls_source_XYZ_hex":CUT_CONTROLS,"cut_controls_candidate_XYZ_hex":refit_controls.to_byte_array().hex_encode(),"cut_controls_mapping_verified":true,"cut_source_XZ_hex":cut.to_byte_array().hex_encode(),"cut_candidate_XZ_hex":new_cut.to_byte_array().hex_encode(),"cut_unchanged":true,"shape_configuration_sha256":_sha(var_to_bytes(shape_config)),"corners":COUNTS},"artifact":{"file":path,"sha256":FileAccess.get_sha256(path),"bytes":FileAccess.get_file_as_bytes(path).size(),"passed":true},"native_save_reload_exact":true,"source_resources_unchanged":true},true)
+	report.merge({"passed":true,"gaps":gaps,"manifest":{"original":originals,"candidate":records,"original_contact_sha256":_sha(before.to_byte_array()),"contact_sha256":_sha(contact.to_byte_array()),"contact_corners":contact.size(),"contact_mapping":contact_proof,"roof52":contact_proof.roof52,"feet":foot_rows,"outside_upper_roof_source_XYZ_hex":OUTER32,"outside_upper_roof_candidate_XYZ_hex":OUTER32,"cut_controls_source_XYZ_hex":CUT_CONTROLS,"cut_controls_candidate_XYZ_hex":refit_controls.to_byte_array().hex_encode(),"cut_controls_mapping_verified":true,"cut_source_XZ_hex":cut.to_byte_array().hex_encode(),"cut_candidate_XZ_hex":new_cut.to_byte_array().hex_encode(),"cut_unchanged":cut.to_byte_array()==new_cut.to_byte_array(),"shape_configuration_sha256":_sha(var_to_bytes(shape_config)),"corners":COUNTS},"artifact":{"file":path,"sha256":FileAccess.get_sha256(path),"bytes":FileAccess.get_file_as_bytes(path).size(),"passed":true},"native_save_reload_exact":true,"source_resources_unchanged":true},true)
 	var file:=FileAccess.open(output_dir.path_join("paving-shape.json"),FileAccess.WRITE)
 	if file==null: _check(false,"Candidate report output open"); report.passed=false; return report
 	file.store_string(JSON.stringify(report,"\t")+"\n"); file.flush(); file.close()

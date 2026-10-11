@@ -1,11 +1,11 @@
 extends "res://scripts/paving_collar_prebuilt.gd"
-## Portable startup owner for the lower-joint successor. The existing043
+## Portable startup owner for the narrow-joint successor. The existing043
 ## owner remains genuine and retains its resources. No authoring or per-frame work.
 const PREVIEW_SELF236 := "res://scripts/paving_preview_prebuilt.gd"
-const PREVIEW_ARTIFACT236 := "res://baked/paving-lower-joints.res"
-const PREVIEW_MANIFEST236 := "res://baked/paving-lower-joints.json"
-const PREVIEW_ARTIFACT_SHA236 := "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60"
-const PREVIEW_CONTACT_SHA236 := "4012b5fc1f1c7af0814472f7dee9d72dce30c79b4748e7ac76f8d03cdf72a31a"
+const PREVIEW_ARTIFACT236 := "res://baked/paving-joints.res"
+const PREVIEW_MANIFEST236 := "res://baked/paving-joints.json"
+const PREVIEW_ARTIFACT_SHA236 := "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057"
+const PREVIEW_CONTACT_SHA236 := "5c3e9e406fb00a944ec6f9bc6c9e0084de1447bf91128554c7ec33bc7479ac09"
 const SOURCE192_SHA236 := "6d5d78516898be3099d0496f07f02057b28b8eb944091d4b27b1018592657aa9"
 const SOURCE192_PROOF_SHA236 := "e79a3726db329ac6de071966504b5271a584042f1a2aafb73c33228e3d460cd6"
 const SOURCE194_SHA236 := "55c1b3266d918c899f77e77097c7e883a1d8e629e756984e1cfc5a96b27d6249"
@@ -35,14 +35,14 @@ func install(world: Node3D,expected_proof_sha: String) -> Dictionary:
 	var decoded: Variant=JSON.parse_string(text)
 	if not decoded is Dictionary: return _fail("Preview manifest dictionary required")
 	_proof=decoded
-	if _proof.get("schema","")!="mush-paving-lower-joints/1" or not _proof.get("native_authoring_save_reload_exact",false) or _proof.get("runtime_loader_sha256","")!=FileAccess.get_sha256(PREVIEW_SELF236) or _proof.get("baseline_loader_sha256","")!=BASELINE_LOADER_SHA236 or _proof.get("baseline_proof_sha256","")!=BASELINE_PROOF_SHA236 or _proof.get("native_mesh_reader_sha256","")!=READER_SHA236 or _proof.get("source194_proof_sha256","")!=SOURCE194_SHA236 or _proof.get("source192_artifact_sha256","")!=SOURCE192_SHA236 or _proof.get("source192_proof_sha256","")!=SOURCE192_PROOF_SHA236: return _fail("Preview manifest provenance refused")
-	if _proof.get("artifact_sha256","")!=PREVIEW_ARTIFACT_SHA236 or _proof.get("artifact_bytes",0)!=641570 or _proof.get("contact_sha256","")!=PREVIEW_CONTACT_SHA236 or _proof.get("contact_corners",0)!=7323 or _proof.get("shape_configuration_sha256","")!=SHAPE_CONFIG_SHA or not _proof.get("expected_native_items",null) is Array or _proof.expected_native_items.size()!=3: return _fail("Exact lower-joint resource/contact descriptors required")
+	if _proof.get("schema","")!="mush-paving-joints/1" or not _proof.get("native_authoring_save_reload_exact",false) or _proof.get("runtime_loader_sha256","")!=FileAccess.get_sha256(PREVIEW_SELF236) or _proof.get("baseline_loader_sha256","")!=BASELINE_LOADER_SHA236 or _proof.get("baseline_proof_sha256","")!=BASELINE_PROOF_SHA236 or _proof.get("native_mesh_reader_sha256","")!=READER_SHA236 or _proof.get("source194_proof_sha256","")!=SOURCE194_SHA236 or _proof.get("source192_artifact_sha256","")!=SOURCE192_SHA236 or _proof.get("source192_proof_sha256","")!=SOURCE192_PROOF_SHA236: return _fail("Preview manifest provenance refused")
+	if _proof.get("artifact_sha256","")!=PREVIEW_ARTIFACT_SHA236 or _proof.get("artifact_bytes",0)!=641570 or _proof.get("contact_sha256","")!=PREVIEW_CONTACT_SHA236 or _proof.get("contact_corners",0)!=7323 or _proof.get("shape_configuration_sha256","")!=SHAPE_CONFIG_SHA or not _proof.get("expected_native_items",null) is Array or _proof.expected_native_items.size()!=3: return _fail("Exact narrow-joint resource/contact descriptors required")
 	for key: String in ["full58_acceptance","visual_fidelity_accepted","sustained_performance_verified","physical_mobile_tested"]:
 		if not _proof.has(key) or _proof[key]!=false: return _fail("Private-preview acceptance scope refused: "+key)
 	var file: FileAccess=FileAccess.open(PREVIEW_ARTIFACT236,FileAccess.READ)
 	if file==null: return _fail("Preview resource missing")
 	var bytes: int=file.get_length(); file.close()
-	if bytes!=641570 or FileAccess.get_sha256(PREVIEW_ARTIFACT236)!=PREVIEW_ARTIFACT_SHA236: return _fail("Exact lower-joint artifact refused")
+	if bytes!=641570 or FileAccess.get_sha256(PREVIEW_ARTIFACT236)!=PREVIEW_ARTIFACT_SHA236: return _fail("Exact narrow-joint artifact refused")
 	var library: MeshLibrary=ResourceLoader.load(PREVIEW_ARTIFACT236,"MeshLibrary",ResourceLoader.CACHE_MODE_IGNORE_DEEP) as MeshLibrary
 	if not _library_exact(library): return _fail("Three material-free preview meshes and one shape required")
 	var baseline_entries: Array=original_owner236.get("_entries")

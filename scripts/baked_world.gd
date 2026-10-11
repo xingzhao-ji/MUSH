@@ -158,7 +158,7 @@ func _ready() -> void:
 	set_living_motion_enabled(true)
 	set_process(true)
 	paving_preview_prebuilt = preload("res://scripts/paving_preview_prebuilt.gd").new()
-	paving_preview_prebuilt_report = paving_preview_prebuilt.install(self,"b5d8fe6a3aa0b12806f7b9b8a5598721624ce47430395fe931ce4d7a496eebb4")
+	paving_preview_prebuilt_report = paving_preview_prebuilt.install(self,"59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd")
 	if not paving_preview_prebuilt_report.get("passed",false) or not paving_preview_prebuilt_report.get("installed",false):
 		push_error("Private paving preview refused: "+str(paving_preview_prebuilt_report.get("failure","")))
 		get_tree().quit(2)

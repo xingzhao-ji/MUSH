@@ -1,8 +1,8 @@
 {
-  "schema": "mush-paving-lower-joints/1",
-  "artifact_sha256": "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60",
+  "schema": "mush-paving-joints/1",
+  "artifact_sha256": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
   "artifact_bytes": 641570,
-  "runtime_loader_sha256": "bbbb433d4faed98b772e15194cf392960dbe1e910133498c596d8a3b57e23e59",
+  "runtime_loader_sha256": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
   "baseline_loader_sha256": "b469bece311013c376633b2d31200fcfbdcc3c3d848284de96981981335da337",
   "baseline_proof_sha256": "6e006ca6f902a3f28b6d3909f8a1799cc57f6a197f59c378b0b7f49502915e51",
   "native_mesh_reader_sha256": "35661bb43a42722eadc24018af8b25bb08b5d4959b117c13aaa3174f85784694",
@@ -10,14 +10,14 @@
   "native_authoring_save_reload_exact": true,
   "expected_native_items": [
     {
-      "all13_sha256": "5fd74f801a5ff393a21f18fcc1c07cc407f515f29fe14b8358f40d9d4447231c",
+      "all13_sha256": "f8b540ad1fc70440dab871c319a7106b2ffac99b410066a7a3bea82e63b56bdb",
       "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
       "native_aabb_variant_hex": "10000000494fcabf0ad7a3bcd0d641405fea264052b81e3f1e00b940",
       "native_buffers": {
         "buffers": {
           "attribute_data": {
             "bytes": 55656,
-            "sha256": "5826ae5bec59e5bb5505ec85ed21eba074937cfd41da03d8a69055191a4d333a"
+            "sha256": "fe60d23cbbecf88008960f2f5191a46ea071d4bea612eaa9ac4f49f9a142a58f"
           },
           "index_data": {
             "bytes": 0,
@@ -29,7 +29,7 @@
           },
           "vertex_data": {
             "bytes": 92760,
-            "sha256": "87f7e46d65260fb66841a1a7e958e48a4e0346f84f29877b78f5016c38453fcc"
+            "sha256": "7adade02c4d000dc096024fae1242ca7fc7f518a31c5b8978ac26d09c1dacbb3"
           }
         },
         "format": "34359738399",
@@ -37,18 +37,18 @@
         "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
         "total_native_surface_buffer_bytes": 148416
       },
-      "native_surface_blob_sha256": "81146d234796ebf382501371f4642ecd6ea20124166d71d15080b374e9c5b735",
-      "rendering_server_surface_sha256": "f6cc03162041934be960f628505daa2c8d00107ec237f2bd961fb26604842d79"
+      "native_surface_blob_sha256": "43d65b674d73ea40793653282c178d99fb29e1349fb74f180c883ce06f93402f",
+      "rendering_server_surface_sha256": "7e4939598c42f0f4132e20d84bccd223eaee7678cca99bc9d65b27692574315d"
     },
     {
-      "all13_sha256": "29735fba60522b42ee0e76f58e64fcb8fb6b897ec623a5abcba755e21f7711c7",
+      "all13_sha256": "dcbc940017612a0d327f0c8bede5432d7aef2e80b19a7b1eb812a02c4559cc93",
       "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
       "native_aabb_variant_hex": "10000000ca3268c00ad7a3bc763e4140b28ce640afcb6d3f4b4cb940",
       "native_buffers": {
         "buffers": {
           "attribute_data": {
             "bytes": 36936,
-            "sha256": "a796b42ba6f61cf588218905fb9d2f03d8722ddd3abc561411feba369d6cb3f4"
+            "sha256": "7dd3a33ef49baeee0185eb073ee10aeef6837697e6748c9579f35a56045ffada"
           },
           "index_data": {
             "bytes": 0,
@@ -60,7 +60,7 @@
           },
           "vertex_data": {
             "bytes": 61560,
-            "sha256": "9a2383174600850d0cf76c21d7399a96e4562b44f7421f822958b386c91b8a09"
+            "sha256": "770bf09c0d6267dc06ec99292850456d78e1127c0917d37c6718b00d04e3f084"
           }
         },
         "format": "34359738399",
@@ -68,18 +68,18 @@
         "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
         "total_native_surface_buffer_bytes": 98496
       },
-      "native_surface_blob_sha256": "af0564ef5f388125403a1c7ff77414ba29bcdeb8e0501e812bc2166d2eb82868",
-      "rendering_server_surface_sha256": "089aaf732f3fe0fb8f22fa7c0095ab6d131bc5a98afdde98eb6e4a23243201a3"
+      "native_surface_blob_sha256": "1ecd4fae8b43d41ba7cdf2d177d1360bc68e87fb353eddcd76ba7158668b8ee1",
+      "rendering_server_surface_sha256": "11892b6cdbbc949c23df5ad2d954ebd686bedee70840b5b3c737920e7739c920"
     },
     {
-      "all13_sha256": "1f6399838d53c43cdbe0fac0763151f825c806370e47ab8c947d9d44b2df0a71",
+      "all13_sha256": "35e4fd9fa36a68aaca201d065bec8a4846d4070b588b709ddf227b427ae1e886",
       "configuration_sha256": "ec3d95de00bb8d4af6eb1982d320246c835cd40ef79a0e6803ca315224b7813d",
       "native_aabb_variant_hex": "10000000000084c0f3fdd4bc000040406666fe40e7546f3f00000041",
       "native_buffers": {
         "buffers": {
           "attribute_data": {
             "bytes": 114012,
-            "sha256": "d5294bebc12d148e2a7b618eaf2794379afed9933c082c909a4cafa7e50d4eb0"
+            "sha256": "bd4602c0c4716f73fcecaef2c2fd8bd90a5a8f6830569c03f1565925291ab8bb"
           },
           "index_data": {
             "bytes": 0,
@@ -91,7 +91,7 @@
           },
           "vertex_data": {
             "bytes": 190020,
-            "sha256": "db2e7b84c5f21420d0f5dac30d878733d75df4be546e11866ae0fedf386c6bbd"
+            "sha256": "42ebc774c049b59ea7537176ee2fbdcdcf61ecef9509ff1eb96a982e04d6387d"
           }
         },
         "format": "34359738399",
@@ -99,23 +99,23 @@
         "scope": "Encoded surface buffers only; excludes mesh object overhead, CPU scratch copies, retained originals, physics acceleration data and driver allocations. Not RSS or GPU timing.",
         "total_native_surface_buffer_bytes": 304032
       },
-      "native_surface_blob_sha256": "31b5c08e528b23ee9276d83f2f96e80ff406ba323c05ccd18060821b6afb1e3d",
-      "rendering_server_surface_sha256": "3cce278f55a07987162baa3625b330b13f89c987f9c3fe5066b061a5ac270ec0"
+      "native_surface_blob_sha256": "a772ebd6d655641c6f33ad75166c9e4c8c7bcfef823fc51a9d2b12dacd06e278",
+      "rendering_server_surface_sha256": "b9c0187273a40ea1768250d504eb3d70bd27abd4466dc18f27f22079f53ce799"
     }
   ],
-  "contact_sha256": "4012b5fc1f1c7af0814472f7dee9d72dce30c79b4748e7ac76f8d03cdf72a31a",
+  "contact_sha256": "5c3e9e406fb00a944ec6f9bc6c9e0084de1447bf91128554c7ec33bc7479ac09",
   "contact_corners": 7323,
   "shape_configuration_sha256": "970e21c18f9ae8a7129b463fdcf6421e03df87f004881456174dde2444ca45b5",
   "full58_acceptance": false,
   "visual_fidelity_accepted": false,
   "sustained_performance_verified": false,
   "physical_mobile_tested": false,
-  "scope": "Experimental lower central joint: 99-100mm to39-40mm, two lower stones and exact shared soil/contact correspondence. Upper geometry and left diagonal approach ridge held. All58 isolated movement routes pass; full-route roof/near-cut contact coverage still fails. Original192 artifact/proof retained; Git65f7168 restores192 startup. Runtime rollback still restores original043.",
+  "scope": "Experimental narrowed lower and upper joints preserving top planes, outer boundary and existing steep faces. Three roof faces locally retriangulated with exact render/contact correspondence. Current artifact passes 58 isolated movement routes and four installed gap routes; full roof-contact coverage and art remain unaccepted. Git bff9467 restores prior source; runtime rollback restores043.",
   "source192_artifact_sha256": "6d5d78516898be3099d0496f07f02057b28b8eb944091d4b27b1018592657aa9",
   "source192_proof_sha256": "e79a3726db329ac6de071966504b5271a584042f1a2aafb73c33228e3d460cd6",
-  "authoring_source_sha256": "10541bf76ca5d9b4854aedd88d0481c6cd5ef1ab32e91cd71fbc1f118614fb61",
-  "authoring_report_sha256": "cb6b7a2f015d7abee01c2db379a6eabf9c1fb7c676b259efd59c58258fc7623d",
-  "authoring_checks": 45,
+  "authoring_source_sha256": "fa65f217ecdd8d39021f6199424a5223dccba090142d75e47879d208d5671479",
+  "authoring_report_sha256": "7a21c585009197920c006ef2db05045984aef415a761abee0ae94507f3d43843",
+  "authoring_checks": 49,
   "gaps": [
     {
       "after_m": 0.0390967290056333,
@@ -136,19 +136,19 @@
       "z": 8.5
     },
     {
-      "after_m": 0.13205114253789,
+      "after_m": 0.0420511461825419,
       "before_m": 0.13205114253789,
       "pair": 1,
       "z": 7.0
     },
     {
-      "after_m": 0.13183194483811,
+      "after_m": 0.0418319860882632,
       "before_m": 0.13183194483811,
       "pair": 1,
       "z": 7.3
     },
     {
-      "after_m": 0.131612851991246,
+      "after_m": 0.0416129638586752,
       "before_m": 0.131612851991246,
       "pair": 1,
       "z": 7.6
@@ -174,7 +174,7 @@
       "stone": 1
     },
     {
-      "candidate_XZ_hex": "a0369ebfb81edd40370234bfec51dc4073fc11be6666de4051cf8abec3f5f44045b2cdbed7a3f840c0a888bf0000f840ee98acbf3333f7404ce9aebf52b8f240",
+      "candidate_XZ_hex": "a0369ebfb81edd40370234bfec51dc40f0cfc7bd6666de402d8a67bec3f5f44045b2cdbed7a3f840c0a888bf0000f840ee98acbf3333f7404ce9aebf52b8f240",
       "native_render_contact_verified": true,
       "pair": 1,
       "side": "left",
@@ -183,7 +183,7 @@
       "stone": 2
     },
     {
-      "candidate_XZ_hex": "45a558bc48e1de406a00d53ec3f5dc40c8ee383fae47dd4076bf313f0000e440c27b0e3f7b14f640801ad33eec51f840286a29bc295cf740319404be3333f340",
+      "candidate_XZ_hex": "3d7b6ebd48e1de406a00d53ec3f5dc40c8ee383fae47dd4076bf313f0000e440c27b0e3f7b14f640801ad33eec51f840286a29bc295cf740aca832be3333f340",
       "native_render_contact_verified": true,
       "pair": 1,
       "side": "right",
@@ -192,10 +192,13 @@
       "stone": 3
     }
   ],
-  "roof52_sha256": "d0613c5f227ca9ce4b9c2d7c709c6ef77294ec230374b23359f8c8d7ca5df76a",
-  "upper_geometry_unchanged": true,
+  "roof52_sha256": "de438db5b6dcb196134193e1e39ef0ffc19b30bf5cb4d2975f0c8a715daca803",
+  "upper_geometry_unchanged": false,
   "near_cut_contact_coverage_verified": false,
   "isolated_movement_58_passed": true,
   "added_triangles": 0,
-  "added_draws": 0
+  "added_draws": 0,
+  "authoring_roof_source_sha256": "b73045cb97587454c24542636e861f27754ae7d52cbd755c94b6246bc628ef87",
+  "cut_controls_candidate_XYZ_hex": "aa34a2bd3bdf8f3e295cdf40f3f647be3de8103e3333f340",
+  "cut_candidate_XZ_hex": "234b1fbe48e1da40aa34a2bd295cdf40f3f647be3333f34037ec46bd713dfa40"
 }

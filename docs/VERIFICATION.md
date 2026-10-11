@@ -261,3 +261,86 @@ unchanged mac062, accepted 0.5.7 and 0.5.5 rollback apps remain available. An
 unused roof-triangulation experiment stays under ignored reports and was not
 integrated. Thick upper fronts, upper gap, soil-contact coverage and whole-game
 art acceptance remain open. Exact receipts/hashes are in the compact summary.
+
+
+## Upper entrance joint successor
+
+The upper center seam now measures 41.61–42.05 mm at three declared sections,
+previously 131.61–132.05 mm. These are trial dimensions guided by the approved
+reference's narrow moss joints, not measurements extracted from the image.
+Top planes, outer shoulders and front tips are retained. Shared soil/contact
+boundaries move with the stones. Three of the 52 soil faces are retriangulated
+through native Geometry2D; render and contact coordinates match exactly.
+
+The final artifact passes 49 native authoring checks, including closed boundaries,
+no overlap/crossing, slope restrictions, unchanged steep-area coverage and saved
+resource readback. It retains the same 641,570 encoded bytes, three meshes, one
+collision shape and triangle counts. It replaces the lower-only successor rather
+than accumulating another runtime resource. Original192 remains; Git `bff9467`
+restores the prior lower-only source. Existing runtime rollback still restores043.
+The seven reused scalar geometry predicates and native Geometry2D avoid a new
+triangulation dependency. Quadratic triangle/edge proof checks are offline and
+bounded by this small patch; no new per-frame work is introduced.
+
+The first narrowed variant exceeded the existing 18-tick unsupported limit.
+Preserving both front tips reduces the slow ascent to 15 ticks. A separate
+fixture issue then appeared: its braking model omitted a 0.316 mm native sideways
+correction and stopped on an 87.35-degree inner return. The unchanged target is
+safe. Arrival now requires safe current/predicted poses, observes the same 20
+settling ticks, and allows at most three ordinary-input refinements toward that
+same target. Every callback and failed stop remains recorded; original final
+arrival, grounding, clearance, unsupported-time and contact gates are unchanged.
+The global budget is checked before input and again after settling. The player
+controller, hover and safe-save support code are unchanged by this successor.
+
+The final gap suite passes 20 checks/four routes and all ten native support cases:
+523 callbacks, two completed steps, zero aborts, maximum rise 0.17417 m. Its slow
+approach crosses within 4.01 mm of the historical snag and needs one small arrival
+refinement. The final full suite passes all 58 movement routes and exact native
+owner/settings/rollback checks, with 7,352 callbacks and no arrival retries.
+**One of 169 checks still fails: moving upper-soil/near-cut contact coverage.**
+No still image, ray probe or successful stone crossing substitutes for that gate.
+
+Fresh gameplay passes 295 assertions across 15 scenarios. The source benchmark
+passes the unchanged 16.7/33.3 ms limits: 120-second night/rain route, 10,091 frames,
+p95 16.302 ms / p99 18.321 ms, two loops, no stalls, 1920 x 1080, default VSync.
+These are callback intervals, not GPU/presentation, thermal or mobile measurements,
+and do not establish a causal speedup over prior source.
+
+Eight matched PNGs fully decode. In the final comparison, `*-before.png` depicts
+the installed upper-joint successor and `*-after.png` depicts the retained
+lower-only baseline loaded for comparison. The four installed day/night/rain/wide
+views and baseline daylight view were inspected against the approved reference.
+The joint is visibly narrower; thick block-like fronts, dark night paving,
+provisional foliage/character art and overall reference fidelity remain open.
+Still captures do not qualify motion or live listening.
+
+Three redundant extracted apps (mac061, mac058, mac059) were removed only after
+all seven files per app matched retained ZIPs and receipts. Selected allocated
+bytes: 1,166,565,376; observed free-space rise: 1,166,381,056 bytes. Current mac062,
+accepted057/rollback055, ZIPs, evidence and profile siblings remain. A guarded
+restore helper is retained with the cleanup receipt; inode/ctime/birthtime cannot
+be reconstructed. Source receipts and exact hashes are in the compact summary.
+
+
+## mac063 exported checkpoint
+
+The separately exported mac063 app includes both narrowed joints and the paired
+step-support fix. Packaging, exact source/ZIP/app checks, ad-hoc signature and
+12 exported startup/effects checks pass. Four exported captures fully decode.
+The 120-second night/rain app route records 9,678 frames, two loops and no stalls,
+1920 x 1080 with default VSync: **p95 18.049 ms / p99 23.515 ms**. The p95 gate
+still fails; the combined exported verification receipt remains failed.
+
+The offline capture contains 106 decoded 1280 x 720 frames at 30 FPS (3.533 seconds),
+plus a decoded AAC track. The 3,343,295-byte MP4 is retained; its temporary AVI was
+removed after encoding/count/complete decode checks. This is not real-time pacing
+or listening evidence. Prior profiles, ordinary candidate save slot, source and
+app/ZIP payloads/metadata remain exact during these automated runs.
+
+A separate ordinary app launch reached CLEARING_READY, but the native UI tool
+could not locate its window (cgWindowNotFound). The owned process was terminated
+and reaped, and the failed attempt retained. No ordinary save was created;
+Save/Continue and visible ordinary UI remain unverified on mac063. mac061's prior
+UI evidence is not transferred to this app. Current launch/artifact details are
+in MAC-CANDIDATE.md. The user-authorized upload retains these unmet gates.

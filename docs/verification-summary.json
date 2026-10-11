@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T14:09:55.260679+00:00",
+  "prepared_utc": "2026-10-11T15:24:53.910750+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -32,8 +32,8 @@
       ]
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-070101-38714/result.json",
-      "receipt_sha256": "3a90987d3d9ec91ce7c1dd9ec5aca7da0bf5ba5beda8ff9ba285f3ef1fa2747c",
+      "receipt": "reports/acceptance-20261011-080312-42163/result.json",
+      "receipt_sha256": "bcdb4c550a713243e3a41cb10979e0f3c3f177c453f2ff4c4bdf7fea8fadaad4",
       "passed": true,
       "source_changes": [],
       "generated_source_files": [],
@@ -139,17 +139,17 @@
       "temporary_clone_removed": true
     },
     "gap_step": {
-      "receipt": "reports/gap-step-20261011-065802-38548/result.json",
-      "receipt_sha256": "bbe1a6c7b403df75970a030cbe9b907877cd3e2859f76a43c06eefcd16413e13",
+      "receipt": "reports/gap-step-20261011-080721-42482/result.json",
+      "receipt_sha256": "61a54b742e06276ddf8bd50d5835ece77b4ab1550b2e01febca6e9647ca7d883",
       "passed": true,
       "source_changes": [],
       "generated_source_files": [],
       "source_preservation_failed": false,
       "checks": {
         "routes": 4,
-        "assertions": 19,
+        "assertions": 20,
         "movement_passed": true,
-        "recorded_ticks": 464,
+        "recorded_ticks": 523,
         "native_geometry_held_exact": true,
         "original_roof_contact_gate_waived": false,
         "manual_controls_verified": false
@@ -320,9 +320,13 @@
     "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c",
     "lineage/entrance48-player-step-proposal02/player.gd": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c",
-    "tests/paving_traversal.gd": "95c07775b0990c759521f16a1d477ac73260cca86923aa7b18f982adaa7bc4b5",
-    "tests/paving_gap_step.gd": "dbb433ae6f3dd35b43a13f8a720d0da92f235c3fa965bd7400658ab2b7d48e22",
-    "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591"
+    "tests/paving_traversal.gd": "fb6bfbb73a2df34d517e12c3f89a3b9f482b57714dcc03bff99e19370dad3e9b",
+    "tests/paving_gap_step.gd": "1660465a81770845cfd76f978fbbee0cbb9d18bdb2c3092a336d0887e81329b2",
+    "tests/native_paired_support.gd": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591",
+    "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
+    "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
+    "scripts/baked_world.gd": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30",
+    "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8"
   },
   "isolated_trials": [
     {
@@ -545,7 +549,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Latest source120-second night/rain callback timing passes p95/p99; frozen mac062 app retains failed p95. No causal speedup, GPU/display or mobile attribution.",
+  "performance_budget_scope": "Final upper-joint source 120s callback-timing route passes; exported mac063 p95 fails at 18.049 ms. No GPU/presentation/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -732,5 +736,298 @@
     "diagnostic_directory": "reports/upper-roof-reachability-20261011",
     "isolated_triangulator_integrated": false,
     "physical_devices_tested": false
+  },
+  "upper_joint_successor": {
+    "scope": "Experimental final upper/lower geometry packaged in mac063. All 58 movement routes pass; full contact/art/manual/mobile acceptance remains open.",
+    "rollback_commit": "bff946770b97f32e10c64a166cd012beee0fb269",
+    "artifact": "baked/paving-joints.res",
+    "artifact_sha256": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
+    "artifact_bytes": 641570,
+    "manifest_sha256": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
+    "gaps": [
+      {
+        "after_m": 0.0390967290056333,
+        "before_m": 0.0990967313898191,
+        "pair": 0,
+        "z": 8.0
+      },
+      {
+        "after_m": 0.0394645244615122,
+        "before_m": 0.099464526845698,
+        "pair": 0,
+        "z": 8.2
+      },
+      {
+        "after_m": 0.0400162176453304,
+        "before_m": 0.100016220029516,
+        "pair": 0,
+        "z": 8.5
+      },
+      {
+        "after_m": 0.0420511461825419,
+        "before_m": 0.13205114253789,
+        "pair": 1,
+        "z": 7.0
+      },
+      {
+        "after_m": 0.0418319860882632,
+        "before_m": 0.13183194483811,
+        "pair": 1,
+        "z": 7.3
+      },
+      {
+        "after_m": 0.0416129638586752,
+        "before_m": 0.131612851991246,
+        "pair": 1,
+        "z": 7.6
+      }
+    ],
+    "authoring": {
+      "receipt": "reports/shape-build-20261011-074955-41330/result.json",
+      "receipt_sha256": "a1560ac228146112cfa4fe6edae1d07d593926d1ed7bea08945c532b8525bd6c",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "authoring_checks": 49,
+        "resource_sha256": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
+        "traversal_verified": false,
+        "art_approved": false
+      }
+    },
+    "authoring_checks": 49,
+    "traversal": {
+      "receipt": "reports/traversal-20261011-080737-42492/result.json",
+      "receipt_sha256": "f7a04ff4160651456430298297fb367d9dcb3d9a66adc62d9f71266337a141be",
+      "passed": false,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": null
+    },
+    "movement_routes": 58,
+    "movement_passed": true,
+    "contact_coverage_passed": false,
+    "assertions": 169,
+    "failed_assertions": 1,
+    "callbacks": 7352,
+    "controller_changed": false,
+    "arrival_refinement_max_attempts": 3,
+    "arrival_settle_ticks": 20,
+    "final_movement_gates_unchanged": true,
+    "gap_step": {
+      "receipt": "reports/gap-step-20261011-080721-42482/result.json",
+      "receipt_sha256": "61a54b742e06276ddf8bd50d5835ece77b4ab1550b2e01febca6e9647ca7d883",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "routes": 4,
+        "assertions": 20,
+        "movement_passed": true,
+        "recorded_ticks": 523,
+        "native_geometry_held_exact": true,
+        "original_roof_contact_gate_waived": false,
+        "manual_controls_verified": false
+      }
+    },
+    "source_benchmark": {
+      "receipt": "reports/benchmark-20261011-081020-42617/result.json",
+      "receipt_sha256": "6afdc5c937b223c7268fbd96c0415b84e6e1ce4c7c6ee8be39d2794ed21a48ab",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "frames": 10091,
+        "frame_p95_ms": 16.302,
+        "frame_p99_ms": 18.321,
+        "route_stalls": 0,
+        "thresholds_passed": true,
+        "route_loops_completed": 2,
+        "render_resolution": [
+          1920,
+          1080
+        ],
+        "vsync": 1,
+        "gpu_timing_available": false,
+        "physical_device_tested": false,
+        "display_presentation_measured": false
+      }
+    },
+    "capture": {
+      "receipt": "reports/shape-capture-20261011-080948-42591/result.json",
+      "receipt_sha256": "319e0c3615a7fae7f537d314dda7c43bff8d3a59c76bdfce316d7c5932fe2f7f",
+      "passed": true,
+      "source_changes": [],
+      "generated_source_files": [],
+      "source_preservation_failed": false,
+      "checks": {
+        "assertions": 11,
+        "full_png_decodes": [
+          {
+            "bytes": 1667842,
+            "png_sha256": "dc8b53be664c058989a48753bf9c79b93f9fcff7677a6126b8e917a1e23cd513",
+            "rgba_sha256": "99570dac6e900e5498e8e4b9a2f8e906e94c460edc5a05832ad01d93a7f8b485",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1669549,
+            "png_sha256": "b5641d91a1737796d4901bbe3e8502b967713f3bd1fb15db9309ec04c6381093",
+            "rgba_sha256": "f301d908df5ae8366b0c778ddf8bcf793ee781e34ea92a2eb1f31cbead81404d",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1359495,
+            "png_sha256": "e119b1c96317d868dc0c9bbe9263638cab2b04dd9546353fb17f37aa97711b2d",
+            "rgba_sha256": "a2b6f84719e3674be8474f14e2783a0fb4ebcaba660e2e0d97dad813adb1d435",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1350315,
+            "png_sha256": "57d524d7074c8ce835a6fac2804ba0b6f5d7668e43c0a491cb6609e547429df6",
+            "rgba_sha256": "4954776e3629afc02574199fd7473603fcf4935aef8e52e1086a5c03b6c17abc",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1678721,
+            "png_sha256": "4bc3bd76c4062577fc09bb3e2b19b20ec86aac42e7b7a3d28dfb050cb56ba0d1",
+            "rgba_sha256": "93c660f32ef8290f17f86e293562c327e301dd4dd13522646f8edcc128f92aea",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1673524,
+            "png_sha256": "959edeb2e66a9b1f2223f84485bd337c7c5753a89e5078b3c8d89939e9a4520d",
+            "rgba_sha256": "ac96ad8114808a39843b0257250ed8251978dc0912b710400ca03b0aed94bdd8",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1518565,
+            "png_sha256": "3687b6c630386b087a6064581f50efdb7fc8a2c9dbc71835602f42d50a0678eb",
+            "rgba_sha256": "eb14858a73e00a19a8a43593600271524dc1ad58455b595520506b4dc9ac0540",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          },
+          {
+            "bytes": 1518937,
+            "png_sha256": "fe183920670f06768503f36ab27c980f381670c551566c0843bbeb90583875fc",
+            "rgba_sha256": "a98a044b1f2ca2b9a93691c3ade09cb33730e3d235d34bf4b44e88e4825a359c",
+            "all_crcs_checked": true,
+            "dimensions": [
+              960,
+              960
+            ]
+          }
+        ],
+        "motion_verified": false,
+        "art_approved": false,
+        "traversal_verified": false
+      }
+    },
+    "capture_label_scope": "before=installed upper-joint successor; after=retained lower-only baseline",
+    "art_approved": false,
+    "motion_verified": false,
+    "new_dependencies": false,
+    "added_triangles": 0,
+    "added_draws": 0
+  },
+  "duplicate_app_cleanup": {
+    "receipt": "reports/storage-cleanup-20261011-three-apps01/receipt.json",
+    "receipt_sha256": "1632485e49b544842c4919eb25731b97d07477348247af709bdb43e6adf4467b",
+    "passed": true,
+    "removed": [
+      "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-042956-9202/MUSH.app",
+      "/Users/xingzhaoji/Library/Application Support/MUSH-mac058/MUSH.app",
+      "/Users/xingzhaoji/Library/Application Support/MUSH-mac059/MUSH.app"
+    ],
+    "selected_allocated_bytes": 1166565376,
+    "observed_free_bytes_delta": 1166381056,
+    "retained_archives_and_evidence_exact": true,
+    "profile_siblings_metadata_exact": true,
+    "restore_script": "reports/storage-cleanup-20261011-three-apps01/restore.py",
+    "restore_script_sha256": "91fc4310bdc0cda67455f62f9a1014f2cc26c413af24f0622750c42fe4b65a95"
+  },
+  "mac063_candidate": {
+    "schema": "mush-mac063-development-candidate/1",
+    "app": "builds/mac-20261011-081358-42723/MUSH.app",
+    "zip": {
+      "path": "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-081358-42723/MUSH.zip",
+      "sha256": "2584703f15535c2d12260d9c8f7751610cb6c63e28af310acf5d50bfb83cd608",
+      "bytes": 162620746
+    },
+    "profile": "MUSH-mac063",
+    "version": "0.6.0",
+    "source_package_receipt_sha256": "b74828cebc3179369d2120b571a36e657d690ae0599cfa48474d877af2672cc5",
+    "verification_receipt": "builds/mac-20261011-081358-42723/verification-20261011-081629-53035/result.json",
+    "verification_receipt_sha256": "f12d6b68b16d7d60fea2659c5bcae53e5e602942a67398b43810162f2a567dca",
+    "startup_checks_passed": 12,
+    "exported_captures_passed": 4,
+    "benchmark_passed": false,
+    "p95_ms": 18.049,
+    "p99_ms": 23.515,
+    "frames": 9678,
+    "loops": 2,
+    "stalls": 0,
+    "capture_s": 120,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "vsync": 1,
+    "gpu_timing_available": false,
+    "display_presentation_measured": false,
+    "movie": "builds/mac-20261011-081358-42723/verification-20261011-081629-53035/clip/environment-smoke.mp4",
+    "movie_sha256": "2921a570ad22b7abf7c174ed36d6a3dceab6576dc444dd048f2182ed542b8454",
+    "movie_seconds": 3.533333333333333,
+    "offline_fixed_fps": 30,
+    "real_time_motion_verified": false,
+    "manual_controls_verified": false,
+    "ordinary_ui_verified": false,
+    "ordinary_ui_attempt": "reports/mac063-ui/new-save/result.json",
+    "ordinary_ui_attempt_sha256": "8b8e7c49fd3311e8a3bd88522ce15e0c3ec5b327b6ee7d9568fd42a26951aa9d",
+    "ordinary_ui_blocker": "Native UI tool cgWindowNotFound; no new ordinary save/Continue observation.",
+    "live_audio_listening": false,
+    "physical_mobile_devices_tested": false,
+    "art_approved": false,
+    "temporary_stage_removed": true,
+    "ordinary_profile_absent": true,
+    "source_runtime_sha256": {
+      "scripts/environment_controller.gd": "1b47fc21fd06eac38de7c67f3a2976a032ddbbeb883fa41fba7d43883a4599a8",
+      "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
+      "lineage/entrance48-player-step-proposal02/player.gd": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c",
+      "baked/paving-joints.res": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057",
+      "baked/paving-joints.json": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd",
+      "scripts/baked_world.gd": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30",
+      "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8"
+    }
   }
 }

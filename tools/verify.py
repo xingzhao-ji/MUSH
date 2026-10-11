@@ -232,7 +232,7 @@ def inspect(suite, output, duration, expected_vsync=1):
                 "manual_controls_verified": False, "art_approved": False}
     if suite == "shape-build":
         report = read_report(output / "native/paving-shape.json")
-        assert report["schema"] == "mush-paving-shape-candidate/1"
+        assert report["schema"] == "mush-paving-shape-candidate/2"
         assert report["passed"] is True and report["checks"]
         assert all(row["passed"] for row in report["checks"])
         return {"authoring_checks": len(report["checks"]),

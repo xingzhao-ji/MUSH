@@ -20,83 +20,7 @@
     },
     "README.md": {
       "bytes": 4238,
-      "sha256": "cf2fec06fe9ae1c0279b365bf1d629fd3611112a0e42e9270a5dc66b66c0990b"
-    },
-    "export_presets.cfg": {
-      "bytes": 1136,
-      "sha256": "bb1183a940a427228ec1330d673bc9f71679c3c527c891bd1303b3d78cf527dc"
-    },
-    "main.tscn": {
-      "bytes": 177,
-      "sha256": "28a339b558a7fd3f505a9eaf99d33c166e6d98a852d54d87e0cdda889dff84d2"
-    },
-    "project.godot": {
-      "bytes": 1005,
-      "sha256": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f"
-    },
-    "assets/clearing-music.wav": {
-      "bytes": 1411244,
-      "sha256": "5dc5a6ba7684b78ec693950295e99dd1f05ccd2f536aa2b615616c1ddba50802"
-    },
-    "assets/clearing-music.wav.import": {
-      "bytes": 507,
-      "sha256": "154eb61003b141a571570cc99b00427f95ca55d027205936a0908fee113cdbee"
-    },
-    "assets/credits.json": {
-      "bytes": 8700,
-      "sha256": "9fbf1394f60f561bd441bbe59a320de86ec623ae6d52485f5ad45f2f81531d30"
-    },
-    "assets/door.wav": {
-      "bytes": 24298,
-      "sha256": "9c5c9a08b9b64c557bdc495edc9533dd0640213fd7763c7dcf5af68586411f01"
-    },
-    "assets/door.wav.import": {
-      "bytes": 477,
-      "sha256": "4e03f2b8c61ccf440851880306f88aa646bf036eb43a38ff4d9b11f1eac2c91f"
-    },
-    "assets/footstep.wav": {
-      "bytes": 5336,
-      "sha256": "818e163fa574f882404c61520ece134d804df11d0cb18c4c14e084039b97d0be"
-    },
-    "assets/footstep.wav.import": {
-      "bytes": 489,
-      "sha256": "ff257e8883e66d24af042777a420a0231a265ab09ce87f2c6ed8641793f7b66e"
-    },
-    "assets/forest-ambience.wav": {
-      "bytes": 1058444,
-      "sha256": "65b393bc55317773eb76c1df6fd985ddcfd479abe8e2168bfc028d4ca9c506ba"
-    },
-    "assets/forest-ambience.wav.import": {
-      "bytes": 510,
-      "sha256": "f6fc31322db68cf4889ef649a3001ccc27439aad3fca92296719ddcaf4518d5c"
-    },
-    "assets/generate_audio.py": {
-      "bytes": 2482,
-      "sha256": "20400344cc676b34a685e99cdab452cabaf506e981736179107db782d473d17b"
-    },
-    "assets/glow.wav": {
-      "bytes": 15478,
-      "sha256": "07c3031fb198853bc980628b7b9ca0b9828bfd55cc1fc14ff8c81a48abfb3250"
-    },
-    "assets/glow.wav.import": {
-      "bytes": 476,
-      "sha256": "39de0a37c7b2a7924478b5d20d95026c29663270b5c72b08fb9fa98bf63da515"
-    },
-    "assets/growth.wav": {
-      "bytes": 61782,
-      "sha256": "a5591936dec8f2fd28198b4ce9976c1d5ca72aed13aca1aa0aa1ff1b5373873a"
-    },
-    "assets/growth.wav.import": {
-      "bytes": 483,
-      "sha256": "87f019b4e1f5bb3e73d692bdc5b283898cd6f710aa6ca048aea0309e9734c5e8"
-    },
-    "assets/icon.svg": {
-      "bytes": 1322,
-      "sha256": "2e3714f16ede7f7686205bc894e9f2660c8b3f741cd0871b87161d314f697c37"
-    },
-    "assets/icon.svg.import": {
-      "bytes": 1020,
-      "sha256": "084a4b57b9f7fd8c2e5df59bcf75c0633218a727a2fda25b7c9a405ef5a0ede3"
+      "sha256": "f44a433b241a421db09eb9a0ab4b26b6a48b4e36fa91723014ca0651c7284a5c"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -150,6 +74,26 @@
       "bytes": 886,
       "sha256": "18e8a072311f705a9f634a450e6b4132e850227bc3b9fe1a0b14e55ee3c48122"
     },
+    "assets/clearing-music.wav": {
+      "bytes": 1411244,
+      "sha256": "5dc5a6ba7684b78ec693950295e99dd1f05ccd2f536aa2b615616c1ddba50802"
+    },
+    "assets/clearing-music.wav.import": {
+      "bytes": 507,
+      "sha256": "154eb61003b141a571570cc99b00427f95ca55d027205936a0908fee113cdbee"
+    },
+    "assets/credits.json": {
+      "bytes": 8700,
+      "sha256": "9fbf1394f60f561bd441bbe59a320de86ec623ae6d52485f5ad45f2f81531d30"
+    },
+    "assets/door.wav": {
+      "bytes": 24298,
+      "sha256": "9c5c9a08b9b64c557bdc495edc9533dd0640213fd7763c7dcf5af68586411f01"
+    },
+    "assets/door.wav.import": {
+      "bytes": 477,
+      "sha256": "4e03f2b8c61ccf440851880306f88aa646bf036eb43a38ff4d9b11f1eac2c91f"
+    },
     "assets/environment/shared_environment.gdshaderinc": {
       "bytes": 1806,
       "sha256": "c7635507ca3292a3a817345d8a234b0efb7a729edee75a8e9f685fa55abfa9d0"
@@ -157,6 +101,50 @@
     "assets/environment/shared_environment.gdshaderinc.uid": {
       "bytes": 20,
       "sha256": "62c22f59be74ec432b2cfc7311d4f3dfc748a475ea1ec25da22b08aba200f16c"
+    },
+    "assets/footstep.wav": {
+      "bytes": 5336,
+      "sha256": "818e163fa574f882404c61520ece134d804df11d0cb18c4c14e084039b97d0be"
+    },
+    "assets/footstep.wav.import": {
+      "bytes": 489,
+      "sha256": "ff257e8883e66d24af042777a420a0231a265ab09ce87f2c6ed8641793f7b66e"
+    },
+    "assets/forest-ambience.wav": {
+      "bytes": 1058444,
+      "sha256": "65b393bc55317773eb76c1df6fd985ddcfd479abe8e2168bfc028d4ca9c506ba"
+    },
+    "assets/forest-ambience.wav.import": {
+      "bytes": 510,
+      "sha256": "f6fc31322db68cf4889ef649a3001ccc27439aad3fca92296719ddcaf4518d5c"
+    },
+    "assets/generate_audio.py": {
+      "bytes": 2482,
+      "sha256": "20400344cc676b34a685e99cdab452cabaf506e981736179107db782d473d17b"
+    },
+    "assets/glow.wav": {
+      "bytes": 15478,
+      "sha256": "07c3031fb198853bc980628b7b9ca0b9828bfd55cc1fc14ff8c81a48abfb3250"
+    },
+    "assets/glow.wav.import": {
+      "bytes": 476,
+      "sha256": "39de0a37c7b2a7924478b5d20d95026c29663270b5c72b08fb9fa98bf63da515"
+    },
+    "assets/growth.wav": {
+      "bytes": 61782,
+      "sha256": "a5591936dec8f2fd28198b4ce9976c1d5ca72aed13aca1aa0aa1ff1b5373873a"
+    },
+    "assets/growth.wav.import": {
+      "bytes": 483,
+      "sha256": "87f019b4e1f5bb3e73d692bdc5b283898cd6f710aa6ca048aea0309e9734c5e8"
+    },
+    "assets/icon.svg": {
+      "bytes": 1322,
+      "sha256": "2e3714f16ede7f7686205bc894e9f2660c8b3f741cd0871b87161d314f697c37"
+    },
+    "assets/icon.svg.import": {
+      "bytes": 1020,
+      "sha256": "084a4b57b9f7fd8c2e5df59bcf75c0633218a727a2fda25b7c9a405ef5a0ede3"
     },
     "assets/licenses/AUDIO-CREDITS.txt": {
       "bytes": 751,
@@ -246,22 +234,6 @@
       "bytes": 19,
       "sha256": "d70dcbc59289404b8101459647f73cae11a27f2b7677d3aa3b8512131526b729"
     },
-    "assets/world/water.gdshader": {
-      "bytes": 2096,
-      "sha256": "3c596d08b4d49e580b588a8dfe5227ee5af32e20e03dcd33482a1a35426fffe1"
-    },
-    "assets/world/water.gdshader.uid": {
-      "bytes": 20,
-      "sha256": "ba887c4b6cf55d2e6d02358afec9e84af862276be25f52dfc868e04cfbb84679"
-    },
-    "assets/world/waterfall.gdshader": {
-      "bytes": 1119,
-      "sha256": "ea869db8c01bfcfd58d640dfc3b12e36839791a846cad6e4fc5ca3ae6cd3207c"
-    },
-    "assets/world/waterfall.gdshader.uid": {
-      "bytes": 20,
-      "sha256": "8d652e5fa4bdde2a0f8575fc17782c1c8728767495329170dc627e43ae854fbf"
-    },
     "assets/world/textures/bark-albedo-proposal-v1.png": {
       "bytes": 3354886,
       "sha256": "164507e71043b92c2d14a1757f6ea1087d1de7fe379985de8f0dff2041d60570"
@@ -285,6 +257,22 @@
     "assets/world/textures/rock_01_diff_1k.jpg.import": {
       "bytes": 968,
       "sha256": "6503393dab0b344a93f4b8acd7fb5f0600989f21b4ecb495119b3160ac3a5290"
+    },
+    "assets/world/water.gdshader": {
+      "bytes": 2096,
+      "sha256": "3c596d08b4d49e580b588a8dfe5227ee5af32e20e03dcd33482a1a35426fffe1"
+    },
+    "assets/world/water.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "ba887c4b6cf55d2e6d02358afec9e84af862276be25f52dfc868e04cfbb84679"
+    },
+    "assets/world/waterfall.gdshader": {
+      "bytes": 1119,
+      "sha256": "ea869db8c01bfcfd58d640dfc3b12e36839791a846cad6e4fc5ca3ae6cd3207c"
+    },
+    "assets/world/waterfall.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "8d652e5fa4bdde2a0f8575fc17782c1c8728767495329170dc627e43ae854fbf"
     },
     "baked/annex-roof-proof.json": {
       "bytes": 29961,
@@ -342,6 +330,14 @@
       "bytes": 682394,
       "sha256": "78896f84b340e02e1301069f50017a49ff287cedb0487bdd1bb42892f5719a7a"
     },
+    "baked/paving-joints.json": {
+      "bytes": 9720,
+      "sha256": "59e4cd50ff8b0d47868f606dc8690747de4fe3e6c2671c2023614aea5e9aaafd"
+    },
+    "baked/paving-joints.res": {
+      "bytes": 641570,
+      "sha256": "1cc176e9f0f195b50927c2e3526e5ac892b4eb047d6218ecb7a71fe0e8001057"
+    },
     "baked/paving-preview192.json": {
       "bytes": 5846,
       "sha256": "e79a3726db329ac6de071966504b5271a584042f1a2aafb73c33228e3d460cd6"
@@ -371,32 +367,36 @@
       "sha256": "5517e37d84c1e40d942fc49395e7c816833f2bf1a397dce95dce2a6d864222e6"
     },
     "docs/ARCHITECTURE.md": {
-      "bytes": 5814,
-      "sha256": "a6ad7f8d7743be27faa331f05ed757f0bc25596aec9e11d2a55f44580d63c035"
+      "bytes": 6255,
+      "sha256": "b7ad641a6f8589122ada8ed45435d6d95a925dcaa8b7141f84cd1bed018f065c"
     },
     "docs/DEPENDENCIES.md": {
       "bytes": 3636,
       "sha256": "8bac36fbb49adb16e61a7dd8442155f88b757642b8e1310d6ebc81bf5f35f237"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 2782,
-      "sha256": "5be15e028b1ade702c2a668953ddf9c3fb4384d90c57f683a9eb5f9f83dedf14"
+      "bytes": 2902,
+      "sha256": "e84c9331bcec334b55c019916fbf0ceb5bea14b0677a6869dae2044683429b56"
     },
     "docs/STATUS.md": {
-      "bytes": 3551,
-      "sha256": "3f0586427deb01dddace9ddec8ace8b647fc4fc1a4d3ee8a40023c01c005eee6"
+      "bytes": 3726,
+      "sha256": "58cae81b0378d1b8aa8d18a6b13cd789610a30d2a6d11118e16e63913be1839b"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 21393,
-      "sha256": "adb264be0c82a23170a7b51841956445ce98dad9fbf279a7ec28b8178baa552b"
-    },
-    "docs/verification-summary.json": {
-      "bytes": 30405,
-      "sha256": "feeb5ec6bdd886835b8c2d881225c902d234ab9ff2a7f9a3e0efacc9c80a6e65"
+      "bytes": 26740,
+      "sha256": "6c42eb5ca86fc786a0c19791d1d66b7f9dc034e775da98b7575ef111dffc0f18"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
+    },
+    "docs/verification-summary.json": {
+      "bytes": 41909,
+      "sha256": "79bdebf1cd62dd8330ef18bba69eb70e24ce6720ceba13b7b4d46a449a464aec"
+    },
+    "export_presets.cfg": {
+      "bytes": 1136,
+      "sha256": "bb1183a940a427228ec1330d673bc9f71679c3c527c891bd1303b3d78cf527dc"
     },
     "lineage/cap-material27-preview01/material-world.gd": {
       "bytes": 13505,
@@ -674,6 +674,14 @@
       "bytes": 20,
       "sha256": "09d7f30261683870376901c7dc204310ee69ca1e08e385f838ff6634dba5ef27"
     },
+    "main.tscn": {
+      "bytes": 177,
+      "sha256": "28a339b558a7fd3f505a9eaf99d33c166e6d98a852d54d87e0cdda889dff84d2"
+    },
+    "project.godot": {
+      "bytes": 1005,
+      "sha256": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f"
+    },
     "scripts/air_capsule_guard.gd": {
       "bytes": 2057,
       "sha256": "58479f2b1c173c478865d6efe80a4f198d42cb7ac93a4549778ed7d0dfc22d93"
@@ -692,7 +700,7 @@
     },
     "scripts/baked_world.gd": {
       "bytes": 28045,
-      "sha256": "b0b62c71bb7f3b8f6f5d07239d37db387257f1fcd78104a8d05fdaee50ec7460"
+      "sha256": "c0aaadc7a2bdf30ca2e1cc3948eec96806fa5ca0357c6400fe001fb665489a30"
     },
     "scripts/baked_world.gd.uid": {
       "bytes": 20,
@@ -771,8 +779,8 @@
       "sha256": "732c979d514fb66040cc3bdb0b7e2e65292b0cfed0b04b2b11e6e4e197e0f334"
     },
     "scripts/paving_preview_prebuilt.gd": {
-      "bytes": 12436,
-      "sha256": "bbbb433d4faed98b772e15194cf392960dbe1e910133498c596d8a3b57e23e59"
+      "bytes": 12421,
+      "sha256": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8"
     },
     "scripts/paving_preview_prebuilt.gd.uid": {
       "bytes": 19,
@@ -859,8 +867,8 @@
       "sha256": "b066d6ae6ba33407f6d531f24f29ddf4081dcca1025c644718bd545ced6537ba"
     },
     "tests/acceptance.gd": {
-      "bytes": 73656,
-      "sha256": "734c26d565dbe741c24dd941e4a19c5323a7c41a95b5d9f3b7d00d158153f80f"
+      "bytes": 73644,
+      "sha256": "5835873e18e3c7b4e768ff9932a6e6273714eb113d440d0ba48a6734da684b28"
     },
     "tests/acceptance.gd.uid": {
       "bytes": 20,
@@ -946,13 +954,53 @@
       "bytes": 20,
       "sha256": "a10f4f113da85a0f101021ff5b302e94d213be5c2f73a62aba4697829865340d"
     },
+    "tests/native_paired_support.gd": {
+      "bytes": 10089,
+      "sha256": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591"
+    },
+    "tests/native_paired_support.gd.uid": {
+      "bytes": 20,
+      "sha256": "0c06b22b0081106b713b70a01fc74fe55fcf6d3d0fc7827e186ff4ad64e2fa94"
+    },
+    "tests/paving_gap_step.gd": {
+      "bytes": 5552,
+      "sha256": "1660465a81770845cfd76f978fbbee0cbb9d18bdb2c3092a336d0887e81329b2"
+    },
+    "tests/paving_gap_step.gd.uid": {
+      "bytes": 20,
+      "sha256": "32a7822f90be7e0a6959589bfc188e93f15d9d6e25026c7f54de65f834ad3d2c"
+    },
+    "tests/paving_shape_build.gd": {
+      "bytes": 1258,
+      "sha256": "9ad54adda443d0a3637bc5136c0535d2f3119e311de653c6ede2cf630b1582d4"
+    },
+    "tests/paving_shape_build.gd.uid": {
+      "bytes": 20,
+      "sha256": "a71aabc68af28f65aacd32323741a489705bbf98971098d45650e20db6783b1d"
+    },
+    "tests/paving_shape_compare.gd": {
+      "bytes": 9316,
+      "sha256": "bd825304b0cd934dccfb9bd349c85aeab35ed3b5c6cfd03fe4396cc73ae7a703"
+    },
+    "tests/paving_shape_compare.gd.uid": {
+      "bytes": 19,
+      "sha256": "926c5f7675ad699033b8ca14a8d81a09c2a0c28711830211e16bd468c848b66e"
+    },
     "tests/paving_surface.gd": {
-      "bytes": 23647,
-      "sha256": "883ede736037c00f90596c7e5169f411623af5041fe020b2668a5465c3940ddb"
+      "bytes": 23635,
+      "sha256": "639fe27aabba825504f081d1c9eed9b17690f7c25f63acfebfeb81379c81c257"
     },
     "tests/paving_surface.gd.uid": {
       "bytes": 20,
       "sha256": "c154acd7b0b03c7e7d7608a12bcb62087e89882fefc380839b2de7356a3c32ee"
+    },
+    "tests/paving_traversal.gd": {
+      "bytes": 51541,
+      "sha256": "fb6bfbb73a2df34d517e12c3f89a3b9f482b57714dcc03bff99e19370dad3e9b"
+    },
+    "tests/paving_traversal.gd.uid": {
+      "bytes": 20,
+      "sha256": "5ff01c16c44b490bf236a5c4dfe191b71122d3a516bc3c69e3c2a77e654d653a"
     },
     "tests/smoke.gd": {
       "bytes": 2637,
@@ -990,65 +1038,33 @@
       "bytes": 14867,
       "sha256": "f07135ee972fea9487e60aa09db9de38c7ed015fd9f51929ca7524d25bbf6b8e"
     },
-    "tools/verify.py": {
-      "bytes": 20753,
-      "sha256": "11e35f429cd70c15f09607ac1c43257f1ff8a68d584a43dd207628fdc4149f2e"
+    "tools/paving_geometry_predicates.gd": {
+      "bytes": 3154,
+      "sha256": "ed314e8c5c150d527a2f48bbab80f6aa5213a972da1baec107f122fb6f5320bc"
     },
-    "baked/paving-lower-joints.json": {
-      "bytes": 9420,
-      "sha256": "b5d8fe6a3aa0b12806f7b9b8a5598721624ce47430395fe931ce4d7a496eebb4"
-    },
-    "baked/paving-lower-joints.res": {
-      "bytes": 641570,
-      "sha256": "2272b3f88da2cc7027865151975702a3553c96d8cf948e4d6b4ab7305e2c6b60"
-    },
-    "tests/paving_shape_build.gd": {
-      "bytes": 1258,
-      "sha256": "9ad54adda443d0a3637bc5136c0535d2f3119e311de653c6ede2cf630b1582d4"
-    },
-    "tests/paving_shape_build.gd.uid": {
+    "tools/paving_geometry_predicates.gd.uid": {
       "bytes": 20,
-      "sha256": "a71aabc68af28f65aacd32323741a489705bbf98971098d45650e20db6783b1d"
-    },
-    "tests/paving_shape_compare.gd": {
-      "bytes": 9316,
-      "sha256": "bd825304b0cd934dccfb9bd349c85aeab35ed3b5c6cfd03fe4396cc73ae7a703"
-    },
-    "tests/paving_shape_compare.gd.uid": {
-      "bytes": 19,
-      "sha256": "926c5f7675ad699033b8ca14a8d81a09c2a0c28711830211e16bd468c848b66e"
-    },
-    "tests/paving_traversal.gd": {
-      "bytes": 48570,
-      "sha256": "95c07775b0990c759521f16a1d477ac73260cca86923aa7b18f982adaa7bc4b5"
-    },
-    "tests/paving_traversal.gd.uid": {
-      "bytes": 20,
-      "sha256": "5ff01c16c44b490bf236a5c4dfe191b71122d3a516bc3c69e3c2a77e654d653a"
+      "sha256": "ce89c5a0209d844242eeee834e5e2cf2a6b26ccb092b130dfa20b6aee773d525"
     },
     "tools/paving_shape.gd": {
-      "bytes": 37569,
-      "sha256": "10541bf76ca5d9b4854aedd88d0481c6cd5ef1ab32e91cd71fbc1f118614fb61"
+      "bytes": 39818,
+      "sha256": "fa65f217ecdd8d39021f6199424a5223dccba090142d75e47879d208d5671479"
     },
     "tools/paving_shape.gd.uid": {
       "bytes": 19,
       "sha256": "7213ad0f30e0cb80407d4574ae8e4e471ef8094997c8b2f74a990f31e936fb37"
     },
-    "tests/native_paired_support.gd": {
-      "bytes": 10089,
-      "sha256": "3cfffc57dd28d8f1935238fed02fc043e7c96aad3a78c4480472209b2bee7591"
+    "tools/paving_upper_roof.gd": {
+      "bytes": 27438,
+      "sha256": "b73045cb97587454c24542636e861f27754ae7d52cbd755c94b6246bc628ef87"
     },
-    "tests/native_paired_support.gd.uid": {
+    "tools/paving_upper_roof.gd.uid": {
       "bytes": 20,
-      "sha256": "0c06b22b0081106b713b70a01fc74fe55fcf6d3d0fc7827e186ff4ad64e2fa94"
+      "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
-    "tests/paving_gap_step.gd": {
-      "bytes": 4216,
-      "sha256": "dbb433ae6f3dd35b43a13f8a720d0da92f235c3fa965bd7400658ab2b7d48e22"
-    },
-    "tests/paving_gap_step.gd.uid": {
-      "bytes": 20,
-      "sha256": "32a7822f90be7e0a6959589bfc188e93f15d9d6e25026c7f54de65f834ad3d2c"
+    "tools/verify.py": {
+      "bytes": 20753,
+      "sha256": "0a264007a002f1096ff2f43f0e054df127464020fe4b7fcf4aeaf6921a891025"
     }
   }
 }

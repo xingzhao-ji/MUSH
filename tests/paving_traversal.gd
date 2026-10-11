@@ -31,15 +31,18 @@ const NativeReader = preload("res://scripts/cap57_prebuilt.gd")
 const ACTIONS := ["move_left", "move_right", "move_forward", "move_back", "float", "glow", "interact", "decorate", "pause", "touch_move_left", "touch_move_right", "touch_move_forward", "touch_move_back"]
 const SETTINGS := ["motion_mode", "up_direction", "floor_max_angle", "floor_snap_length", "floor_stop_on_slope", "floor_constant_speed", "floor_block_on_wall", "wall_min_slide_angle", "max_slides", "safe_margin", "slide_on_ceiling", "platform_floor_layers", "platform_wall_layers", "platform_on_leave"]
 const SOURCE_CONTACT_SHA := "dd340a548d27f0e57de9e40dd01642d8a4068e3a079495bba52fb9e1f72b10ef"
-const CONTACT_SHA := "4012b5fc1f1c7af0814472f7dee9d72dce30c79b4748e7ac76f8d03cdf72a31a"
+const CONTACT_SHA := "5c3e9e406fb00a944ec6f9bc6c9e0084de1447bf91128554c7ec33bc7479ac09"
 const SOURCE_ARTIFACT := "res://baked/paving-preview192.res"
 const SOURCE_ARTIFACT_SHA := "6d5d78516898be3099d0496f07f02057b28b8eb944091d4b27b1018592657aa9"
-const ROOF_SHA := "d0613c5f227ca9ce4b9c2d7c709c6ef77294ec230374b23359f8c8d7ca5df76a"
+const SOURCE_ROOF_SHA := "d0613c5f227ca9ce4b9c2d7c709c6ef77294ec230374b23359f8c8d7ca5df76a"
+const ROOF_SHA := "de438db5b6dcb196134193e1e39ef0ffc19b30bf5cb4d2975f0c8a715daca803"
 const SOURCE_LOWER_FEET := ["336eb4bf0000fc40562b55bf3d0afb4084ed8bbeb81efd4077f7d8be33330b41ee2802bf52b80c41adeaa9bfc3f50c41494fcabf66660c41085fc9bf713d0a41", "ce8c32beb81efd40a25f3f3e295cfb40048e0b3ff628fc409620063fae470141119ed03e66660a416b55963e8fc20b41a9d837be9a990b414ccf9ebe7b140a41"]
 const LOWER_FEET := ["336eb4bf0000fc40562b55bf3d0afb40b62279beb81efd404e9bc9be33330b4197f1fabe52b80c41adeaa9bfc3f50c41494fcabf66660c41085fc9bf713d0a41", "204551beb81efd404f9e373e295cfb40048e0b3ff628fc409620063fae470141119ed03e66660a416b55963e8fc20b41fb9056be9a990b41752baebe7b140a41"]
-const UPPER_FEET := ["a0369ebfb81edd40370234bfec51dc4073fc11be6666de4051cf8abec3f5f44045b2cdbed7a3f840c0a888bf0000f840ee98acbf3333f7404ce9aebf52b8f240", "45a558bc48e1de406a00d53ec3f5dc40c8ee383fae47dd4076bf313f0000e440c27b0e3f7b14f640801ad33eec51f840286a29bc295cf740319404be3333f340"]
+const SOURCE_UPPER_FEET := ["a0369ebfb81edd40370234bfec51dc4073fc11be6666de4051cf8abec3f5f44045b2cdbed7a3f840c0a888bf0000f840ee98acbf3333f7404ce9aebf52b8f240", "45a558bc48e1de406a00d53ec3f5dc40c8ee383fae47dd4076bf313f0000e440c27b0e3f7b14f640801ad33eec51f840286a29bc295cf740319404be3333f340"]
+const UPPER_FEET := ["a0369ebfb81edd40370234bfec51dc40f0cfc7bd6666de402d8a67bec3f5f44045b2cdbed7a3f840c0a888bf0000f840ee98acbf3333f7404ce9aebf52b8f240", "3d7b6ebd48e1de406a00d53ec3f5dc40c8ee383fae47dd4076bf313f0000e440c27b0e3f7b14f640801ad33eec51f840286a29bc295cf740aca832be3333f340"]
 # Native79 bent-cut XZ controls, qualified only with the exact retained roof packet.
-const CUT := [Vector2(-.15556006133556366, 6.840000152587891), Vector2(-.0489768385887146, 6.980000019073486), Vector2(-.17335791885852814, 7.599999904632568), Vector2(-.04856511577963829, 7.820000171661377)]
+const SOURCE_CUT := [Vector2(-.15556006133556366, 6.840000152587891), Vector2(-.0489768385887146, 6.980000019073486), Vector2(-.17335791885852814, 7.599999904632568), Vector2(-.04856511577963829, 7.820000171661377)]
+const CUT := [Vector2(-0.15556006133556366, 6.840000152587891), Vector2(-0.07920201122760773, 6.980000019073486), Vector2(-0.19527797400951385, 7.599999904632568), Vector2(-0.04856511577963829, 7.820000171661377)]
 const CUT_CONTROLS_XYZ := "f09b48bd3bdf8f3e295cdf40bd8431be3de8103e3333f340"
 const ROUTES := [
 	["slow_analog", .25, [["left_soil", -.95, 9.4], ["left_ascent", -.95, 7.60], ["left_descent", -.95, 9.4], ["right_soil", .18, 9.4], ["right_ascent", .18, 7.60], ["right_descent", .18, 9.4]]],
@@ -245,7 +248,11 @@ func _drive(target: Vector3, label: String, effective: float) -> bool:
 	var limit := mini(1200, int(ceil(Vector2(target.x - start.x, target.z - start.z).length() / (2.2 * effective) * 60.0)) + 180)
 	var predicted_release := false
 	var prediction_error := -1.0
+	var brake_attempts: Array = []
+	var settled_after_release := false
 	for _i: int in range(limit):
+		if fatal or ticks - movement_start_tick >= MAX_TICKS or Time.get_ticks_usec() - started > 150000000:
+			fatal = true; break
 		var stop := Vector3.ZERO
 		var future := Vector3(player.velocity.x, 0.0, player.velocity.z)
 		var delta := player.get_physics_process_delta_time()
@@ -255,21 +262,36 @@ func _drive(target: Vector3, label: String, effective: float) -> bool:
 			stop += future * delta
 		var predicted := player.global_position + stop
 		prediction_error = Vector2(predicted.x - target.x, predicted.z - target.z).length()
-		if player.is_on_floor() and player.state == "Grounded" and player.get("_step48_phase") == "idle" and prediction_error <= .03:
-			predicted_release = true; break
-		if fatal or ticks - movement_start_tick >= MAX_TICKS or Time.get_ticks_usec() - started > 150000000:
-			fatal = true; break
+		if player.is_on_floor() and player.state == "Grounded" and player.get("_step48_phase") == "idle" and prediction_error <= .03 and player._valid_safe_position(player.global_position) and player._valid_safe_position(predicted):
+			# The braking estimate omits native slide correction. Confirm the
+			# same 20-tick settle, then refine toward the unchanged target if
+			# it stopped on a steep seam. All observations and limits remain.
+			var attempt := {"position":_v(player.global_position), "prediction":_v(predicted), "current_safe":player._valid_safe_position(player.global_position), "predicted_safe":player._valid_safe_position(predicted)}
+			requested = 0.0; _release(); await _frames(20)
+			settled_after_release = true
+			attempt["settled_position"] = _v(player.global_position)
+			attempt["settled_safe"] = player._valid_safe_position(player.global_position)
+			brake_attempts.append(attempt)
+			if bool(attempt.settled_safe):
+				predicted_release = true; break
+			if brake_attempts.size() >= 3: break
+			continue
 		var offset := target - player.global_position
 		player.camera_yaw = atan2(-offset.x, -offset.z)
+		settled_after_release = false
 		requested = effective; Input.action_press("move_forward", strength)
 		await _frames(1)
 		if player.state == "Recovering" or not player.enabled or player.get("_require_release") or paused: break
-	requested = 0.0; _release(); await _frames(20)
+	requested = 0.0; _release()
+	if not settled_after_release: await _frames(20)
+	# Settling also spends real ticks/time; an arrival cannot bypass the cap.
+	if ticks - movement_start_tick >= MAX_TICKS or Time.get_ticks_usec() - started > 150000000: fatal = true
 	var support: Dictionary = player.call("_support_at", player.global_position, .22)
 	var height_error := -1.0
 	if not support.is_empty(): height_error = absf(player.global_position.y - (support.position as Vector3).y)
 	var result := active_leg.duplicate(true)
 	result.erase("gap"); result.erase("blocked")
+	result["brake_attempts"] = brake_attempts
 	result.merge({"label":label, "from":_v(start), "target":_v(target), "end":_v(player.global_position), "first_tick":first_tick, "last_tick":ticks, "effective_input":effective, "predicted_release":predicted_release, "predicted_release_error_m":prediction_error, "settled_xz_error_m":Vector2(player.global_position.x - target.x, player.global_position.z - target.z).length(), "settled_floor":player.is_on_floor(), "settled_state":player.state, "settled_safe_valid":bool(player.call("_valid_safe_position", player.global_position)), "support_height_error_m":height_error, "displacement":_v(player.global_position - start)}, true)
 	var movement_ok: bool = predicted_release and result.settled_xz_error_m <= .06 and result.travel_m > .02 and result.settled_floor and result.settled_state == "Grounded" and result.settled_safe_valid and height_error >= 0.0 and height_error <= .06 and result.recovery_ticks == 0 and result.ceiling_ticks == 0 and result.longest_unsupported_ticks <= 18 and result.longest_blocked_ticks <= 90 and result.max_up <= .22 and result.max_down <= .22 and result.input_exact and callbacks_exact and not fatal and _held()
 	result["passed"] = movement_ok
@@ -424,7 +446,7 @@ func _admit_candidate(reports: String) -> bool:
 	var parsed: Variant = JSON.parse_string(file.get_as_text()); file.close()
 	if not parsed is Dictionary: return false
 	candidate_proof = parsed
-	if candidate_proof.get("schema", "") != "mush-paving-shape-candidate/1" or not candidate_proof.get("passed", false) or not candidate_proof.get("native_save_reload_exact", false) or not candidate_proof.get("source_resources_unchanged", false) or not candidate_proof.get("failures", ["missing"]).is_empty(): return false
+	if candidate_proof.get("schema", "") != "mush-paving-shape-candidate/2" or not candidate_proof.get("passed", false) or not candidate_proof.get("native_save_reload_exact", false) or not candidate_proof.get("source_resources_unchanged", false) or not candidate_proof.get("failures", ["missing"]).is_empty(): return false
 	for check: Dictionary in candidate_proof.get("checks", []):
 		if not check.get("passed", false): return false
 	var artifact: Dictionary = candidate_proof.get("artifact", {})
@@ -436,12 +458,12 @@ func _admit_candidate(reports: String) -> bool:
 	var mapping: Dictionary = manifest.get("contact_mapping", {})
 	var roof: Dictionary = manifest.get("roof52", {})
 	var feet: Array = manifest.get("feet", [])
-	if manifest.get("original_contact_sha256", "") != SOURCE_CONTACT_SHA or int(manifest.get("contact_corners", 0)) != 7323 or not _integer_array_equal(manifest.get("corners", []), [4638, 3078, 9501]) or not mapping.get("passed", false) or not mapping.get("unchanged_complement_exact", false) or not roof.get("passed", false) or not roof.get("actual_source_to_candidate_mapping_exact", false) or not roof.get("same_face_slots_and_order", false) or not roof.get("unchanged_complement_exact", false) or not _integer_array_equal(roof.get("face_range", []), [2387, 2439]) or feet.size() != 4: return false
+	if manifest.get("original_contact_sha256", "") != SOURCE_CONTACT_SHA or int(manifest.get("contact_corners", 0)) != 7323 or not _integer_array_equal(manifest.get("corners", []), [4638, 3078, 9501]) or not mapping.get("passed", false) or not mapping.get("unchanged_complement_exact", false) or not roof.get("passed", false) or not mapping.get("nonroof_source_to_candidate_mapping_exact", false) or not roof.get("topology_replaced", false) or roof.get("actual_source_to_candidate_mapping_exact", true) or roof.get("same_face_slots_and_order", true) or not _integer_array_equal(roof.get("face_range", []), [2387, 2439]) or feet.size() != 4: return false
 	var cut_source := str(manifest.get("cut_source_XZ_hex", "")).hex_decode()
 	var cut_candidate := str(manifest.get("cut_candidate_XZ_hex", "")).hex_decode()
 	var controls_source := str(manifest.get("cut_controls_source_XYZ_hex", "")).hex_decode()
 	var controls_candidate := str(manifest.get("cut_controls_candidate_XYZ_hex", "")).hex_decode()
-	if not manifest.get("cut_controls_mapping_verified", false) or cut_source != PackedVector2Array(CUT).to_byte_array() or cut_candidate.size() != 32 or controls_source != CUT_CONTROLS_XYZ.hex_decode() or controls_candidate.size() != 24: return false
+	if not manifest.get("cut_controls_mapping_verified", false) or cut_source != PackedVector2Array(SOURCE_CUT).to_byte_array() or cut_candidate.size() != 32 or controls_source != CUT_CONTROLS_XYZ.hex_decode() or controls_candidate.size() != 24: return false
 	if cut_candidate.slice(0, 8) != cut_source.slice(0, 8) or cut_candidate.slice(24, 32) != cut_source.slice(24, 32): return false
 	var candidate_cut := _foot(cut_candidate.hex_encode())
 	for point: Vector2 in candidate_cut:
@@ -449,7 +471,7 @@ func _admit_candidate(reports: String) -> bool:
 	for control: int in range(2):
 		var old_point := Vector3(controls_source.decode_float(control * 12), controls_source.decode_float(control * 12 + 4), controls_source.decode_float(control * 12 + 8))
 		var new_point := Vector3(controls_candidate.decode_float(control * 12), controls_candidate.decode_float(control * 12 + 4), controls_candidate.decode_float(control * 12 + 8))
-		if not new_point.is_finite() or old_point.z != new_point.z or Vector2(old_point.x, old_point.z) != CUT[control + 1] or Vector2(new_point.x, new_point.z) != candidate_cut[control + 1]: return false
+		if not new_point.is_finite() or old_point.z != new_point.z or Vector2(old_point.x, old_point.z) != SOURCE_CUT[control + 1] or Vector2(new_point.x, new_point.z) != candidate_cut[control + 1]: return false
 	candidate_library = ResourceLoader.load(candidate_path, "MeshLibrary", ResourceLoader.CACHE_MODE_IGNORE_DEEP) as MeshLibrary
 	if candidate_library == null or not bool(owner.call("_library_exact", candidate_library)): return false
 	# The proof derives from immutable192. The active installed baseline may be
@@ -471,18 +493,26 @@ func _admit_candidate(reports: String) -> bool:
 	if new_shape == null or new_shape == shape or var_to_bytes(owner.call("_shape_configuration", new_shape)) != var_to_bytes(owner.call("_shape_configuration", shape)): return false
 	var before := source_shape.get_faces(); var after := new_shape.get_faces()
 	if after.size() != before.size() or before.to_byte_array() != str(mapping.get("source_XYZ_hex", "")).hex_decode() or after.to_byte_array() != str(mapping.get("candidate_XYZ_hex", "")).hex_decode() or _sha(after.to_byte_array()) != manifest.get("contact_sha256", ""): return false
+	# The roof is retriangulated. Its corners cannot honestly be checked in old
+	# face slots; establish a single native map on the retained nonroof domain.
+	var native_map: Dictionary = {}
+	for index: int in range(before.size()):
+		if index>=2387*3 and index<2439*3: continue
+		var key:=_hex(before[index])
+		if native_map.has(key) and _hex(native_map[key])!=_hex(after[index]): return false
+		native_map[key]=after[index]
+	var rebuilt: Dictionary=load("res://tools/paving_upper_roof.gd").new().build(before.slice(2387*3,2439*3),native_map)
+	if not rebuilt.get("passed",false) or not rebuilt.evidence.interior_authoring_25_degrees_passed or not rebuilt.evidence.topology.no_new_steep_coverage_over_source_walkable_within_area_limit or rebuilt.triangles.to_byte_array()!=after.slice(2387*3,2439*3).to_byte_array() or rebuilt.controls.to_byte_array()!=controls_candidate: return false
+	var visible_roof: PackedVector3Array=candidate_library.get_item_mesh(2).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	if visible_roof.slice(3113*3,3165*3).to_byte_array()!=rebuilt.triangles.to_byte_array(): return false
 	var control_indices: Array = [[], []]
 	var endpoints_found: Array[bool] = [false, false]
-	for index: int in range(before.size()):
+	for index: int in range(after.size()):
 		for control: int in range(2):
-			if _hex(before[index]) == controls_source.slice(control * 12, control * 12 + 12).hex_encode():
-				if _hex(after[index]) != controls_candidate.slice(control * 12, control * 12 + 12).hex_encode(): return false
-				control_indices[control].append(index)
+			if _hex(after[index])==controls_candidate.slice(control*12,control*12+12).hex_encode(): control_indices[control].append(index)
 		for endpoint: int in range(2):
-			var cut_index := 0 if endpoint == 0 else 3
-			if Vector2(before[index].x, before[index].z) == CUT[cut_index]:
-				if _hex(before[index]) != _hex(after[index]): return false
-				endpoints_found[endpoint] = true
+			var cut_index:=0 if endpoint==0 else 3
+			if Vector2(after[index].x,after[index].z)==SOURCE_CUT[cut_index]: endpoints_found[endpoint]=true
 	if control_indices[0].is_empty() or control_indices[1].is_empty() or not endpoints_found[0] or not endpoints_found[1]: return false
 	var moved: Array[int] = []; var changed_faces: Array[int] = []; var roof_moved: Array[int] = []
 	for index: int in range(before.size()):
@@ -494,8 +524,8 @@ func _admit_candidate(reports: String) -> bool:
 	if moved.is_empty() or not _integer_array_equal(mapping.get("moved_corner_indices", []), moved) or not _integer_array_equal(mapping.get("changed_face_indices", []), changed_faces) or not _integer_array_equal(roof.get("moved_corner_indices", []), roof_moved): return false
 	var source_roof := before.slice(2387 * 3, 2439 * 3).to_byte_array()
 	var candidate_roof := after.slice(2387 * 3, 2439 * 3).to_byte_array()
-	if _sha(source_roof) != ROOF_SHA or source_roof != str(roof.get("source_XYZ_hex", "")).hex_decode() or candidate_roof != str(roof.get("candidate_XYZ_hex", "")).hex_decode() or roof.get("source_sha256", "") != ROOF_SHA or _sha(candidate_roof) != roof.get("candidate_sha256", ""): return false
-	var old_feet: Array = SOURCE_LOWER_FEET + UPPER_FEET
+	if _sha(source_roof) != SOURCE_ROOF_SHA or source_roof != str(roof.get("source_XYZ_hex", "")).hex_decode() or candidate_roof != str(roof.get("candidate_XYZ_hex", "")).hex_decode() or roof.get("source_sha256", "") != SOURCE_ROOF_SHA or _sha(candidate_roof) != roof.get("candidate_sha256", ""): return false
+	var old_feet: Array = SOURCE_LOWER_FEET + SOURCE_UPPER_FEET
 	var mapped_feet: Array[PackedVector2Array] = []
 	for stone: int in range(4):
 		var row: Dictionary = feet[stone]
@@ -507,7 +537,7 @@ func _admit_candidate(reports: String) -> bool:
 			var found := false
 			for index: int in range(before.size()):
 				if Vector2(before[index].x, before[index].z) == old_polygon[corner]:
-					if Vector2(after[index].x, after[index].z) != new_polygon[corner]: return false
+					if not (index>=2387*3 and index<2439*3) and Vector2(after[index].x, after[index].z) != new_polygon[corner]: return false
 					found = true
 			if not found: return false
 		mapped_feet.append(new_polygon)
@@ -516,7 +546,7 @@ func _admit_candidate(reports: String) -> bool:
 	lower_feet.assign(mapped_feet.slice(0, 2)); upper_feet.assign(mapped_feet.slice(2, 4))
 	active_cut = candidate_cut
 	expected_contact_sha = str(manifest.contact_sha256); expected_roof_sha = str(roof.candidate_sha256)
-	candidate_receipt = {"resource":candidate_path, "resource_sha256":artifact.sha256, "proof":proof_path, "proof_sha256":FileAccess.get_sha256(proof_path), "native_payloads_exact":true, "mapping_exact":true, "moved_contact_corners":moved.size(), "changed_contact_faces":changed_faces.size(), "mapped_roof_corners":roof_moved.size(), "source_roof_sha256":ROOF_SHA, "candidate_roof_sha256":expected_roof_sha, "foot_wires":feet, "cut_source_XZ_hex":cut_source.hex_encode(), "cut_candidate_XZ_hex":cut_candidate.hex_encode(), "cut_controls_source_XYZ_hex":controls_source.hex_encode(), "cut_controls_candidate_XYZ_hex":controls_candidate.hex_encode(), "cut_control_registered_corners":control_indices, "cut_controls_mapping_exact":true, "cut_endpoints_exact":true, "genuine_preview_owner_rewritten":false}
+	candidate_receipt = {"resource":candidate_path, "resource_sha256":artifact.sha256, "proof":proof_path, "proof_sha256":FileAccess.get_sha256(proof_path), "native_payloads_exact":true, "nonroof_mapping_exact":true, "roof_topology_native_rebuilt_exact":true, "roof_render_contact_exact":true, "roof_same_face_order":false, "moved_contact_corners":moved.size(), "changed_contact_faces":changed_faces.size(), "mapped_roof_corners":roof_moved.size(), "source_roof_sha256":SOURCE_ROOF_SHA, "candidate_roof_sha256":expected_roof_sha, "foot_wires":feet, "cut_source_XZ_hex":cut_source.hex_encode(), "cut_candidate_XZ_hex":cut_candidate.hex_encode(), "cut_controls_source_XYZ_hex":controls_source.hex_encode(), "cut_controls_candidate_XYZ_hex":controls_candidate.hex_encode(), "cut_control_registered_corners":control_indices, "cut_controls_mapping_exact":true, "cut_endpoints_exact":true, "genuine_preview_owner_rewritten":false}
 	return true
 
 func _set_candidate(selected: bool) -> void:

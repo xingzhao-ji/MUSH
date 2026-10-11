@@ -1065,7 +1065,7 @@ func _report_directory() -> String:
 func _build_fingerprint() -> Dictionary:
 	if OS.has_feature("editor"):
 		var files: Dictionary={}
-		for filename in ["project.godot","main.tscn","scripts/playable.gd","scripts/baked_world.gd","scripts/forest_enclosure.gd","scripts/world_snapshot_state.gd","scripts/main.gd","scripts/world.gd","scripts/player.gd","scripts/save_store.gd","scripts/props.gd","assets/world/fireflies.gdshader","baked/clearing.res","tests/acceptance.gd","tests/crash_probe.gd","scripts/paving_preview_prebuilt.gd","scripts/paw_grounding.gd","baked/paving-preview192.res","baked/paving-preview192.json","baked/paving-lower-joints.res","baked/paving-lower-joints.json","scripts/air_capsule_guard.gd","lineage/entrance48-player-step-proposal02/player.gd"]:
+		for filename in ["project.godot","main.tscn","scripts/playable.gd","scripts/baked_world.gd","scripts/forest_enclosure.gd","scripts/world_snapshot_state.gd","scripts/main.gd","scripts/world.gd","scripts/player.gd","scripts/save_store.gd","scripts/props.gd","assets/world/fireflies.gdshader","baked/clearing.res","tests/acceptance.gd","tests/crash_probe.gd","scripts/paving_preview_prebuilt.gd","scripts/paw_grounding.gd","baked/paving-preview192.res","baked/paving-preview192.json","baked/paving-joints.res","baked/paving-joints.json","scripts/air_capsule_guard.gd","lineage/entrance48-player-step-proposal02/player.gd"]:
 			files[filename]=FileAccess.get_sha256("res://"+filename)
 		return {"kind":"editor_source","source_sha256":files}
 	var packs: Dictionary={}
