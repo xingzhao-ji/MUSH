@@ -3394,5 +3394,60 @@
     "route_loops_completed": 2,
     "route_stalls": 0,
     "csv_sha256": "c795c7d8254dd34047dd54ae3907439de4b17d06dd667d0fa1e1607b12bd2da6"
+  },
+  "foliage_and_pacing_diagnostics": {
+    "runtime_changed": false,
+    "foliage_trial_integrated": false,
+    "free_bytes_observed": 12436209664,
+    "scope": "Actual scene isolation/native samples; no new performance or art acceptance",
+    "art_result": "Nearer window exposure improves; approach remains obscured; trial not integrated",
+    "receipts": {
+      "reports/home3-foliage-attribution-20261011-165409-3336/receipt.json": {
+        "bytes": 52279,
+        "sha256": "2dda044392b3cdc6b3457b9c980504a0397ff5232e66f9c3fe2ea0526b52cdd2"
+      },
+      "reports/home3-foliage-attribution-v2-20261011-165509-3473/receipt.json": {
+        "bytes": 52497,
+        "sha256": "6c2c4d8e442f2c4fe4f62bc6b7ba2a4eb3f1cbbcd5a23db6e13160d09d758799"
+      },
+      "reports/home3-cohort-preview-20261011-170454-4134/receipt.json": {
+        "bytes": 52347,
+        "sha256": "0fa713eb33abad053fbe3c162600f4c7a05d8aaeede41475b918f3831809bf84"
+      },
+      "reports/home3-cohort-diagnostic-20261011-171444-4616/receipt.json": {
+        "bytes": 69387,
+        "sha256": "fa29e8de1c8a71f94a7dffbc2c58a1df6aa03272bfd7b2f360c6385b4d1340b3"
+      },
+      "reports/mac065-sampled-diagnostic-20261011-170320-3955/receipt.json.gz": {
+        "bytes": 349090,
+        "sha256": "23d9fbae4dc0629d5163fc8740fb7d2c15b60ad8d7e298dca2824b5b14e463c3"
+      },
+      "reports/mac065-performance-review-new/repeat-analysis.json": {
+        "bytes": 413272,
+        "sha256": "0b46442a7c30a52534b84556971e1bbdad1cbbb226ee2a443dac3bd2ca789f02"
+      },
+      "reports/mac065-performance-review-new/trace-analysis.json": {
+        "bytes": 20104,
+        "sha256": "11a2eb48827e0fd99853db782d18fa43ee3761010a47b9aedfe78e7658d49e18"
+      }
+    }
+  },
+  "duplicate_extracted_apps_cleanup": {
+    "receipt": "reports/duplicate-old-app-cleanup-v2-20261011-172421/receipt.json",
+    "receipt_sha256": "3e02bacb9ee1d9ac10866bc44acca4560ad5c7a4045e709aeafa42e7d9f2b52e",
+    "passed": true,
+    "target_allocated_bytes_removed": 782827520,
+    "free_bytes_after": 13169426432,
+    "archives_retained": [
+      "mac062",
+      "mac063"
+    ],
+    "current_extracted_apps_retained": [
+      "mac064",
+      "mac065"
+    ],
+    "original_accepted_and_rollback_retained": true,
+    "archive_modes_receipt": "reports/duplicate-old-app-cleanup-v2-20261011-172421/archive-mode-readback.json",
+    "archive_modes_sha256": "2449f3f8682fe83709febd442a9eac7d3f9541bfeb20fffdde8c57ea7fbcbc6c"
   }
 }

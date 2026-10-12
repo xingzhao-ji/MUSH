@@ -50,3 +50,9 @@ and the verified clip's intermediate AVI were removed after readback. Prior
 builds/ZIPs, saves and references remain. Frozen mac064 retains its passing
 16.644 / 20.498 ms result; this successor's failure does not rewrite it.
 Builds, full captures and private profiles stay outside Git. The ZIP is a release asset.
+
+Older development mac062/mac063 extracted apps were removed only after complete
+comparison with their retained ZIPs and signature checks. Their archives and
+verification evidence remain in the same build directories. Unzip the retained
+`MUSH.zip` to recover either app; all seven payloads and file permissions per app
+were checked. mac064/mac065, accepted057 and rollback055 stay extracted.

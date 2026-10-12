@@ -415,24 +415,24 @@
       "sha256": "2f192b37ef775aee4cc7904c0d08fc4f83e0bb875a36726c5b08330043226635"
     },
     "docs/MAC-CANDIDATE.md": {
-      "bytes": 3274,
-      "sha256": "0c14197e8e207bc505b90d675554cb120291389dcf95c415a21b1ca16c81a7d3"
+      "bytes": 3666,
+      "sha256": "ea52b47cbe38520bf975cd8c076167fe51967462207655ab44c6741480473e07"
     },
     "docs/STATUS.md": {
-      "bytes": 6878,
-      "sha256": "b2238e3da448a6854056cdb1cc9f4f309b65f154d1e837f665ed978766842d88"
+      "bytes": 7579,
+      "sha256": "d342d5e8352649a8eca5b7271e92a25bbc309ea69e43980f30dd1ee81a2b527d"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 71073,
-      "sha256": "51ba9bc30b452ef8c6f64cdc9a618433a676cb8127667faba804fcd5aa511761"
+      "bytes": 75894,
+      "sha256": "fd19a5b211273a6e403c17a6de16deeea8d407b1a8cae1992bd92a267445cda8"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 150955,
-      "sha256": "c8c36ba8f8dfa61cdfce4ebabe5056e373791763c72ef70108e7dc1932abe61d"
+      "bytes": 153414,
+      "sha256": "8c77bfe44c2c7a2efe2094930329f4fae2054a7ad6af68a681abe9bce279f52b"
     },
     "export_presets.cfg": {
       "bytes": 1136,

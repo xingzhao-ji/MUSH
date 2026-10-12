@@ -1016,3 +1016,76 @@ failure. Source, prior profiles, ordinary save, app and ZIP preservation pass.
 AC power and no reported OS thermal warnings were recorded; this is not thermal
 qualification or proof of a cause. No additional rerun was used to seek a pass.
 Receipt: `reports/mac065-export-repeat-20261011-150637/receipt.json`.
+
+## Foliage isolation and pacing diagnosis (runtime unchanged)
+
+The current 120-second mac065 failure remains failed. Read-only analysis of the
+source/first export/repeat CSVs finds that the repeat averages 59.717 callbacks/s
+with median 16.657 ms, while renderer CPU p95 falls to 2.216 ms. Reported VSync
+and refresh remain 1/120 Hz; duration-weighted draw/primitive counters differ by
+less than 0.02%. These are callback/counter observations, not proof of a display
+cap, GPU cost, or a cause. The earlier first-pass renderer CPU spike does not
+reproduce. `reports/mac065-performance-review-new/repeat-analysis.json` retains
+11 independently checked input hashes.
+
+A separate unchanged-app 60-second diagnostic uses the installed macOS sampler
+on the owned process for two requested eight-second windows. Both samples and
+the bounded engine exit complete, with source/app/ZIP/profile preservation exact.
+Main-thread observations include Metal completion and IOSurface event waits;
+44–49% of terminal observations remain unsymbolized. The second sample spans
+five route steps, so its wait share cannot be assigned solely to the hotspot.
+Sampling affects timing: this is neither a 120-second pass nor an optimization.
+No quality reduction or production performance change was selected. Receipts:
+`reports/mac065-sampled-diagnostic-20261011-170320-3955/receipt.json.gz` and
+`reports/mac065-performance-review-new/trace-analysis.json` (seven checked inputs).
+
+The third home's obstruction is reproduced in the actual Main scene. Exact
+native geometry admission matches all 55 middle-layer chunks. Two center-ray
+queries identify tree7 (low) and tree8 (medium), both without live contact bodies.
+An initial helper API error remains failed; its successor passes eight checks.
+This is static native triangle attribution, not full-window or moving-camera
+visibility. Receipt: `reports/home3-foliage-attribution-v2-20261011-165509-3473/`.
+
+An isolated trial raises both trees to the existing tall cohort through the
+original generator. All 30 roots and RNG states, all 28 other trees' poses,
+shared native meshes/materials, 450 instances, 208,920 triangles and 55 batches
+remain exact; existing physics stays live and unchanged. The first capture
+attempt obtains no fresh drawn frames and remains failed. A successor adds
+independent draw/window diagnostics and stops on the first undrawn view; all
+15 checks and 12 fully decoded 1280×720 images pass with complete restoration.
+No draw fallback, quality change or relaxed assertion was used. The earlier
+draw inactivity's cause remains unproved.
+
+All six day/night pairs were visually inspected. The nearer view now exposes
+the window beside a trunk, but foliage still obscures the approach. The central
+clearing composition shows no material visual change. The trial is **not
+integrated**: a center-ray hit is insufficient to describe the full visible
+window. Broader window/canopy attribution is the next scenery diagnostic.
+Production runtime, the mac065 app and prior acceptance results are unchanged.
+Receipt: `reports/home3-cohort-diagnostic-20261011-171444-4616/receipt.json`.
+Earlier failed preview: `reports/home3-cohort-preview-20261011-170454-4134/`.
+Still frames do not qualify motion, manual play, live audio or physical devices.
+
+## Verified duplicate extracted-app cleanup
+
+Free space dropped below the 12 GiB export preflight floor. The unaccepted
+mac062/mac063 extracted apps were compared file-by-file with their retained ZIPs
+and original package manifests, and both strict ad-hoc signatures passed. Native
+attribute scans found no extended attributes requiring separate retention. Only
+those two duplicate app folders were removed; all 14 file payloads and executable
+permissions are preserved in their ZIPs. Both archives fully reread afterward.
+mac064/mac065, accepted057, rollback055, source, profiles and unique captures remain.
+
+The target files accounted for **782,827,520 allocated bytes (746.56 MiB)**.
+Observed free space rose by 779,640,832 bytes to **12.26 GiB**; APFS accounting and
+other activity prevent exclusive attribution of that difference. All 335 other
+build entries, current source payloads and prior profile metadata pass exact
+preservation checks. Only the two containing directories' size/mtime/ctime were
+allowed to change with removal. A first metadata preflight stopped before any
+deletion; its failed receipt is retained.
+
+Receipt: `reports/duplicate-old-app-cleanup-v2-20261011-172421/receipt.json`;
+`archive-mode-readback.json` independently checks all retained file permissions.
+The saved `before.json` records full app identities. Recovery is extraction of
+each retained `MUSH.zip` into its original build directory; recreation necessarily
+changes inode/ctime. No unique build, source, asset, save or evidence was deleted.
