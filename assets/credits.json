@@ -68,7 +68,8 @@
       "collision": ".95m capsule radius .28m",
       "materials": "cream body, dark eyes; PBR",
       "textures": [],
-      "status": "deliberately provisional species and motion"
+      "status": "User-selected cream woodland creature direction; model refinement and motion review remain in progress",
+      "refinement": "Single tucked round tail reuses the existing procedural mesh/material/rig; five separate tuft meshes omitted."
     },
     {
       "id": "props-plants-resident-v1",

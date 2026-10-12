@@ -83,8 +83,8 @@
       "sha256": "154eb61003b141a571570cc99b00427f95ca55d027205936a0908fee113cdbee"
     },
     "assets/credits.json": {
-      "bytes": 9155,
-      "sha256": "603e8679d391a52b49ca2bfadb17410d95714b6d08422618cf5fe221c19bd7d4"
+      "bytes": 9347,
+      "sha256": "a17981e90aad035bd711eeed174beadf3f0101fc599664ee85a42cdbf99b1b14"
     },
     "assets/door.wav": {
       "bytes": 24298,
@@ -895,8 +895,8 @@
       "sha256": "f011a3bb2d5fcaf63b03003d910dabfcae8a2d36176192f78b8fca855cea51be"
     },
     "scripts/player.gd": {
-      "bytes": 35557,
-      "sha256": "a2add8e39d019ea43e1103d60d794ed8feeef85ed03266e83b1d8ef9e80ca74d"
+      "bytes": 35388,
+      "sha256": "5d60c65112b87cdb80401ee93ae2a1ffd0d505057058adf81c2bea7faab1d716"
     },
     "scripts/player.gd.uid": {
       "bytes": 19,

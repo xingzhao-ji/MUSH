@@ -1,6 +1,6 @@
 class_name ClearingPlayer
 extends CharacterBody3D
-## A deliberately provisional articulated cream creature; final species and appearance are undecided.
+## The user-selected cream woodland creature; surface and motion polish remain in progress.
 ## Feet are the controller origin. Animation never moves the collision body or camera target.
 
 signal feedback(message: String)
@@ -584,7 +584,7 @@ func _build_creature() -> void:
 	_visual.name = "VisualRoot"
 	add_child(_visual)
 	_visual.set_meta("provisional", true)
-	_visual.set_meta("design_status", "Provisional cream creature; final species, fur and expression are not approved.")
+	_visual.set_meta("design_status", "Approved cream woodland creature direction; model refinement and motion review remain in progress.")
 	_cream = _material(Color(0.93, 0.85, 0.70), 0.88)
 	var feet_material: StandardMaterial3D = _material(Color(0.84, 0.72, 0.54))
 	var inner_ear: StandardMaterial3D = _material(Color(0.76, 0.55, 0.41))
@@ -629,11 +629,8 @@ func _build_creature() -> void:
 		arm.add_child(gesture)
 		_ellipsoid(gesture, "Forepaw", Vector3(0.0, -0.034, -0.024), Vector3(0.13, 0.20, 0.14), _cream)
 	var tail: BoneAttachment3D = _attachment("Tail", "tail")
-	_ellipsoid(tail, "TailMesh", Vector3(0.0, 0.01, 0.10), Vector3(0.34, 0.33, 0.33), _cream)
-	# A few soft lobes suggest volume without deciding a production fur system.
-	for i: int in range(5):
-		var angle: float = float(i) * TAU / 5.0
-		_ellipsoid(tail, "TailTuft", Vector3(sin(angle) * 0.087, cos(angle) * 0.087, 0.18), Vector3(0.17, 0.17, 0.18), _cream)
+	# One tucked volume keeps the round tail readable without separate bead-like lobes.
+	_ellipsoid(tail, "TailMesh", Vector3(0.0, 0.015, 0.085), Vector3(0.32, 0.32, 0.30), _cream)
 	_build_animations()
 
 func _build_effects() -> void:
