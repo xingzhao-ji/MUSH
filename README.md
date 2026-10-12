@@ -23,9 +23,22 @@ The active inheritance chain in `lineage/` is required at runtime. See the full
 [architecture](docs/ARCHITECTURE.md) for startup dependencies and bounded-work
 tradeoffs.
 
+## Recorded demo
+
+[Watch the 12-second engine capture](docs/demos/MUSH-gameplay-demo.mp4) or browse
+the [clearing and bridge screenshots](docs/demos/README.md). This is the real
+main scene captured with Godot 4.7.2 MovieWriter at 1280 × 720 and 15 fps on a
+cloud software renderer. Rendering ran slower than playback, so the clip does
+not establish real-time performance or manual-play acceptance. It contains an
+audio track; listening quality was not reviewed during publication.
+The [15-minute technical-demo runbook](docs/demos/MUSH-15-minute-demo-runbook.txt)
+is a presentation plan, not the length of the recording.
+
+[![MUSH's clearing and mushroom home](docs/demos/MUSH-clearing-screenshot.png)](docs/demos/MUSH-gameplay-demo.mp4)
+
 ## Run
 
-Clone the repository with an account that has access, then open the project:
+Clone the public repository, then open the project:
 
 ```sh
 git clone https://github.com/xingzhao-ji/MUSH.git

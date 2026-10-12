@@ -19,8 +19,8 @@
       "sha256": "53373af7d7794eb025e4265c1d67b744ce5a420b113a6d2b215d9b57e31b30d2"
     },
     "README.md": {
-      "bytes": 9856,
-      "sha256": "adb2760d78325c863ed84c56f1165e7972aaaa256aa257f99ab1da76b960f6cf"
+      "bytes": 10570,
+      "sha256": "0feb03c2aa449acaa89fe70c15c759a0bbee3ee53287946384512460ff4ad2aa"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -425,6 +425,30 @@
     "docs/VERIFICATION.md": {
       "bytes": 84441,
       "sha256": "57a55a72ff82094d65ef7d356502c6da7b3f5db31718b0725a94ce2b148bed64"
+    },
+    "docs/demos/.gdignore": {
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "docs/demos/MUSH-15-minute-demo-runbook.txt": {
+      "bytes": 6096,
+      "sha256": "f62412a100344452f36fe975bd3f336277bcf343094f4facae5e42b6afd399c2"
+    },
+    "docs/demos/MUSH-bridge-screenshot.png": {
+      "bytes": 2140581,
+      "sha256": "c6eefd2cfd3c9117f2bd7d99c88b73db3d17effbda0e75ad7015a501c55b0833"
+    },
+    "docs/demos/MUSH-clearing-screenshot.png": {
+      "bytes": 2280308,
+      "sha256": "805b0349da7224b099fbe4128a9a1286771ff92721deda4ec1a819f7724d62e2"
+    },
+    "docs/demos/MUSH-gameplay-demo.mp4": {
+      "bytes": 15047428,
+      "sha256": "7eb3d7817943f09c287f09fa0881b77fbce642b255c3508ff60e97e7ec31dd0d"
+    },
+    "docs/demos/README.md": {
+      "bytes": 1921,
+      "sha256": "ea5ee2dc27575ad1283b3a1d8fd022fe09679f60059cff76a331aa57910874c2"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,

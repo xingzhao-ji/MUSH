@@ -1,0 +1,60 @@
+MUSH — 15-minute technical demo runbook
+
+Evidence scope
+Experimental 0.6.0 source at commit 9874b92d65679ee6625fffa4511b7f6f64f8cfff.
+Repository: https://github.com/xingzhao-ji/MUSH
+Captured on dot's cloud computer using official Godot 4.7.2, Mesa llvmpipe, OpenGL compatibility, 1280 × 720, 15 fps.
+The attached 12-second clip is genuine engine-rendered footage of the real main scene, using the repository's automated player traversal and Godot MovieWriter. Rendering ran slower than playback. This is not a real-time performance benchmark or manual-play acceptance. The game source was unchanged. No mock screen or generated scenery was used.
+
+0:00–2:00 — Problem, stack, architecture
+- Describe the product as a small cozy clearing for exploration, planting and furnishing a home. It is a development prototype, not an approved new release.
+- Stack: Godot 4.7.2, GDScript gameplay, native CharacterBody movement and rendering, baked native resources, JSON local saves, Python verification tools.
+- Trace main.tscn → scripts/playable.gd. Show the composition of the baked world, player, save store, UI, audio and environmental controller.
+- Clarify ownership: Godot provides engine/physics/rendering; project work includes gameplay, save validation/recovery, procedural-content caching and verification. Consult assets/credits.json and LICENSE.md for third-party assets.
+
+2:00–7:00 — Golden-path demonstration
+- Start from a fresh, isolated demo save. Choose Begin a new clearing.
+- Walk using W/A/S/D; use the mouse to look. Follow the stone path toward the mushroom home, then turn toward the bridge. The attached clip demonstrates this actual movement route.
+- Show the interaction prompts and use E where offered. Show G for Glow and Space for Float. Avoid claiming a completed interaction if its state was not actually verified in rehearsal.
+- Open Escape for settings and sky/weather. Demonstrate reduced-motion/effects and contrast day/night only after rehearsing those states on the presentation machine.
+- Show the home and, if unlocked, B for decorating. Use meaningful plant/furniture choices; never seed impossible progression or label a planned state as completed.
+- Save and quit, relaunch, and Continue only after verifying the round trip with the isolated demo save. The supplied cloud clip proves traversal, not all of these proposed live-demo steps.
+- If the live game fails, play the 12-second verified clip and display the two genuine captures. Do not stretch it into a pretend 5-minute interaction recording.
+
+7:00–12:00 — Code deep dive
+7:00–8:00: scripts/playable.gd and scripts/baked_world.gd
+  Explain startup composition and the pinned baked-resource/proof checks. Show actual scene load rather than an inactive authoring helper. The active lineage inheritance is still a runtime dependency.
+8:00–9:30: scripts/save_store.gd
+  Walk through save_snapshot, validation, the 1 MiB size bound, pending-file readback and validated backup handling. Show load_snapshot's fallback to the last validated backup. Discuss preserving a good backup when the primary is damaged.
+9:30–10:30: scripts/environment_controller.gd
+  Explain shared time/weather/material state, quality and reduced-motion handling. Its design separates visual environmental effects from gameplay forces, collision, mesh mutation and save state.
+10:30–11:15: scripts/paw_grounding.gd
+  Show visual foot correction as a SkeletonModifier3D after animation; it avoids body/collider/camera writes. Distinguish visual contact improvement from physical terrain-traversal correctness.
+11:15–12:00: tools/verify.py and tests/benchmark.gd
+  Show bounded native test orchestration, preserved receipts and the actual route-driving Input.action_press logic. Explain why frame callbacks, GPU duration, display presentation and offline MovieWriter playback are different measurements.
+
+12:00–15:00 — Tradeoffs, bugs and next work
+- Baked/proof-pinned resources reduce runtime authoring work but require exact asset/engine compatibility. The cloud's initial 4.6.3 engine was rejected; running the required official 4.7.2 resolved that startup mismatch without editing game code.
+- This cloud capture uses software-rendered OpenGL compatibility. Repository benchmark receipts describe a different Forward+/Metal Mac setup. Do not compare them as a speedup or use the clip's playback rate as performance evidence.
+- docs/STATUS.md and docs/VERIFICATION.md document remaining paving/contact-coverage and visual-art issues. Their historical passing gameplay and benchmark figures were not rerun in this capture session.
+- Manual movement/camera comfort, live audio acceptance, final art quality and physical mobile-device validation remain separate gates.
+- Proposed next milestone: rehearse the live interaction/save round trip on the actual presentation machine, then prioritize the documented contact-coverage and visual-readability issues. Say this is a proposed milestone, not completed work.
+
+Presenter checklist
+- Use Godot 4.7.2 and an isolated demo profile; keep retained release saves intact.
+- Open the five source files above before presenting.
+- Have MP4 and still images available locally if the live launch stalls.
+- Explain prototype status and renderer differences once, clearly.
+- Keep claims tied to current source or explicitly identified historical receipts.
+
+Source anchors
+README.md — product scope, controls, stack, run requirements, verification caveats
+main.tscn; scripts/playable.gd — real startup graph
+scripts/baked_world.gd — native baked resource/proof loading
+scripts/save_store.gd — size bounds, validation, pending writes and backup recovery
+scripts/environment_controller.gd — shared visual-state boundaries
+scripts/paw_grounding.gd — visual-only foot adjustment
+ tests/benchmark.gd — actual automated movement route and capture configuration
+ tools/verify.py — bounded test runner and retained receipts
+ docs/STATUS.md; docs/VERIFICATION.md — historical evidence and open acceptance
+ assets/credits.json; LICENSE.md — provenance and terms
