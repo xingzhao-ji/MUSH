@@ -2,7 +2,35 @@
 
 A small, cozy Godot clearing to explore, plant and make a home in. This repository contains the **experimental 0.6.0 development source**, including combined paving and visual paw-contact work. It is not a newly approved release. The separately retained Mac 0.5.7 app remains recommended; 0.5.5 remains its rollback.
 
+## Source, playable artifacts and engineering scope
+
+- [Source repository](https://github.com/xingzhao-ji/MUSH) and [mac066 Mac candidate](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066). These require repository access while the project is private. The candidate is a real exported game, with the limitations recorded below; there is no published browser demo.
+- Project work includes GDScript gameplay and movement, bounded save validation/recovery, cached procedural geometry, shared environmental rendering state, and reproducible verification tools. Godot supplies the engine, physics and rendering facilities. [Asset credits](assets/credits.json) distinguish original procedural content from third-party music, sounds and textures.
+- This is a development prototype. The repository does not claim external adoption, an upstream Godot contribution, a shipped mobile product or a blanket open-source license. The generated bark/moss proposals retain unresolved provenance in [LICENSE.md](LICENSE.md); public distribution needs that issue resolved.
+
+### Runtime map
+
+| Component | Responsibility | Source |
+| --- | --- | --- |
+| Main scene and composition | Load the clearing, player, UI, save store and environmental systems | [main.tscn](main.tscn), [playable.gd](scripts/playable.gd) |
+| World and baked resources | Load pinned meshes/colliders and retain original references for rollback | [baked_world.gd](scripts/baked_world.gd), [baked/](baked/) |
+| Player and paw presentation | Keep CharacterBody movement separate from visual foot/bone adjustment | [player.gd](scripts/player.gd), [paw_grounding.gd](scripts/paw_grounding.gd) |
+| Save store | Validate bounded state, verify writes and recover from a validated backup | [save_store.gd](scripts/save_store.gd) |
+| Shared environment | Coordinate time, weather, material state and reduced-motion settings | [environment_controller.gd](scripts/environment_controller.gd) |
+| Verification and packaging | Run native checks, preserve failed receipts, and build isolated Mac candidates | [tools/verify.py](tools/verify.py), [tools/package_mac.py](tools/package_mac.py) |
+
+The active inheritance chain in `lineage/` is required at runtime. See the full
+[architecture](docs/ARCHITECTURE.md) for startup dependencies and bounded-work
+tradeoffs.
+
 ## Run
+
+Clone the repository with an account that has access, then open the project:
+
+```sh
+git clone https://github.com/xingzhao-ji/MUSH.git
+cd MUSH
+```
 
 Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop test configuration is Forward+/Metal on a Mac. The new mac066 candidate clears the sampled third-home canopy views and passes its 120-second benchmark with verified engine draw progress. The source passes 295 gameplay assertions and 29 forest checks; the app passes 12 startup checks and four still captures. Full art and manual-play acceptance remain open. Choose **Begin a new clearing**. Development saves use Godot's `MUSH-dev` user directory, separate from retained release profiles.
 
@@ -47,6 +75,28 @@ python3 tools/verify.py --engine /path/to/Godot --suite benchmark
 The runner writes timestamped results beneath ignored `reports/` and compresses large JSON outputs after verified readback. Tracked `reports/.gdignore` and `builds/.gdignore` prevent test screenshots and exported outputs from becoming imported game assets. `forest-layers` checks the installed forest, ten static window sightlines, actual trunk contacts, camera clearance and ten matched stills. The installed trees 6, 7 and 8 now use the existing tall cohort to expose the third home, with roots, RNG order and shared resources retained. Two explicit redraws qualify each frozen still; this is not motion or display-presentation evidence. `outer-tree` exercises five trunk routes and native camera/bark queries through the reproduced foreground obstruction. `house-foundation` checks the installed rock support, native geometry/contact preservation and 12 paired day/night captures. `home-placement` checks the actual two-home startup installation and eight matched day/night pairs, including foliage-obscured diagnostic views; it does not prove player reachability or whole-foot terrain coverage. Runner failure paths have standard-library tests: `python3 -m unittest discover -s tests -p test_verify_runner.py`. The benchmark uses a 120-second route. See [verification evidence](docs/VERIFICATION.md) for results and the exact scope of each check; commands alone are not evidence of passing tests. The traversal suite still exits with a failed upper-soil contact-coverage gate even though all 58 movement routes pass. The separate `gap-step` suite verifies the fixed narrow-joint snag with four movement routes and ten native support cases. `shape-build` creates an isolated resource under `reports/`; `shape-capture --candidate /absolute/path/to/paving-shape.res` compares it with the installed source. Captures establish pictured states, not motion or live audio quality.
 
 See [the tested local Mac candidate](docs/MAC-CANDIDATE.md) for its launch path, controls and remaining issues.
+
+### Reading the results
+
+The October 11, 2026 source checkpoint `b5c9f61` records 295 gameplay assertions
+across 15 scenarios and 29 forest checks. Its 120-second night/rain source route
+at 1920 × 1080 with default VSync records p95 **11.575 ms** and p99 **13.188 ms**,
+two loops and zero stalls. The benchmark validates route completion and engine
+draw progress, then recomputes percentiles from the recorded callback intervals.
+It measures application frame callbacks, not GPU duration or display presentation.
+
+The mac066 exported 120-second route passes p95 **10.619 ms** / p99 **13.759 ms**,
+with 15,177 samples, two loops, no stalls and verified engine draw advancement.
+Its first screenshot phase timed out; a separate topmost-window retry passes all
+four stills. The failed receipt is retained.
+
+The older separately exported mac065 candidate records p95 **17.524 ms**, exceeding the
+unchanged 16.7 ms budget. The paving contact-coverage gate also remains failed.
+Source and export results qualify their own artifacts; they do not establish a
+causal speedup or physical-phone performance. These are recorded results, not a
+claim that documentation edits reran the game. Continuous manual motion, live
+listening and whole-game art acceptance remain open. Full scope, hardware and
+historical failures are preserved in [VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Build and contribute
 
