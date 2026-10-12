@@ -44,8 +44,17 @@
         "https://openai.com/policies/services-agreement/",
         "https://openai.com/policies/service-terms/"
       ],
-      "license_status": "Hosted output rights framework documented; governing account terms and user input provenance unexposed. No distributed model weights or blanket release clearance.",
-      "status": "unapproved material proposals; actual 1254x1254 PNGs"
+      "license_status": "Project owner confirmed original creation from scratch on 2026-10-12, resolving the previously recorded origin uncertainty. Image-generation provenance is retained. No blanket license or third-party rights change is granted.",
+      "status": "unapproved material proposals; actual 1254x1254 PNGs",
+      "origin_confirmation": {
+        "date": "2026-10-12",
+        "source": "Direct project-owner confirmation",
+        "statement": "The owner confirmed they created the assets and that everything was created from scratch.",
+        "scope": [
+          "assets/world/textures/bark-albedo-proposal-v1.png",
+          "assets/world/textures/moss-albedo-proposal-v1.png"
+        ]
+      }
     },
     {
       "id": "provisional-player-v1",
