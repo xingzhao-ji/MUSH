@@ -12,7 +12,8 @@
     "manifest": "SOURCE_MANIFEST.json (contains this summary; excluded from its own hash list)",
     "verified_remote_baseline": "08c418783d97e805ac30461aebf872837c5045d1",
     "url": "https://github.com/xingzhao-ji/MUSH",
-    "latest_verified_source_commit": "b5c9f616ecfe6b1937f185a8dc1eb4dcdaea051e"
+    "latest_verified_source_commit": "a93a12ab350b0eb90a2bd4bf6cf34ce165d8bf89",
+    "current_visibility_observed": "public (owner changed; checked with GitHub API 2026-10-11)"
   },
   "engine": {
     "version": "4.7.2.stable.official.ed1daf0bf",
@@ -589,7 +590,7 @@
     "tests/outer_tree_camera.gd": "b71e53a058a5ce062923b9909447d90f2c7fe46059deb3328c59ff4fa14d260e",
     "tests/outer_trunk_contacts.gd": "b067fc975ecfb3f86cd1c867c39659217669f7ff2e308d1f4d3cf446970729d2",
     "tests/bark_camera_probe.gd": "7e61df152d86098a5caa002c4bb3de79adae3e9fb95a1713efd4fbd27368a8d6",
-    "scripts/player.gd": "a2add8e39d019ea43e1103d60d794ed8feeef85ed03266e83b1d8ef9e80ca74d",
+    "scripts/player.gd": "5d60c65112b87cdb80401ee93ae2a1ffd0d505057058adf81c2bea7faab1d716",
     "scripts/closest_home_foundation.gd": "982ec712022140d8f35df69f79303a4c4f53e61ba5ece4b7d611b2cc4928febe",
     "tests/house_foundation.gd": "4b6a5163b883e04c25b11a82049bd7c838abd10b6013b72bfa325dd1f2e1c10a",
     "assets/world/closest-home-support.res": "e28c423d198ea90b80478c1902ce8f05a3215dfca308644a93376991cfe31e2c",
@@ -819,7 +820,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "mac066 exported120s night/rain passes10.619/13.759ms,15177samples,2loops,0stalls with verified draw advancement. Source120s passes11.575/13.188ms. Historical failures retained; no causal/GPU/display/thermal/mobile qualification.",
+  "performance_budget_scope": "Current cream-tail source120s passes12.275/13.640ms,13027samples,2loops,0stalls with engine draw advancement. Separate frozen mac066 export passes10.619/13.759ms. Historical failures retained; no causal/GPU/display/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -3744,5 +3745,75 @@
     "user_choice": "Refine the current cream woodland creature",
     "date": "2026-10-11",
     "current_model_or_motion_accepted": false
+  },
+  "character_tail_refinement": {
+    "source_commit": "a93a12ab350b0eb90a2bd4bf6cf34ce165d8bf89",
+    "rollback": "9874b92d65679ee6625fffa4511b7f6f64f8cfff",
+    "runtime_player_sha256": "5d60c65112b87cdb80401ee93ae2a1ffd0d505057058adf81c2bea7faab1d716",
+    "meshes_before_after": [
+      29,
+      24
+    ],
+    "triangles_before_after": [
+      31552,
+      26112
+    ],
+    "new_dependencies": [],
+    "isolation": {
+      "path": "reports/character-tail-20261011-193551-31339/native/tail-preview.json",
+      "bytes": 6638,
+      "sha256": "d9cab3ab17aa4ef6d1f861aaf28a176c431d05ede12d10ebbe21994f8a16d29b"
+    },
+    "installed": {
+      "path": "reports/character-tail-20261011-194139-31811/native/tail-current.json",
+      "bytes": 4522,
+      "sha256": "fa273d36c1db00915675fac2f87390ae4d1431042eb25f834b57b7e4199a8292"
+    },
+    "paired_pngs": 8,
+    "installed_pngs": 4,
+    "all_pngs_decoded_and_visually_reviewed": true,
+    "full_regression": {
+      "path": "reports/character-full-input-20261011-200559-34273/receipt.json.gz",
+      "bytes": 371932,
+      "sha256": "a3e05b9ef137fe7b9c1dd8b9285bfbf16da470b4294e5c3f4f2fa37d0451b8d9"
+    },
+    "assertions": 295,
+    "scenarios": 15,
+    "full_regression_conditions": "Original tests with read-only focus/action observer, topmost window; no changed input/deadlines/controller/assertions. First full run remains failed.",
+    "earlier_regression_failure": {
+      "path": "reports/character-tail-regression-20261011-194307-31877/receipt.json.gz",
+      "bytes": 378741,
+      "sha256": "e7972cb3e018140951cc8355a0785f024caf4b777f5fb0731481c1e74be604d1"
+    },
+    "guard_classification": {
+      "path": "reports/character-tail-regression-20261011-194307-31877/guard-classification.json",
+      "bytes": 690,
+      "sha256": "5e5d542b8756b45c1044016e9be8912f4bf3a68e2197a9e4f68cce17328041c9"
+    },
+    "isolated_T01_readback": {
+      "path": "reports/character-input-20261011-195834-33678/independent-readback.json",
+      "bytes": 7826,
+      "sha256": "ec2589bc3898a585ca088badd479ccbbbff4f48999c41e6b3b56df3843e48be5"
+    },
+    "benchmark": {
+      "path": "reports/benchmark-20261011-200132-34018/result.json",
+      "bytes": 51002,
+      "sha256": "778adb76b92ba3a72f85f43d7053870cba12fceed0eb917edd4fe693f1c57390"
+    },
+    "benchmark_preservation": {
+      "path": "reports/character-tail-performance-20261011-200132-34018/receipt.json.gz",
+      "bytes": 378707,
+      "sha256": "1978a7cc2705b542fbb3e53153a0db8212f64f68368d9e18f0d9a79882735913"
+    },
+    "p95_ms": 12.275,
+    "p99_ms": 13.64,
+    "samples": 13027,
+    "loops": 2,
+    "stalls": 0,
+    "performance_gain_proved": false,
+    "exported_with_tail": false,
+    "physical_device_tested": false,
+    "motion_verified": false,
+    "final_character_art_accepted": false
   }
 }

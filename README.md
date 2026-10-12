@@ -27,8 +27,9 @@ tradeoffs.
 
 [Watch the 12-second engine capture](docs/demos/MUSH-gameplay-demo.mp4) or browse
 the [clearing and bridge screenshots](docs/demos/README.md). This is the real
-main scene captured with Godot 4.7.2 MovieWriter at 1280 × 720 and 15 fps on a
-cloud software renderer. Rendering ran slower than playback, so the clip does
+main scene captured from source `9874b92`, before the current tail refinement,
+with Godot 4.7.2 MovieWriter at 1280 × 720 and 15 fps on a cloud software
+renderer. Rendering ran slower than playback, so the clip does
 not establish real-time performance or manual-play acceptance. It contains an
 audio track; listening quality was not reviewed during publication.
 The [15-minute technical-demo runbook](docs/demos/MUSH-15-minute-demo-runbook.txt)
@@ -58,6 +59,13 @@ Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop t
 | Escape | Pause, settings, sky/weather and save |
 
 Settings include reduced motion/effects, camera preferences, sound levels and key rebinding. The garden has eight places; the home has six furniture places. There is no combat, death or time pressure.
+
+Current source also refines the cream creature’s tail into one smooth, tucked
+volume, removing five mesh nodes. Fresh source checks pass 295 gameplay assertions
+and the 120-second benchmark (p95 12.275 ms / p99 13.640 ms). Earlier failed
+attempts and the scope of the input-diagnostic run remain in
+[verification evidence](docs/VERIFICATION.md). The downloadable mac066 app
+predates this source refinement.
 
 ## Verify
 

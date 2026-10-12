@@ -8,6 +8,8 @@ mushroom home and bridge. It was captured from experimental 0.6.0 source at
 [`9874b92`](https://github.com/xingzhao-ji/MUSH/tree/9874b92d65679ee6625fffa4511b7f6f64f8cfff)
 using official Godot 4.7.2 and MovieWriter on a cloud computer with Mesa llvmpipe
 and OpenGL compatibility. No mock screen or generated replacement scenery is used.
+These captures predate the current cream-tail refinement; the pinned source
+commit identifies the exact model shown.
 
 Rendering ran slower than playback. The clip does not measure real-time frame
 rate, qualify manual play, or rerun the repository's Mac benchmark and gameplay
