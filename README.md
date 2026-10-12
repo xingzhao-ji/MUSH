@@ -67,6 +67,10 @@ attempts and the scope of the input-diagnostic run remain in
 [verification evidence](docs/VERIFICATION.md). The downloadable mac066 app
 predates this source refinement.
 
+## Browser build
+
+The original Godot game has a versioned, single-threaded WebGL 2 export with local browser saves. See [web build, controls, hosting and verification](docs/WEB-DEMO.md). The browser demo is pinned to tested source `9874b92`, before the current single-tail refinement; it does not replace newer native source. Browser performance and whole-game acceptance remain separate checks.
+
 ## Verify
 
 Python 3 and the matching Godot executable are required. Close the game/editor before testing and retain 10 GiB of free disk space. Run the import suite first on a clean checkout. From the repository root:
@@ -124,3 +128,4 @@ historical failures are preserved in [VERIFICATION.md](docs/VERIFICATION.md).
 Install Godot 4.7.2's export templates before using the `macOS MUSH` preset. On this Mac, `python3 tools/package_mac.py --engine /path/to/Godot --candidate mac067` stages the current source into an ignored build directory, exports a separate `MUSH-mac067` candidate and checks its ZIP, signature and startup. Choose an unused `macNNN` candidate name. It requires that candidate profile to be absent and reserves 10 GiB beyond a 2 GiB output ceiling. The script downloads nothing. It writes `MUSH.app` and `MUSH.zip` beneath a timestamped `builds/mac-*` directory and uses local ad-hoc signing. The preset does not produce a notarized/store release or an iPhone build. No physical-device performance, manual controls or live listening acceptance is claimed.
 
 Keep baked resources and `lineage/`: they are active dependencies. Generated imports, builds, reports, credentials, private saves and user reference images are excluded from Git. [Architecture](docs/ARCHITECTURE.md), [dependencies and notices](docs/DEPENDENCIES.md), [remaining work](docs/STATUS.md) and [license scope](LICENSE.md) describe the boundaries. [AGENTS.md](AGENTS.md) provides the short development workflow.
+

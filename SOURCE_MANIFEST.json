@@ -19,8 +19,8 @@
       "sha256": "53373af7d7794eb025e4265c1d67b744ce5a420b113a6d2b215d9b57e31b30d2"
     },
     "README.md": {
-      "bytes": 11039,
-      "sha256": "0d51e0c93353d24fc4395f7cb0fb7d31c51a2af698888d88e3ca01475508b883"
+      "bytes": 11437,
+      "sha256": "0a3ba7a8c47f6765f9cbe93e10294ffdfbf6feab33934c1d751cfffab0314ef7"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -1285,6 +1285,14 @@
     "tools/verify.py": {
       "bytes": 34898,
       "sha256": "95059b3c7f1af397a849805a8cb6bfb84b0ac461954abe48684e12f2669657a5"
+    },
+    "docs/WEB-DEMO.md": {
+      "bytes": 4372,
+      "sha256": "1b8cc759793c7f9e58116ff495d30a7bf9454d8db36e143d2c4503e79734e4eb"
+    },
+    "tools/export_web.sh": {
+      "bytes": 3528,
+      "sha256": "ce8e6fb895c7901bee48be2bcdfbb5dd3dfd897983076c12a77188e0fea381b6"
     }
   }
 }
