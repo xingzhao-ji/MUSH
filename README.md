@@ -4,7 +4,7 @@ A small, cozy Godot clearing to explore, plant and make a home in. This reposito
 
 ## Source, playable artifacts and engineering scope
 
-- [Source repository](https://github.com/xingzhao-ji/MUSH) and [mac066 Mac candidate](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066). The candidate is a real exported game, with the limitations recorded below; there is no published browser demo.
+- [Source repository](https://github.com/xingzhao-ji/MUSH) and [mac066 Mac candidate](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066). The candidate is a real exported game, with the limitations recorded below. A separate [versioned browser build](https://xingzhao-ji.github.io/my_site/demos/mush/index.html) is now published; its pinned source and desktop WebGL 2 requirements are described below.
 - Project work includes GDScript gameplay and movement, bounded save validation/recovery, cached procedural geometry, shared environmental rendering state, and reproducible verification tools. Godot supplies the engine, physics and rendering facilities. [Asset credits](assets/credits.json) distinguish original procedural content from third-party music, sounds and textures.
 - This is a development prototype. The repository does not claim external adoption, an upstream Godot contribution, a shipped mobile product or a blanket open-source license. The project owner confirmed original creation of the bark/moss assets; [LICENSE.md](LICENSE.md) records the provenance clarification and unchanged third-party terms.
 
@@ -68,6 +68,8 @@ attempts and the scope of the input-diagnostic run remain in
 predates this source refinement.
 
 ## Browser build
+
+[Open the versioned browser build](https://xingzhao-ji.github.io/my_site/demos/mush/index.html). A desktop browser with WebGL 2 is required; the first download is large and shader compilation can take time.
 
 The original Godot game has a versioned, single-threaded WebGL 2 export with local browser saves. See [web build, controls, hosting and verification](docs/WEB-DEMO.md). The browser demo is pinned to tested source `9874b92`, before the current single-tail refinement; it does not replace newer native source. Browser performance and whole-game acceptance remain separate checks.
 
