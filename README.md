@@ -4,9 +4,9 @@ A small, cozy Godot clearing to explore, plant and make a home in. This reposito
 
 ## Source, playable artifacts and engineering scope
 
-- [Source repository](https://github.com/xingzhao-ji/MUSH) and [mac066 Mac candidate](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066). These require repository access while the project is private. The candidate is a real exported game, with the limitations recorded below; there is no published browser demo.
+- [Source repository](https://github.com/xingzhao-ji/MUSH) and [mac066 Mac candidate](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066). The candidate is a real exported game, with the limitations recorded below; there is no published browser demo.
 - Project work includes GDScript gameplay and movement, bounded save validation/recovery, cached procedural geometry, shared environmental rendering state, and reproducible verification tools. Godot supplies the engine, physics and rendering facilities. [Asset credits](assets/credits.json) distinguish original procedural content from third-party music, sounds and textures.
-- This is a development prototype. The repository does not claim external adoption, an upstream Godot contribution, a shipped mobile product or a blanket open-source license. The generated bark/moss proposals retain unresolved provenance in [LICENSE.md](LICENSE.md); public distribution needs that issue resolved.
+- This is a development prototype. The repository does not claim external adoption, an upstream Godot contribution, a shipped mobile product or a blanket open-source license. The project owner confirmed original creation of the bark/moss assets; [LICENSE.md](LICENSE.md) records the provenance clarification and unchanged third-party terms.
 
 ### Runtime map
 

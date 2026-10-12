@@ -15,12 +15,12 @@
       "sha256": "158ed410ecb43be38ee0634b213cac7ef9b66234abeecd2b090486f125175a54"
     },
     "LICENSE.md": {
-      "bytes": 1433,
-      "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
+      "bytes": 1648,
+      "sha256": "53373af7d7794eb025e4265c1d67b744ce5a420b113a6d2b215d9b57e31b30d2"
     },
     "README.md": {
-      "bytes": 9891,
-      "sha256": "b0a8e7fd4014dfa17c4ccf74c2542b3a8004e4c5ad0820f8d875ee2af501e6b1"
+      "bytes": 9856,
+      "sha256": "adb2760d78325c863ed84c56f1165e7972aaaa256aa257f99ab1da76b960f6cf"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -83,8 +83,8 @@
       "sha256": "154eb61003b141a571570cc99b00427f95ca55d027205936a0908fee113cdbee"
     },
     "assets/credits.json": {
-      "bytes": 8700,
-      "sha256": "9fbf1394f60f561bd441bbe59a320de86ec623ae6d52485f5ad45f2f81531d30"
+      "bytes": 9155,
+      "sha256": "603e8679d391a52b49ca2bfadb17410d95714b6d08422618cf5fe221c19bd7d4"
     },
     "assets/door.wav": {
       "bytes": 24298,
@@ -411,8 +411,8 @@
       "sha256": "67efa99112ba018253084ace705745b2d985c4f95d4dcfd5c59b90295111245f"
     },
     "docs/DEPENDENCIES.md": {
-      "bytes": 4790,
-      "sha256": "2f192b37ef775aee4cc7904c0d08fc4f83e0bb875a36726c5b08330043226635"
+      "bytes": 4844,
+      "sha256": "b98852b4f97bed82586fd048a294ad07a1b1c8eff1e1f50a8fcf5508b9c39548"
     },
     "docs/MAC-CANDIDATE.md": {
       "bytes": 3393,
