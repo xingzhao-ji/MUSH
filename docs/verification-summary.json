@@ -36,8 +36,8 @@
       ]
     },
     "acceptance": {
-      "receipt": "reports/acceptance-20261011-143849-89828/result.json",
-      "receipt_sha256": "886988414d01372daf22ab9e5ed9b006b3154e11b9b9463f292e4dbb70d8e0eb",
+      "receipt": "reports/acceptance-20261011-181134-11368/result.json",
+      "receipt_sha256": "a27ad3f3be63d180caebf9f302c1f45053b4b38a81b7de5d39f939afcc326137",
       "passed": true,
       "checks": {
         "scenarios": 15,
@@ -115,12 +115,13 @@
     },
     "runner_failure_paths": {
       "passed": true,
-      "tests": 4,
+      "tests": 8,
       "command": "python3 -m unittest discover -s tests -p test_verify_runner.py",
-      "source_sha256": "231cb8d0109b3ede44c9865889ca94be0b2a2b5c1db77c038c2a251a3be201b5",
+      "source_sha256": "22abcc08cd3fd818a14102440d83a9bb2217d870e18d88566fb5177f25b086a3",
       "last_run_after_gap_step_changes": true,
       "last_run_after_forest_changes": true,
-      "last_run_after_forest_layers_changes": true
+      "last_run_after_forest_layers_changes": true,
+      "render_progress_rejection_cases_passed": true
     },
     "fresh_local_clone": {
       "passed": true,
@@ -346,6 +347,21 @@
       },
       "source_changes": [],
       "generated_source_files": []
+    },
+    "forest_layers_three_tree": {
+      "receipt": "reports/forest-layers-20261011-180716-11086/result.json",
+      "receipt_sha256": "029655730c7462303f6e282f3b663b31776bb3ebbd631b4dea35395c5f3e002e",
+      "passed": true,
+      "assertions": 29,
+      "window_samples_clear": 10,
+      "native_collision_matches": 20,
+      "camera_poses": 36,
+      "trunk_contact_cases": 4,
+      "contact_assertions": 19,
+      "full_png_decodes": 10,
+      "motion_verified": false,
+      "art_approved": false,
+      "performance_measured": false
     }
   },
   "benchmarks": [
@@ -536,7 +552,7 @@
     "art/reference acceptance",
     "near-cut paving coverage",
     "aggregate full-route contact gate",
-    "home3 foliage obstruction, closest-home plain side/rear landscape join and full reference fidelity",
+    "exhaustive home3 moving-camera pixel visibility, closest-home plain side/rear landscape join and full reference fidelity",
     "exhaustive camera/character pixel visibility beyond tested outer-tree route",
     "negative-Z background water coverage"
   ],
@@ -544,7 +560,7 @@
     "project.godot": "3c9df5d46e4f3673e78c81e22b5afa06ce50a5b76bf9ab5db0f0993683061e4f",
     "scripts/playable.gd": "3e7674040ef249bda2357f7b75d2d9aebce131e1eb33827c9b07998c0f06c775",
     "scripts/environment_controller.gd": "f0046cfdc0750eab2e0cb68ce282f223c949035537566c91e4fd5ea85d4a4734",
-    "tests/benchmark.gd": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d",
+    "tests/benchmark.gd": "e95bebfcf484cc664b9f7e6af754094a75c59005b3b69aa2cdd8d5039922a615",
     "tests/environment_controller_contract.gd": "bc79ec4cb387041b1275234b9c1dff879ca1ab4ea3dbe91d7b4678c9408e5a90",
     "tests/ground_material_sync.gd": "dd9cf041f0647df4934d14a3b24f7b514aa4f25982c4aef58d3d1fd903f05f0c",
     "lineage/entrance48-player-step-proposal02/player.gd": "8ad3cd5c4da1b4f627748c4180331d3fb29e581af1711b1c5ffc77d722f01d1c",
@@ -557,14 +573,14 @@
     "scripts/paving_preview_prebuilt.gd": "f6b364e68ca21f4ec065943137464ed4df947aab593f1eebbc4329b90d60e6e8",
     "tests/paving_surface.gd": "bcd7d4c2275f02da440889d2faa1df984bd42579dfe55c6da0e8e0892fb960f7",
     "tests/paving_front_surface.gd": "36264ab826922b000888ebb67af9979ee2743cf74c008ee193cc8cb2e6274073",
-    "tools/verify.py": "f91233a88391a3d43e5b6ae40ceb8a8d4e07e936ef0905d9a4404ef253611a3e",
+    "tools/verify.py": "95059b3c7f1af397a849805a8cb6bfb84b0ac461954abe48684e12f2669657a5",
     "scripts/forest_backdrop_prebuilt.gd": "b7f92ec4776f96acd0e6286082582eff6d8db5b87038ea04e27f1aaa93ca3197",
     "tools/author_forest_backdrop.gd": "045e41af690cc3706294fae3679a2766c09f024c290802b2f75ec79ed66901e9",
     "tests/forest_backdrop.gd": "903542eda0ba46eb6bf2be5ae40fea356282a0848085805ab28e91af18b250ab",
     "tests/forest_backdrop_build.gd": "57b99ae49188d61966fdb7adcb92e7cf57e84c1f48dae4c4de047fcbaa87a793",
-    "scripts/forest_enclosure.gd": "10b6423e3a4667cd81749eaf194a45096bca92d1076a1a68b8a4878f8a688983",
+    "scripts/forest_enclosure.gd": "227a84e61fc17bc44c8e170b5cdd4c634f6a8afe8feb8609fef9afa0724cdf14",
     "scripts/air_capsule_guard.gd": "7e8185f41d9e916962e47d20249720175aaa7a184b22de42272a8bb99658f603",
-    "tests/forest_layers.gd": "a29866c5b57657f0de34eb798d13aa421eb07fa7b1606a89c958d4f3d67b4242",
+    "tests/forest_layers.gd": "4fff9e4b6974291249b95d338103470fe68c30f9edd756166868ced2b727ca6b",
     "tests/forest_trunk_contacts.gd": "4f46b344407692666fb1e6ef127c7d4f469ad3a99a9df4a0895b549220b7c534",
     "scripts/outer_tree_contact.gd": "29fc84ef200775ad7c606edde7850977291ad89fff536878cd8fd6445a302348",
     "tests/outer_tree_camera.gd": "b71e53a058a5ce062923b9909447d90f2c7fe46059deb3328c59ff4fa14d260e",
@@ -3353,28 +3369,33 @@
     "offline_fixed_fps": 30,
     "real_time_motion_verified": false,
     "manual_controls_verified": false,
-    "ordinary_ui_verified": false,
-    "ordinary_ui_scope": "Not attempted on mac065; mac064 native UI access failed with cgWindowNotFound. No prior Save/Continue observation transferred.",
+    "ordinary_ui_verified": true,
+    "ordinary_ui_scope": "Two ordinary sessions: Begin/pause/Save & quit and relaunch/Continue restoring Glow; second session night/rain selection/settings/Float. Both exit0 and reaped. Dummy audio; sustained movement/camera comfort and third reopen remain unverified.",
     "live_audio_listening": false,
     "physical_mobile_devices_tested": false,
     "art_approved": false,
     "temporary_stage_removed": true,
     "peak_sampled_owned_allocated_bytes": 810754048,
-    "ordinary_profile_absent": true,
     "uploaded_as_is_authorized": true,
     "known_issues": [
       "Exported p95 frame-time threshold failed (17.524 ms >16.7 ms)",
       "Home3 ground-camera foliage obstruction",
       "Separate paving contact-coverage gate remains failed",
       "Terrain joins, paving fronts, provisional character/interior, reference fidelity",
-      "Manual controls/motion, current ordinary Save/Continue, live listening and physical phones unverified"
+      "Sustained manual controls/motion, live listening and physical phones unverified"
     ],
     "uploaded": true,
     "url": "https://github.com/xingzhao-ji/MUSH/releases/tag/mac065",
     "upload_receipt": "reports/mac065-preparation/upload-verification.json",
     "upload_receipt_sha256": "7e96fd3bbba1e0a6cc1508927d2a9e2c171be74538754a3af06fa898445bb817",
     "delivery_sha256": "c114a3e862ab28e5cd5e3fcbe6e851d5b58a23a2a80deefc8af4ab26d19bdf55",
-    "storage_free_bytes_observed": 13494681600
+    "storage_free_bytes_observed": 13494681600,
+    "ordinary_ui_evidence": {
+      "path": "reports/mac065-continue-ui-20261011-173926/ui-observations.json",
+      "bytes": 1958,
+      "sha256": "9065ad925ec2980451f48c1eac0b7b87cd09141165318427bbd313a772217ec2"
+    },
+    "ordinary_profile_absent_at_package": true
   },
   "source_performance_budget_passed": true,
   "build_import_exclusion": {
@@ -3399,7 +3420,7 @@
     "runtime_changed": false,
     "foliage_trial_integrated": false,
     "free_bytes_observed": 12436209664,
-    "scope": "Actual scene isolation/native samples; no new performance or art acceptance",
+    "scope": "Historical two-tree isolation before the three-tree successor; no new performance or art acceptance in these earlier receipts.",
     "art_result": "Nearer window exposure improves; approach remains obscured; trial not integrated",
     "receipts": {
       "reports/home3-foliage-attribution-20261011-165409-3336/receipt.json": {
@@ -3449,5 +3470,80 @@
     "original_accepted_and_rollback_retained": true,
     "archive_modes_receipt": "reports/duplicate-old-app-cleanup-v2-20261011-172421/archive-mode-readback.json",
     "archive_modes_sha256": "2449f3f8682fe83709febd442a9eac7d3f9541bfeb20fffdde8c57ea7fbcbc6c"
+  },
+  "home3_three_tree_successor": {
+    "scope": "Installed source change, not a newly packaged mac066 or whole-game approval.",
+    "trees": [
+      6,
+      7,
+      8
+    ],
+    "height_scale": 1.0,
+    "root_offsets_integrated": false,
+    "roots_rng_and_other_27_exact": true,
+    "height_cohorts": [
+      12,
+      7,
+      11
+    ],
+    "instances": 450,
+    "triangles": 208920,
+    "spatial_batches": 55,
+    "added_materials": 0,
+    "added_bodies": 0,
+    "added_shapes": 0,
+    "tree6_existing_shapes_rebuilt": 5,
+    "preview": {
+      "path": "reports/home3-cohort-explicit-three-20261011-175429-9668/receipt.json",
+      "bytes": 69671,
+      "sha256": "dc89e17f06624ca80ba52b988ceabc9257a93377c08d8978dff0dd7ac63b94b5"
+    },
+    "preview_checks": 15,
+    "preview_decoded_images": 12,
+    "integrated_forest_checks": 29,
+    "integrated_decoded_images": 10,
+    "comparison_scope": "Preview baseline is immediate mixed layout; integrated suite baseline is preserved all-tall layout. Explicit frozen stills only; no motion or display-presentation qualification.",
+    "window_test": {
+      "static_samples": 10,
+      "clear": 10,
+      "full_pixel_visibility_proved": false
+    },
+    "render_progress": {
+      "schema": "mush-benchmark-render-progress/1",
+      "counter": "Engine.get_frames_drawn",
+      "strictly_advanced_each_csv_interval": true,
+      "csv_columns": 19,
+      "forced_draw": false,
+      "old_receipts_retroqualified": false,
+      "unit_tests": 8
+    },
+    "benchmark": {
+      "status": "closed_pass",
+      "receipt": "reports/benchmark-20261011-182401-12470/result.json",
+      "receipt_sha256": "4e28ffc306fa623fb787e64e3e9b8ec04342c54c0555ea8f4707351e33d87aff",
+      "passed": true,
+      "frames": 13889,
+      "frame_p95_ms": 11.575,
+      "frame_p99_ms": 13.188,
+      "route_loops_completed": 2,
+      "route_stalls": 0,
+      "render_resolution": [
+        1920,
+        1080
+      ],
+      "vsync": 1,
+      "engine_draw_progress_valid": true,
+      "gpu_timing_available": false,
+      "display_presentation_measured": false,
+      "physical_device_tested": false,
+      "causal_improvement_claimed": false
+    },
+    "mac066": {
+      "status": "planned_not_exported"
+    },
+    "art_approved": false,
+    "continuous_motion_verified": false,
+    "live_listening_verified": false,
+    "physical_mobile_tested": false
   }
 }

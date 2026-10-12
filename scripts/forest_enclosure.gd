@@ -2,6 +2,7 @@ extends RefCounted
 ## Three height groups reuse the existing meshes, materials and private seed.
 ## Four reachable stems receive cheap static collision. Crowns stay visual.
 ## reference_layout reproduces the preceding constructor for paired verification.
+const HOME_VIEW_TALL_TREES: Array[int] = [6,7,8]
 
 static func build(world: Node3D, reference_layout: bool=false) -> Dictionary:
 	var foliage_mesh: Mesh
@@ -28,6 +29,7 @@ static func build(world: Node3D, reference_layout: bool=false) -> Dictionary:
 	var positions: Array[Vector3] = []
 	var solid_count: int = 0
 	var collision_shell_bound: float = 0.0
+	var height_cohorts: Array[int] = [0,0,0]
 	# These radii are within the existing 22–32 m visual forest ring.
 	for index: int in range(22):
 		var angle: float = lerpf(-1.48,1.48,float(index)/21.0)
@@ -42,6 +44,10 @@ static func build(world: Node3D, reference_layout: bool=false) -> Dictionary:
 		if not reference_layout and origin.x>7.3 and origin.x<10.7: origin.x=11.4
 		var tier: int = index % 7
 		var height_scale: float = 1.0 if reference_layout else (.34 if tier in [0,3,5] else (.55 if tier in [1,6] else 1.0))
+		# Lift the canopy above the distant home's window; roots remain anchored.
+		# Stems, branches and existing collision are built from this same scale.
+		if not reference_layout and index in HOME_VIEW_TALL_TREES: height_scale=1.0
+		height_cohorts[0 if height_scale<.4 else (1 if height_scale<.8 else 2)]+=1
 		var spread_scale: float = .85 if height_scale < .4 else (.94 if height_scale < .8 else 1.0)
 		var crown_y: float = .78 if height_scale < .4 else (.90 if height_scale < .8 else 1.0)
 		var height: float = random.randf_range(8.4,12.8)*height_scale
@@ -85,7 +91,7 @@ static func build(world: Node3D, reference_layout: bool=false) -> Dictionary:
 	cylinder.rings = 1
 	var draws: int = _install_chunks(root,"BentTrunks",cylinder,world._materials.bark,trunks,0.0)
 	draws += _install_chunks(root,"LayeredCanopies",foliage_mesh,foliage_material,crowns,.03)
-	return {"schema":"mush-forest-middle-layer/1","trees":positions.size(),"trunk_segments":trunks.size(),"canopy_clusters":crowns.size(),"additional_draw_nodes":draws,"spatial_chunk_size_m":8.0,"seed":530052,"new_colliders":solid_count,"new_collision_shapes":solid_count*5,"maximum_trunk_collision_shell_m":collision_shell_bound,"height_cohorts":[0,0,30] if reference_layout else [13,9,8],"height_scales":[1.0] if reference_layout else [.34,.55,1.0],"stream_root_shifted":0 if reference_layout else 1,"reference_layout":reference_layout,"new_playable_area":false,"shared_existing_wind_material":true,"art_approved":false}
+	return {"schema":"mush-forest-middle-layer/1","trees":positions.size(),"trunk_segments":trunks.size(),"canopy_clusters":crowns.size(),"additional_draw_nodes":draws,"spatial_chunk_size_m":8.0,"seed":530052,"new_colliders":solid_count,"new_collision_shapes":solid_count*5,"maximum_trunk_collision_shell_m":collision_shell_bound,"height_cohorts":height_cohorts,"height_scales":[1.0] if reference_layout else [.34,.55,1.0],"stream_root_shifted":0 if reference_layout else 1,"reference_layout":reference_layout,"new_playable_area":false,"shared_existing_wind_material":true,"art_approved":false}
 
 static func _segment(start: Vector3,finish: Vector3,radius: float) -> Transform3D:
 	var direction: Vector3 = finish-start

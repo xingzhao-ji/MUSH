@@ -6,6 +6,9 @@ var inventories: Dictionary
 var geometry_hash: String
 var physics_hash: String
 var clearance_report: Dictionary={}
+var still_draws: int=0
+
+func _still_drawn() -> void: still_draws+=1
 
 func _run() -> void:
 	for arg: String in OS.get_cmdline_user_args():
@@ -19,6 +22,7 @@ func _run() -> void:
 	if not _check("Actual rendered startup with fresh test profile",controller!=null and game.world.snapshot_loaded and str(game.store.directory).begins_with("user://verification/") and DisplayServer.get_name()!="headless"):
 		_finish(); return
 	owner=game.world.paving_preview_prebuilt
+	RenderingServer.frame_post_draw.connect(_still_drawn)
 	game.get_window().unfocusable=true; game.get_window().mouse_passthrough=true
 	game.set_process(false); game.set_physics_process(false); game.set_process_input(false); game.set_process_unhandled_input(false)
 	game.player.release_controls(); game.player.enabled=false
@@ -41,8 +45,10 @@ func _run() -> void:
 	for row: Dictionary in inventories.baseline.nodes: lines.append(row.name+"="+row.buffer_sha256)
 	lines.sort()
 	_check("Reference constructor reproduces all preceding native chunk buffers",_sha("\n".join(lines).to_utf8_buffer())=="1ddd6241fbc22f8ead63b294cf26a00d3f4b236ab9b2075c1028cb0fb3fc997f")
-	_check("Ordinary startup owns corrected layout and fixed native camera inset",candidate_report.height_cohorts==[13,9,8] and candidate_report.stream_root_shifted==1 and game.player.get_camera().get_parent().name=="ShapeCastCameraMargin" and game.player.get_camera().position==Vector3(0,0,-.05))
+	_check("Ordinary startup owns corrected layout and fixed native camera inset",candidate_report.height_cohorts==[12,7,11] and candidate_report.stream_root_shifted==1 and game.player.get_camera().get_parent().name=="ShapeCastCameraMargin" and game.player.get_camera().position==Vector3(0,0,-.05))
 	await _native_clearance()
+	clearance_report["home_window"]=_home_window_sightlines(game.world)
+	_check("Ten installed native window sightlines clear",clearance_report.home_window.passed)
 	var contacts: RefCounted=load("res://tests/forest_trunk_contacts.gd").new()
 	clearance_report["contacts"]=await contacts.run(game,trial)
 	_check("Actual trunk blocking/sliding regression",clearance_report.contacts.passed)
@@ -68,10 +74,14 @@ func _forest_pair(label: String) -> void:
 	var settled_rest:=_rest()
 	for after: bool in [false,true]:
 		baseline.visible=not after; trial.visible=after
-		await _frames(10); await RenderingServer.frame_post_draw
+		await _frames(10)
+		var draw_start: int=still_draws
+		# Explicit GPU stills remain valid when macOS occludes the QA window.
+		# These captures do not qualify presentation cadence or motion.
+		RenderingServer.force_draw(true,0.0); RenderingServer.force_draw(true,0.0)
 		var frame: Image=root.get_texture().get_image(); frame.convert(Image.FORMAT_RGBA8)
 		var name:=label+("-after.png" if after else "-before.png")
-		var ok:=frame.get_size()==Vector2i(1280,720) and frame.save_png(output.path_join(name))==OK and _held()==held and _rest()==settled_rest and _bodies()==physics_hash
+		var ok:=still_draws>=draw_start+2 and frame.get_size()==Vector2i(1280,720) and frame.save_png(output.path_join(name))==OK and _held()==held and _rest()==settled_rest and _bodies()==physics_hash
 		_check(name+": frozen context and pre-existing rest/collision exact",ok)
 		views.append({"file":name,"passed":ok,"sha256":FileAccess.get_sha256(output.path_join(name)),"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)})
 	baseline.show(); trial.hide()
@@ -117,7 +127,7 @@ func _finish() -> void:
 	var failed:=0
 	for row: Dictionary in checks:
 		if not row.passed: failed+=1
-	FileAccess.open(output.path_join("forest-layers.json"),FileAccess.WRITE).store_string(JSON.stringify({"passed":failed==0,"checks":checks,"views":views,"candidate_report":candidate_report,"camera":camera_rows,"clearance":clearance_report,"inventories":inventories,"motion_verified":false,"art_approved":false,"performance_measured":false},"  "))
+	FileAccess.open(output.path_join("forest-layers.json"),FileAccess.WRITE).store_string(JSON.stringify({"passed":failed==0,"checks":checks,"views":views,"capture_method":"two explicit RenderingServer redraws per frozen still","candidate_report":candidate_report,"camera":camera_rows,"clearance":clearance_report,"inventories":inventories,"motion_verified":false,"art_approved":false,"performance_measured":false},"  "))
 	print("FOREST_COMPLETE ",failed," failures")
 	if is_instance_valid(game): game._quit_clean(0 if failed==0 else 2)
 	else: quit(2)
@@ -246,3 +256,67 @@ func _trunk_camera_check() -> void:
 	_check("Twelve actual camera-sphere poses clear the four new trunks",valid and count==12)
 	_check("Native spring arm responds to all four trunks",shortened==4)
 	_check("Camera checks leave original bodies exact",_bodies()==physics_hash)
+
+
+func _home_window_sightlines(world: Node3D) -> Dictionary:
+	var result: Dictionary={"passed":false,"diagnostic_integrity":false,"clear":false,"samples":[],"owners":[],"instances":0,"scope":"Ten static native segment samples against installed middle-layer trunks/crowns only. Shader wind/opacity, other scenery, complete pixels and ordinary-camera paths are not qualified."}
+	var group: Node3D=world.get_node_or_null("ForestMiddleLayer") as Node3D
+	var home: Node3D=world.get_node_or_null("ForestBeyondTheClearing/@Node3D@3802") as Node3D
+	var window: Node3D=home.get_node_or_null("@Node3D@3807") as Node3D if home!=null else null
+	if group==null or home==null or window==null or not world.distant_home_placement_report.get("installed",false) or home.global_position!=Vector3(-15.5,5.2,-24.5) or window.transform!=Transform3D(Basis.IDENTITY,Vector3(0,.98,.73)): return result
+	var cache: Dictionary={}; var entries: Array[Dictionary]=[]
+	for child: Node in group.get_children():
+		if not child is MultiMeshInstance3D: continue # Existing bodies are not render owners.
+		var node: MultiMeshInstance3D=child
+		if node.multimesh==null or node.multimesh.mesh==null or not (str(node.name).begins_with("BentTrunks_") or str(node.name).begins_with("LayeredCanopies_")): return result
+		var mesh: Mesh=node.multimesh.mesh; var id: int=mesh.get_instance_id()
+		if not cache.has(id): cache[id]=_sightline_faces(mesh)
+		if cache[id].is_empty(): return result
+		var path: String=str(world.get_path_to(node))
+		result.owners.append({"path":path,"instances":node.multimesh.instance_count,"mesh_id":id,"faces_sha256":_sha(cache[id].to_byte_array())})
+		for index: int in range(node.multimesh.instance_count):
+			var pose: Transform3D=node.global_transform*node.multimesh.get_instance_transform(index)
+			if not pose.is_finite() or pose.basis.determinant()<=0.000001: return result
+			entries.append({"path":path,"instance":index,"pose":pose,"bounds":pose*mesh.get_aabb(),"faces":cache[id]})
+	result.instances=entries.size()
+	if entries.size()!=450: return result
+	var offsets: Array[Vector2]=[Vector2.ZERO,Vector2(-.10,-.15),Vector2(.10,-.15),Vector2(-.10,.15),Vector2(.10,.15)]
+	var all_clear: bool=true
+	for camera: Dictionary in [{"name":"ground","position":Vector3(-10.9,1.65,-19.1)},{"name":"approach","position":Vector3(-9,1.8,-15)}]:
+		for sample: int in range(offsets.size()):
+			var point: Vector3=window.global_transform*Vector3(offsets[sample].x,offsets[sample].y,0)
+			var box: AABB=AABB(camera.position,Vector3.ZERO).expand(point).grow(.00001)
+			var hits: Array[Dictionary]=[]
+			for entry: Dictionary in entries:
+				if not box.intersects(entry.bounds): continue
+				var inverse: Transform3D=entry.pose.affine_inverse(); var start: Vector3=inverse*camera.position; var end: Vector3=inverse*point
+				var count: int=0; var nearest: float=INF; var triangle: int=-1
+				for first: int in range(0,entry.faces.size(),3):
+					var hit: Variant=Geometry3D.segment_intersects_triangle(start,end,entry.faces[first],entry.faces[first+1],entry.faces[first+2])
+					if hit==null: continue
+					count+=1
+					var distance: float=camera.position.distance_to(entry.pose*hit)
+					if distance<nearest: nearest=distance; triangle=int(first/3)
+				if count>0: hits.append({"path":entry.path,"instance":entry.instance,"triangle_hits":count,"nearest_triangle":triangle,"nearest_distance_m":nearest})
+			hits.sort_custom(func(a: Dictionary,b: Dictionary) -> bool: return a.nearest_distance_m<b.nearest_distance_m)
+			all_clear=all_clear and hits.is_empty()
+			result.samples.append({"camera":camera.name,"sample":sample,"offset":[offsets[sample].x,offsets[sample].y],"target":[point.x,point.y,point.z],"clear":hits.is_empty(),"hits":hits})
+	result.diagnostic_integrity=result.samples.size()==10; result.clear=all_clear; result.passed=result.diagnostic_integrity and all_clear
+	return result
+
+func _sightline_faces(mesh: Mesh) -> PackedVector3Array:
+	var faces: PackedVector3Array=PackedVector3Array()
+	if not (mesh is ArrayMesh or mesh is CylinderMesh): return faces
+	for surface: int in range(mesh.get_surface_count()):
+		if int(RenderingServer.mesh_get_surface(mesh.get_rid(),surface).get("primitive",-1))!=Mesh.PRIMITIVE_TRIANGLES: return PackedVector3Array()
+		var arrays: Array=mesh.surface_get_arrays(surface)
+		if arrays.size()!=Mesh.ARRAY_MAX or not arrays[Mesh.ARRAY_VERTEX] is PackedVector3Array: return PackedVector3Array()
+		var points: PackedVector3Array=arrays[Mesh.ARRAY_VERTEX]; var indices: Variant=arrays[Mesh.ARRAY_INDEX]
+		if indices!=null and not indices is PackedInt32Array: return PackedVector3Array()
+		var count: int=indices.size() if indices!=null and not indices.is_empty() else points.size()
+		if count==0 or count%3!=0: return PackedVector3Array()
+		for corner: int in range(count):
+			var index: int=int(indices[corner]) if indices!=null and not indices.is_empty() else corner
+			if index<0 or index>=points.size() or not points[index].is_finite(): return PackedVector3Array()
+			faces.append(points[index])
+	return faces

@@ -27,6 +27,9 @@ var save_ms:float=0
 var rss_samples:Array=[]
 var pipeline_draw_at_start:float=0
 var pacing_at_start:Dictionary={}
+var draw_counts:Array[int]=[]
+var last_draw_count:int=0
+var draw_count_before_first_sample:int=0
 
 func _ready() -> void:
 	game=get_parent()
@@ -86,6 +89,7 @@ func _ready() -> void:
 	raw=FileAccess.open(output.path_join("%s-%d.csv"%[scenario,repetition]),FileAccess.WRITE)
 	raw.store_line("time_s,frame_ms,cpu_render_ms,gpu_render_ms,process_ms,physics_ms,static_memory_bytes,render_memory_bytes,draw_calls,objects,primitives,player_x,player_y,player_z,route_step,pipeline_draw_compilations,camera_fade,first_mesh_transparency,cream_emission_enabled")
 	last_tick=Time.get_ticks_usec()
+	last_draw_count=Engine.get_frames_drawn()
 	start_memory=Performance.get_monitor(Performance.MEMORY_STATIC)
 	pipeline_draw_at_start=Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)
 	pacing_at_start=_pacing_state()
@@ -123,11 +127,16 @@ func _physics_process(delta:float) -> void:
 
 func _process(_delta:float) -> void:
 	if raw==null: return
+	var drawn_now:int=Engine.get_frames_drawn()
+	var drawn_before:int=last_draw_count
+	last_draw_count=drawn_now
 	var now:int=Time.get_ticks_usec()
 	var dt:float=(now-last_tick)/1000.0
 	last_tick=now
 	elapsed+=_delta if movie else dt/1000.0
 	if elapsed<warmup: return
+	if draw_counts.is_empty(): draw_count_before_first_sample=drawn_before
+	draw_counts.append(drawn_now)
 	var rid:RID=get_viewport().get_viewport_rid()
 	var cpu:float=RenderingServer.viewport_get_measured_render_time_cpu(rid)+RenderingServer.get_frame_setup_time_cpu()
 	var gpu:float=RenderingServer.viewport_get_measured_render_time_gpu(rid)
@@ -144,6 +153,15 @@ func _percentile(values:Array[float],percent:float) -> float:
 	var sorted:Array[float]=values.duplicate()
 	sorted.sort()
 	return sorted[mini(sorted.size()-1,int(ceil(percent*sorted.size())-1))] if not sorted.is_empty() else 0.0
+
+func _draw_progress() -> Dictionary:
+	var previous:int=draw_count_before_first_sample
+	var undrawn:int=0; var backwards:int=0
+	for count:int in draw_counts:
+		if count==previous: undrawn+=1
+		if count<previous: backwards+=1
+		previous=count
+	return {"schema":"mush-benchmark-render-progress/1","counter":"Engine.get_frames_drawn","before_first_sample":draw_count_before_first_sample,"sample_counts":draw_counts,"undrawn_callbacks":undrawn,"backwards_callbacks":backwards,"valid":not draw_counts.is_empty() and draw_counts.size()==frame_times.size() and undrawn==0 and backwards==0,"scope":"Engine draw advancement before every measured process sample; not viewport pixels or display presentation. No explicit redraws are issued."}
 
 func _finish() -> void:
 	Input.action_release("move_forward")
@@ -168,8 +186,10 @@ func _finish() -> void:
 		"night_amount": float(game.world.night_amount),
 		"rain_amount": float(game.world.rain_amount)
 	}
+	result["render_progress"]=_draw_progress()
+	result["render_measurement_valid"]=result.render_progress.valid
 	result["measurement_kind"]="fixed_step_traversal_movie" if movie else "wall_clock_native_route"
-	result["frame_targets_passed"]=null if movie else result.frame_p95_ms<=16.7 and result.frame_p99_ms<=33.3
+	result["frame_targets_passed"]=null if movie else result.render_measurement_valid and result.frame_p95_ms<=16.7 and result.frame_p99_ms<=33.3
 	if mobile_probe:
 		result["measurement_kind"]="short_desktop_renderer_comparison"
 		result["frame_targets_passed"]=null

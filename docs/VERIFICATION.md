@@ -1089,3 +1089,58 @@ Receipt: `reports/duplicate-old-app-cleanup-v2-20261011-172421/receipt.json`;
 The saved `before.json` records full app identities. Recovery is extraction of
 each retained `MUSH.zip` into its original build directory; recreation necessarily
 changes inode/ctime. No unique build, source, asset, save or evidence was deleted.
+
+
+## Third-home view and benchmark draw qualification
+
+The installed source raises only seeded trees 6, 7 and 8 to the existing tall
+cohort. All 30 roots, random-call order and the other 27 trees remain exact.
+Native meshes/materials are reused: 450 instances, 208,920 triangles and 55
+spatial batches remain. Cohorts are now 12 low / 7 medium / 11 tall. Tree6's five
+existing cylinder shapes regenerate coherently; no new body, material or frame
+loop is added. The optional root-offset helper is not integrated.
+
+The immediate mixed-layout preview passes 15 checks and 12 fully decoded
+1280 × 720 stills. Reviewed pairs expose the window in both fixed ground/approach
+views in day and night; a natural partial trunk/roof overlap remains. The
+integrated forest suite passes **29 checks**, ten clear static window segments,
+20 native stem/collider matches, 36 camera poses, four contact cases / 19 checks
+and ten decoded images. Its “before” uses the preserved all-tall constructor,
+not the immediate mixed predecessor. The separate preview supplies that direct
+comparison. Two explicit [RenderingServer redraws](https://docs.godotengine.org/en/stable/classes/class_renderingserver.html#class-renderingserver-method-force-draw) are used for frozen stills;
+this does not qualify normal presentation, motion, shader-displaced pixel
+visibility or benchmark timing. Earlier passive-draw failures remain failed.
+
+Fresh gameplay passes **295 assertions across 15 scenarios**, with source
+contents unchanged. Receipts:
+
+- `reports/home3-cohort-explicit-three-20261011-175429-9668/receipt.json`
+- `reports/forest-layers-20261011-180716-11086/result.json`
+- `reports/acceptance-20261011-181134-11368/result.json`
+
+The benchmark now records Engine.get_frames_drawn in JSON for every measured
+CSV interval, including its preceding callback baseline. Validation requires
+strictly positive advancement for every sample and rejects absent, partial,
+frozen or decreasing telemetry. The 19 CSV columns and 16.7/33.3 ms budgets are
+unchanged; benchmarking issues no explicit redraws. Eight runner unit tests
+pass, including advancing, frozen/backward and missing/partial counter cases.
+This detects undrawn callback intervals, not viewport pixels or display
+presentation. Historical receipts are not retroqualified.
+
+The current 120-second night/rain source benchmark passes: **p95 11.575 ms /
+p99 13.188 ms**, 13,889 samples, two loops and zero stalls at 1920 × 1080,
+VSync 1. Engine draw advancement is strictly positive for every measured
+callback interval. No GPU/display, physical-device or causal improvement is
+proved. Receipt: `reports/benchmark-20261011-182401-12470/result.json`.
+mac066 export is planned; no new app, archive or exported benchmark is claimed.
+The authorized as-is mac065 upload and both failed p95 routes remain failed.
+
+Two ordinary mac065 UI sessions now qualify Begin, pause, Save & quit and
+relaunch/Continue restoring Glow. The second session also observes night/rain
+selection, settings navigation and Float toggle. Both owned processes exited 0
+and were reaped, preserving source, app/archive and prior profiles. No third
+relaunch verified the second night/rain save. Evidence:
+`reports/mac065-continue-ui-20261011-173926/ui-observations.json`, with both
+session receipts linked there. Dummy audio leaves listening unverified.
+Sustained manual movement/camera comfort, continuous motion, whole-game art,
+physical phones and paving contact coverage remain open.

@@ -134,6 +134,23 @@ def run(command, output, label, timeout):
     return result
 
 
+def inspect_render_progress(progress, frames):
+    """Reject callback metrics without actual engine draw advancement."""
+    assert isinstance(progress, dict), "Missing render-progress telemetry"
+    assert progress.get("schema") == "mush-benchmark-render-progress/1"
+    assert progress.get("counter") == "Engine.get_frames_drawn"
+    counts = progress.get("sample_counts")
+    previous = progress.get("before_first_sample")
+    assert type(previous) is int and previous >= 0
+    assert isinstance(counts, list) and frames > 0 and len(counts) == frames
+    for count in counts:
+        assert type(count) is int and count > previous, "Undrawn benchmark callback interval"
+        previous = count
+    assert progress.get("valid") is True
+    assert progress.get("undrawn_callbacks") == progress.get("backwards_callbacks") == 0
+    return {"engine_draw_progress_valid": True, "samples": frames}
+
+
 def inspect(suite, output, duration, expected_vsync=1):
     if suite == "import":
         return {"import_passed": True}
@@ -151,6 +168,8 @@ def inspect(suite, output, duration, expected_vsync=1):
         with (output / "worst-1.csv").open(newline="") as stream:
             rows = list(csv.DictReader(stream))
         assert rows and len(rows) == report["frames"]
+        inspect_render_progress(report.get("render_progress"), len(rows))
+        assert report["render_measurement_valid"] is True
         assert all(len(row) == 19 and None not in row for row in rows)
         values = [{k: float(v) for k, v in row.items()} for row in rows]
         assert all(math.isfinite(value) for row in values for value in row.values())
@@ -169,12 +188,14 @@ def inspect(suite, output, duration, expected_vsync=1):
         assert report["vsync"] == expected_vsync
         assert report["limit_p95_ms"] == 16.7 and report["limit_p99_ms"] == 33.3
         assert p95 <= 16.7 and p99 <= 33.3
+        assert report["frame_targets_passed"] is True
         return {"frames": len(frames), "frame_p95_ms": p95, "frame_p99_ms": p99,
                 "route_stalls": 0, "thresholds_passed": True,
                 "route_loops_completed": report["route_loops_completed"],
                 "render_resolution": report["render_resolution"],
                 "vsync": report["vsync"],
                 "gpu_timing_available": report["gpu_timing_available"],
+                "engine_draw_progress_valid": True,
                 "physical_device_tested": False, "display_presentation_measured": False}
     if suite in ("paving", "paving-front"):
         report = read_report(output / "native/paving-surface.json")
@@ -285,6 +306,10 @@ def inspect(suite, output, duration, expected_vsync=1):
         contacts = report["clearance"]["contacts"]
         assert contacts["passed"] and len(contacts["cases"]) == 4
         assert report["clearance"]["root_queries"] == 30 and report["clearance"]["leaf_penetrations"] == 0
+        window = report["clearance"]["home_window"]
+        assert window["passed"] and window["diagnostic_integrity"] and window["instances"] == 450
+        assert len(window["samples"]) == 10 and all(row["clear"] for row in window["samples"])
+        assert report["candidate_report"]["height_cohorts"] == [12, 7, 11]
         assert report["inventories"]["trial"]["instances"] == 450 and report["inventories"]["trial"]["draw_nodes"] == 55
         spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)

@@ -90,5 +90,28 @@ class VerificationReceipts(unittest.TestCase):
                         verify.inspect("home-placement", Path("unused"), 120)
 
 
+class BenchmarkDrawProgress(unittest.TestCase):
+    @staticmethod
+    def progress(counts):
+        return {"schema": "mush-benchmark-render-progress/1", "counter": "Engine.get_frames_drawn",
+                "before_first_sample": 100, "sample_counts": counts, "valid": True,
+                "undrawn_callbacks": 0, "backwards_callbacks": 0}
+
+    def test_advancing_renderer(self):
+        result = verify.inspect_render_progress(self.progress([101, 102, 104]), 3)
+        self.assertTrue(result["engine_draw_progress_valid"])
+
+    def test_fast_callbacks_cannot_hide_a_frozen_renderer(self):
+        # Reject even a report that incorrectly claims validity and zero gaps.
+        for counts in ([100, 101, 102], [101, 101, 102], [101, 99, 102]):
+            with self.subTest(counts=counts), self.assertRaises(AssertionError):
+                verify.inspect_render_progress(self.progress(counts), 3)
+
+    def test_missing_or_incomplete_draw_evidence(self):
+        for progress in (None, {}, self.progress([101, 102])):
+            with self.subTest(progress=progress), self.assertRaises(AssertionError):
+                verify.inspect_render_progress(progress, 3)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -19,8 +19,8 @@
       "sha256": "4b9f9d741670ae13b362a357c886868e8fcb3a89830b4ad2f82f5dfbc2096974"
     },
     "README.md": {
-      "bytes": 5588,
-      "sha256": "5727262f3576e857fd35f00bfe6ea8d3826958eb3e944c7659d39b63b00c18e0"
+      "bytes": 6014,
+      "sha256": "93cef08fdec79a5b21f2bf1b156f89188e0c4d03d98128de650e824a022c5555"
     },
     "assets/audio/clearing-reverie.mp3": {
       "bytes": 4834993,
@@ -419,20 +419,20 @@
       "sha256": "ea52b47cbe38520bf975cd8c076167fe51967462207655ab44c6741480473e07"
     },
     "docs/STATUS.md": {
-      "bytes": 7579,
-      "sha256": "d342d5e8352649a8eca5b7271e92a25bbc309ea69e43980f30dd1ee81a2b527d"
+      "bytes": 8430,
+      "sha256": "ac5f108854b1fa5ce05392d1f805f37b76848123f265429e9bcc24afa4e20d1b"
     },
     "docs/VERIFICATION.md": {
-      "bytes": 75894,
-      "sha256": "fd19a5b211273a6e403c17a6de16deeea8d407b1a8cae1992bd92a267445cda8"
+      "bytes": 79377,
+      "sha256": "3e49b4b384de9303cf09c70c5cbedd5341020bf7419e9cf1db05a5d19da9980e"
     },
     "docs/superpowers/plans/2026-10-11-clean-repository.md": {
       "bytes": 1966,
       "sha256": "71b52ac1748ba9e8567c5485cb3033f616c1a7e07186df92924a873137b46c3a"
     },
     "docs/verification-summary.json": {
-      "bytes": 153414,
-      "sha256": "8c77bfe44c2c7a2efe2094930329f4fae2054a7ad6af68a681abe9bce279f52b"
+      "bytes": 156790,
+      "sha256": "3d7eb359b597497ee16ba6a69d56bfa25d077aae1a723bbb1a73ec51f255505c"
     },
     "export_presets.cfg": {
       "bytes": 1136,
@@ -799,8 +799,8 @@
       "sha256": "2babb2c130cd44e1838e34df03dcc9eb456a95c434d141bd50e569923fe3d0bb"
     },
     "scripts/forest_enclosure.gd": {
-      "bytes": 7089,
-      "sha256": "10b6423e3a4667cd81749eaf194a45096bca92d1076a1a68b8a4878f8a688983"
+      "bytes": 7458,
+      "sha256": "227a84e61fc17bc44c8e170b5cdd4c634f6a8afe8feb8609fef9afa0724cdf14"
     },
     "scripts/forest_enclosure.gd.uid": {
       "bytes": 20,
@@ -967,8 +967,8 @@
       "sha256": "1c2da64bf46012bd95c90e2ccf0dd20a73e508348e65e36f1e8975b281ef4f19"
     },
     "tests/benchmark.gd": {
-      "bytes": 13031,
-      "sha256": "16b6413d4c65596bdb007922ca85170c48e362bd381a57e30543f81b5d90bf0d"
+      "bytes": 14261,
+      "sha256": "e95bebfcf484cc664b9f7e6af754094a75c59005b3b69aa2cdd8d5039922a615"
     },
     "tests/benchmark.gd.uid": {
       "bytes": 20,
@@ -1031,8 +1031,8 @@
       "sha256": "05f27706776ed0913385f010a1e2f62495875d75ffb34af58093dd89d3016dd1"
     },
     "tests/forest_layers.gd": {
-      "bytes": 17538,
-      "sha256": "a29866c5b57657f0de34eb798d13aa421eb07fa7b1606a89c958d4f3d67b4242"
+      "bytes": 23168,
+      "sha256": "4fff9e4b6974291249b95d338103470fe68c30f9edd756166868ced2b727ca6b"
     },
     "tests/forest_layers.gd.uid": {
       "bytes": 20,
@@ -1191,8 +1191,8 @@
       "sha256": "d969a5b951dccb6742958bd57e3812f2e9661cf2b4f86773e8cc0cd48f43965c"
     },
     "tests/test_verify_runner.py": {
-      "bytes": 4847,
-      "sha256": "c3daeda8f82dfd023b54a2b313bf54e22bb92f6d918c301364b5376a1a7aedbf"
+      "bytes": 6014,
+      "sha256": "22abcc08cd3fd818a14102440d83a9bb2217d870e18d88566fb5177f25b086a3"
     },
     "tests/ui_review.gd": {
       "bytes": 14258,
@@ -1259,8 +1259,8 @@
       "sha256": "052d282b7e239bc839076ad85c45b41ac3d37a1814ac94301565c2b39d6ebc09"
     },
     "tools/verify.py": {
-      "bytes": 33443,
-      "sha256": "f91233a88391a3d43e5b6ae40ceb8a8d4e07e936ef0905d9a4404ef253611a3e"
+      "bytes": 34898,
+      "sha256": "95059b3c7f1af397a849805a8cb6bfb84b0ac461954abe48684e12f2669657a5"
     }
   }
 }
