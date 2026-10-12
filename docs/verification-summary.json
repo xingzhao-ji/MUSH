@@ -3725,5 +3725,24 @@
     "mac065_mac066_accepted_and_rollback_retained": true,
     "free_bytes_after": 12795944960,
     "next_export_requires_fresh_12GiB": true
+  },
+  "paving_tangent_diagnostic": {
+    "receipt": "reports/paving-tangent-20261011-191956-29706/receipt.json.gz",
+    "native_report": "reports/paving-tangent-20261011-191956-29706/native/tangent-envelope.json",
+    "sha256": "efebf6e9cfeb43dd4317796612e37f425e53f9b644deea87348f6adafb1d3859",
+    "checks_passed": 107,
+    "samples": 24,
+    "native_queries": 48,
+    "faces": 14,
+    "eligible_roof_contacts": 0,
+    "saturated_queries": 0,
+    "moving_contact_coverage_earned": false,
+    "full_traversal_gate": "failed; unchanged",
+    "scope": "Bounded native queries only; not universal reachability or movement-defect proof."
+  },
+  "character_direction": {
+    "user_choice": "Refine the current cream woodland creature",
+    "date": "2026-10-11",
+    "current_model_or_motion_accepted": false
   }
 }

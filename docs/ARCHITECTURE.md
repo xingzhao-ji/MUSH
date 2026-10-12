@@ -68,15 +68,17 @@ does not isolate the extra terrain/water fragment cost or establish a speedup.
 
 The existing native forest constructor keeps seed 530052 and the same 450
 instances/208,920 triangles, grouped into 8 m MultiMesh chunks. Height groups
-(13 low, nine medium, eight tall) change transforms rather than assets. Root
-positions remain anchored; one former river root moves to the east bank. Native
+(12 low, seven medium, 11 tall) change transforms rather than assets. Root
+positions remain anchored; one former river root moves to the east bank. Trees 6,
+7 and 8 use the existing tall form to clear sampled views of the distant home;
+Tree 6’s existing five collision shapes use the same new stem geometry. Native
 meshes and shared foliage wind materials are reused. There are 55 draw nodes,
 previously 56. The existing shadow-off policy for this supplementary layer is
 retained; this does not qualify near-player tree shadow/contact quality.
 
 Four reachable main stems gain five static CylinderShape3D segments each. They
 follow the visible segment pose without nonuniform physics scaling. The circular
-cylinder conservatively encloses the octagonal taper with at most a 6.27 cm shell;
+cylinder conservatively encloses the octagonal taper with at most a 7.52 cm shell;
 branches/crowns remain visual. Existing unsafe-support metadata blocks Float and
 safe-save support. Native broad-phase/query work depends on scene contents; no
 per-leaf body or script simulation is added. Construction uses expected

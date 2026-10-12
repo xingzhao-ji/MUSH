@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **The latest mac065 app fails its p95 route budget, including an unchanged repeat; the separately recorded source route passes. Earlier results remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **Current mac066 source and export routes pass their recorded callback budgets with engine draw progress. The older mac065 app fails p95, including an unchanged repeat; those failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -1204,3 +1204,28 @@ is extraction of its retained `MUSH.zip` into the original build directory;
 inode/ctime necessarily change. The immediate observed free-space sample is
 12,795,944,960bytes (11.92GiB); no exclusive APFS free-space attribution is made.
 The10GiB runtime floor remains; any later export needs fresh12GiB admission.
+
+
+## Bounded slope-adjusted paving contact diagnostic
+
+The previous direct-over-roof probes did not account for capsule tangency on
+sloped triangles. This diagnostic derives the lower-sphere center from the actual
+0.28 m radius capsule and offsets each roof point along its native face normal.
+The available near-cut inset pool contains 47 points across 14 walkable faces;
+24 samples cover all 14 faces and offsets up to 8.524 cm. Each receives one
+short roof-confirmation ray and two downward native capsule queries, with the
+actual 5 mm margin and both recovery modes. No body is teleported or driven.
+
+The native run passes 107 diagnostic checks. All 24 rays confirm the roof,
+but the 48 capsule queries yield zero qualifying roof contacts and no saturated
+contact lists. The 218 indexed contacts comprise 188 upper-stone contacts and
+30 without a classified upper region. Player/query state, installed geometry,
+source, ordinary saves, prior profiles and retained app/archive metadata remain
+exact. The process exits 0 and is reaped. This strengthens the bounded bridging
+evidence; it does not prove universal unreachability or a movement defect. The
+164/165 traversal result and its failed coverage gate remain unchanged.
+
+Receipt: `reports/paving-tangent-20261011-191956-29706/receipt.json.gz`.
+Native report: `native/tangent-envelope.json`, SHA256
+`efebf6e9cfeb43dd4317796612e37f425e53f9b644deea87348f6adafb1d3859`.
+No runtime change, new dependency or performance gain is claimed.
