@@ -1144,3 +1144,63 @@ relaunch verified the second night/rain save. Evidence:
 session receipts linked there. Dummy audio leaves listening unverified.
 Sustained manual movement/camera comfort, continuous motion, whole-game art,
 physical phones and paving contact coverage remain open.
+
+
+## mac066 packaged verification
+
+Source `b5c9f616ecfe6b1937f185a8dc1eb4dcdaea051e` produced
+`builds/mac-20261011-183516-13113/MUSH.app`. Package startup12, Universal
+architecture, strict ad-hoc signature and ZIP readback pass; only arm64 was run.
+ZIP164,451,093 bytes, SHA256
+`a43cff3de58902b4c6004ba321541ab4d65ea844605fb1c4e3184f4f5f87e8d5`.
+Temporary export staging was removed after verification.
+
+`verification-20261011-183801-23748/result.json` records a **failed** first
+capture phase: one day image, then a 120-second timeout; the process was terminated
+and reaped. Native CUA access also failed with a pipe startup error. The exact
+cause of stopped drawing was not established. Benchmark and clip phases passed.
+
+The 120-second exported night/rain route passes unchanged16.7/33.3ms limits:
+**p95 10.619 ms / p99 13.759 ms**, 15,177 samples, two loops, zero stalls at
+1920 × 1080/default VSync. Every callback interval has advancing engine draw
+counts. Root independently re-ran the CSV/draw inspector and matched the native
+executable/PCK fingerprint against the package. No explicit redraw was used.
+No causal speedup, GPU/display presentation, thermals or mobile result is claimed.
+
+`capture-topmost-20261011-184351-24527/result.json` is the passing successor:
+the same unchanged app, four full960×960 PNG decodes, requested window flags
+`--windowed --always-on-top --position 80,80`. Root reviewed all four images.
+This qualifies fixed exported stills, not ordinary UI, continuous motion or
+normal presentation. The earlier timeout is retained. The separate offline
+MovieWriter clip fully decodes106 frames at1280×720/30FPS,3.533333s, with AAC
+stereo48kHz audio; its intermediate AVI was removed after readback. No live
+listening or continuous-motion judgment was earned.
+
+Both verification runs preserve source, prior profile metadata, ordinary mac066
+save (absent), app/ZIP metadata and payloads, and package receipt. Current ordinary
+UI remains pending. Paving contact coverage and art/terrain/character issues
+remain open. `DELIVERY.json` links all receipts and exact asset hashes.
+
+The canopy adjustment reuses native geometry and changes only startup selection
+for three indices: the existing O(N) forest construction and fixed450 instances
+are retained, with constant additional selector state and no custom frame loop.
+The diagnostic benchmark adds one draw-counter sample per existing interval:
+amortized O(1) sampling and O(F) stored counts for F frames, only under the test
+hook. Incremental GPU cost and peak memory were not isolated.
+
+
+## Additional duplicate mac064 cleanup
+
+`reports/duplicate-mac064-cleanup-20261011-185303/result.json` records removal
+of only `builds/mac-20261011-132118-71306/MUSH.app`:391,745,536 allocated
+file bytes (373.60MiB). All seven files were matched against the retained ZIP,
+including full CRC readback and POSIX modes; strict native codesign verification
+passed and no xattrs were present. A second pre-deletion read and post-deletion
+archive read passed. The390 non-target build entries, source and all profile
+metadata remain exact. The mac061 extracted app was already absent.
+
+mac065/mac066 and accepted057/rollback055 remain extracted. Recovery of mac064
+is extraction of its retained `MUSH.zip` into the original build directory;
+inode/ctime necessarily change. The immediate observed free-space sample is
+12,795,944,960bytes (11.92GiB); no exclusive APFS free-space attribution is made.
+The10GiB runtime floor remains; any later export needs fresh12GiB admission.

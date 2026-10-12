@@ -1,7 +1,7 @@
 {
   "schema": "mush-clean-verification-summary/1",
   "scope": "Local automated evidence for this development source; full receipts retained outside Git. Runtime fingerprints, not a whole-game release approval.",
-  "prepared_utc": "2026-10-11T21:56:07.065107+00:00",
+  "prepared_utc": "2026-10-12T01:50:52.439350+00:00",
   "git": {
     "private_remote_target": "xingzhao-ji/MUSH",
     "uploaded": true,
@@ -11,7 +11,8 @@
     "allocation_change_commit": "ee6c62d",
     "manifest": "SOURCE_MANIFEST.json (contains this summary; excluded from its own hash list)",
     "verified_remote_baseline": "08c418783d97e805ac30461aebf872837c5045d1",
-    "url": "https://github.com/xingzhao-ji/MUSH"
+    "url": "https://github.com/xingzhao-ji/MUSH",
+    "latest_verified_source_commit": "b5c9f616ecfe6b1937f185a8dc1eb4dcdaea051e"
   },
   "engine": {
     "version": "4.7.2.stable.official.ed1daf0bf",
@@ -482,7 +483,7 @@
       "generated_source_files": []
     }
   ],
-  "performance_budget_passed": false,
+  "performance_budget_passed": true,
   "profiling": {
     "kind": "instrumented 30-second diagnostics, no completed route loop",
     "script_profile": "reports/script-profile-20261011-032111/diagnostic.json",
@@ -538,12 +539,14 @@
     "paw_visual_contact": "2 grounded ray queries, up to 4 sphere support evaluations, 2 pose adjustments per physics tick; constant script state; native query complexity scene-dependent",
     "paired_step_support": "At most two added native rays per step-support lookup; constant script state. Physics query cost remains collision-world dependent; incremental cost unisolated.",
     "forest_backdrop": "Offline: O(V(X+Z)+XZ+I+XlogX+ZlogZ+W) work, O(XZ+I+W) storage; array-based axis dedup is bounded here. Runtime: linear byte/native-channel verification, two new draw nodes, no new custom frame loop. GPU work unisolated.",
-    "distant_home_placement": "Startup-only linear native payload/channel admission and cached mesh assignment; approximately5.48MiB original/candidate position payloads plus other transient data. No added triangles/nodes/colliders/per-frame work. Peak memory and incremental timing not isolated."
+    "distant_home_placement": "Startup-only linear native payload/channel admission and cached mesh assignment; approximately5.48MiB original/candidate position payloads plus other transient data. No added triangles/nodes/colliders/per-frame work. Peak memory and incremental timing not isolated.",
+    "three_tree_canopy": "Existing O(N) startup construction, same450instances/208920triangles/55batches; constant selector state, no added custom frame loop; incremental GPU/peak memory unisolated.",
+    "benchmark_draw_progress": "Diagnostic-only: amortized O(1) counter sampling, O(F) extra counts for F existing measured frames; no ordinary-game sampling."
   },
   "pending": [
     "physical mobile devices",
     "IPA/installable iPhone build",
-    "sustained exported-app performance/headroom",
+    "longer exported-app thermal/headroom testing",
     "per-presented-frame GPU/display timing",
     "thermal performance",
     "live audio listening/balance",
@@ -816,7 +819,7 @@
     },
     "available_bytes_after": 12949307392
   },
-  "performance_budget_scope": "Current source120s callback route passes16.136/18.102ms; exportedmac065 fails p95 at17.524ms, p99 22.847ms,9622frames,2loops,0stalls. Frozenmac064 pass and mac063 failure retained. As-is upload authorized; no gate waived or cause proved. No GPU/presentation/thermal/mobile qualification.",
+  "performance_budget_scope": "mac066 exported120s night/rain passes10.619/13.759ms,15177samples,2loops,0stalls with verified draw advancement. Source120s passes11.575/13.188ms. Historical failures retained; no causal/GPU/display/thermal/mobile qualification.",
   "night_sky_fill_successor": {
     "rollback_source_commit": "091487625c7faf4103538b1663e72d47c33b3613",
     "day_energy": 0.05,
@@ -3472,7 +3475,7 @@
     "archive_modes_sha256": "2449f3f8682fe83709febd442a9eac7d3f9541bfeb20fffdde8c57ea7fbcbc6c"
   },
   "home3_three_tree_successor": {
-    "scope": "Installed source change, not a newly packaged mac066 or whole-game approval.",
+    "scope": "Installed in source and mac066; no whole-game art approval.",
     "trees": [
       6,
       7,
@@ -3539,11 +3542,188 @@
       "causal_improvement_claimed": false
     },
     "mac066": {
-      "status": "planned_not_exported"
+      "status": "packaged_verified_uploaded",
+      "app": "builds/mac-20261011-183516-13113/MUSH.app"
     },
     "art_approved": false,
     "continuous_motion_verified": false,
     "live_listening_verified": false,
     "physical_mobile_tested": false
+  },
+  "mac066_candidate": {
+    "schema": "mush-mac066-development-candidate/1",
+    "app": "builds/mac-20261011-183516-13113/MUSH.app",
+    "zip": {
+      "path": "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-183516-13113/MUSH.zip",
+      "sha256": "a43cff3de58902b4c6004ba321541ab4d65ea844605fb1c4e3184f4f5f87e8d5",
+      "bytes": 164451093
+    },
+    "profile": "MUSH-mac066",
+    "version": "0.6.0",
+    "source_commit": "b5c9f616ecfe6b1937f185a8dc1eb4dcdaea051e",
+    "source_manifest_sha256_at_package": "05110bec13b9e22d870815f241190ebfe408eab0e34a59d84c3cc937f76e1d71",
+    "source_package_receipt": {
+      "path": "builds/mac-20261011-183516-13113/receipt.json",
+      "bytes": 55587,
+      "sha256": "57171b09d6e5b16bf03641cf4e6ff4fd65194ff8ef1f33620b52ab8ff5332622"
+    },
+    "verification_receipt": {
+      "path": "builds/mac-20261011-183516-13113/verification-20261011-183801-23748/result.json",
+      "bytes": 3132154,
+      "sha256": "c60fa19f6924b53c8adb1b6783ade03f7236225b540894d355eaacdf8fc823cc"
+    },
+    "verification_initial_passed": false,
+    "initial_failure": "Default-window capture timed out after day.png; owned process terminated and reaped. Benchmark and clip passed.",
+    "capture_successor_receipt": {
+      "path": "builds/mac-20261011-183516-13113/capture-topmost-20261011-184351-24527/result.json",
+      "bytes": 3243650,
+      "sha256": "0139b12087eba3edf928d4e196e510b6c5de1bb2d2d9a6b8b6b88b4c6c42070e"
+    },
+    "capture_successor_scope": "Four fixed native screenshots with --windowed --always-on-top --position 80,80; no explicit redraws, ordinary UI or display presentation qualification.",
+    "startup_checks_passed": 12,
+    "exported_captures_passed": 4,
+    "signature_strict_adhoc": true,
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "physically_run_architectures": [
+      "arm64"
+    ],
+    "benchmark_passed": true,
+    "benchmark": {
+      "frames": 15177,
+      "frame_p95_ms": 10.619,
+      "frame_p99_ms": 13.759,
+      "route_stalls": 0,
+      "thresholds_passed": true,
+      "route_loops_completed": 2,
+      "render_resolution": [
+        1920,
+        1080
+      ],
+      "vsync": 1,
+      "gpu_timing_available": false,
+      "engine_draw_progress_valid": true,
+      "physical_device_tested": false,
+      "display_presentation_measured": false
+    },
+    "capture_s": 120,
+    "benchmark_csv": {
+      "path": "builds/mac-20261011-183516-13113/verification-20261011-183801-23748/benchmark/worst-1.csv",
+      "bytes": 1880846,
+      "sha256": "a4663fd24e6b90b369cfd8eebee7f0d9981f293e37f409eb6891fab0891341b6"
+    },
+    "native_benchmark_fingerprint_matches_app": true,
+    "movie": {
+      "path": "/Users/xingzhaoji/Projects/MUSH/builds/mac-20261011-183516-13113/verification-20261011-183801-23748/clip/environment-smoke.mp4",
+      "bytes": 3630639,
+      "sha256": "1b8c08abdb1f49206e35f4dc94f0b974fa0b1b86a7484731048f405821b74f9c"
+    },
+    "movie_frames": 106,
+    "movie_seconds": 3.533333333333333,
+    "offline_fixed_fps": 30,
+    "movie_full_decode_passed": true,
+    "real_time_motion_verified": false,
+    "manual_controls_verified": false,
+    "ordinary_ui_verified": false,
+    "ordinary_ui_scope": "Not exercised on mac066; native CUA pipe unavailable. mac065 observations remain historical.",
+    "live_audio_listening": false,
+    "physical_mobile_devices_tested": false,
+    "art_approved": false,
+    "temporary_stage_removed": true,
+    "temporary_avi_removed": true,
+    "peak_sampled_owned_allocated_bytes": 811245568,
+    "ordinary_profile_absent": true,
+    "app_files": {
+      "Contents/_CodeSignature/CodeResources": {
+        "bytes": 3165,
+        "sha256": "117e470e233b17e2e849fdf5b690ede187458cb20c27aec283ed5774215c89ce"
+      },
+      "Contents/MacOS/MUSH": {
+        "bytes": 187121136,
+        "sha256": "146614d36ac6707a8e92ea4a41271f5df55ff6dafd876398b186846a876eee87"
+      },
+      "Contents/Resources/icon.icns": {
+        "bytes": 305802,
+        "sha256": "e620db8df3f86015ce6022fdd66682ca27b66f8438ee1c4516aa763c5047fd4d"
+      },
+      "Contents/Resources/PrivacyInfo.xcprivacy": {
+        "bytes": 229,
+        "sha256": "0535353bb08c25b8ce5ed9ac7e442a5994f402e0f6cbc4bed668cfc63c2ceac3"
+      },
+      "Contents/Resources/MUSH.pck": {
+        "bytes": 206498992,
+        "sha256": "555103b6be5cb39b0336670f97999871f640be1df34f18f5415fadf5ee7d9779"
+      },
+      "Contents/Info.plist": {
+        "bytes": 1867,
+        "sha256": "08086e239b63ba2177bd3e14d1567d87d77c521dd044ba93ecff279fef8b4ff2"
+      },
+      "Contents/PkgInfo": {
+        "bytes": 9,
+        "sha256": "7e50a30efad50208a173203ced60818d693bb61266b75aa10927d1a2adce80cb"
+      }
+    },
+    "source_runtime_change": "Existing tall form assigned to trees 6,7,8; roots, RNG, other27 trees,450instances,208920triangles,55batches retained; existing tree6 stem collision rebuilt coherently.",
+    "source_tests": {
+      "gameplay_assertions": 295,
+      "scenarios": 15,
+      "forest_assertions": 29,
+      "window_sightlines_clear": 10,
+      "native_stem_collision_matches": 20,
+      "camera_poses": 36,
+      "contact_routes": 4,
+      "contact_assertions": 19
+    },
+    "performance_approximation": "Engine draw-counter advancement validates callback sampling; GPU, display presentation, thermals and causal speedup remain unmeasured.",
+    "screenshots": [
+      {
+        "path": "builds/mac-20261011-183516-13113/capture-topmost-20261011-184351-24527/capture/day.png",
+        "bytes": 1709578,
+        "sha256": "1a41460815fa154ab51c1fa41cd5bdad3725a2bd0e94f22d6ce3c2018aa7dd79"
+      },
+      {
+        "path": "builds/mac-20261011-183516-13113/capture-topmost-20261011-184351-24527/capture/night.png",
+        "bytes": 1513404,
+        "sha256": "86696555aa52850beeb572c34cd9c6763bdf3300b378f8ca8887f9667945cb45"
+      },
+      {
+        "path": "builds/mac-20261011-183516-13113/capture-topmost-20261011-184351-24527/capture/entrance-day.png",
+        "bytes": 1636539,
+        "sha256": "0f9fcae2271b0190e2fbe3bd7043bf6cc1649a66d7ea664c690397d86c114098"
+      },
+      {
+        "path": "builds/mac-20261011-183516-13113/capture-topmost-20261011-184351-24527/capture/entrance-night.png",
+        "bytes": 1412469,
+        "sha256": "caf40ef05a1b92cfd84df04c9d2423bc59ef2b8dec98863c2b41ffab9f9ee2d4"
+      }
+    ],
+    "known_issues": [
+      "Separate paving contact-coverage gate failed; near-cut upper-soil coverage remains open.",
+      "Thick paving fronts and dark night entrance.",
+      "Landscape/water joins, regular foliage bands, plain support rock, provisional character/interior and full reference fidelity.",
+      "Comprehensive moving-camera visibility, sustained manual controls, continuous motion, live listening and physical-phone testing pending."
+    ],
+    "uploaded_as_is_authorized": true,
+    "storage_free_bytes_observed": 12474937344,
+    "url": "https://github.com/xingzhao-ji/MUSH/releases/tag/mac066",
+    "uploaded": true,
+    "delivery_sha256": "8779fae82ea44de08eb71e4bf118156f2c40c16b4f5e7bf8362d09c319a2c7f0",
+    "upload_receipt": "reports/mac066-delivery-preparation/upload-verification.json",
+    "upload_receipt_sha256": "c687b4c80093b862de7d15a9d48df32cd88e13bc522688a64b3eda7ca220bbfa"
+  },
+  "duplicate_mac064_cleanup": {
+    "receipt": "reports/duplicate-mac064-cleanup-20261011-185303/result.json",
+    "receipt_sha256": "1f935873601e00a3a26078cf9a8e18e612078b8c501324597eac9181aaaa815b",
+    "passed": true,
+    "allocated_file_bytes_removed": 391745536,
+    "protected_build_entries_exact": 390,
+    "source_exact": true,
+    "profiles_metadata_exact": true,
+    "zip_recovery_verified": true,
+    "mac065_mac066_accepted_and_rollback_retained": true,
+    "free_bytes_after": 12795944960,
+    "next_export_requires_fresh_12GiB": true
   }
 }
