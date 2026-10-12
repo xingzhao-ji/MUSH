@@ -46,6 +46,13 @@ Use **Godot 4.7.2**, open `project.godot`, and run the main scene. The desktop t
 
 Settings include reduced motion/effects, camera preferences, sound levels and key rebinding. The garden has eight places; the home has six furniture places. There is no combat, death or time pressure.
 
+Current source also refines the cream creature’s tail into one smooth, tucked
+volume, removing five mesh nodes. Fresh source checks pass 295 gameplay assertions
+and the 120-second benchmark (p95 12.275 ms / p99 13.640 ms). Earlier failed
+attempts and the scope of the input-diagnostic run remain in
+[verification evidence](docs/VERIFICATION.md). The downloadable mac066 app
+predates this source refinement.
+
 ## Verify
 
 Python 3 and the matching Godot executable are required. Close the game/editor before testing and retain 10 GiB of free disk space. Run the import suite first on a clean checkout. From the repository root:

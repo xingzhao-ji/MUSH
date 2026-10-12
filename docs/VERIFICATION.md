@@ -1,6 +1,6 @@
 # Verification of the clean source
 
-October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **Current mac066 source and export routes pass their recorded callback budgets with engine draw progress. The older mac065 app fails p95, including an unchanged repeat; those failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
+October 11, 2026. The portable development copy imports and passes its fresh gameplay, environment, material-parity and still-capture checks. **Current cream-tail source and the separate mac066 export pass their recorded callback budgets with engine draw progress. The older mac065 app fails p95, including an unchanged repeat; those failures remain recorded.** The as-is GitHub baseline upload is verified; whole-game release acceptance remains open. Each result is bound to its recorded source fingerprint; later source changes require the relevant checks again.
 
 The checks use Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`), Forward+/Metal, an Apple M4 Pro Mac with 48 GiB RAM, and Dummy audio. Engine SHA256: `c7cccbf8fb143e34e02fd6521e09be2c2b974f0d5db080b19071c9c570718ccf`.
 
@@ -1229,3 +1229,65 @@ Receipt: `reports/paving-tangent-20261011-191956-29706/receipt.json.gz`.
 Native report: `native/tangent-envelope.json`, SHA256
 `efebf6e9cfeb43dd4317796612e37f425e53f9b644deea87348f6adafb1d3859`.
 No runtime change, new dependency or performance gain is claimed.
+
+
+## Cream creature: single-tail refinement
+
+The user chose refinement of the existing cream woodland creature. Source
+`a93a12ab350b0eb90a2bd4bf6cf34ce165d8bf89` replaces five bead-like tail lobes
+with one tucked round ellipsoid using the existing TailMesh, cream material and
+bone. The construction loop is omitted, keeping the mesh registry coherent.
+Face/body parts, bone rest poses, clips, paw modifier, camera and physics stay
+unchanged. Rollback is `9874b92d65679ee6625fffa4511b7f6f64f8cfff`.
+
+Isolation passes ten checks and eight decoded 960-square before/after images.
+Fresh ordinary-source startup passes ten checks and four decoded stills. All
+twelve images were reviewed: the round rear/side silhouette is cleaner. A faint
+previous-tail outline in the comparison side view is absent from fresh startup;
+its transient rendering cause was not established. These explicit-redraw stills
+prove depicted states, not animation or display presentation. A first fixture
+parse error and a later stale six-part admission check are retained as failed
+attempts, separately from the passing successors.
+
+The actual character now creates **24 mesh nodes / 26,112 triangles**, previously
+29 / 31,552: five fewer nodes and 5,440 fewer triangles. No new texture, material,
+shader, animation, collider or frame loop is added. Startup construction and the
+existing per-frame fade remain O(M) for M character meshes, with five fewer
+entries. Geometry counts do not measure GPU savings, memory or phone performance.
+
+The first full regression fails T01 after its held movement action clears before
+the test releases it; the player is grounded and only a floor contact is recorded.
+The other 14 scenarios pass. Its ordinary-save guard also incorrectly includes
+five existing crash/fault scratch directories. A separate metadata audit confirms
+those were the only changed buckets; the original receipt remains failed.
+An isolated original T01 passes all 18 assertions with a read-only input/focus
+observer and a topmost window. Its wrapper reads an incorrect log filename;
+independent readback verifies the completed native pass without rerunning it.
+
+One subsequent full run with that observer/window configuration passes
+**295/295 assertions across 15 scenarios**, preserving source, ordinary saves,
+prior profiles and retained apps/archives. The five scratch outputs are explicitly
+declared before that run. No input, controller, route, deadline or assertion was
+changed. The original input-loss cause remains unconfirmed; the
+[pinned engine clears pressed events on application focus transitions](https://github.com/godotengine/godot/blob/ed1daf0bf/scene/main/scene_tree.cpp#L869),
+but the original run did not record those notifications.
+
+The independent 120-second night/rain source benchmark passes unchanged budgets:
+**p95 12.275 ms / p99 13.640 ms**, 13,027 samples, two loops and zero stalls at
+1920×1080/default VSync. Every measured interval advances engine draw counts;
+the CSV/draw inspector was independently rerun. No forced draws or input observer
+run in this benchmark. This is neither a causal speedup nor GPU, thermal or
+physical-device qualification. All owned processes exited and were reaped.
+
+Receipts: `reports/character-tail-20261011-193551-31339/` (isolation),
+`reports/character-tail-20261011-194139-31811/` (installed stills),
+`reports/character-tail-regression-20261011-194307-31877/` (failed first run),
+`reports/character-input-20261011-195834-33678/` (isolated T01/readback),
+`reports/character-full-input-20261011-200559-34273/` (full pass), and
+`reports/character-tail-performance-20261011-200132-34018/` (benchmark guards).
+The exact source benchmark is `reports/benchmark-20261011-200132-34018/`.
+
+The downloadable mac066 app remains unchanged and predates this source refinement.
+No new export, continuous-motion, live-listening or physical-phone acceptance
+is claimed. Native UI automation still fails to start its pipe. Whole-game art
+and the independent paving contact-coverage gate remain open.

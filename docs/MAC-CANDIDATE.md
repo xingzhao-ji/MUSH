@@ -1,10 +1,13 @@
 # Mac development candidate (mac066)
 
-[Download the private mac066 prerelease](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066).
+[Download the mac066 prerelease](https://github.com/xingzhao-ji/MUSH/releases/tag/mac066).
 This experimental 0.6.0 app lifts three existing tree canopies to expose the third
 home from the sampled ground and approach views. Roots, shared wind/materials,
 overall geometry counts and coherent trunk collision are retained. Accepted 0.5.7
 and rollback 0.5.5 remain preserved; whole-game art/play acceptance remains open.
+
+Newer source `a93a12a` refines the cream creature’s tail and has separate source
+verification. This frozen mac066 app predates that change.
 
 Double-click `builds/mac-20261011-183516-13113/MUSH.app`, or run:
 

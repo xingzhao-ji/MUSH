@@ -4,6 +4,12 @@
 
 `lineage/` contains active inheritance, not discarded trial copies. Main inherits the planting interaction chain; World inherits the scenery and living-motion chain; the current player inherits the camera/step controller. Preserve these paths until a separately tested extraction replaces each dependency.
 
+The cream creature now uses one tucked tail ellipsoid, omitting five separate
+tuft mesh constructions. Its 24 registered meshes contain 26,112 triangles.
+Existing skeleton, clips, material and per-frame fade are reused; no fur system
+or new physics is introduced. Construction/fade remain O(M) in the fixed mesh
+count M. The five-node reduction does not establish a frame-time or memory gain.
+
 ## World resources
 
 `scripts/baked_world.gd` loads the renderer-neutral clearing and installs prebuilt cap, plaster, paving, floor, soil and roof resources through existing owners. Loaders verify pinned payloads and preserve original references for rollback. The combined preview swaps existing mesh/shape references; it adds no paving body or per-frame geometry generation. Two shallow entrance material forks now reuse the reviewed Rock01 albedo at startup, before both paving owners capture their selected materials. The top keeps one planar sample. The new front fork uses the existing three-sample world-space triplanar branch across all 3,078 front corners, including the retained 2,598-corner prefix. The startup report names its counts pre_geometry_install_batch_corners (972 top / 2,526 front); fixture readback verifies the final installed batches at 4,638 top / 3,078 front corners. Original material pointers remain available, other aliases keep their references, and ordinary environmental discovery forwards clock/cloud/wetness uniforms. Relative to the previous source, this adds one static material and three front albedo samples, with no new texture asset, draw node, geometry, collision or script frame loop; existing environmental bindings remain active. Shader cost depends on visible front pixels and is not a GPU or mobile measurement. The baked paving resource remains unchanged; the separate front-return geometry candidate was rejected at art review.
