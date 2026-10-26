@@ -271,11 +271,12 @@ func _run() -> void:
 		game.ui.hide()
 		if "--junction" in arguments: await _junction_scenario()
 		elif "--endpoint" in arguments: await _endpoint_scenario()
+		elif "--path-pairs" in arguments: await _path_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else "full"),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else "full")),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -402,6 +403,57 @@ func _endpoint_scenario() -> void:
 	for i: int in range(e - 3, r - 1, -3): back.append(slice._p[i])
 	var ret: Dictionary = await _drive(back, "endpoint-return", 6000)
 	_check("(harness-placed) Return 60 m from the root, no recovery/stall, grounded", ret.reached and not ret.recovered and not ret.stuck and ret.floor_ratio >= 0.97, {"end":ret.end,"ticks":ret.ticks})
+
+## Path-look evidence (diagnostic; HARNESS-PLACED at poses recorded by real walks): the same
+## pose and frame captured with the previous earth material ("before", rebuilt exactly as it
+## was in 3058e28) and with the current path material ("after"). Only the ribbon material
+## differs between the two frames of a pair.
+const PAIR_POSES := [
+	# slice-20261026-070902-96139 slice-root-approach-day / slice-shore-day; route-20261026-072355-96790 route-overlook-day
+	["root-approach", Vector3(386.89, -78.71, -284.54)],
+	["shore", Vector3(387.12, -78.01, -300.14)],
+	["knoll-overlook", Vector3(72.7724, 26.6973, 214.5524)],
+]
+
+func _path_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	var current: Material = route._mesh_instance.material_override
+	var legacy := StandardMaterial3D.new()
+	legacy.albedo_texture = preload("res://assets/world/textures/rock_01_diff_1k.jpg")
+	legacy.albedo_color = Color(0.86, 0.66, 0.48)
+	legacy.uv1_triplanar = true
+	legacy.uv1_world_triplanar = true
+	legacy.uv1_scale = Vector3.ONE * 0.22
+	legacy.roughness = 0.95
+	legacy.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_check("Both ribbons share the path material", current is ShaderMaterial and slice._mesh_instance.material_override == current)
+	var hero: Vector3 = scenery.hero.base
+	for pose: Array in PAIR_POSES:
+		var at: Vector3 = pose[1]
+		await _place(at, 0.0)
+		match pose[0]:
+			"root-approach":
+				var to_root: float = Vector2(at.x - hero.x, at.z - hero.z).length()
+				var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (at.y + 0.7), to_root))
+				_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+				player.camera_yaw += deg_to_rad(10.0)
+			"shore":
+				_look(Vector3(190.0, -80.0, -330.0), -4.0)
+			"knoll-overlook":
+				_look(Vector3(110.0, 0.0, -500.0), -9.0)
+		# Walking pose: the walker faces along the camera, as in the walk frames.
+		player._visual.rotation.y = player.camera_yaw
+		await _frames(45)
+		for state: Array in [["before", legacy], ["after", current]]:
+			route._mesh_instance.material_override = state[1]
+			slice._mesh_instance.material_override = state[1]
+			await _frames(4)
+			await _capture("path-%s-%s-day" % [pose[0], state[0]])
+		_check("Pair %s captured at the recorded pose (within 0.3 m), camera clear" % pose[0], player.global_position.distance_to(at) < 0.3 and _camera_clearance() > 0.05, {"player":_v(player.global_position), "recorded":_v(at), "camera_clearance_m":_camera_clearance()})
+	route._mesh_instance.material_override = current
+	slice._mesh_instance.material_override = current
 
 func _offset(points: PackedVector3Array, i: int, lateral: float) -> Vector3:
 	var a: Vector3 = points[maxi(i - 1, 0)]

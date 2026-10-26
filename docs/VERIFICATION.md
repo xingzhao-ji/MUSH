@@ -1570,3 +1570,43 @@ Checks:
 - **Pixels:** the green crack in `route-overlook-day.png` (`route-20261026-072355-96790`) is gone at the same pose (`route-20261026-081428-7507/route-overlook-day.png`).
 
 Rollback: `git revert` this commit.
+
+## Path material: worn track with moss shoulders (2026-10-26)
+
+**Status: material-only pass, pending PM review; art not accepted.** Rollback: `git revert` this commit.
+
+**Change:**
+- The two walking ribbons (the existing route and the slice) share a new prototype shader, `assets/world/prototype_path.gdshader`. It replaces the uniform orange earth material.
+- **Track:** a narrow worn-earth track meanders on the tread, about 1.5–2.3 m wide with a ragged edge and a few bare patches. It fades through trampled grass into moss shoulders and embankment skirts.
+- **Moss:** reproduces the far terrain's own moss branch (clearing feather, near detail, macro tone, damp valley).
+- **Seamless join:** patterns use world XZ, so the two ribbons continue through the junction without a visible restart.
+- **Earth:** desaturated packed earth at about the old brightness.
+- **Shoulder shading:** the shoulders' shading normal leans toward up, so the verge lights like the neighbouring ground instead of showing the tread-edge crease. This is shading only.
+- **Unchanged:** ribbon geometry, collision, walkable and safe corridor widths, anchors and the clearing.
+
+**Evidence:**
+- **Matched pairs** (`path-pairs-20261026-084112-11808`). A new diagnostic suite, `path-pairs`, is harness-placed at the poses recorded by the definitive walks. Each pose is captured with the previous material, rebuilt exactly, then with the new one, in the same process and frame. Only the ribbon material differs. All poses are within 1 cm of the recorded ones.
+- **Rejected first look:** the first pass (`path-pairs-20261026-083846-11185`) made the earth nearly black (about 34, 13, 5 sRGB) and showed the tread/shoulder crease as a hard green edge. It is superseded.
+
+Lower frame (y ≥ 400, avatar excluded):
+
+| Pose | Earth share before → after | Green share before → after |
+|---|---|---|
+| Root approach (`slice-root-approach-day` pose) | 78% → 51% | 19% → 42% |
+| East shore (`slice-shore-day` pose) | 92% → 26% | 8% → 71% |
+| Knoll overlook (`route-overlook-day` pose) | 91% → 32% | 7% → 44% |
+
+- **Scenic** (`scenic-20261026-084237-12189`):
+  - Fails only the known vista coverage gate (0.0130 < 0.02).
+  - Footing drift 0.0 m (7/7).
+  - Draw nodes, triangle counts and colliders unchanged.
+  - No error or leak lines.
+  - The clearing views are unchanged.
+- **Not rerun, by PM decision:** the traversal, route and acceptance suites. The change is material-only and movement and collision are unchanged. The last runs on identical geometry are slice 26/26 `081725`, route 22/22 `081428` and acceptance 295/295 `083218`.
+
+**Limits:**
+- **Root approach:** a soft, fairly straight boundary remains where the track meets the sunlit verge. Near the camera the track is broad and smooth, because Rock01 is magnified there.
+- **Overview:** from above, the path is less visible than the old orange line.
+- **Not done:** no ground-cover meshes, pebbles or normal map.
+- **Not measured:** frame time and GPU cost of the shader. It adds about 8 texture fetches per ribbon fragment.
+- **Still open:** the benchmark p95 failure (17.573 ms) stands, the LOD density change remains, and the art is not accepted.

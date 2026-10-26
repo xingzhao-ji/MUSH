@@ -6,6 +6,7 @@ extends Node3D
 const SHADER := preload("res://assets/world/far_canopy.gdshader")
 const Route := preload("res://scripts/prototype_route.gd")
 const TERRAIN_SHADER := preload("res://assets/world/far_terrain.gdshader")
+const PATH_SHADER := preload("res://assets/world/prototype_path.gdshader")
 const WATER_SHADER := preload("res://assets/world/far_water.gdshader")
 const LEAF_SHADER := preload("res://assets/world/prototype_leaf.gdshader")
 const SOURCE_LEAF_SHADER := preload("res://lineage/living-scenery37-proposal01/canopy-wind37.gdshader")
@@ -1420,15 +1421,16 @@ func _add_route() -> void:
 	route.name = "NaturalRoute"
 	add_child(route)
 	var profile: Variant = route_report.get("profile_x_z_raw_soil_tread")
-	# Trodden earth: the existing Rock01 texture, world-triplanar at real scale, warm tint.
-	var earth := StandardMaterial3D.new()
-	earth.albedo_texture = ROCK_TEXTURE
-	earth.albedo_color = Color(0.86, 0.66, 0.48)
-	earth.uv1_triplanar = true
-	earth.uv1_world_triplanar = true
-	earth.uv1_scale = Vector3.ONE * 0.22
-	earth.roughness = 0.95
-	earth.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# Worn-earth track on the tread fading into the far terrain's moss on the shoulders and
+	# skirts (shared by the slice). Visual only: geometry and collision are unchanged.
+	var earth := ShaderMaterial.new()
+	earth.shader = PATH_SHADER
+	earth.set_shader_parameter("moss_tex", MOSS_TEXTURE)
+	earth.set_shader_parameter("rock_tex", ROCK_TEXTURE)
+	earth.set_shader_parameter("moss_mean", _moss_mean)
+	earth.set_shader_parameter("clearing_rect", Vector4(baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y))
+	earth.set_shader_parameter("clearing_gain", Vector3(CLEARING_GAIN.r, CLEARING_GAIN.g, CLEARING_GAIN.b))
+	earth.set_shader_parameter("total_width", 3.6 + 2.0 * 2.2)
 	var built: bool = route.configure({"centerline": _route_points, "tread_width": 3.6, "shoulder_width": 2.2, "max_grade_deg": 14.0,
 		"exclusion_rects": [Rect2(-24.0, -24.0, 49.0, 53.0)], "ground_height": Callable(self, "terrain_height"), "material": earth})
 	route_report = route.get_report()

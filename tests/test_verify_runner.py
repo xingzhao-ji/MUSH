@@ -152,6 +152,16 @@ class StartupFailFast(unittest.TestCase):
         self.assertIsNone(verify.startup_failure("SCRIPT ERROR: Invalid access to property\n"))
 
 
+class PathPairsReport(unittest.TestCase):
+    def test_missing_pair_fails(self):
+        files = [f"path-{pose}-{state}-day.png" for pose in ("root-approach", "shore") for state in ("before", "after")]
+        report = {"schema": "mush-slice-traversal/1", "mode": "path-pairs", "passed": True, "legs": [],
+                  "checks": [{"label": "pair", "passed": True}], "images": [{"file": name} for name in files]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every before/after pair"):
+                verify.inspect("path-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
