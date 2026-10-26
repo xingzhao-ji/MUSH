@@ -50,6 +50,30 @@ const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0
 const ROUTE_GRADE := 0.194
 const SOIL_BUCKET := 8.0
 const APPROACH_Z_FROM := 25.5
+## Connected slice: knoll junction (continuing straight out of the existing route's end,
+## so both ribbons share one flush cross-section) -> 13 m loop round the knoll summit's
+## south side -> eastern high ground -> two switchbacks down the
+## terrace benches -> valley floor -> east shoreline (10-15 m from the water) -> hero root.
+## Laid out from a grade-constrained search over the installed heightfield (diagnostic
+## tests/terrain_probe.gd); the last point lies inside the hero stem so its root stops
+## the walker. The junction point is taken from the existing route's end at runtime.
+const SLICE_WAYPOINTS: Array[Vector2] = [Vector2(57.1, 228.3), Vector2(58.1, 238), Vector2(65.1, 244.1), Vector2(69.6, 244.9), Vector2(85, 243), Vector2(100, 237), Vector2(114, 226), Vector2(127, 211), Vector2(150, 180), Vector2(170, 161), Vector2(195, 148), Vector2(230, 130), Vector2(270, 110), Vector2(300, 96), Vector2(320, 85.5), Vector2(331, 80), Vector2(340, 76), Vector2(349.9, 71.9), Vector2(354, 62), Vector2(349.9, 52.1), Vector2(340, 48), Vector2(329, 47.5), Vector2(316, 47.5), Vector2(290, 50), Vector2(262, 47), Vector2(238, 40), Vector2(221, 38.5), Vector2(209, 38.2), Vector2(198, 38), Vector2(188.1, 33.9), Vector2(184, 24), Vector2(188.1, 14.1), Vector2(198, 10), Vector2(209, 9.8), Vector2(222, 9.8), Vector2(247, 10), Vector2(270, 8), Vector2(292, 4), Vector2(312, -6), Vector2(334, -18), Vector2(360, -22), Vector2(385, -32), Vector2(410, -45), Vector2(436, -60), Vector2(462, -76), Vector2(488, -90), Vector2(505, -106), Vector2(500, -125), Vector2(482, -142), Vector2(455, -175), Vector2(420, -204), Vector2(393, -243), Vector2(387, -298), Vector2(397, -356), Vector2(402, -418), Vector2(390, -478), Vector2(378, -540), Vector2(377, -608)]
+const SLICE_GRADE := 0.205
+## Switchback turns are flattened: inside turns tighter than SLICE_TURN_RADIUS the tread
+## grade is capped, so the inner shoulder edge stays far below the 30 degree surface limit.
+## Both hairpins are 14 m arcs sampled every 45 degrees.
+const SLICE_TURN_GRADE := 0.12
+const SLICE_TURN_RADIUS := 20.0
+## Trail bed: matches the ribbon cross-section (flat tread 1.8 m, shoulders falling at the
+## module's 18 degrees to 4 m) 0.12 m below it, then blends back to natural ground by 30 m.
+const SLICE_BED_EDGE := 4.0
+const SLICE_BED_BLEND := 30.0
+const SLICE_BUCKET := 40.0
+## Second detail patch over the slice (world x/z), disjoint from the cliff patch's rows.
+const SLICE_PATCH := Rect2(60.0, -393.0, 460.0, 663.0)
+## Clearing edge feather: far-terrain moss tone gain near the baked ground (linear), so
+## the square no longer reads by colour from afar; measured from the overview capture.
+const CLEARING_GAIN := Color(2.6, 2.2, 2.0)
 const DAY_SUN := Color("ffc07e")
 const NIGHT_SUN := Color("a9a6ee")
 
@@ -106,6 +130,19 @@ var _edge_step: float = 2.0
 var _route_points: PackedVector3Array = PackedVector3Array()
 var _route_box := Rect2()
 var _shaping_route: bool = false
+var slice_route: Node3D
+var slice_report: Dictionary = {}
+var root_body: StaticBody3D
+var root_collision_triangles: int = 0
+var slice_patch_triangles: int = 0
+var _slice_bed: PackedVector3Array = PackedVector3Array()
+## Vegetation decision phases ignore the slice's trail bed (as they ignore the eroded
+## landform), so their random draws, and every existing placement, stay unchanged.
+var _skip_slice_bed: bool = false
+var _slice_buckets: Dictionary = {}
+var _slice_box := Rect2()
+var _rendered_buckets: Dictionary = {}
+var _rendered_faces: PackedVector3Array = PackedVector3Array()
 
 static func is_enabled() -> bool:
 	if "prototype_off" in OS.get_environment("MUSH_SCENERY_DIAG").split(",", false): return false
@@ -128,11 +165,47 @@ func _terrace(value: float, step: float, width: float) -> float:
 
 ## Final terrain: landforms plus the graded trail bed along the walkable route.
 func terrain_height(x: float, z: float) -> float:
-	var raw: float = _raw_height(x, z)
-	if _route_points.is_empty() or _shaping_route or not _route_box.has_point(Vector2(x, z)) or _box_distance(x, z) <= 0.0:
-		return raw
+	var height: float = _raw_height(x, z)
+	var slice_flat: float = NAN
+	if not (_skip_slice_bed or _slice_bed.is_empty() or not _slice_box.has_point(Vector2(x, z)) or _box_distance(x, z) <= 0.0):
+		var info: Vector2 = _slice_bed_info(x, z)
+		if info.x < SLICE_BED_BLEND: height = lerpf(info.y, height, smoothstep(SLICE_BED_EDGE, SLICE_BED_BLEND, info.x))
+		if info.x < SLICE_BED_EDGE: slice_flat = info.y
+	var route_flat: float = NAN
+	var route_info: Vector2 = _route_bed_info(x, z)
+	if route_info.x < INF:
+		height = lerpf(route_info.y - 0.12, height, smoothstep(4.0, 11.0, route_info.x))
+		if route_info.x < 4.0: route_flat = route_info.y - 0.12
+	# Where both trail beds meet (the knoll junction), neither may raise ground over the
+	# other route's walking surface inside its flat zone.
+	if not is_nan(slice_flat): height = minf(height, slice_flat)
+	if not is_nan(route_flat): height = minf(height, route_flat)
+	return height
+
+## Slice trail bed at x,z from the built ribbon's own samples (bucketed): (distance to the
+## centreline, bed surface matching the ribbon cross-section 0.12 m below it), or INF.
+func _slice_bed_info(x: float, z: float) -> Vector2:
+	var key := Vector2i(floori(x / SLICE_BUCKET), floori(z / SLICE_BUCKET))
+	if not _slice_buckets.has(key): return Vector2(INF, 0.0)
+	var here := Vector2(x, z)
 	var best: float = INF
-	var tread: float = raw
+	var tread: float = 0.0
+	for i: int in _slice_buckets[key]:
+		var a := Vector2(_slice_bed[i].x, _slice_bed[i].z)
+		var ab := Vector2(_slice_bed[i + 1].x, _slice_bed[i + 1].z) - a
+		var t: float = clampf((here - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		var dist: float = here.distance_to(a + ab * t)
+		if dist < best:
+			best = dist
+			tread = lerpf(_slice_bed[i].y, _slice_bed[i + 1].y, t)
+	return Vector2(best, tread - 0.12 - maxf(0.0, minf(best, SLICE_BED_EDGE) - 1.8) * 0.325)
+
+## Existing route trail bed (unchanged rule): (distance to the planned centreline, tread), or INF.
+func _route_bed_info(x: float, z: float) -> Vector2:
+	if _route_points.is_empty() or _shaping_route or not _route_box.has_point(Vector2(x, z)) or _box_distance(x, z) <= 0.0:
+		return Vector2(INF, 0.0)
+	var best: float = INF
+	var tread: float = 0.0
 	for i: int in _route_points.size() - 1:
 		var a := Vector2(_route_points[i].x, _route_points[i].z)
 		var ab := Vector2(_route_points[i + 1].x, _route_points[i + 1].z) - a
@@ -141,7 +214,7 @@ func terrain_height(x: float, z: float) -> float:
 		if dist < best:
 			best = dist
 			tread = lerpf(_route_points[i].y, _route_points[i + 1].y, t)
-	return lerpf(tread - 0.12, raw, smoothstep(4.0, 11.0, best))
+	return Vector2(best, tread)
 
 ## Baked-ground continuity: outside the baked extent, the measured height of the baked
 ## soil at the nearest perimeter point; inside it, just below that soil (hidden).
@@ -340,13 +413,17 @@ func configure(world: Node3D) -> void:
 	_collect_soil(baked_extent.grow(6.0))
 	_sample_edges()
 	_plan_route()
+	# The existing ribbon depends only on its planned points, so building it before the
+	# terrain mesh leaves it identical; the slice starts from its measured end.
+	_add_route()
+	_add_slice_route()
 	# Diagnostic-only performance bisection (empty by default; never set by the game).
 	var skip: PackedStringArray = OS.get_environment("MUSH_SCENERY_DIAG").split(",", false)
 	_add_terrain()
 	if "plain_terrain" in skip: _terrain_material.shader = preload("res://assets/world/far_canopy.gdshader"); _terrain_material.set_shader_parameter("mode", 2)
 	if "no_water" in skip: _static[_static.size() - 1].visible = false
-	_add_route()
 	_add_giants(rng)
+	_add_root_collision()
 	_add_pillars(rng)
 	_add_boulders(rng)
 	if not "no_trees" in skip: _add_trees(rng)
@@ -377,9 +454,10 @@ func _add_terrain() -> void:
 		var sx: float = lerpf(-1.0, 1.0, float(column) / TERRAIN_CELLS)
 		coarse.append(TERRAIN_HALF * signf(sx) * pow(absf(sx), 1.7))
 	var patch: Rect2i = _detail_patch_cells(coarse)
+	var slice_cells: Rect2i = _slice_patch_cells(coarse, patch)
 	for row: int in TERRAIN_CELLS:
 		for column: int in TERRAIN_CELLS:
-			if patch.has_point(Vector2i(column, row)): continue
+			if patch.has_point(Vector2i(column, row)) or slice_cells.has_point(Vector2i(column, row)): continue
 			var i0: int = row * columns + column
 			var i1: int = i0 + 1
 			var i2: int = i0 + columns
@@ -390,7 +468,8 @@ func _add_terrain() -> void:
 	st.generate_normals()
 	var mesh: ArrayMesh = st.commit()
 	detail_cells_replaced = patch.get_area()
-	terrain_triangles = (TERRAIN_CELLS * TERRAIN_CELLS - detail_cells_replaced) * 2
+	terrain_triangles = (TERRAIN_CELLS * TERRAIN_CELLS - detail_cells_replaced - slice_cells.get_area()) * 2
+	landform_checks["slice_coarse_cells_replaced"] = slice_cells.get_area()
 	var centre: int = (TERRAIN_CELLS / 2) * columns + TERRAIN_CELLS / 2
 	var near_vertical: int = 0
 	var finite: bool = true
@@ -425,6 +504,8 @@ func _add_terrain() -> void:
 	_terrain_material.set_shader_parameter("moss_tex", MOSS_TEXTURE)
 	_terrain_material.set_shader_parameter("rock_tex", ROCK_TEXTURE)
 	_terrain_material.set_shader_parameter("moss_mean", _moss_mean)
+	_terrain_material.set_shader_parameter("clearing_rect", Vector4(baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y))
+	_terrain_material.set_shader_parameter("clearing_gain", Vector3(CLEARING_GAIN.r, CLEARING_GAIN.g, CLEARING_GAIN.b))
 	var terrain := MeshInstance3D.new()
 	terrain.name = "WorldTerrain"
 	terrain.mesh = mesh
@@ -432,7 +513,8 @@ func _add_terrain() -> void:
 	terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(terrain)
 	_static.append(terrain)
-	_add_detail_patch(coarse, patch)
+	detail_patch_triangles = _add_detail_patch(coarse, patch, "CliffDetailPatch", "detail_patch")
+	slice_patch_triangles = _add_detail_patch(coarse, slice_cells, "SliceDetailPatch", "slice_patch")
 	var disc := CylinderMesh.new()
 	disc.top_radius = 300.0
 	disc.bottom_radius = 300.0
@@ -478,8 +560,17 @@ func _detail_patch_cells(coarse: PackedFloat32Array) -> Rect2i:
 
 ## Detail patch at about DETAIL_CELL spacing. Border vertices lie on the coarse cell
 ## edges at the coarse edge's straight-line height, so the join is watertight.
-func _add_detail_patch(coarse: PackedFloat32Array, cells: Rect2i) -> void:
-	if cells.get_area() <= 0: return
+## Coarse cells under the connected slice, starting at the cliff patch's last row line so
+## the two patches never share a cell (their common border lies on coarse edges).
+func _slice_patch_cells(coarse: PackedFloat32Array, cliff: Rect2i) -> Rect2i:
+	var c0: int = maxi(0, coarse.bsearch(SLICE_PATCH.position.x) - 1)
+	var c1: int = mini(coarse.size() - 1, coarse.bsearch(SLICE_PATCH.end.x))
+	var r0: int = cliff.end.y
+	var r1: int = mini(coarse.size() - 1, coarse.bsearch(SLICE_PATCH.end.y))
+	return Rect2i(c0, r0, c1 - c0, maxi(0, r1 - r0))
+
+func _add_detail_patch(coarse: PackedFloat32Array, cells: Rect2i, label: String, key: String) -> int:
+	if cells.get_area() <= 0: return 0
 	var px := PackedFloat32Array()
 	var pz := PackedFloat32Array()
 	for axis: int in 2:
@@ -521,21 +612,22 @@ func _add_detail_patch(coarse: PackedFloat32Array, cells: Rect2i) -> void:
 			st.add_index(i1); st.add_index(i3); st.add_index(i2)
 	st.generate_normals()
 	var mesh: ArrayMesh = st.commit()
-	detail_patch_triangles = (px.size() - 1) * (pz.size() - 1) * 2
+	var triangles: int = (px.size() - 1) * (pz.size() - 1) * 2
 	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
 	var up: bool = true
 	for normal: Vector3 in normals: up = up and normal.is_finite()
-	landform_checks["detail_patch_normals_finite"] = up
-	landform_checks["detail_patch_centre_normal_y"] = normals[(pz.size() / 2) * width + width / 2].y
-	landform_checks["detail_patch_world_rect"] = [px[0], pz[0], px[px.size() - 1], pz[pz.size() - 1]]
-	landform_checks["detail_patch_grid"] = [px.size() - 1, pz.size() - 1]
+	landform_checks[key + "_normals_finite"] = up
+	landform_checks[key + "_centre_normal_y"] = normals[(pz.size() / 2) * width + width / 2].y
+	landform_checks[key + "_world_rect"] = [px[0], pz[0], px[px.size() - 1], pz[pz.size() - 1]]
+	landform_checks[key + "_grid"] = [px.size() - 1, pz.size() - 1]
 	var node := MeshInstance3D.new()
-	node.name = "CliffDetailPatch"
+	node.name = label
 	node.mesh = mesh
 	node.material_override = _terrain_material
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(node)
 	_static.append(node)
+	return triangles
 
 ## Medium-distance review pose on the detailed cliff band (camera only, not walkable):
 ## about 600 m out on the sun side, raised to clear the terrain along its sightline.
@@ -802,6 +894,11 @@ func _tree_batch(batches: Dictionary, kind: String, mesh: Mesh, material: Materi
 	if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": kind, "range": range_name, "poses": []}
 	batches[key].poses.append(pose)
 
+func _on_slice(x: float, z: float, margin: float) -> bool:
+	if not is_instance_valid(slice_route) or not slice_route.valid: return false
+	var y: float = slice_route.surface_height_at(x, z)
+	return slice_route.is_in_corridor(Vector3(x, terrain_height(x, z) if is_nan(y) else y, z), margin)
+
 ## Triangles in a mesh, for indexed or non-indexed surfaces.
 func _triangle_count(mesh: Mesh) -> int:
 	var total: int = 0
@@ -834,6 +931,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	var shore: int = 0
 	var flank: int = 0
 	_legacy_mesa = true
+	_skip_slice_bed = true
 	while tries < 6000 and (shelf < 14 or shore < 12 or flank < 14):
 		tries += 1
 		var spot: Vector2
@@ -869,6 +967,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		elif group == 3: shore += 1
 		else: flank += 1
 	_legacy_mesa = false
+	_skip_slice_bed = false
 	var near_crown: Dictionary = _dense_crown(templates)
 	# Separate generator: crown orientation must not shift any seeded placement.
 	var crown_rng := RandomNumberGenerator.new()
@@ -885,6 +984,8 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		# A tree whose ground the new landform changed, and that now falls on a cliff
 		# face, is dropped after its draws; unchanged ground (e.g. the rim) keeps it.
 		if _landform_changed(spot.x, spot.y) and terrain_slope(spot.x, spot.y) > 0.6: continue
+		# Keep the connected slice walkable and visible (also after the draws).
+		if _on_slice(spot.x, spot.y, 6.0): continue
 		var cell := Vector2i(floori(spot.x / 160.0), floori(spot.y / 160.0))
 		# Near trees (framing and route flanks) get full leaf clusters at their branch ends.
 		if groups[index] in [1, 4]: near_target += 1
@@ -963,6 +1064,7 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 	var colors: Array[Color] = []
 	var tries: int = 0
 	_legacy_mesa = true
+	_skip_slice_bed = true
 	while xs.size() < 3000 and tries < 60000:
 		tries += 1
 		# Denser near the clearing: squared radius sampling, then far scatter.
@@ -983,9 +1085,12 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		var width: float = rng.randf_range(6.0, 10.0) if form < 0.3 else (rng.randf_range(11.0, 20.0) if form < 0.8 else rng.randf_range(16.0, 26.0))
 		var height: float = rng.randf_range(16.0, 26.0) if form < 0.3 else (rng.randf_range(10.0, 17.0) if form < 0.8 else rng.randf_range(7.0, 11.0))
 		_legacy_mesa = false
+		_skip_slice_bed = false
 		var placed: float = terrain_height(x, z)
 		var on_cliff: bool = _landform_changed(x, z) and terrain_slope(x, z) > 0.6
+		var on_slice: bool = _on_slice(x, z, 3.0)
 		_legacy_mesa = true
+		_skip_slice_bed = true
 		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, placed - 1.0, z)))
 		var shade: float = rng.randf_range(0.8, 1.05)
 		var tone: Color = FOREST_HUES[rng.randi_range(0, FOREST_HUES.size() - 1)].lerp(base_color.lerp(accent_color, rng.randf_range(0.0, 0.4)), 0.25) * shade
@@ -993,11 +1098,12 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		tone = tone.lerp(Color("35603a"), smoothstep(-40.0, -70.0, placed) * 0.25)
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
-		if on_cliff or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
+		if on_cliff or on_slice or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
 			xs.pop_back()
 			continue
 		colors.append(tone)
 	_legacy_mesa = false
+	_skip_slice_bed = false
 	carpet_count = xs.size()
 	carpet_triangles = (clump.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * carpet_count
 	# One shared material; 400 m spatial chunks so off-screen forest is frustum-culled
@@ -1335,12 +1441,162 @@ func _add_route() -> void:
 		var start: Vector3 = route.get_start_point()
 		_approach = Rect2(start.x - 1.8, APPROACH_Z_FROM, 3.6, start.z - APPROACH_Z_FROM + 0.3)
 
+## Slice centreline: Catmull-Rom through the waypoints every 6.5 m, from the existing
+## route's end; tread heights follow natural ground within SLICE_GRADE using a backward
+## then forward clamp (start pinned to the junction height, so the join is flush).
+func _plan_slice(start: Vector3) -> PackedVector3Array:
+	var heading: Vector3 = route.get_end_direction()
+	# Two collinear points keep the first stretch straight, so the slice's first ring has
+	# exactly the existing route's end heading (no wedge gap or overlap at the seam).
+	var way: Array[Vector2] = [Vector2(start.x, start.z), Vector2(start.x + heading.x * 5.0, start.z + heading.z * 5.0), Vector2(start.x + heading.x * 11.0, start.z + heading.z * 11.0)]
+	way.append_array(SLICE_WAYPOINTS)
+	var curve := Curve2D.new()
+	for i: int in way.size():
+		var tangent: Vector2 = (way[mini(i + 1, way.size() - 1)] - way[maxi(i - 1, 0)]) * 0.5
+		curve.add_point(way[i], -tangent / 3.0, tangent / 3.0)
+	curve.bake_interval = 0.5
+	var length: float = curve.get_baked_length()
+	var count: int = int(ceil(length / 6.5))
+	var flat := PackedVector2Array()
+	for k: int in count + 1: flat.append(curve.sample_baked(minf(length, float(k) * length / count)))
+	var heights := PackedFloat32Array()
+	heights.resize(flat.size())
+	for k: int in flat.size(): heights[k] = terrain_height(flat[k].x, flat[k].y) + 0.06
+	heights[0] = start.y
+	var caps := PackedFloat32Array()
+	caps.resize(flat.size())
+	caps.fill(SLICE_GRADE)
+	var turns: int = 0
+	for k: int in range(1, flat.size() - 1):
+		var turn: float = absf((flat[k] - flat[k - 1]).angle_to(flat[k + 1] - flat[k]))
+		if turn > 0.0001 and flat[k - 1].distance_to(flat[k + 1]) * 0.5 / turn < SLICE_TURN_RADIUS:
+			caps[k] = SLICE_TURN_GRADE
+			turns += 1
+	for k: int in range(flat.size() - 2, 0, -1):
+		var run: float = flat[k].distance_to(flat[k + 1])
+		var grade: float = minf(caps[k], caps[k + 1])
+		heights[k] = clampf(heights[k], heights[k + 1] - grade * run, heights[k + 1] + grade * run)
+	for k: int in range(1, flat.size()):
+		var run: float = flat[k].distance_to(flat[k - 1])
+		var grade: float = minf(caps[k], caps[k - 1])
+		heights[k] = clampf(heights[k], heights[k - 1] - grade * run, heights[k - 1] + grade * run)
+	slice_report["turn_capped_points"] = turns
+	var points := PackedVector3Array()
+	var cut: float = 0.0
+	var fill: float = 0.0
+	for k: int in flat.size():
+		points.append(Vector3(flat[k].x, heights[k], flat[k].y))
+		var natural: float = terrain_height(flat[k].x, flat[k].y) + 0.06
+		cut = maxf(cut, natural - heights[k])
+		fill = maxf(fill, heights[k] - natural)
+	slice_report["planned_points"] = points.size()
+	slice_report["planned_length_m"] = length
+	slice_report["planned_max_cut_m"] = cut
+	slice_report["planned_max_fill_m"] = fill
+	return points
+
+func _add_slice_route() -> void:
+	if not is_instance_valid(route) or not route.valid:
+		slice_report["error"] = "existing route missing; slice not built"
+		return
+	var start: Vector3 = route.get_end_point()
+	var points: PackedVector3Array = _plan_slice(start)
+	slice_route = Route.new()
+	slice_route.name = "SliceRoute"
+	add_child(slice_route)
+	var earth: Material = route._mesh_instance.material_override if is_instance_valid(route._mesh_instance) else null
+	# 2.5 m samples keep the ~1.45 km ribbon under the module's 1,200-sample limit.
+	# The slice's first ring coincides with the existing route's last ring: same point, height,
+	# heading and falling-shoulder profile (taper_length 0). join_overlap 0: a flat overlap
+	# on the existing route's 11 degree climb left a 4-6 cm lip that stopped the walker.
+	var built: bool = slice_route.configure({"centerline": points, "tread_width": 3.6, "shoulder_width": 2.2, "max_grade_deg": 14.0, "sample_spacing": 2.5, "taper_length": 0.0, "join_overlap": 0.0,
+		"exclusion_rects": [Rect2(-24.0, -24.0, 49.0, 53.0)], "ground_height": Callable(self, "terrain_height"), "material": earth})
+	var report: Dictionary = slice_route.get_report()
+	report.merge(slice_report, true)
+	report.erase("profile_x_z_raw_soil_tread")
+	slice_report = report
+	if not built: return
+	# The trail bed follows the ribbon's own samples, so the ground meets what is drawn.
+	_slice_bed = slice_route._p.duplicate()
+	_slice_box = Rect2(Vector2(_slice_bed[0].x, _slice_bed[0].z), Vector2.ZERO)
+	for point: Vector3 in _slice_bed: _slice_box = _slice_box.expand(Vector2(point.x, point.z))
+	_slice_box = _slice_box.grow(SLICE_BED_BLEND + 2.0)
+	for i: int in _slice_bed.size() - 1:
+		var seg := Rect2(Vector2(_slice_bed[i].x, _slice_bed[i].z), Vector2.ZERO).expand(Vector2(_slice_bed[i + 1].x, _slice_bed[i + 1].z)).grow(SLICE_BED_BLEND)
+		for bx: int in range(floori(seg.position.x / SLICE_BUCKET), floori(seg.end.x / SLICE_BUCKET) + 1):
+			for bz: int in range(floori(seg.position.y / SLICE_BUCKET), floori(seg.end.y / SLICE_BUCKET) + 1):
+				var key := Vector2i(bx, bz)
+				if not _slice_buckets.has(key): _slice_buckets[key] = PackedInt32Array()
+				var list: PackedInt32Array = _slice_buckets[key]
+				list.append(i)
+				_slice_buckets[key] = list
+
+## Natural boundary at the slice's end: the hero stem's own rendered triangles around
+## ground level become one static concave collider, so the walker stops at the root.
+func _add_root_collision() -> void:
+	var stems: MultiMeshInstance3D = null
+	for node: MultiMeshInstance3D in _nodes:
+		if String(node.name) == "CanopyStems": stems = node
+	if stems == null or hero.is_empty(): return
+	var pose: Transform3D = stems.global_transform * stems.multimesh.get_instance_transform(0)
+	var ground: float = float(hero.ground)
+	var faces: PackedVector3Array = stems.multimesh.mesh.get_faces()
+	var band := PackedVector3Array()
+	for i: int in range(0, faces.size(), 3):
+		var a: Vector3 = pose * faces[i]
+		var b: Vector3 = pose * faces[i + 1]
+		var c: Vector3 = pose * faces[i + 2]
+		if minf(a.y, minf(b.y, c.y)) > ground + 12.0 or maxf(a.y, maxf(b.y, c.y)) < ground - 6.0: continue
+		band.append(a); band.append(b); band.append(c)
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(band)
+	root_body = StaticBody3D.new()
+	root_body.name = "HeroRootCollision"
+	root_body.collision_layer = 1
+	root_body.collision_mask = 0
+	root_body.set_meta("unsafe_support", true)
+	var holder := CollisionShape3D.new()
+	holder.shape = shape
+	root_body.add_child(holder)
+	add_child(root_body)
+	root_collision_triangles = band.size() / 3
+
+## Rendered terrain height at x,z from the actual terrain/patch mesh triangles near the
+## routes (lazy, for verification only; not used by gameplay).
+func rendered_terrain_height(x: float, z: float) -> float:
+	if _rendered_faces.is_empty():
+		var region: Rect2 = _slice_box.merge(_route_box) if _slice_box.size != Vector2.ZERO else _route_box
+		for name: String in ["WorldTerrain", "CliffDetailPatch", "SliceDetailPatch"]:
+			var node: MeshInstance3D = get_node_or_null(name)
+			if node == null: continue
+			var faces: PackedVector3Array = node.mesh.get_faces()
+			for i: int in range(0, faces.size(), 3):
+				var tri := Rect2(Vector2(faces[i].x, faces[i].z), Vector2.ZERO).expand(Vector2(faces[i + 1].x, faces[i + 1].z)).expand(Vector2(faces[i + 2].x, faces[i + 2].z))
+				if not tri.intersects(region.grow(40.0)): continue
+				var index: int = _rendered_faces.size() / 3
+				_rendered_faces.append(faces[i]); _rendered_faces.append(faces[i + 1]); _rendered_faces.append(faces[i + 2])
+				for bx: int in range(floori(tri.position.x / 8.0), floori(tri.end.x / 8.0) + 1):
+					for bz: int in range(floori(tri.position.y / 8.0), floori(tri.end.y / 8.0) + 1):
+						var key := Vector2i(bx, bz)
+						if not _rendered_buckets.has(key): _rendered_buckets[key] = PackedInt32Array()
+						var list: PackedInt32Array = _rendered_buckets[key]
+						list.append(index)
+						_rendered_buckets[key] = list
+	var best: float = NAN
+	var key := Vector2i(floori(x / 8.0), floori(z / 8.0))
+	if not _rendered_buckets.has(key): return best
+	for t: int in _rendered_buckets[key]:
+		var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x, 1000.0, z), Vector3.DOWN, _rendered_faces[t * 3], _rendered_faces[t * 3 + 1], _rendered_faces[t * 3 + 2])
+		if hit is Vector3 and (is_nan(best) or (hit as Vector3).y > best): best = (hit as Vector3).y
+	return best
+
 ## Movement-only extension used by the player: the exact route corridor, or the short
 ## approach strip over baked collider ground between the old movement box (z 26) and the
 ## seam (z 29). Saves and teleports do NOT use this; they keep the original box.
 func allows_movement(point: Vector3) -> bool:
 	if not is_instance_valid(route) or not route.valid or not point.is_finite(): return false
 	if _approach.has_point(Vector2(point.x, point.z)) and point.y > -1.0 and point.y < 4.0: return true
+	if is_instance_valid(slice_route) and slice_route.valid and slice_route.is_in_corridor(point): return true
 	return route.is_in_corridor(point)
 
 ## Camera on the route's end at eye height, facing back over the clearing to the valley.
@@ -1436,10 +1692,12 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		sky.set_shader_parameter("horizon_color", Color("f4c49a").lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
 
 func get_report() -> Dictionary:
-	var colliders: int = find_children("*", "CollisionObject3D", true, false).size() - (route_report.get("colliders", 0) as int)
+	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.
+	var owned: int = int(route_report.get("colliders", 0)) + int(slice_report.get("colliders", 0)) + (1 if is_instance_valid(root_body) else 0)
+	var colliders: int = find_children("*", "CollisionObject3D", true, false).size() - owned
 	var shadows: int = 0
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

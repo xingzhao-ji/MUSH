@@ -13,6 +13,15 @@ func _outside_playable(point: Vector3) -> bool:
 		return false
 	return not (is_instance_valid(movement_extension) and movement_extension.allows_movement(point))
 
+## The inherited guard treats y < -1.5 as having fallen out of the world. Inside the
+## prototype's walkable corridors (the slice descends to the valley floor near -80 m) a
+## walker standing on ribbon support is not lost; off-corridor, or without support, the
+## rule is unchanged. With no extension installed this is exactly the original rule.
+func _fell_below_world() -> bool:
+	if not super._fell_below_world():
+		return false
+	return not (is_instance_valid(movement_extension) and movement_extension.allows_movement(global_position) and not _support_at(global_position, 1.2).is_empty())
+
 func _outside_original_box(point: Vector3) -> bool:
 	return super._outside_playable(point)
 

@@ -34,6 +34,11 @@ var _step48_rejections: Dictionary = {}
 var _step48_events: Array[Dictionary] = []
 var _step48_last_attempt: Dictionary = {}
 
+## Out-of-world height guard (unchanged rule: below y -1.5). A hook so the prototype's
+## movement extension can admit supported walking on its corridors (air_capsule_guard.gd).
+func _fell_below_world() -> bool:
+	return global_position.y < -1.5
+
 func _physics_process(delta: float) -> void:
 	var entrance48_teleport_tick: bool = _pending_teleport
 	if entrance48_teleport_tick:
@@ -47,7 +52,7 @@ func _physics_process(delta: float) -> void:
 	if state == "Recovering":
 		_update_recovery(delta)
 		return
-	if _outside_playable(global_position) or _over_water(global_position) or global_position.y < -1.5:
+	if _outside_playable(global_position) or _over_water(global_position) or _fell_below_world():
 		recover()
 		return
 	if _require_release and not _any_control_held():

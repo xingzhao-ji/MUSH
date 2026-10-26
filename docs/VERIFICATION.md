@@ -1425,3 +1425,100 @@ Checks:
 Not rerun or still failing:
 - **Benchmark:** not rerun. The p95 17.573 ms failure stands.
 - **LOD:** the leaf-density change at 94–96 m and 118–120 m remains.
+
+## Connected environment slice: knoll to lake shore and hero root (2026-10-26)
+
+**Status: traversal validated; art not accepted; junction seam open.** Rollback: `git revert` this commit, or `--prototype-scenery=off`.
+
+Geometry (startup-only, `scripts/prototype_scenery.gd`):
+- **SliceRoute:** one walking ribbon from the existing route end (72, 26.86, 215) to a documented endpoint 2.5 m before the hero-root collider. It runs 1,488.6 m in 921 samples: a summit loop, two 14 m hairpins, terraces down to the valley floor, then the east lake shore.
+  - **Grades:** walking grade at most 14.0°; steepest surface (shoulder) 22.8°.
+  - **Turns:** minimum turn radius 8.43 m.
+  - **Cross-section:** 3.6 m tread with 2.2 m shoulders.
+  - **Collision:** its own collider of 5,520 faces, the same triangles it renders, on layer 1.
+  - **Height range:** about −82 m to +34 m.
+- **HeroRootCollision:** a StaticBody3D of 432 triangles taken from the hero stem between 6 m below and 12 m above the ground. Only the root stops a walker.
+- **Terrain:**
+  - A bed is carved under the ribbon, and a second 5 m detail patch covers it (`SliceDetailPatch`).
+  - Vegetation keeps its random stream and is filtered off the tread.
+  - `far_terrain.gdshader` feathers the clearing's moss tone (a noisy 45 m edge).
+  - The far layer still has no colliders.
+- **Movement:**
+  - The movement-only extension now admits the exact slice corridor.
+  - Safe, save and teleport positions still require the original box.
+- **Fall guard:**
+  - `lineage/entrance48-player-step-proposal02/player.gd` moves its inline `y < -1.5` recovery test into `_fell_below_world()`. The rule is unchanged, the edit is 7 lines and it is the only `lineage/` edit.
+  - `scripts/air_capsule_guard.gd` overrides it so that a walker below −1.5 m stays put only when standing on an extension corridor with ribbon support within 1.2 m.
+  - Off-corridor or unsupported positions still recover. With no extension installed, the original rule applies.
+- **Topology change (PM-authorized):**
+  - The old route end is now the slice junction, not an open fall edge.
+  - The `route` suite verifies grounded continuation there.
+  - It also checks recovery at the junction's exposed side and at the summit loop's outer edge.
+
+Checks, in order. All runs are on the same runtime source; receipt manifests match except for test and runner files.
+
+| Suite | Result | Report |
+|---|---|---|
+| `junction` (harness-placed; not continuous proof) | 12/12 — route→slice and back on 0 and ±1.2 m lines; supported walk below −1.5 m; stepping off below −1.5 m still recovers | `junction-20261026-060508-86940`, fresh repeat on the committed test file `junction-20261026-073119-98088` (12/12) |
+| `endpoint` (harness-placed from 440 m; not continuous proof) | 6/6 — reaches the endpoint, unobstructed approach frame, input contact probe, 60 m return | `endpoint-20261026-070641-94961` |
+| `slice` (definitive full out-and-back) | **26/26**, 890 s, exit 0, no leak lines | `slice-20261026-070902-96139` |
+| `route` (old route, updated topology assertion) | **22/22** | `route-20261026-072355-96790` |
+| `acceptance` | **295/295**, no leak | `acceptance-20261026-062600-89451` |
+| `scenic` | **Fails** only the known vista coverage gate (0.0128 < 0.02); framing, floor and all-giant footing (drift 0.0 m, 7/7) pass | `scenic-20261026-073421-99024` |
+
+Full-walk details (`slice-20261026-070902-96139`):
+- **Outbound:** clearing → route → junction → whole slice → endpoint: 48,237 ticks, 1,746 m, 100% grounded, no recovery. Largest per-tick drop 0.014 m; camera clearance at least 0.21 m.
+- **Contact probe:** forward input from the endpoint is stopped by the hero-root body itself, 0.43 m ahead. The walker ends grounded, on the corridor, with no recovery.
+- **Saves:** save and safe positions stay in the original box.
+- **Return:** endpoint → knoll junction: 40,981 ticks, 100% grounded, no recovery. The route suite separately covers the clearing ↔ knoll leg.
+- **Edges:** Float on the shore ends grounded. Stepping off at the lake side and on both sides of the descent recovers into the original box, and `teleport_safe` onto the slice resolves into the box.
+
+Images (1280×720 runtime captures; inspected):
+- `slice-root-approach-day.png`: real walk, 364 m from the hero centre. Path, buttressed root base beside the walker, stem and cap underside.
+  - **Proven in-frame:** both root targets project in frame and clear of the avatar. Nothing blocks them: no terrain, and none of the 3,685 prototype instance bounds.
+  - **Out of frame:** the cap top is cropped.
+- `slice-shore-day.png`: east-shore arrival, real walk. The composition is flat and the lake reads as a dull grey-brown sheet.
+- `slice-root-contact-day.png`: contact proof only. It is wall-filling and is not a landmark image.
+- `route-20261026-072355-96790/route-overlook-day.png`: shows the junction seam below.
+- Wide views: `scenic-20261026-073421-99024/world-overview-day.png`, where the slice reads as one continuous line from the knoll to the hero root, and `rim-overlook-day.png`. The clearing still reads as a square patch.
+
+Costs from the static prototype report (`scenic-20261026-073421-99024`):
+- **Terrain:** coarse terrain 91,442 → 83,616 triangles, with the replaced cells moving into the new 32,028-triangle slice patch.
+- **Slice ribbon:** 5,520 rendered triangles and 5,520 collision faces.
+- **Hero root collider:** 432 triangles.
+- **Unchanged:** the existing route at 1,590, the forest carpet at 504,000, and far-layer colliders at 0.
+- **Copied trees:** 960,480 → 918,196 triangles built, filtered off the tread; near-crown replacement 18/18.
+- **Draw nodes:** 88 → 89 as counted by the report.
+- **Prototype-owned colliders:** 3 (route, slice, root).
+- **Frame time:** not measured.
+
+Open defects and limits (not fixed):
+- **Junction seam:**
+  - The slice's first cross-section is rotated about 1.8° from the route's last one. This leaves a wedge gap in both render and collision on one side: 1–2 cm at 0.5 m out, about 3 cm at the 1.2 m walking line, and 12 cm at the 3.75 m shoulder edge (`terrain-probe-20261026-073005-seam`).
+  - It shows as a green crack in the knoll overlook.
+  - The earlier "no gaps" junction note used 5 cm rays and missed it.
+  - All walks across the junction pass.
+- **Return leg:** ends at the knoll junction, not the clearing.
+- **Intermittent exit leak:** "resources still in use at exit" (scenic `052059`, earlier acceptance `015518`). Root cause not established; it did not recur in these runs.
+- **Art not accepted:** shore view flat; pale smooth stem; low-poly crowns; vista coverage gate fails.
+- **Performance:**
+  - Benchmark not rerun; the p95 17.573 ms failure stands.
+  - GPU time unmeasured.
+  - The slice adds geometry and colliders.
+- **LOD:** the leaf-density change at 94–96 m and 118–120 m remains.
+- **Manual evidence:** motion, feel, audio and device are not verified.
+
+Retained failed evidence:
+- **Slice:**
+  - `052936`: fixture walked to the wrong target.
+  - `053046`: stuck at the junction; existing-route intrusion regression, since fixed.
+  - `055125`: 4–6 cm join lip.
+  - `055625`: recovered by the `y < -1.5` guard; its root frame was mislabelled.
+  - `060755`: 23/25, stuck against the root.
+  - `063323`: 25/25 under the since-rejected stall-zone rule. Not root-arrival evidence.
+- **Route:** `063025`: 17/18, open-end assertion before the topology decision.
+- **Junction:** `060141`: start-up teleport overlap and the guard.
+- **Endpoint:**
+  - `065218` and `065446`: unusable approach frames, taken under the cap.
+  - `065731`: fixture tick cap.
+  - `070057`: the hero's own stem counted as a blocker.

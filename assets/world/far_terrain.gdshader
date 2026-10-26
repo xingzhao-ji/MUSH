@@ -15,6 +15,10 @@ uniform bool debug_unlit = false;
 uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
 uniform vec3 warm_rock : source_color = vec3(0.66, 0.55, 0.44);
 uniform vec3 cool_rock : source_color = vec3(0.46, 0.45, 0.50);
+// Clearing edge feather: baked ground extent (x0, z0, x1, z1) and the far-moss tone gain
+// that matches the clearing's average colour, applied with an irregular boundary.
+uniform vec4 clearing_rect = vec4(0.0);
+uniform vec3 clearing_gain = vec3(1.0);
 varying vec3 v_world;
 varying vec3 v_normal;
 
@@ -43,11 +47,14 @@ void fragment() {
 	// Moss: two rotated scales break tiling; detail fades to the mean with distance.
 	// Fetch the moss texture only where its detail is visible: it has no mipmaps, and
 	// minified fetches across the whole far terrain thrash the texture cache.
-	vec3 moss = moss_mean;
+	vec2 outside = max(max(clearing_rect.xy - v_world.xz, v_world.xz - clearing_rect.zw), vec2(0.0));
+	float feather = 1.0 - smoothstep(0.0, 45.0, length(outside) + (fbm(v_world.xz * 0.03) - 0.5) * 40.0);
+	vec3 far_moss = moss_mean * mix(vec3(1.0), clearing_gain, feather);
+	vec3 moss = far_moss;
 	if (dist < 80.0) {
 		vec2 uv = v_world.xz * moss_scale;
 		vec3 detail = mix(texture(moss_tex, uv).rgb, texture(moss_tex, mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * uv * 0.41 + 0.37).rgb, 0.4);
-		moss = mix(detail, moss_mean, smoothstep(20.0, 80.0, dist));
+		moss = mix(detail, far_moss, smoothstep(20.0, 80.0, dist));
 	}
 	moss *= mix(vec3(0.92, 1.02, 0.95), vec3(1.08, 1.0, 0.86), macro);
 	// Damp valley floor, then a narrow sandy shore band at the lake level.

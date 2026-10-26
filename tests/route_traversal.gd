@@ -53,6 +53,11 @@ func _place(point: Vector3, yaw: float) -> void:
 	player._camera_pivot.global_position = player.global_position + Vector3.UP * 0.70
 	await _frames(40)
 
+func _corridor_beside(at: Vector3, dir: Vector3) -> bool:
+	for metres: float in [4.0, 5.5, 7.0, 8.5]:
+		if scenery.allows_movement(at + dir * metres): return true
+	return false
+
 func _drive(targets: Array, label: String, max_ticks: int, expect_recovery: bool) -> Dictionary:
 	var leg := {"label":label,"from":_v(player.global_position),"ticks":0,"floor_ticks":0,"recovered":false,"recovery_tick":-1,"min_camera_clearance":INF,"max_drop_per_tick":0.0,"max_y":-INF,"min_y":INF,"reached":false}
 	var previous: Vector3 = player.global_position
@@ -188,9 +193,32 @@ func _scenario() -> void:
 		_check(probe[0]+": stepping off the corridor recovers into the original box", leg.recovered and leg.end_inside_original_box and leg.end_floor and leg.min_y > a.y - 1.5, {"recovered_at":leg.get("recovered_at"),"end":leg.end,"min_y":leg.min_y})
 	var end: Vector3 = route.get_end_point()
 	var heading: Vector3 = route.get_end_direction()
+	var slice: Node3D = scenery.get("slice_route")
+	var connected: bool = is_instance_valid(slice) and slice.valid and slice.get_start_point().distance_to(end) <= 0.05
 	await _place(end - heading*2.0, atan2(-heading.x,-heading.z))
 	var over: Dictionary = await _drive([end + heading*8.0],"open-end",900,true)
-	_check("Open end: walking past it recovers into the original box", over.recovered and over.end_inside_original_box and over.end_floor and over.min_y > end.y - 1.5, {"recovered_at":over.get("recovered_at"),"end":over.end})
+	if connected:
+		# Authorized topology change (PM decision): the old end is the connected slice's
+		# junction, not an open fall edge. Walking past it must continue, grounded, onto the slice.
+		_check("Junction (authorized topology change): walking past the old end continues grounded onto the connected slice", over.reached and not over.recovered and over.end_floor and slice.is_in_corridor(player.global_position), {"end":over.end,"recovered_at":over.get("recovered_at")})
+		# Equivalent off-route recovery at the genuinely exposed edges there: the junction's
+		# north-west side, and the outer side of the slice's summit loop.
+		var k: int = 0
+		while k < slice._p.size() - 2 and slice._p[k].distance_to(end) < 30.0: k += 1
+		var d1: Vector3 = slice._p[k] - slice._p[k - 1]
+		var d2: Vector3 = slice._p[k + 1] - slice._p[k]
+		var outward: Vector3 = Vector3(d2.x, 0.0, d2.z).normalized().cross(Vector3.UP) * signf(d1.cross(d2).y)
+		for probe: Array in [["junction-exposed-edge", end, Vector3(-heading.z, 0.0, heading.x)], ["summit-loop-outer-edge", slice._p[k], outward]]:
+			# The probe side must be genuinely exposed: no walkable corridor 4-9 m out.
+			var dir: Vector3 = probe[2]
+			if _corridor_beside(probe[1], dir): dir = -dir
+			if not _check(probe[0] + ": an exposed side exists (no corridor 4-9 m out)", not _corridor_beside(probe[1], dir), {"at":_v(probe[1])}): continue
+			probe[2] = dir
+			await _place(probe[1], atan2(-(probe[2] as Vector3).x, -(probe[2] as Vector3).z))
+			var off: Dictionary = await _drive([(probe[1] as Vector3) + (probe[2] as Vector3) * 9.0], probe[0], 900, true)
+			_check(probe[0] + ": stepping off recovers into the original box", off.recovered and off.end_inside_original_box and off.end_floor and off.min_y > (probe[1] as Vector3).y - 1.5, {"recovered_at":off.get("recovered_at"),"end":off.end})
+	else:
+		_check("Open end: walking past it recovers into the original box", over.recovered and over.end_inside_original_box and over.end_floor and over.min_y > end.y - 1.5, {"recovered_at":over.get("recovered_at"),"end":over.end})
 	# 5. Teleport/reload resolution never lands on the route.
 	player.teleport_safe(a,0.0)
 	await _frames(60)
