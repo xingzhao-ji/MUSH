@@ -24,6 +24,8 @@ const FAR_PLANE := 2600.0
 const FOG_END := 1400.0
 const TERRAIN_HALF := 1500.0
 const TERRAIN_CELLS := 220
+## Local detail patch over the rim view's central cliff band (target cell size, metres).
+const DETAIL_CELL := 6.0
 const VALLEY_DIR := Vector2(0.447, -0.894)
 const LAKE_CENTER := Vector2(190.0, -330.0)
 const LAKE_Y := -82.0
@@ -72,6 +74,8 @@ var _hill_noise: FastNoiseLite
 var _terrace_noise: FastNoiseLite
 var _legacy_mesa: bool = false
 var landform_checks: Dictionary = {}
+var detail_patch_triangles: int = 0
+var detail_cells_replaced: int = 0
 var route: Node3D
 var route_report: Dictionary = {}
 var seam_height: float = NAN
@@ -233,8 +237,14 @@ func _eroded_mesa_height(x: float, z: float) -> float:
 	var survive: float = smoothstep(-0.25, 0.35, _terrace_noise.get_noise_2d(x * 0.9 + 500.0, z * 0.9))
 	var shaped: float = lerpf(raw, strata, survive * smoothstep(0.2, 0.55, body))
 	var gully: float = pow(1.0 - absf(_hill_noise.get_noise_2d(x * 1.3 - 400.0, z * 1.3)), 6.0) * 34.0 * smoothstep(0.25, 0.7, body) * (1.0 - smoothstep(0.9, 1.0, body))
-	var crown: float = _hill_noise.get_noise_2d(x * 0.8, z * 0.8 + 700.0) * 16.0 * smoothstep(0.85, 1.0, body)
-	return maxf(shaped - gully + crown, talus)
+	# Tops break into ridgelines and saddles instead of one flat plateau.
+	var top: float = smoothstep(0.7, 1.0, body)
+	var ridges: float = (pow(1.0 - absf(_ridge_noise.get_noise_2d(x * 2.2 + 900.0, z * 2.2)), 3.0) * 70.0 - 20.0) * top
+	var crown: float = _hill_noise.get_noise_2d(x * 0.8, z * 0.8 + 700.0) * 22.0 * top
+	# Rock breakup on the faces (30-70 m); only the detail patch resolves it fully.
+	var face: float = smoothstep(0.15, 0.6, body) * (1.0 - top * 0.6)
+	var breakup: float = (_terrace_noise.get_noise_2d(x * 5.0, z * 5.0) * 6.0 + _hill_noise.get_noise_2d(x * 9.0 + 200.0, z * 9.0) * 2.5) * face
+	return maxf(shaped - gully + crown + ridges + breakup, talus)
 
 func terrain_slope(x: float, z: float) -> float:
 	var e: float = 6.0
@@ -320,8 +330,14 @@ func _add_terrain() -> void:
 			st.set_color(Color(0, 0, 0))
 			st.set_uv(Vector2(float(column) / TERRAIN_CELLS, float(row) / TERRAIN_CELLS))
 			st.add_vertex(Vector3(x, terrain_height(x, z), z))
+	var coarse := PackedFloat32Array()
+	for column: int in columns:
+		var sx: float = lerpf(-1.0, 1.0, float(column) / TERRAIN_CELLS)
+		coarse.append(TERRAIN_HALF * signf(sx) * pow(absf(sx), 1.7))
+	var patch: Rect2i = _detail_patch_cells(coarse)
 	for row: int in TERRAIN_CELLS:
 		for column: int in TERRAIN_CELLS:
+			if patch.has_point(Vector2i(column, row)): continue
 			var i0: int = row * columns + column
 			var i1: int = i0 + 1
 			var i2: int = i0 + columns
@@ -331,7 +347,8 @@ func _add_terrain() -> void:
 			st.add_index(i1); st.add_index(i3); st.add_index(i2)
 	st.generate_normals()
 	var mesh: ArrayMesh = st.commit()
-	terrain_triangles = TERRAIN_CELLS * TERRAIN_CELLS * 2
+	detail_cells_replaced = patch.get_area()
+	terrain_triangles = (TERRAIN_CELLS * TERRAIN_CELLS - detail_cells_replaced) * 2
 	var centre: int = (TERRAIN_CELLS / 2) * columns + TERRAIN_CELLS / 2
 	var near_vertical: int = 0
 	var finite: bool = true
@@ -367,6 +384,7 @@ func _add_terrain() -> void:
 	terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(terrain)
 	_static.append(terrain)
+	_add_detail_patch(coarse, patch)
 	var disc := CylinderMesh.new()
 	disc.top_radius = 300.0
 	disc.bottom_radius = 300.0
@@ -383,6 +401,94 @@ func _add_terrain() -> void:
 	lake.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(lake)
 	_static.append(lake)
+
+## Coarse cells under the rim view's central cliff band (520-1150 m out, about +/-20
+## degrees around the hero direction), snapped to coarse grid lines.
+func _detail_patch_cells(coarse: PackedFloat32Array) -> Rect2i:
+	var rim: Vector2 = _rim_point(5.0)
+	var ahead: Vector2 = (HERO - rim).normalized()
+	var bounds := Rect2(rim + ahead * 520.0, Vector2.ZERO)
+	for distance: float in [520.0, 800.0, 1150.0]:
+		for degrees: float in [-20.0, -10.0, 0.0, 10.0, 20.0]:
+			bounds = bounds.expand(rim + ahead.rotated(deg_to_rad(degrees)) * distance)
+	var c0: int = maxi(0, coarse.bsearch(bounds.position.x) - 1)
+	var c1: int = mini(coarse.size() - 1, coarse.bsearch(bounds.end.x))
+	var r0: int = maxi(0, coarse.bsearch(bounds.position.y) - 1)
+	var r1: int = mini(coarse.size() - 1, coarse.bsearch(bounds.end.y))
+	return Rect2i(c0, r0, c1 - c0, r1 - r0)
+
+## Detail patch at about DETAIL_CELL spacing. Border vertices lie on the coarse cell
+## edges at the coarse edge's straight-line height, so the join is watertight.
+func _add_detail_patch(coarse: PackedFloat32Array, cells: Rect2i) -> void:
+	if cells.get_area() <= 0: return
+	var px := PackedFloat32Array()
+	var pz := PackedFloat32Array()
+	for axis: int in 2:
+		var line: PackedFloat32Array = px if axis == 0 else pz
+		var first: int = cells.position.x if axis == 0 else cells.position.y
+		var last: int = cells.end.x if axis == 0 else cells.end.y
+		for c: int in range(first, last):
+			var parts: int = maxi(1, ceili((coarse[c + 1] - coarse[c]) / DETAIL_CELL))
+			for k: int in parts: line.append(lerpf(coarse[c], coarse[c + 1], float(k) / parts))
+		line.append(coarse[last])
+		if axis == 0: px = line
+		else: pz = line
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for j: int in pz.size():
+		for i: int in px.size():
+			var x: float = px[i]
+			var z: float = pz[j]
+			var h: float
+			if i == 0 or i == px.size() - 1:
+				var r: int = clampi(coarse.bsearch(z, false) - 1, 0, coarse.size() - 2)
+				h = lerpf(terrain_height(x, coarse[r]), terrain_height(x, coarse[r + 1]), inverse_lerp(coarse[r], coarse[r + 1], z))
+			elif j == 0 or j == pz.size() - 1:
+				var c: int = clampi(coarse.bsearch(x, false) - 1, 0, coarse.size() - 2)
+				h = lerpf(terrain_height(coarse[c], z), terrain_height(coarse[c + 1], z), inverse_lerp(coarse[c], coarse[c + 1], x))
+			else:
+				h = terrain_height(x, z)
+			st.set_color(Color(0, 0, 0))
+			st.set_uv(Vector2(float(i) / (px.size() - 1), float(j) / (pz.size() - 1)))
+			st.add_vertex(Vector3(x, h, z))
+	var width: int = px.size()
+	for j: int in pz.size() - 1:
+		for i: int in width - 1:
+			var i0: int = j * width + i
+			var i1: int = i0 + 1
+			var i2: int = i0 + width
+			var i3: int = i2 + 1
+			st.add_index(i0); st.add_index(i1); st.add_index(i2)
+			st.add_index(i1); st.add_index(i3); st.add_index(i2)
+	st.generate_normals()
+	var mesh: ArrayMesh = st.commit()
+	detail_patch_triangles = (px.size() - 1) * (pz.size() - 1) * 2
+	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	var up: bool = true
+	for normal: Vector3 in normals: up = up and normal.is_finite()
+	landform_checks["detail_patch_normals_finite"] = up
+	landform_checks["detail_patch_centre_normal_y"] = normals[(pz.size() / 2) * width + width / 2].y
+	landform_checks["detail_patch_world_rect"] = [px[0], pz[0], px[px.size() - 1], pz[pz.size() - 1]]
+	landform_checks["detail_patch_grid"] = [px.size() - 1, pz.size() - 1]
+	var node := MeshInstance3D.new()
+	node.name = "CliffDetailPatch"
+	node.mesh = mesh
+	node.material_override = _terrain_material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
+
+## Close review pose on the detailed cliff band (camera only, not walkable): from the
+## sun side, looking back at the lit faces, clear of every giant cap.
+func cliff_detail_pose() -> Dictionary:
+	var rim: Vector2 = _rim_point(5.0)
+	var ahead: Vector2 = (HERO - rim).normalized()
+	var focus2: Vector2 = rim + ahead.rotated(deg_to_rad(14.0)) * 950.0
+	var focus := Vector3(focus2.x, terrain_height(focus2.x, focus2.y) + 60.0, focus2.y)
+	var sunward := Vector2(0.77, -0.64).normalized()
+	var eye2: Vector2 = focus2 + sunward * 360.0
+	var eye_y: float = maxf(terrain_height(eye2.x, eye2.y) + 70.0, focus.y + 30.0)
+	return {"position": Vector3(eye2.x, eye_y, eye2.y), "target": focus, "fov": 50.0}
 
 func _giant_specs() -> Array:
 	return GIANTS
@@ -1039,12 +1145,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_enabled = not _debug_colors
 	environment.fog_light_color = Color("c3a4d0").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
-	environment.fog_depth_begin = 120.0
+	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
+	environment.fog_depth_begin = 200.0
 	environment.fog_depth_end = FOG_END
-	environment.fog_depth_curve = 1.2
+	environment.fog_depth_curve = 1.8
 	environment.fog_density = (0.14 if _overview else lerpf(0.5, 0.8, rain))
-	environment.fog_aerial_perspective = 0.35
-	environment.fog_sun_scatter = 0.2
+	environment.fog_aerial_perspective = 0.25
+	environment.fog_sun_scatter = 0.1
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:
@@ -1057,4 +1164,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

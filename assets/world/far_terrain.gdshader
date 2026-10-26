@@ -58,6 +58,10 @@ void fragment() {
 	vec3 w = pow(abs(n), vec3(4.0));
 	w /= (w.x + w.y + w.z);
 	vec3 rock = texture(rock_tex, v_world.zy * rock_scale).rgb * w.x + texture(rock_tex, v_world.xz * rock_scale).rgb * w.y + texture(rock_tex, v_world.xy * rock_scale).rgb * w.z;
+	// A second, 4x larger sample of the same texture breaks the visible 8 m tile grid.
+	float big = rock_scale * 0.25;
+	vec3 broad = texture(rock_tex, v_world.zy * big + 0.31).rgb * w.x + texture(rock_tex, v_world.xz * big + 0.57).rgb * w.y + texture(rock_tex, v_world.xy * big + 0.13).rgb * w.z;
+	rock = rock * mix(vec3(1.0), broad * 2.0, 0.5);
 	float streak = fbm(vec2((v_world.x + v_world.z) * 0.06, h * 0.008 + fbm(v_world.xz * 0.02) * 0.6));
 	rock *= mix(cool_rock, warm_rock, streak) * 1.35;
 	// Geological strata: warped, uneven-thickness layers of tone (not a periodic band).

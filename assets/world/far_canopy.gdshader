@@ -116,6 +116,8 @@ void fragment() {
 		w /= (w.x + w.y + w.z);
 		float scale = 0.12;
 		vec3 rock = texture(rock_tex, v_world.zy * scale).rgb * w.x + texture(rock_tex, v_world.xz * scale).rgb * w.y + texture(rock_tex, v_world.xy * scale).rgb * w.z;
+		vec3 broad = texture(rock_tex, v_world.zy * scale * 0.25 + 0.31).rgb * w.x + texture(rock_tex, v_world.xz * scale * 0.25 + 0.57).rgb * w.y + texture(rock_tex, v_world.xy * scale * 0.25 + 0.13).rgb * w.z;
+		rock = rock * mix(vec3(1.0), broad * 2.0, 0.5);
 		float streak = fbm(vec2((v_world.x + v_world.z) * 0.05, v_world.y * 0.01));
 		float strata = fbm(vec2(v_world.y * 0.05 + fbm(v_world.xz * 0.01) * 1.4, 0.61));
 		albedo = rock * mix(vec3(0.95, 0.88, 0.86), vec3(1.25, 1.08, 0.92), streak) * mix(0.82, 1.1, strata) * (0.9 + 0.2 * v_tint);

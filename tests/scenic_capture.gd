@@ -23,11 +23,13 @@ func _bridge_bounds() -> AABB:
 
 func _views() -> Array[Dictionary]:
 	var bridge: AABB = _bridge_bounds()
+	var detail: Dictionary = game.prototype_scenery.cliff_detail_pose() if is_instance_valid(game.get("prototype_scenery")) else {"position":Vector3(300,60,-500),"target":Vector3(500,40,-900),"fov":50.0}
 	var overlook: Dictionary = game.prototype_scenery.overlook_pose() if is_instance_valid(game.get("prototype_scenery")) else {"position":Vector3(40,3,-40),"target":Vector3(378,100,-648),"fov":48.0}
 	var middle: Vector3 = bridge.get_center()
 	return [
 		{"view":"scenic-home","camera":"review","position":Vector3(6,3.3,20),"target":Vector3(3.2,1.65,0),"fov":60.0,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":HOME_ANCHOR},
 		{"view":"scenic-vista","camera":"review","position":Vector3(-1,2.6,22),"target":Vector3(22,9,-40),"fov":55.0,"player":Vector3(-5.0,0.08,13.0),"yaw":-0.03,"anchor":HOME_ANCHOR},
+		{"view":"cliff-detail","camera":"review","position":detail.position,"target":detail.target,"fov":detail.fov,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":detail.target},
 		{"view":"rim-overlook","camera":"review","position":overlook.position,"target":overlook.target,"fov":overlook.fov,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":overlook.target},
 		{"view":"world-overview","camera":"review","position":Vector3(-320,620,520),"target":Vector3(150,-40,-480),"fov":62.0,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":Vector3(0,0,0)},
 		{"view":"ground-path","camera":"player","player":Vector3(-2,0.08,18),"look_at":HOME_ANCHOR,"pitch":-4.0,"anchor":HOME_ANCHOR},

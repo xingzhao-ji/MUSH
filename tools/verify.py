@@ -151,7 +151,7 @@ def inspect_render_progress(progress, frames):
     return {"engine_draw_progress_valid": True, "samples": frames}
 
 
-SCENIC_VIEWS = ("scenic-home", "scenic-vista", "rim-overlook", "world-overview", "ground-path", "ground-bridge")
+SCENIC_VIEWS = ("scenic-home", "scenic-vista", "cliff-detail", "rim-overlook", "world-overview", "ground-path", "ground-bridge")
 SCENIC_APPEARANCES = ("day", "night", "rain")
 SCENIC_SIZE = [1280, 720]
 
