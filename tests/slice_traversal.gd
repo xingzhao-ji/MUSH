@@ -277,11 +277,12 @@ func _run() -> void:
 		elif "--rock-pairs" in arguments: await _rock_pairs_scenario()
 		elif "--stem-pairs" in arguments: await _stem_pairs_scenario()
 		elif "--look-pairs" in arguments: await _look_pairs_scenario()
+		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else "full")))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else "full"))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -681,6 +682,88 @@ func _look_pairs_scenario() -> void:
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Opposite-shore vegetation evidence (diagnostic): at the shore walk pose, the rim overlook and an
+## offset ground view along the east shore, every visible ForestCarpet clump is listed (owner,
+## index, position, size, distance, screen box); when scenery.shore_groves exists, before (clumps
+## shown, groves hidden) and after are captured in the same frame with per-view timing.
+func _shore_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	var pose: Dictionary = scenery.overlook_pose()
+	var review := Camera3D.new()
+	review.fov = pose.fov
+	game.add_child(review)
+	var has_groves: bool = scenery.get("shore_groves") != null and is_instance_valid(scenery.shore_groves)
+	var grove: Dictionary = scenery.get_report().get("shore_groves", {})
+	_check("Opposite-shore groves built within budget (<= 400,000 triangles, <= 12 nodes), no colliders or shadows", grove.get("built", false) and int(grove.triangles) <= 400000 and int(grove.nodes) <= 12, grove)
+	var offset_at: Vector3 = slice._p[_nearest_sample(Vector3(402.0, -78.0, -418.0))]
+	for view: Array in [["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0)], ["overlook", null, null], ["shore-offset", offset_at, Vector3(200.0, -80.0, -420.0)]]:
+		if view[1] == null:
+			review.position = pose.position
+			review.look_at(pose.target)
+			review.make_current()
+		else:
+			await _place(view[1], 0.0)
+			_look(view[2], -4.0)
+			player._visual.rotation.y = player.camera_yaw
+			player._camera.make_current()
+		await _frames(45)
+		for state: String in (["before", "after"] if has_groves else ["current"]):
+			if has_groves: scenery.set_shore_groves(state == "after")
+			await _frames(8)
+			await _capture("shore-%s-%s-day" % [view[0], state])
+			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+			images[images.size() - 1]["clumps"] = _visible_clumps(view[0] == "overlook")
+			if has_groves: timings.append((await _time_view(30, 180)).merged({"pose": view[0], "state": state}))
+	player._camera.make_current()
+	review.queue_free()
+	if has_groves:
+		scenery.set_shore_groves(true)
+		var drawn_ok := true
+		for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
+		_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
+## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.
+func _visible_clumps(review_camera: bool) -> Array:
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	var size: Vector2 = get_viewport().get_visible_rect().size
+	var found: Array = []
+	for node: Node in scenery.get_children():
+		var instance: MultiMeshInstance3D = node as MultiMeshInstance3D
+		if instance == null or not instance.is_visible_in_tree() or not String(instance.name).begins_with("ForestCarpet_"): continue
+		var local: AABB = instance.multimesh.mesh.get_aabb()
+		for i: int in instance.multimesh.instance_count:
+			var pose: Transform3D = instance.global_transform * instance.multimesh.get_instance_transform(i)
+			var box: AABB = pose * local
+			var centre: Vector3 = box.get_center()
+			var distance: float = cam.global_position.distance_to(centre)
+			if distance > 900.0 or cam.is_position_behind(centre): continue
+			var lo := Vector2(INF, INF)
+			var hi := Vector2(-INF, -INF)
+			for k: int in 8:
+				var corner: Vector3 = box.get_endpoint(k)
+				if cam.is_position_behind(corner): continue
+				var p: Vector2 = cam.unproject_position(corner)
+				lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.y))
+				hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.y))
+			lo = lo.clamp(Vector2.ZERO, size)
+			hi = hi.clamp(Vector2.ZERO, size)
+			var share: float = (hi.x - lo.x) * (hi.y - lo.y) / (size.x * size.y)
+			if share < 0.0003: continue
+			var hidden := false
+			for k: int in range(1, 24):
+				var on: Vector3 = cam.global_position.lerp(centre, k / 24.0)
+				var ground: float = scenery.terrain_height(on.x, on.z)
+				if ground > on.y + 1.0:
+					hidden = true
+					break
+			if hidden: continue
+			found.append({"owner": String(instance.name), "index": i, "position": _v(pose.origin), "size": _v(box.size), "distance_m": snappedf(distance, 0.1), "screen_box": [roundi(lo.x), roundi(lo.y), roundi(hi.x), roundi(hi.y)], "screen_share": snappedf(share, 0.0001)})
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.screen_share > b.screen_share)
+	return found
 
 ## Owner of the surface under a screen pixel: nearest hit of the camera ray against the real
 ## triangles of every visible prototype mesh and multimesh instance (bounding boxes first).

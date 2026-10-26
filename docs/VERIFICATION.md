@@ -1839,3 +1839,43 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Stipple:** the dither shows as a stipple inside the 20 m band during motion; there is no anti-aliasing.
 - **Not verified:** live display motion.
 - **Still open:** the benchmark failure, the vista gate and full-scene art acceptance.
+
+## Opposite-shore groves (2026-10-26)
+
+**Status: local improvement; scene art not accepted.** Visual only. Rollback: `git revert` this commit.
+
+**Target:** the pale low-poly `ForestCarpet` blob row on the lake's far bank, seen from the east-shore walk.
+- **Inventory** (`shore-pairs-20261026-114728-38153`): blobs per view at the shore pose, the rim overlook and an offset east-shore view.
+- **Belt:** clumps with origin y −82.5 to −69 (within ~13 m of lake level), within 360 m of the lake centre, and west of x 300. That is 103 clumps, rendered 12–59 m wide and 9–29 m tall.
+
+**Change** (`scripts/prototype_scenery.gd`, `_add_shore_groves`):
+- **Removed from carpet:** the belt clumps leave the carpet multimeshes. They are kept in `ShoreBeltClumps` as the groves' far LOD, drawn beyond 650 m.
+- **Groves:** each clump becomes 1–2 low, wide shrub masses made from the copied trees' broken ring-crown mesh, at 60–80% of its rendered width.
+- **Trees:** widest clumps first and within a fixed 400,000-triangle budget, copied native trees rise from the shrubs: one per clump, two for clumps 40 m or wider. Each keeps its trunk parts and three crowns scaled 1.6×.
+- **Result:** 164 shrubs, 76 trees, 396,848 triangles and 2 nodes, drawn to 700 m.
+- **Distant views:** they keep the clumps.
+
+**Evidence** (`shore-pairs-20261026-115514-39340`: before and after in the same frame at the shore, overlook and shore-offset views):
+- **Shore and offset views:** the waterline blob row becomes a continuous ragged forest edge of trunks and broken crowns over a shrub layer.
+- **Overlook:** only the lower-left bank changes. Its remaining mid-ground blobs are 690–870 m away, beyond the belt.
+
+**Cost:**
+- **Primitives:** +380k at shore and offset (+9%), +380k at the overlook (+39%). Draw calls +1; draw nodes 121 → 124.
+- **Timing:** per-view wall p50 rose 1.0–2.1 ms after sequential before/after sampling. Render CPU p50 was about the same, and GPU time is unavailable.
+- **Noise:** another workload shared the machine, and the same shore view's before p50 ranged from 29.7 to 40.9 ms across runs. These timings are **not** a reliable cost measure.
+
+**Scenic** (`scenic-20261026-115653-39655`): fails only the known vista gate (0.0128).
+- Canopy and clipped metrics are unchanged.
+- Footing drift is 0.0 (7/7), and geometry and collision are unchanged.
+
+**Rejected iterations, retained:**
+- `114931`: over budget at 561k and 18 nodes; the thin top-crown trees lost the bank's mass.
+- `115219`: 15 nodes, and the band was still thin.
+- `115355`: groves sized from the clump scale factor instead of the rendered size, about half-size.
+
+**Limitations:**
+- **Height:** the new band is lower than the blobs it replaces.
+- **Contrast:** the pale blobs further up the slope, outside the belt, now contrast with the darker waterline forest.
+- **Far view:** the clumps return beyond 650–700 m.
+- **Not checked:** night and rain views of the groves.
+- **Still open:** the route benchmark (p95 19.834 ms) and the vista gate. Full-scene art is not accepted.

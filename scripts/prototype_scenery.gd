@@ -142,6 +142,19 @@ var rock_material: ShaderMaterial
 var _tree_templates: Array = []
 var _near_crown: Dictionary = {}
 var corridor_trees: Array[MultiMeshInstance3D] = []
+## Opposite-shore groves: forest-carpet clumps on the lake's shoreline belt (origin within ~13 m of
+## lake level, <= 360 m from the lake centre, west of x 300) become layered groves (low shrub masses
+## of the copied trees' ring-crown mesh plus copied trees, within SHORE_GROVE_BUDGET triangles);
+## the clumps are kept as the groves' far LOD beyond SHORE_CLUMP_BEGIN.
+const SHORE_BELT_Y := Vector2(-82.5, -69.0)
+const SHORE_BELT_RADIUS := 360.0
+const SHORE_BELT_MAX_X := 300.0
+const SHORE_GROVE_END := 700.0
+const SHORE_CLUMP_BEGIN := 650.0
+const SHORE_GROVE_BUDGET := 400000
+var shore_groves: Node3D
+var shore_clumps: MultiMeshInstance3D
+var shore_groves_report: Dictionary = {}
 ## Visible near-corridor forest clumps (centre within this of the stretch's path) are replaced
 ## by layered groups of the copied native trees; clumps beyond it stay as distant backdrop.
 const CORRIDOR_TREE_REACH := 125.0
@@ -472,6 +485,7 @@ func configure(world: Node3D) -> void:
 	if not "no_trees" in skip: _add_trees(rng)
 	if not "no_carpet" in skip: _add_carpet(rng)
 	if not "no_understory" in skip: _add_corridor_understory()
+	if not "no_shore_groves" in skip: _add_shore_groves()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
 	diagnostic_skips = skip
@@ -1557,6 +1571,159 @@ func _add_corridor_trees(targets: Array) -> Dictionary:
 		built[batches[key].range] += _triangle_count(batches[key].mesh) * node.multimesh.instance_count
 	return {"trees": trees, "targets": targets.size(), "ring_crowns": crowns, "nodes": batches.size(), "triangles": built.all + built.far + built.near}
 
+func _add_shore_groves() -> void:
+	shore_groves_report = {"built": false}
+	if _tree_templates.is_empty(): return
+	# 1. Belt clumps leave the carpet multimeshes (kept in ShoreBeltClumps as the far LOD).
+	var targets: Array[Transform3D] = []
+	var target_colors: Array[Color] = []
+	var clump_mesh: Mesh = null
+	var clump_material: Material = null
+	for node: GeometryInstance3D in _static:
+		if not String(node.name).begins_with("ForestCarpet_"): continue
+		var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		var keep: Array[Transform3D] = []
+		var keep_colors: Array[Color] = []
+		for i: int in multi.instance_count:
+			var pose: Transform3D = multi.get_instance_transform(i)
+			var o: Vector3 = pose.origin
+			if o.y >= SHORE_BELT_Y.x and o.y <= SHORE_BELT_Y.y and Vector2(o.x, o.z).distance_to(LAKE_CENTER) <= SHORE_BELT_RADIUS and o.x < SHORE_BELT_MAX_X:
+				targets.append(pose)
+				target_colors.append(multi.get_instance_color(i))
+				continue
+			keep.append(pose)
+			keep_colors.append(multi.get_instance_color(i))
+		if keep.size() == multi.instance_count: continue
+		clump_mesh = multi.mesh
+		clump_material = (node as MultiMeshInstance3D).material_override
+		multi.instance_count = keep.size()
+		for i: int in keep.size():
+			multi.set_instance_transform(i, keep[i])
+			multi.set_instance_color(i, keep_colors[i])
+	if targets.is_empty(): return
+	var far := MultiMesh.new()
+	far.transform_format = MultiMesh.TRANSFORM_3D
+	far.use_colors = true
+	far.mesh = clump_mesh
+	far.instance_count = targets.size()
+	for i: int in targets.size():
+		far.set_instance_transform(i, targets[i])
+		far.set_instance_color(i, target_colors[i])
+	shore_clumps = MultiMeshInstance3D.new()
+	shore_clumps.name = "ShoreBeltClumps"
+	shore_clumps.multimesh = far
+	shore_clumps.material_override = clump_material
+	shore_clumps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	shore_clumps.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	shore_clumps.visibility_range_end = 1700.0
+	add_child(shore_clumps)
+	_static.append(shore_clumps)
+	# 2. Layered groves within SHORE_GROVE_BUDGET: every clump becomes 1-2 low, wide shrub masses of
+	# the copied trees' broken ring-crown mesh (60-80 % of its width, keeps the ground-level mass);
+	# then, widest clumps first, one tree (two for clumps >= 40 m) rises out of it with its trunk
+	# parts and three crowns (the top one and the two widest-reaching), crowns scaled 1.6x.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261029
+	var shrub_part: Dictionary = {}
+	var tops: Array = []
+	for template: Array in _tree_templates:
+		var top: float = 0.0
+		var crowns: Array = []
+		for part: Dictionary in template:
+			top = maxf(top, (part.local * (part.mesh as Mesh).get_aabb()).end.y)
+			if part.kind == "LayeredCanopies":
+				crowns.append(part)
+				if shrub_part.is_empty(): shrub_part = part
+		crowns.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.local.origin.y > b.local.origin.y)
+		var chosen: Array = crowns.slice(0, 1)
+		var lateral: Array = crowns.slice(1)
+		lateral.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return Vector2(a.local.origin.x, a.local.origin.z).length() > Vector2(b.local.origin.x, b.local.origin.z).length())
+		chosen.append_array(lateral.slice(0, 2))
+		tops.append({"height": maxf(top, 1.0), "crowns": chosen})
+	var batches: Dictionary = {}
+	var shrub_box: AABB = (shrub_part.mesh as Mesh).get_aabb()
+	var shrub_tris: int = _triangle_count(shrub_part.mesh)
+	var triangles: int = 0
+	var shrubs: int = 0
+	var order: Array = range(targets.size())
+	order.sort_custom(func(a: int, b: int) -> bool: return (targets[a] * clump_mesh.get_aabb()).size.x > (targets[b] * clump_mesh.get_aabb()).size.x)
+	for k: int in order:
+		var pose: Transform3D = targets[k]
+		# Rendered clump size (the transform scale is about half of it).
+		var box: AABB = pose * clump_mesh.get_aabb()
+		var width: float = maxf(box.size.x, box.size.z)
+		var height: float = box.size.y
+		var centre := Vector2(pose.origin.x, pose.origin.z)
+		for n: int in (1 if width < 28.0 else 2):
+			var spot: Vector2 = centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * width * rng.randf_range(0.0, 0.22)
+			var ground: float = terrain_height(spot.x, spot.y)
+			if ground < LAKE_Y + 0.6: continue
+			var w: float = width * rng.randf_range(0.6, 0.8)
+			var h: float = height * rng.randf_range(0.4, 0.55)
+			var scale := Vector3(w / shrub_box.size.x, h / shrub_box.size.y, w / shrub_box.size.z)
+			var basis: Basis = Basis(Vector3.UP, rng.randf_range(0.0, TAU)) * Basis.from_scale(scale)
+			_tree_batch(batches, "LayeredCanopies", shrub_part.mesh, shrub_part.material, Vector2i.ZERO, "all", Transform3D(basis, Vector3(spot.x, ground - 0.3 - shrub_box.position.y * scale.y, spot.y)))
+			shrubs += 1
+			triangles += shrub_tris
+	var trees: int = 0
+	var skipped: int = 0
+	var crowns_kept: int = 0
+	for k: int in order:
+		var pose: Transform3D = targets[k]
+		# Rendered clump size (the transform scale is about half of it).
+		var box: AABB = pose * clump_mesh.get_aabb()
+		var width: float = maxf(box.size.x, box.size.z)
+		var height: float = box.size.y
+		var centre := Vector2(pose.origin.x, pose.origin.z)
+		for n: int in (2 if width >= 40.0 else 1):
+			var pick: int = rng.randi_range(0, _tree_templates.size() - 1)
+			var cost: int = 0
+			for part: Dictionary in _tree_templates[pick]:
+				if part.kind != "LayeredCanopies" or part in tops[pick].crowns: cost += _triangle_count(part.mesh)
+			if triangles + cost > SHORE_GROVE_BUDGET:
+				skipped += 1
+				continue
+			var want: float = height * (rng.randf_range(1.05, 1.3) if n == 0 else rng.randf_range(0.7, 0.95))
+			var size: float = clampf(want / float(tops[pick].height), 0.6, 2.8)
+			var spot: Vector2 = centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * width * rng.randf_range(0.05, 0.3)
+			var ground: float = terrain_height(spot.x, spot.y)
+			if ground < LAKE_Y + 0.6 or terrain_slope(spot.x, spot.y) > 0.6:
+				skipped += 1
+				continue
+			var root := Transform3D(Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3.ONE * size), Vector3(spot.x, ground - 0.35, spot.y))
+			# One batch cell for the whole belt (about 330 x 470 m), so the groves stay within the node budget.
+			var cell := Vector2i.ZERO
+			trees += 1
+			triangles += cost
+			for part: Dictionary in _tree_templates[pick]:
+				if part.kind == "LayeredCanopies":
+					if not part in tops[pick].crowns: continue
+					crowns_kept += 1
+					var fuller := Transform3D(part.local.basis * Basis.from_scale(Vector3.ONE * 1.6), part.local.origin)
+					_tree_batch(batches, part.kind, part.mesh, part.material, cell, "all", root * fuller)
+					continue
+				_tree_batch(batches, part.kind, part.mesh, part.material, cell, "all", root * part.local)
+	shore_groves = Node3D.new()
+	shore_groves.name = "ShoreGroves"
+	add_child(shore_groves)
+	var built: int = 0
+	for key: String in batches:
+		var node: MultiMeshInstance3D = _tree_node(batches[key], "ShoreGroves_")
+		node.visibility_range_end = SHORE_GROVE_END
+		remove_child(node)
+		shore_groves.add_child(node)
+		built += _triangle_count(batches[key].mesh) * node.multimesh.instance_count
+	set_shore_groves(true)
+	shore_groves_report = {"built": true, "belt": {"origin_y": [SHORE_BELT_Y.x, SHORE_BELT_Y.y], "lake_radius_m": SHORE_BELT_RADIUS, "max_x": SHORE_BELT_MAX_X},
+		"clumps_replaced": targets.size(), "clump_triangles_moved_to_far_lod": _triangle_count(clump_mesh) * targets.size(), "shrubs": shrubs, "trees": trees, "trees_skipped_budget_or_ground": skipped, "crowns": crowns_kept,
+		"triangles": built, "triangles_planned": triangles, "nodes": batches.size(), "budget_triangles": SHORE_GROVE_BUDGET, "grove_range_end_m": SHORE_GROVE_END, "clump_far_lod_begin_m": SHORE_CLUMP_BEGIN, "colliders": 0, "shadow_casters": 0}
+
+## Groves on (clumps as far LOD beyond SHORE_CLUMP_BEGIN), or the previous look (clumps at every
+## distance, groves hidden). Diagnostic toggle for same-frame evidence.
+func set_shore_groves(enabled: bool) -> void:
+	if is_instance_valid(shore_groves): shore_groves.visible = enabled
+	if is_instance_valid(shore_clumps): shore_clumps.visibility_range_begin = SHORE_CLUMP_BEGIN if enabled else 0.0
+
 ## The clearing's own understory meshes and materials (SpatiallyChunkedFoliage), with each
 ## asset's median authored scale so the corridor plants match the clearing's scale.
 func _understory_sources() -> Dictionary:
@@ -2229,4 +2396,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
