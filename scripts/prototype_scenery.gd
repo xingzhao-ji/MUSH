@@ -190,6 +190,18 @@ var landform_checks: Dictionary = {}
 var detail_patch_triangles: int = 0
 ## [original material, softened duplicate] pairs; dynamic wind/night uniforms are copied.
 var _crown_sync: Array = []
+## Foreground leaf craft on the near (dense) crowns: blade fold along the midrib and tip arch as a
+## fraction of half-width (linear, quadratic in |lateral|) and of leaf length, the share of the
+## angle by which each leaf turns toward the crown's outside, and its random twist (rad).
+const LEAF_FOLD := Vector2(0.22, 0.18)
+const LEAF_ARCH := 0.10
+const LEAF_TURN := 0.3
+const LEAF_TWIST := 0.18
+var _near_crown_previous: Mesh
+## Every material switched to LEAF_SHADER (near palettes, far tone, far crossfade copy).
+var _prototype_leaf_materials: Array[ShaderMaterial] = []
+var leaf_craft: bool = false
+var leaf_craft_report: Dictionary = {}
 var detail_cells_replaced: int = 0
 var route: Node3D
 var route_report: Dictionary = {}
@@ -973,15 +985,122 @@ func _dense_crown(templates: Array) -> Dictionary:
 	var far_fade: Material = far_tone
 	if far_tone is ShaderMaterial and far_tone != ring_material:
 		far_fade = far_tone.duplicate()
+		_prototype_leaf_materials.append(far_fade as ShaderMaterial)
 		_crown_sync.append([ring_material, far_fade])
 	_lod_materials = {"near": softs, "far": [far_fade]}
 	return {"mesh": mesh, "materials": softs, "far_material": far_tone, "far_fade_material": far_fade, "scale": ratio}
+
+## Foreground leaf craft (near crowns only). A copy of the dense crown with the same leaves,
+## vertices and triangles: each 36-vertex leaf (world.gd _append_ground_leaf, placed by
+## _make_canopy_mesh) is folded gently upward along its midrib, its tip arched down, turned part
+## of the way toward the crown's outside and twisted slightly about its own axis, all about its
+## base, so the attachment point does not move. Normals are smoothed across each leaf and keep
+## each vertex's original side. Returns null (and reports why) for any other layout.
+func _craft_crown(source: Mesh) -> ArrayMesh:
+	leaf_craft_report = {"crafted": false}
+	var arrays: Array = source.surface_get_arrays(0)
+	var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var n: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	if source.get_surface_count() != 1 or arrays[Mesh.ARRAY_INDEX] != null or v.size() % 36 != 0 or uv.size() != v.size() or n.size() != v.size():
+		leaf_craft_report["reason"] = "not the 36-vertex leaf layout"
+		return null
+	var out_v := PackedVector3Array(v)
+	var out_n := PackedVector3Array(n)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7341
+	var base_shift: float = 0.0
+	var max_shift: float = 0.0
+	var length_sum: float = 0.0
+	var flipped: int = 0
+	var degenerate: int = 0
+	var degenerate_before: int = 0
+	var finite := true
+	for o: int in range(0, v.size(), 36):
+		var base: int = -1
+		var tip: int = -1
+		var rib: int = -1
+		var edge: int = -1
+		for i: int in range(o, o + 36):
+			if uv[i].is_equal_approx(Vector2(0.5, 0.0)): base = i
+			elif uv[i].is_equal_approx(Vector2(0.5, 1.0)): tip = i
+			elif uv[i].is_equal_approx(Vector2(0.5, 0.5)): rib = i
+			elif uv[i].is_equal_approx(Vector2(0.0, 0.5)): edge = i
+		if base < 0 or tip < 0 or rib < 0 or edge < 0:
+			leaf_craft_report["reason"] = "leaf %d has no base, tip, midrib or edge vertex" % (o / 36)
+			return null
+		var root: Vector3 = v[base]
+		var length: float = root.distance_to(v[tip])
+		length_sum += length
+		var axis: Vector3 = (v[tip] - root) / length
+		var up: Vector3 = (n[rib] - axis * n[rib].dot(axis)).normalized()
+		var lateral: Vector3 = v[edge] - v[rib]
+		var half_width: float = (lateral - up * lateral.dot(up) - axis * lateral.dot(axis)).length()
+		var outward: Vector3 = root.normalized()
+		var facing: Vector3 = up if up.dot(outward) >= 0.0 else -up
+		var hinge: Vector3 = facing.cross(outward)
+		var turn := Basis.IDENTITY
+		if hinge.length() > 1e-5: turn = Basis(hinge.normalized(), LEAF_TURN * facing.angle_to(outward))
+		turn = turn * Basis(axis, rng.randf_range(-LEAF_TWIST, LEAF_TWIST))
+		for i: int in range(o, o + 36):
+			var f: float = absf(uv[i].x - 0.5) * 2.0
+			var local: Vector3 = v[i] - root + up * (half_width * (LEAF_FOLD.x * f + LEAF_FOLD.y * f * f) - LEAF_ARCH * length * uv[i].y * uv[i].y)
+			out_v[i] = root + turn * local
+			finite = finite and out_v[i].is_finite()
+			max_shift = maxf(max_shift, out_v[i].distance_to(v[i]) / length)
+		base_shift = maxf(base_shift, out_v[base].distance_to(root))
+		var up_now: Vector3 = turn * up
+		var sums: Dictionary = {}
+		for k: int in range(o, o + 36, 3):
+			var face: Vector3 = (out_v[k + 1] - out_v[k]).cross(out_v[k + 2] - out_v[k])
+			var before: Vector3 = (v[k + 1] - v[k]).cross(v[k + 2] - v[k])
+			if before.length() < 1e-12: degenerate_before += 1
+			if face.length() < 1e-12:
+				degenerate += 1
+				continue
+			if before.length() >= 1e-12 and face.dot(turn * before) <= 0.0: flipped += 1
+			if face.dot(up_now) < 0.0: face = -face
+			for m: int in 3: sums[out_v[k + m]] = sums.get(out_v[k + m], Vector3.ZERO) + face
+		for i: int in range(o, o + 36):
+			var smooth: Vector3 = (sums.get(out_v[i], up_now) as Vector3).normalized()
+			out_n[i] = smooth if n[i].dot(up) >= 0.0 else -smooth
+	var out: Array = arrays.duplicate()
+	out[Mesh.ARRAY_VERTEX] = out_v
+	out[Mesh.ARRAY_NORMAL] = out_n
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out)
+	mesh.surface_set_material(0, source.surface_get_material(0))
+	var leaves: int = v.size() / 36
+	leaf_craft_report = {"crafted": true, "passed": finite and flipped == 0 and base_shift < 1e-5 and degenerate == degenerate_before and _triangle_count(mesh) == _triangle_count(source),
+		"leaves": leaves, "vertices": out_v.size(), "vertices_previous": v.size(), "triangles": _triangle_count(mesh), "triangles_previous": _triangle_count(source),
+		"finite": finite, "flipped_faces": flipped, "degenerate_faces": degenerate, "degenerate_faces_previous": degenerate_before, "base_shift_max": base_shift,
+		"max_vertex_shift_per_leaf_length": max_shift, "mean_leaf_length": length_sum / leaves, "fold": [LEAF_FOLD.x, LEAF_FOLD.y], "arch": LEAF_ARCH, "turn": LEAF_TURN, "twist_rad": LEAF_TWIST,
+		"outline": "shader: 0.919 * sin(pi * v^0.9)^1.2 inside the blade polygon (prototype_leaf.gdshader leaf_craft)"}
+	return mesh
+
+## Foreground leaf craft on (current) or the previous look; diagnostic toggle. Off restores the
+## previous dense crown and, on every prototype leaf material, the source shader's second
+## back-face flip.
+func set_leaf_craft(enabled: bool) -> void:
+	if _near_crown_previous == null: return
+	leaf_craft = enabled
+	for material: ShaderMaterial in _prototype_leaf_materials: material.set_shader_parameter("legacy_side_flip", not enabled)
+	for node: GeometryInstance3D in _static:
+		if node.get_meta("lod_range", "") == "near" and node is MultiMeshInstance3D:
+			(node as MultiMeshInstance3D).multimesh.mesh = _near_crown.mesh if enabled else _near_crown_previous
+	for material: Variant in _lod_materials.get("near", []):
+		if material is ShaderMaterial: (material as ShaderMaterial).set_shader_parameter("leaf_craft", 1.0 if enabled else 0.0)
+
+## Diagnostic: show where prototype leaf shading normals face away from the viewer.
+func set_leaf_facing_debug(enabled: bool) -> void:
+	for material: ShaderMaterial in _prototype_leaf_materials: material.set_shader_parameter("debug_facing", enabled)
 
 ## Duplicate leaf materials only: switch to the prototype copy of the source leaf shader
 ## and damp backlight transmission and specular glare, so backlit leaves stay green.
 func _restrain_leaf(material: Material) -> void:
 	if not material is ShaderMaterial or (material as ShaderMaterial).shader != SOURCE_LEAF_SHADER: return
 	(material as ShaderMaterial).shader = LEAF_SHADER
+	_prototype_leaf_materials.append(material as ShaderMaterial)
 	(material as ShaderMaterial).set_shader_parameter("backlight_scale", 0.35)
 	(material as ShaderMaterial).set_shader_parameter("leaf_specular", 0.18)
 	(material as ShaderMaterial).set_shader_parameter("roughness_value", 0.92)
@@ -1099,6 +1218,13 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	_legacy_mesa = false
 	_skip_slice_bed = false
 	var near_crown: Dictionary = _dense_crown(templates)
+	# Foreground leaf craft: near crowns draw a crafted copy of the dense crown (same leaves and
+	# triangles); the previous mesh is kept only for same-frame evidence (set_leaf_craft).
+	if not near_crown.is_empty():
+		var crafted: ArrayMesh = _craft_crown(near_crown.mesh)
+		if crafted != null:
+			_near_crown_previous = near_crown.mesh
+			near_crown["mesh"] = crafted
 	_tree_templates = templates
 	_near_crown = near_crown
 	# Separate generator: crown orientation must not shift any seeded placement.
@@ -1154,6 +1280,8 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		tree_instances += multi.instance_count
 	tree_report["lod"] = lod
 	set_lod_crossfade(true)
+	set_leaf_craft(true)
+	leaf_craft_report.merge({"near_nodes": lod.near_batches, "near_instances": lod.near_instances, "near_triangles": lod.near_triangles, "rim_view_dense_instances": lod.rim_view_dense_instances, "rim_view_dense_triangles": lod.rim_view_dense_triangles})
 	tree_count = spots.size()
 	var tree_triangles: int = 0
 	for key: String in batches:
@@ -2627,4 +2755,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

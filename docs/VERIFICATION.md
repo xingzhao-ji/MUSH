@@ -2119,3 +2119,99 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Gills:** no gill geometry.
 - **Night overlook:** the moon disk draws in front of the cap. This is pre-existing and was not addressed.
 - **Still open:** the route benchmark **failure** (p95 19.834 ms), the vista gate, the lake shader's GPU cost, the grove night tone and full-scene art acceptance.
+
+## Foreground leaves: shaped blades and corrected back-face normals (2026-10-26)
+
+**Status: local improvement on the prototype leaf materials; scene art not accepted.** The near crowns now read darker from the overlook side; see Limitations. Rollback: `git revert` this commit.
+
+**Target** (overlook framing trees):
+- **Outlines:** octagonal blades with hard facet corners.
+- **Shading:** a flat tone per blade.
+- **Contrast:** almost-black faces next to pale yellow faces, strongest on the right tree.
+
+### 1. Blade craft (near crowns only)
+- **Source:** the dense near crown is the existing `world.gd _make_canopy_mesh(620)`. Each copy has 620 leaves; each leaf is the 12-triangle `_append_ground_leaf` blade, non-indexed with 36 vertices, UV.x 0 / 0.5 / 1 across (edge / midrib / edge) and UV.y along the blade.
+- **Scope:** the near-crown nodes (LOD role "near"): 6 nodes, 93 instances and 691,920 triangles. Of these, 26 instances and 193,440 triangles are within the rim view's dense range.
+- **Mesh** (`_craft_crown`): a crafted copy with the same leaves, vertices (22,320) and triangles (7,440), so the triangle and draw delta is 0. For each leaf:
+  - **Fold:** a gentle upward fold along the midrib; the edge lift is 0.22·|f| + 0.18·f² of half-width.
+  - **Arch:** the tip drops 0.10 of the leaf length.
+  - **Turn:** the leaf turns 30% of the way toward the crown's outside, with a ±0.18 rad twist about its axis (seeded).
+  - **Base:** everything rotates about the leaf base, so the attachment point does not move.
+  - **Normals:** smoothed across each leaf, keeping each vertex's original side.
+  - **Fallback:** any other layout keeps the previous crown, and the report says why.
+- **Mesh check:** 620 / 22,320 / 7,440 unchanged; finite; 0 flipped faces; 0 degenerate faces, as before; base shift 0.0; largest vertex move 0.56 of a leaf length, the tip under the turn.
+- **Shader** (`leaf_craft`, the two near materials only):
+  - **Outline:** the blade polygon is trimmed to a smooth outline lying inside it, `0.919·sin(π·v^0.9)^1.2`. It is widest at v ≈ 0.46, with a pointed tip, and keeps about 87% of the polygon's area.
+  - **Tone:** a lighter midrib, faint fwidth-faded veins, a darker base and a lighter thin margin.
+
+### 2. Back-face normal correction (all four prototype leaf materials)
+- **Engine evidence:** the installed Godot 4.7.2 binary maps `cull_disabled` (and `cull_front`) to `#define DO_SIDE_CHECK`. Its fragment prologue then flips `normal` for `!gl_FrontFacing` before user code runs.
+- **Defect:** `prototype_leaf.gdshader`, copied from `lineage/living-scenery37-proposal01/canopy-wind37.gdshader`, flipped again (`if(!FRONT_FACING) NORMAL=-NORMAL;`), so every back face was shaded with a normal pointing away from the viewer.
+- **Fix:** the second flip is removed.
+  - **Diagnostics:** `legacy_side_flip` restores it for same-frame evidence, and `debug_facing` paints away-facing shading normals magenta.
+  - **Materials:** the two near palettes, `far_tone` (near trees' far crowns and corridor trees) and `far_fade`. Near and far LOD therefore stay alike through the crossfade.
+- **Facing diagnostic** (`leaf-pairs-20261026-134504-92808`, day): the share of prototype-leaf pixels whose shading normal faces away from the viewer.
+
+| View | Previous output | Corrected |
+|---|---|---|
+| Overlook | 61.5% | 0.7% |
+| Offset | 29.9% | 0.6% |
+
+  The residual is grazing-edge slivers from interpolated normals.
+- **Which faces were wrong:** in the previous output's matched day frames:
+
+| Region | Pale leaf pixels (luma ≥ 70) with a wrong normal | Near-black pixels (luma < 30) with a correct normal |
+|---|---|---|
+| Overlook, right tree | 99.0% | 97.3% |
+| Overlook, left tree | 94.7% | 82.8% |
+| Offset | 91.4% | 95.7% |
+
+- **Diagnosis:**
+  - **Pale faces:** the defect. Back faces were lit as if they faced the sun.
+  - **Dark faces:** physically consistent shading. They are correctly shaded camera-facing sides, and the sun is beyond these crowns as seen from the overlook side.
+  - **Result:** with the fix, the crowns read consistently dark from this side. They were not brightened: no lighting, emission or palette change.
+- **History:** commit `bd3fcea` damped backlight ×0.35, specular and roughness on these materials, and `_dense_crown` darkened their palettes, because "low backlit sun bleached near leaves cream". That cream look is this defect. Those compensations are left as they are, pending a decision.
+- **Outside scope, unchanged:** the same second flip exists in `canopy-wind37`, `foliage`, `tactile`, `waterfall` and `foreground_stone_moss_proposal_v1` (the ring forest, groves and understory). Prototype leaves now shade differently from the original foliage.
+
+**Matched evidence** (`leaf-pairs-20261026-134504-92808`):
+- **Comparison:** "before" is the exact previous output (previous crown, legacy flip); "after" is the crafted crown with corrected normals.
+- **Views:** the rim overlook, and an offset camera 8 m from the actual near crown closest to the right framing tree's spot (1.5 m from it), by day and night.
+
+| Region (day) | Foliage coverage | Mean luma | Near-black share |
+|---|---|---|---|
+| Overlook, right tree | 0.628 → 0.623 | 86.0 → 25.1 | 18.5% → 85.2% |
+| Overlook, left tree | 0.600 → 0.583 | 46.9 → 23.7 | 33.4% → 79.8% |
+| Offset | 0.835 → 0.827 | 47.6 → 33.8 | 42.4% → 64.0% |
+
+- **Night:** the framing trees become coherent dark silhouettes against the moonlit sky, with no artefacts.
+- **Craft-only pairs:** `leaf-pairs-20261026-132843-83141` ran before the normal correction (legacy flip in both states). Its zoomed offset shows octagonal blades becoming smooth ovate leaves.
+
+**Cost:** primitives and draws are identical in every view. The timing deltas are within observed variance. GPU timing is unavailable, and the discard and outline cost is not isolated.
+
+**LOD crossfade:** `lod-check-20261026-134931-94985` (with the normal correction and heartbeat) **passed**: 578.9 s, no errors or leaks.
+- **Crossfade:** no pop and no coverage gap in either sweep or either physical walk; the largest share jump was 0.066–0.073.
+- **Detector sanity:** the original swap registers pops (share jumps up to 0.879) and gaps.
+- **Walks:** approach and retreat crossed 88–124 m with no recovery.
+- **Health:** 280 heartbeats, every interval drew frames, and `can_draw` and focus stayed true.
+- **Phase timing:** each walk took 56–135 s; walk-before-approach took 128 s, against more than 473 s and unfinished in `133140`.
+- **Margin risk:** the run used 579 of its 600 s bound, about 1.85× slower than `112634` (312 s). Further runs may time out from slowness alone. The bound was not changed.
+
+**Harness health:**
+- **`lod-check-20261026-133140-84928`** (crafted crowns, before the normal fix) **timed out**: exit −15 at 600.2 s, reaped, no error lines, no `lod.json`.
+  - **Timeline:** sweeps finished at 92 s (66 s in `112634`). The walk-before-approach crops (124 → 87 m) took 23 s (11.6 s before). The walk then never finished: no end-of-walk files in the following 450 s, against 29 s in `112634`.
+  - **Expected gap:** crops are written only between 87 and 125 m, so having no files below 87 m is expected in itself.
+- **Earlier stall:** `cap-shape-pairs-130149` stalled after its first capture in the same way.
+- **Probe** (`reports/draw-probe-20261026/probe.log`): an owned, bounded probe with no game world, run with the suite flags for 40 s. It drew in every interval (30,100 frames), `window_can_draw` stayed true, and the window was unfocused in 117 of 971 samples without drawing stopping.
+- **Unknown:** the stall did not reproduce, and its cause is not established.
+- **Heartbeat:** `tests/harness_heartbeat.gd` now prints frame counters, `can_draw`, focus and phase or step labels every 2 s of wall time. It is used by `slice_traversal.gd` and `lod_check.gd`, with walk tick, path and coverage step labels. The focused `leaf-pairs-134504` (40 s) had 14 heartbeats and no interval without drawing.
+- **Queued scenic:** the scenic run queued behind `133140` was stopped by its own watcher before it started Godot. That watcher's clean-up pattern also matched and ended its own shell; no other process was touched.
+
+**Scenic:** not rerun after these changes. The last scenic run is `scenic-20261026-131619-75393`, on the cap shape, before the leaf work.
+
+**Limitations:**
+- **Dark crowns:** seen from the overlook and route side, the near crowns now read mostly dark. Detail inside the crown is low.
+- **Edge-on slivers:** still present.
+- **Outline:** one shape for every blade, aliasing like polygon edges.
+- **Coverage:** foliage coverage is 1–2 points lower.
+- **Source foliage:** the source shaders keep the double flip.
+- **Not verified:** wind motion of the folded leaves, live display and device.

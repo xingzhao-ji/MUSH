@@ -24,10 +24,13 @@ var game: Node
 var scenery: Node
 var player: Node
 var output := "user://verification/lod"
+var beat: Node
 
 func _ready() -> void:
 	game = get_parent()
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	beat = preload("res://tests/harness_heartbeat.gd").new()
+	add_child(beat)
 	_run.call_deferred()
 
 func _v(value: Vector3) -> Array:
@@ -76,6 +79,7 @@ func _coverage(frame: Image, roi: Rect2i) -> Dictionary:
 	get_tree().paused = true
 	var out := {}
 	for role: String in ["near", "far"]:
+		beat.step = beat.step.get_slice(" | ", 0) + " | coverage " + role
 		var hidden: Array = []
 		for node: Node in scenery.get_children():
 			if node.get_meta("lod_range", "") == role and (node as Node3D).visible:
@@ -229,6 +233,7 @@ func _run() -> void:
 
 ## A. Harness-driven review camera sweep (fixed aim at the batch).
 func _sweep(camera: Camera3D, near: MultiMeshInstance3D, centre: Vector3, heading: Vector3, state: String) -> Dictionary:
+	beat.phase = "sweep-%s" % state
 	camera.make_current()
 	var steps: Array = []
 	var crops: Array = []
@@ -316,6 +321,7 @@ func _walk(plan: Dictionary, direction: String, state: String) -> Dictionary:
 	for i: int in range(int(plan.span[0]), int(plan.span[1]) + 1): path.append(route[i])
 	if direction == "retreat": path.reverse()
 	var tree: Vector3 = plan.origin
+	beat.phase = "walk-%s-%s" % [state, direction]
 	player._camera.make_current()
 	_release()
 	player.global_position = path[0] + Vector3.UP * 0.05
@@ -359,6 +365,7 @@ func _walk(plan: Dictionary, direction: String, state: String) -> Dictionary:
 			recovered = true
 			break
 		var d: float = player._camera.global_position.distance_to(tree)
+		beat.step = "ticks %d, path %d/%d, d %.1f m, left %.2f m, stall %d" % [ticks, index, path.size(), d, left, stall]
 		span = Vector2(minf(span.x, d), maxf(span.y, d))
 		var crossed: bool = absf(d - last_d) >= 1.0 or last_d == INF
 		if not crossed: continue

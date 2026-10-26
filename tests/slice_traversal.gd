@@ -21,8 +21,12 @@ var _tree_boxes: Array = []
 var timings: Array = []
 var motion_steps: Array = []
 
+var beat: Node
+
 func _ready() -> void:
 	game = get_parent()
+	beat = preload("res://tests/harness_heartbeat.gd").new()
+	add_child(beat)
 	_run.call_deferred()
 
 func _check(label: String, ok: bool, detail: Variant = null) -> bool:
@@ -55,6 +59,7 @@ func _camera_clearance() -> float:
 	return at.y - _ground_under(at)
 
 func _capture(label: String) -> void:
+	beat.phase = "capture " + label
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var frame: Image = get_viewport().get_texture().get_image()
@@ -281,12 +286,12 @@ func _run() -> void:
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		elif "--water-motion" in arguments: await _water_motion_scenario()
-		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("--cap-shape" in arguments)
+		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("shape" if "--cap-shape" in arguments else ("leaf" if "--leaf-craft" in arguments else "craft"))
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else "cap-pairs") if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else ("leaf-pairs" if "--leaf-craft" in arguments else "cap-pairs")) if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -905,12 +910,14 @@ func _motion_frame(kind: String, index: int, meta: Dictionary, full: bool) -> Di
 ## the rim-overlook review camera, the recorded root-approach walk pose, and an offset under-cap
 ## view (review camera 1.7 m above a slice sample ~160 m from the hero, looking up at the gills),
 ## day and night; per-view frame timing in ABBA order by day.
-func _cap_pairs_scenario(shape: bool = false) -> void:
+func _cap_pairs_scenario(mode: String = "craft") -> void:
 	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
 	await _frames(60)
 	_check("Cap craft is on the hero cap material", scenery.get_report().get("cap_craft", {}).get("enabled", false), scenery.get_report().get("cap_craft"))
-	var toggle: Callable = scenery.set_cap_shape if shape else scenery.set_cap_craft
-	var prefix: String = "capshape" if shape else "cap"
+	var shape: bool = mode == "shape"
+	var toggle: Callable = scenery.set_cap_shape if shape else (scenery.set_leaf_craft if mode == "leaf" else scenery.set_cap_craft)
+	var prefix: String = "capshape" if shape else ("leaf" if mode == "leaf" else "cap")
+	if mode == "leaf": _check("Foreground leaf craft mesh check: same leaves, vertices and triangles, finite, leaf bases fixed, no face flipped, no new degenerate faces", scenery.leaf_craft_report.get("passed", false) and scenery.leaf_craft, scenery.leaf_craft_report)
 	if shape: _check("Hero cap shape mesh check: same topology, finite, closed seam, centre normals up/down, no face flipped against the previous cap, centre unchanged, degenerate triangles only in the unchanged centre fan", scenery.hero_cap_mesh_check.get("passed", false), scenery.hero_cap_mesh_check)
 	var hero: Vector3 = scenery.hero.base
 	var pose: Dictionary = scenery.overlook_pose()
@@ -921,11 +928,37 @@ func _cap_pairs_scenario(shape: bool = false) -> void:
 		if absf(Vector2(slice._p[i].x - hero.x, slice._p[i].z - hero.z).length() - 160.0) < absf(Vector2(slice._p[under_i].x - hero.x, slice._p[under_i].z - hero.z).length() - 160.0): under_i = i
 	var under_at: Vector3 = slice._p[under_i] + Vector3.UP * 1.7
 	var toward: Vector3 = Vector3(hero.x - under_at.x, 0.0, hero.z - under_at.z).normalized()
+	# Leaf offset: 8 m from the actual near crown closest to the right framing tree's spot
+	# (forward 7 m, right 14 m of the overlook eye, as placed by _add_trees), from the eye's side.
+	var offset_target := Vector3.ZERO
+	var offset_at := Vector3.ZERO
+	if mode == "leaf":
+		var eye: Vector3 = pose.position
+		var forward := Vector2(pose.target.x - eye.x, pose.target.z - eye.z).normalized()
+		var right := Vector2(-forward.y, forward.x)
+		var spot: Vector2 = Vector2(eye.x, eye.z) + forward * 7.0 + right * 14.0
+		var best: float = INF
+		for node: Node in scenery.get_children():
+			if not node is MultiMeshInstance3D or node.get_meta("lod_range", "") != "near": continue
+			var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+			for i: int in multi.instance_count:
+				var at: Vector3 = ((node as MultiMeshInstance3D).global_transform * multi.get_instance_transform(i)).origin
+				var gap: float = Vector2(at.x - spot.x, at.z - spot.y).length()
+				if gap < best:
+					best = gap
+					offset_target = at
+		offset_at = offset_target + Vector3(eye.x - offset_target.x, 0.0, eye.z - offset_target.z).normalized() * 8.0 + Vector3.UP * 0.5
+		_check("Leaf offset view aims at an actual near crown of the right framing tree (within 6 m of its spot)", best < 6.0, {"crown": _v(offset_target), "spot": [spot.x, spot.y], "gap_m": best, "camera": _v(offset_at)})
 	for mood: Array in [["day", false], ["night", true]]:
 		game.world.set_appearance(mood[1], false, false)
 		await get_tree().create_timer(4.5).timeout
-		for view: String in ["overlook", "root-approach", "under-cap"]:
-			if view == "overlook":
+		for view: String in (["overlook", "offset"] if mode == "leaf" else ["overlook", "root-approach", "under-cap"]):
+			if view == "offset":
+				review.fov = 60.0
+				review.position = offset_at
+				review.look_at(offset_target)
+				review.make_current()
+			elif view == "overlook":
 				review.fov = pose.fov
 				review.position = pose.position
 				review.look_at(pose.target)
@@ -954,6 +987,23 @@ func _cap_pairs_scenario(shape: bool = false) -> void:
 				for state: String in ["before", "after", "after", "before"]:
 					toggle.call(state == "after")
 					timings.append((await _time_view(30, 180)).merged({"pose": view, "state": state}))
+	if mode == "leaf":
+		# Facing diagnostic (day): magenta where a prototype leaf's shading normal faces away from
+		# the viewer, green elsewhere; previous and current state at the same two views.
+		game.world.set_appearance(false, false, false)
+		await get_tree().create_timer(4.5).timeout
+		scenery.set_leaf_facing_debug(true)
+		for view: String in ["overlook", "offset"]:
+			review.fov = pose.fov if view == "overlook" else 60.0
+			review.position = pose.position if view == "overlook" else offset_at
+			review.look_at(pose.target if view == "overlook" else offset_target)
+			review.make_current()
+			await _frames(30)
+			for state: String in ["before", "after"]:
+				toggle.call(state == "after")
+				await _frames(6)
+				await _capture("leaf-facing-%s-%s-day" % [view, state])
+		scenery.set_leaf_facing_debug(false)
 	player._camera.make_current()
 	review.queue_free()
 	toggle.call(true)

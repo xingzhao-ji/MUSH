@@ -256,6 +256,16 @@ class CapShapePairsReport(unittest.TestCase):
                 verify.inspect("cap-shape-pairs", Path("unused"), 120)
 
 
+class LeafPairsReport(unittest.TestCase):
+    def test_cap_views_do_not_satisfy_leaf_pairs(self):
+        files = [f"leaf-{view}-{state}-{mood}.png" for mood in ("day", "night") for view in ("overlook", "root-approach", "under-cap") for state in ("before", "after")]
+        report = {"schema": "mush-slice-traversal/1", "mode": "leaf-pairs", "passed": True, "legs": [],
+                  "checks": [{"label": "leaf", "passed": True}], "images": [{"file": name} for name in files]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every before/after pair"):
+                verify.inspect("leaf-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
