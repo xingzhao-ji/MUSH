@@ -28,6 +28,8 @@ const TERRAIN_HALF := 1500.0
 const TERRAIN_CELLS := 220
 ## Local detail patch over the rim view's central cliff band (target cell size, metres).
 const DETAIL_CELL := 6.0
+## Giant footing heights must match the legacy landform within this tolerance (metres).
+const FOOTING_TOLERANCE := 0.01
 ## Near-tree crowns may use a denser existing canopy mesh up to this many vertices.
 ## Near-tree crowns may use a distinct existing canopy mesh up to this many times the ring mesh's triangles.
 const NEAR_CROWN_MAX_RATIO := 8
@@ -237,13 +239,16 @@ func _landform_changed(x: float, z: float) -> bool:
 ## anchor does not move. Small giants stand on the eroded landform at the same x/z (their
 ## stems are grounded from terrain_height); keeping legacy discs under them left stepped
 ## terrace columns standing out of the new massifs.
-## The preserved disc covers the hero's stem and buttress footprint (stem radius 0.15 x cap
-## radius), not its 220 m cap: a cap-sized disc kept a stepped legacy terrace tower standing
-## behind the stem.
+## Every giant keeps its footing (base height unchanged) inside a narrow, smoothly faded
+## support zone sized to its stem and buttress footprint (stem radius 0.15 x cap radius;
+## full within 2.6 stem radii, gone by 4.8). Cap-sized discs (used before 036ae7d) kept a
+## stepped legacy terrace tower standing behind the hero's stem.
 func _giant_footing(x: float, z: float) -> float:
-	var row: Array = GIANTS[0]
-	var stem_r: float = float(row[2]) * 0.15
-	return 1.0 - smoothstep(stem_r * 2.6, stem_r * 4.8, Vector2(x, z).distance_to(Vector2(row[0], row[1])))
+	var keep: float = 0.0
+	for row: Array in GIANTS:
+		var stem_r: float = float(row[2]) * 0.15
+		keep = maxf(keep, 1.0 - smoothstep(stem_r * 2.6, stem_r * 4.8, Vector2(x, z).distance_to(Vector2(row[0], row[1]))))
+	return keep
 
 func _eroded_mesa_height(x: float, z: float) -> float:
 	var warp := Vector2(_hill_noise.get_noise_2d(x * 0.6 + 300.0, z * 0.6), _hill_noise.get_noise_2d(x * 0.6, z * 0.6 - 300.0)) * 90.0
@@ -394,14 +399,19 @@ func _add_terrain() -> void:
 		if normal.y < 0.25: near_vertical += 1
 	landform_checks["terrain_finite"] = finite
 	landform_checks["near_vertical_vertices"] = near_vertical
-	var regrounded: Array = []
+	# All-giant footing drift against the legacy landform (the ground every giant stood on
+	# at bd3fcea); required to be zero within FOOTING_TOLERANCE.
+	var footing_drift: float = 0.0
+	var bases: Array = []
 	for row: Array in GIANTS:
 		var now: float = terrain_height(row[0], row[1])
 		_legacy_mesa = true
-		regrounded.append(snappedf(now - terrain_height(row[0], row[1]), 0.01))
+		var before: float = terrain_height(row[0], row[1])
 		_legacy_mesa = false
-	landform_checks["hero_footing_drift_m"] = absf(regrounded[0])
-	landform_checks["small_giant_ground_shift_m"] = regrounded.slice(1)
+		footing_drift = maxf(footing_drift, absf(now - before))
+		bases.append([row[0], snappedf(now, 0.001), row[1]])
+	landform_checks["giant_footing_drift_m"] = footing_drift
+	landform_checks["giant_bases_xyz"] = bases
 	var route_drift: float = 0.0
 	for point: Vector3 in _route_points:
 		var now: float = terrain_height(point.x, point.z)
@@ -1431,4 +1441,5 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

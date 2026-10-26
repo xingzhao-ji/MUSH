@@ -1405,9 +1405,10 @@ Changes, checked against `design-reference/mush-concept-1.png`:
   - Faces are steeper (body transition n 0.16–0.40, was 0.12–0.46).
   - Sharp skyline peaks along narrow crests.
 - **Rock pillars:** each is now a fused cluster of four slender needle crags (faceted cross-section that twists with height, uneven ledges, jagged tip, lean), replacing the fat stacked lathe pillar. Same three sites and one draw call.
-- **Giant footings:**
-  - The old landform is now preserved only under the hero's stem and buttress footprint (about 86–158 m). Before, it was preserved under every giant's cap radius (hero: 198–330 m), which had left an unchanging stepped terrace tower standing behind the stem.
-  - The six small giants now stand on the new landform at the same x/z. Their vertical shifts are 60.42, 0, 10.03, 0, 1.19 and 0 m. All 7 stems are grounded.
+- **Giant footings:** the old landform is now preserved under each giant's stem and buttress footprint instead of under its cap radius (hero: 198–330 m), which had left an unchanging stepped terrace tower standing behind the stem.
+  - The first version (`036ae7d`) preserved only the hero's footprint and raised or lowered six small giants by up to 60.42 m. That departed from the instruction to preserve footings.
+  - Corrected: every giant keeps its own narrow, smoothly faded support zone (full within 2.6 stem radii, gone by 4.8, stem radius 0.15 × cap radius). All seven base heights match the ground they stood on at `bd3fcea`.
+  - Maximum all-giant footing drift is **0.0 m** (tolerance 0.01 m). This is now a hard check in the prototype report and in the scenic capture (`giant_footing_check`).
 
 Cost:
 - **Terrain triangles:** unchanged (91,442 coarse + 51,520 detail patch).
@@ -1415,10 +1416,11 @@ Cost:
 - **Draw nodes:** unchanged at 88.
 
 Checks:
-- Hero footing drift 0.0 m; route terrain drift 0.0 m; normals finite.
-- Near-vertical coarse vertices: 285 (was 169).
-- **Scenic:** all views pass framing and floor checks. The vista coverage gate still **fails** at 0.0129 (`reports/scenic-20261026-043649-78794`).
-- **Route:** **18/18** (`reports/route-20261026-043849-78884`).
+- All-giant footing drift 0.0 m (7/7); route terrain drift 0.0 m; normals finite.
+- Near-vertical coarse vertices: 286 (was 169).
+- **Scenic:** all views pass framing and floor checks, plus the footing check. The vista coverage gate still **fails** at 0.0129 (`reports/scenic-20261026-044356-79174`).
+- **Route:** **18/18** (`reports/route-20261026-044557-79276`).
+- **Visible side effect:** the (−280, −760) giant's original ground sits about 60 m below the new massif there, so it stands in a narrow recess cut into the massif, visible in the overview.
 
 Not rerun or still failing:
 - **Benchmark:** not rerun. The p95 17.573 ms failure stands.
