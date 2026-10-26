@@ -8,6 +8,9 @@ uniform float shimmer_amount = 1.0;
 uniform float night = 0.0;
 uniform float rain = 0.0;
 uniform bool mist = false;
+// Outlet stream: UV.x across (0..1), UV.y along the channel (downstream); COLOR.r = steepness
+// of the reach (more foam where it steps down).
+uniform bool stream = false;
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
@@ -24,7 +27,16 @@ float fbm(vec2 p) {
 }
 void fragment() {
 	float t = shimmer_time * shimmer_amount;
-	if (mist) {
+	if (stream) {
+		float across = abs(UV.x - 0.5) * 2.0;
+		float flow = fbm(vec2(UV.x * 4.0, UV.y * 6.0 - t * 0.6));
+		float foam = smoothstep(0.55, 0.85, flow) * (0.25 + 0.75 * COLOR.r);
+		ALBEDO = mix(vec3(0.16, 0.38, 0.40), vec3(0.88, 0.93, 0.95), foam);
+		ALPHA = clamp((0.72 + 0.25 * foam) * (1.0 - smoothstep(0.6, 1.0, across)), 0.0, 1.0);
+		ROUGHNESS = 0.15;
+		SPECULAR = 0.5;
+		EMISSION = vec3(0.02, 0.04, 0.05) * night * foam;
+	} else if (mist) {
 		vec2 c = (UV - vec2(0.5, 0.55)) * vec2(2.0, 2.4);
 		float puff = fbm(UV * 3.0 + vec2(t * 0.02, -t * 0.04));
 		ALBEDO = vec3(0.92, 0.94, 0.96);

@@ -33,10 +33,11 @@ const FOG_END := 1600.0
 ## 1400, curve 1.8, density 0.5 / 0.8 in rain) was measured to lift and flatten the West Wall at
 ## 0.3-1.2 km (docs/VERIFICATION.md). This profile keeps near and mid distance clearer and
 ## reaches about the same far haze (~0.46-0.55 beyond 1.4 km); fog colour, aerial perspective,
-## night and the overview are unchanged.
+## night and the overview are unchanged. Rain blends every parameter back to the previous
+## profile (full rain = previous rain fog), since the clearer profile removed rain's mid haze.
 const FOG_BEGIN := 320.0
 const FOG_CURVE := 2.6
-const FOG_DENSITY := Vector2(0.55, 0.85)
+const FOG_DENSITY := 0.55
 ## Capture-only: render the previous fog profile for same-frame evidence.
 var atmosphere_previous: bool = false
 const TERRAIN_HALF := 1500.0
@@ -249,6 +250,25 @@ const WALL_BENCHES: Array[Vector3] = [Vector3(0.22, 16.0, 11.0), Vector3(0.41, 2
 var _basin := Vector3(INF, INF, 0.0)
 const BASIN_RADIUS := 55.0
 const BASIN_DEPTH := 14.0
+## Outlet stream from the plunge basin to the lake: centreline points (x, bed height, z) every
+## STREAM_STEP m, planned on the terrain without the stream; the valley is carved only downward
+## (flat bed of half-width STREAM_BED, banks at STREAM_BANK rise per metre, out to STREAM_VALLEY).
+const STREAM_STEP := 10.0
+const STREAM_BED := 16.0
+const STREAM_BANK := 0.55
+const STREAM_VALLEY := 220.0
+const STREAM_BUCKET := 40.0
+var _stream: Array[Vector3] = []
+var _stream_buckets: Dictionary = {}
+var _stream_box := Rect2()
+var _stream_carving: bool = false
+## Precomputed once (8 m cells over the valley's reach): carve target height and distance to the
+## centreline, so terrain queries stay constant-time.
+const STREAM_CELL := 8.0
+var _stream_grid := PackedFloat32Array()
+var _stream_grid_d := PackedFloat32Array()
+var _stream_grid_cols: int = 0
+var stream_report: Dictionary = {"built": false}
 var _wall_grid_s := PackedFloat32Array()
 var _wall_grid_box := Rect2()
 const WALL_GRID_CELL := 25.0
@@ -427,6 +447,8 @@ func _raw_height(x: float, z: float) -> float:
 	if _basin.x != INF:
 		var to_basin: float = Vector2(x, z).distance_to(Vector2(_basin.x, _basin.y))
 		if to_basin < BASIN_RADIUS * 3.0: height -= _basin.z * exp(-pow(to_basin / BASIN_RADIUS, 2.0))
+	# Not during seeded placement draws (legacy landform), so placement streams do not shift.
+	if _stream_carving and not _legacy_mesa: height = _stream_carve(x, z, height)
 	return height
 
 ## Eroded layered massifs: broad warped bodies with talus feet, uneven strata ledges
@@ -572,6 +594,9 @@ func configure(world: Node3D) -> void:
 	_add_slice_route()
 	# Diagnostic-only performance bisection (empty by default; never set by the game).
 	var skip: PackedStringArray = OS.get_environment("MUSH_SCENERY_DIAG").split(",", false)
+	# The outlet stream is planned on the same terrain state the mesh is built from (after the
+	# route and slice beds exist); its carve is 500+ m from both.
+	if not geology_skip: _plan_stream()
 	_add_terrain()
 	if "plain_terrain" in skip: _terrain_material.shader = preload("res://assets/world/far_canopy.gdshader"); _terrain_material.set_shader_parameter("mode", 2)
 	if "no_water" in skip: _static[_static.size() - 1].visible = false
@@ -602,7 +627,8 @@ func _add_terrain() -> void:
 			# Graded grid: dense near the clearing, coarse toward the horizon.
 			var x: float = TERRAIN_HALF * signf(sx) * pow(absf(sx), 1.7)
 			var z: float = TERRAIN_HALF * signf(sz) * pow(absf(sz), 1.7)
-			st.set_color(Color(0, 0, 0))
+			# Riparian band (outlet stream channel and plunge-pool rim) for the terrain shader.
+			st.set_color(Color(_riparian(x, z), 0, 0))
 			st.set_uv(Vector2(float(column) / TERRAIN_CELLS, float(row) / TERRAIN_CELLS))
 			st.add_vertex(Vector3(x, terrain_height(x, z), z))
 	var coarse := PackedFloat32Array()
@@ -1405,7 +1431,7 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		tone = tone.lerp(Color("35603a"), smoothstep(-40.0, -70.0, placed) * 0.25)
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
-		if on_cliff or on_slice or _inside_wall(x, z) or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
+		if on_cliff or on_slice or _inside_wall(x, z) or _stream_distance(x, z).x < STREAM_BED + 24.0 or (_basin.x != INF and Vector2(x, z).distance_to(Vector2(_basin.x, _basin.y)) < BASIN_RADIUS * 1.5) or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
 			if _inside_wall(x, z): escarpment_report["clumps_in_rock"] = int(escarpment_report.get("clumps_in_rock", 0)) + 1
 			xs.pop_back()
 			continue
@@ -2234,6 +2260,154 @@ func _plan_wall() -> void:
 			_wall_grid_s[r * cols + c2] = along
 	escarpment_report = {"built": false, "toe_length_m": s, "samples": _wall.size(), "mask_cells": cols * rows}
 
+## Outlet stream plan: from the basin's lake-facing rim, step downhill toward the lake (look-ahead
+## steepest descent within +-40 degrees of a heading pulled toward the lake), smooth, then give it
+## a monotonic bed from just under the pool level to below the lake surface.
+func _plan_stream() -> void:
+	if _basin.x == INF: return
+	var basin := Vector2(_basin.x, _basin.y)
+	var heading: Vector2 = (LAKE_CENTER - basin).normalized()
+	var p: Vector2 = basin + heading * BASIN_RADIUS
+	var path: Array[Vector2] = [p]
+	for i: int in 220:
+		var lake_dir: Vector2 = (LAKE_CENTER - p).normalized()
+		var bias: Vector2 = (heading * 0.4 + lake_dir * 0.6).normalized()
+		var best: Vector2 = bias
+		var best_h: float = INF
+		for deg: float in [-40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0]:
+			var d: Vector2 = bias.rotated(deg_to_rad(deg))
+			var look: float = terrain_height(p.x + d.x * 25.0, p.y + d.y * 25.0) + absf(deg) * 0.04
+			if look < best_h:
+				best_h = look
+				best = d
+		heading = best
+		p += heading * STREAM_STEP
+		path.append(p)
+		# End inside the lake's water (the lake surface disc reaches 300 m from its centre).
+		if p.distance_to(LAKE_CENTER) < 250.0 and terrain_height(p.x, p.y) < LAKE_Y + 0.5: break
+	var smooth: Array[Vector2] = []
+	for i: int in path.size():
+		var acc := Vector2.ZERO
+		var n: int = 0
+		for j: int in range(maxi(0, i - 2), mini(path.size(), i + 3)):
+			acc += path[j]
+			n += 1
+		smooth.append(path[i] if i == 0 or i == path.size() - 1 else acc / n)
+	var basin_ground: float = terrain_height(basin.x, basin.y)
+	var pool_y: float = basin_ground + BASIN_DEPTH * 0.62
+	var bed: float = pool_y - 1.5
+	var ground: PackedFloat32Array = []
+	for i: int in smooth.size():
+		var g: float = terrain_height(smooth[i].x, smooth[i].y)
+		ground.append(g)
+		if i > 0: bed = minf(bed - 0.15, g - 3.0)
+		bed = maxf(bed, LAKE_Y - 3.0)
+		_stream.append(Vector3(smooth[i].x, bed, smooth[i].y))
+	_stream_box = Rect2(smooth[0], Vector2.ZERO)
+	for q: Vector2 in smooth: _stream_box = _stream_box.expand(q)
+	_stream_box = _stream_box.grow(STREAM_VALLEY)
+	for i: int in _stream.size() - 1:
+		var a := Vector2(_stream[i].x, _stream[i].z)
+		var b := Vector2(_stream[i + 1].x, _stream[i + 1].z)
+		var lo: Vector2 = Vector2(minf(a.x, b.x), minf(a.y, b.y)) - Vector2.ONE * STREAM_VALLEY
+		var hi: Vector2 = Vector2(maxf(a.x, b.x), maxf(a.y, b.y)) + Vector2.ONE * STREAM_VALLEY
+		for bx: int in range(floori(lo.x / STREAM_BUCKET), floori(hi.x / STREAM_BUCKET) + 1):
+			for bz: int in range(floori(lo.y / STREAM_BUCKET), floori(hi.y / STREAM_BUCKET) + 1):
+				var key := Vector2i(bx, bz)
+				if not _stream_buckets.has(key): _stream_buckets[key] = []
+				_stream_buckets[key].append(i)
+	_stream_grid_cols = ceili(_stream_box.size.x / STREAM_CELL) + 1
+	var grid_rows: int = ceili(_stream_box.size.y / STREAM_CELL) + 1
+	_stream_grid.resize(_stream_grid_cols * grid_rows)
+	_stream_grid_d.resize(_stream_grid_cols * grid_rows)
+	for r: int in grid_rows:
+		for k: int in _stream_grid_cols:
+			var at: Vector2 = _stream_box.position + Vector2(k, r) * STREAM_CELL
+			var frame: Vector2 = _stream_segment_distance(at.x, at.y)
+			_stream_grid_d[r * _stream_grid_cols + k] = frame.x
+			_stream_grid[r * _stream_grid_cols + k] = INF if frame.x > STREAM_VALLEY else frame.y + maxf(0.0, frame.x - STREAM_BED) * STREAM_BANK
+	var carve_max: float = 0.0
+	for i: int in _stream.size(): carve_max = maxf(carve_max, ground[i] - _stream[i].y)
+	stream_report = {"built": false, "length_m": STREAM_STEP * (_stream.size() - 1), "points": _stream.size(), "pool_level_m": pool_y, "basin_ground_at_plan_m": basin_ground, "bed_start_m": _stream[0].y, "bed_end_m": _stream[_stream.size() - 1].y, "ground_profile_m": [ground[0], ground[ground.size() / 2], ground[ground.size() - 1]], "max_centre_carve_m": carve_max, "reached_lake": Vector2(_stream[_stream.size() - 1].x, _stream[_stream.size() - 1].z).distance_to(LAKE_CENTER) < 250.0 and terrain_height(_stream[_stream.size() - 1].x, _stream[_stream.size() - 1].z) < LAKE_Y + 0.5}
+	_stream_carving = true
+
+## Distance to the stream centreline (x) and the carve target height (y) from the precomputed
+## grid (bilinear); x = INF away from the valley.
+func _stream_distance(x: float, z: float) -> Vector2:
+	if _stream_grid.is_empty() or not _stream_box.has_point(Vector2(x, z)): return Vector2(INF, 0.0)
+	var f: Vector2 = (Vector2(x, z) - _stream_box.position) / STREAM_CELL
+	var k: int = mini(floori(f.x), _stream_grid_cols - 2)
+	var r: int = mini(floori(f.y), _stream_grid.size() / _stream_grid_cols - 2)
+	var w: Vector2 = f - Vector2(k, r)
+	var i: int = r * _stream_grid_cols + k
+	var d: float = lerpf(lerpf(_stream_grid_d[i], _stream_grid_d[i + 1], w.x), lerpf(_stream_grid_d[i + _stream_grid_cols], _stream_grid_d[i + _stream_grid_cols + 1], w.x), w.y)
+	var t4 := [_stream_grid[i], _stream_grid[i + 1], _stream_grid[i + _stream_grid_cols], _stream_grid[i + _stream_grid_cols + 1]]
+	for v: float in t4:
+		if v == INF: return Vector2(d, INF)
+	return Vector2(d, lerpf(lerpf(t4[0], t4[1], w.x), lerpf(t4[2], t4[3], w.x), w.y))
+
+## Exact distance to the stream centreline (x) and the bed height there (y), by segment search.
+func _stream_segment_distance(x: float, z: float) -> Vector2:
+	if _stream.is_empty() or not _stream_box.has_point(Vector2(x, z)): return Vector2(INF, 0.0)
+	var key := Vector2i(floori(x / STREAM_BUCKET), floori(z / STREAM_BUCKET))
+	if not _stream_buckets.has(key): return Vector2(INF, 0.0)
+	var here := Vector2(x, z)
+	var best: float = INF
+	var bed: float = 0.0
+	for i: int in _stream_buckets[key]:
+		var a := Vector2(_stream[i].x, _stream[i].z)
+		var ab := Vector2(_stream[i + 1].x, _stream[i + 1].z) - a
+		var t: float = clampf((here - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		var gap: float = here.distance_to(a + ab * t)
+		if gap < best:
+			best = gap
+			bed = lerpf(_stream[i].y, _stream[i + 1].y, t)
+	return Vector2(best, bed)
+
+## The valley the stream has cut: lowers ground to the bed plus banks, never raises it.
+func _stream_carve(x: float, z: float, height: float) -> float:
+	var frame: Vector2 = _stream_distance(x, z)
+	if frame.x > STREAM_VALLEY or frame.y == INF: return height
+	return minf(height, frame.y)
+
+## 1 on the stream's channel and the plunge pool's rim, fading out over ~22 m (wet gravel banks).
+func _riparian(x: float, z: float) -> float:
+	var wet: float = 0.0
+	var frame: Vector2 = _stream_distance(x, z)
+	if frame.x != INF: wet = 1.0 - smoothstep(STREAM_BED, STREAM_BED + 14.0, frame.x)
+	if _basin.x != INF: wet = maxf(wet, 1.0 - smoothstep(BASIN_RADIUS * 1.0, BASIN_RADIUS * 1.6, Vector2(x, z).distance_to(Vector2(_basin.x, _basin.y))))
+	return wet
+
+## Labelled basin view (a new camera): on the stream's vegetation-free valley, 40 m over
+## the rendered floor, looking upstream at the basin and the falls' foot. Empty without a stream.
+func stream_view_pose() -> Dictionary:
+	if _stream.size() < 6: return {}
+	var at: Vector3 = _stream[int(_stream.size() * 0.18)]
+	var eye := Vector3(at.x, _coarse_height(at.x, at.z) + 40.0, at.z)
+	return {"position": eye, "target": Vector3(_basin.x, _stream[0].y + 25.0, _basin.y), "fov": 60.0}
+
+## Height of the rendered coarse terrain mesh (graded grid, triangulated as in _add_terrain).
+func _coarse_height(x: float, z: float) -> float:
+	var cells: float = float(TERRAIN_CELLS)
+	var to_s := func(v: float) -> float: return signf(v) * pow(absf(v) / TERRAIN_HALF, 1.0 / 1.7)
+	var fx: float = (to_s.call(x) + 1.0) * 0.5 * cells
+	var fz: float = (to_s.call(z) + 1.0) * 0.5 * cells
+	var c0: int = clampi(floori(fx), 0, TERRAIN_CELLS - 1)
+	var r0: int = clampi(floori(fz), 0, TERRAIN_CELLS - 1)
+	var grid := func(i: int) -> float: var s: float = lerpf(-1.0, 1.0, float(i) / cells); return TERRAIN_HALF * signf(s) * pow(absf(s), 1.7)
+	var x0: float = grid.call(c0)
+	var x1: float = grid.call(c0 + 1)
+	var z0: float = grid.call(r0)
+	var z1: float = grid.call(r0 + 1)
+	var u: float = clampf((x - x0) / (x1 - x0), 0.0, 1.0)
+	var v: float = clampf((z - z0) / (z1 - z0), 0.0, 1.0)
+	var h0: float = terrain_height(x0, z0)
+	var h1: float = terrain_height(x1, z0)
+	var h2: float = terrain_height(x0, z1)
+	var h3: float = terrain_height(x1, z1)
+	if u + v <= 1.0: return h0 + u * (h1 - h0) + v * (h2 - h0)
+	return h3 + (1.0 - u) * (h2 - h3) + (1.0 - v) * (h1 - h3)
+
 ## Signed distance from the West Wall's toe (positive toward the valley) and position along it,
 ## from the coarse mask; x = INF away from the wall.
 func _wall_frame(x: float, z: float) -> Vector2:
@@ -2436,6 +2610,9 @@ func _add_falls() -> Dictionary:
 	var rows: int = 56
 	var min_clear: float = INF
 	var pool_y: float = terrain_height(_basin.x, _basin.y) + BASIN_DEPTH * 0.62
+	stream_report["basin_ground_at_build_m"] = terrain_height(_basin.x, _basin.y)
+	# The pool spills through its outlet: its surface is no higher than the outlet's floor allows.
+	if not _stream.is_empty(): pool_y = minf(pool_y, _coarse_height(_stream[0].x, _stream[0].z) + 0.6)
 	for j: int in rows + 1:
 		var t: float = float(j) / rows
 		var y: float = top - 2.0 - (top - 2.0 - pool_y) * t
@@ -2486,6 +2663,7 @@ func _add_falls() -> Dictionary:
 	pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(pool)
 	_static.append(pool)
+	_add_stream_water(pool_y)
 	# Spray: soft sheets over the basin, taller where the water lands.
 	var mist_st := SurfaceTool.new()
 	mist_st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -2511,6 +2689,109 @@ func _add_falls() -> Dictionary:
 	add_child(veil)
 	_static.append(veil)
 	return {"built": true, "width_m": [12.0, 86.0], "contact_fraction": 0.18, "pool": _v3(pool.position), "pool_radius_m": BASIN_RADIUS * 1.25, "lip": _v3(Vector3(toe.x + nrm.x * (_wall_face_offset(sample, 1.0, h, top) + 6.0), top, toe.y + nrm.y * (_wall_face_offset(sample, 1.0, h, top) + 6.0))), "foot": _v3(foot), "drop_m": top - pool_y, "min_face_clearance_m": min_clear, "ribbon_triangles": rows * 4, "mist_triangles": 6}
+
+## Stream water: a ribbon laid on the rendered (coarse) valley floor along the carved channel,
+## from the pool's outlet to the lake surface, flowing downstream; plus clearance and sightline
+## evidence in stream_report.
+func _add_stream_water(pool_y: float) -> void:
+	if _stream.size() < 3: return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var along: float = 0.0
+	var floating: float = 0.0
+	var above_banks: float = -INF
+	var worst: Array = []
+	var steep_max: float = 0.0
+	var last_y: float = pool_y
+	# Thalweg: at each point the water follows the lowest rendered ground across the section
+	# (+-12 m), smoothed, since the 10-16 m mesh can put the low line beside the planned path.
+	var shifts: PackedFloat32Array = []
+	for i: int in _stream.size():
+		var c0 := Vector2(_stream[i].x, _stream[i].z)
+		var t0: Vector2 = (Vector2(_stream[mini(i + 1, _stream.size() - 1)].x, _stream[mini(i + 1, _stream.size() - 1)].z) - Vector2(_stream[maxi(i - 1, 0)].x, _stream[maxi(i - 1, 0)].z)).normalized()
+		var s0 := Vector2(-t0.y, t0.x)
+		var best: float = 0.0
+		var low: float = INF
+		for o: float in [-12.0, -6.0, 0.0, 6.0, 12.0]:
+			var g: float = _coarse_height(c0.x + s0.x * o, c0.y + s0.y * o)
+			if g < low - 0.05:
+				low = g
+				best = o
+		shifts.append(0.0 if i == 0 else best)
+	var smoothed: PackedFloat32Array = shifts.duplicate()
+	for i: int in range(1, shifts.size() - 1): smoothed[i] = (shifts[i - 1] + shifts[i] + shifts[i + 1]) / 3.0
+	for i: int in _stream.size():
+		var t: Vector2 = (Vector2(_stream[mini(i + 1, _stream.size() - 1)].x, _stream[mini(i + 1, _stream.size() - 1)].z) - Vector2(_stream[maxi(i - 1, 0)].x, _stream[maxi(i - 1, 0)].z)).normalized()
+		var side := Vector2(-t.y, t.x)
+		var c := Vector2(_stream[i].x, _stream[i].z) + side * smoothed[i]
+		var floor_y: float = _coarse_height(c.x, c.y)
+		var half: float = lerpf(6.0, 10.0, float(i) / float(_stream.size() - 1))
+		# Banks are measured beyond the flat floor (the 10-16 m mesh renders that floor flat).
+		var bank_low: float = minf(_coarse_height(c.x + side.x * (STREAM_BED + 6.0), c.y + side.y * (STREAM_BED + 6.0)), _coarse_height(c.x - side.x * (STREAM_BED + 6.0), c.y - side.y * (STREAM_BED + 6.0)))
+		# Water sits just over the rendered floor and under its lower bank, never above the pool
+		# and never below the lake.
+		# Follows the rendered floor (which undulates slightly along the planned, monotonic bed);
+		# a strict no-rise cap buried whole reaches under that floor.
+		var y: float = clampf(minf(floor_y + 0.45, bank_low - 0.15), LAKE_Y + 0.05, pool_y)
+		if i == 0: y = minf(pool_y - 0.05, bank_low - 0.15)
+		floating = maxf(floating, y - floor_y)
+		# Water must lie below its banks (the rendered ground just beyond the ribbon), except where
+		# the channel has reached the lake's own water.
+		var in_lake: bool = c.distance_to(LAKE_CENTER) < 290.0 and floor_y < LAKE_Y
+		if not in_lake:
+			var bank: float = bank_low
+			if y - bank > above_banks: worst = [snappedf(c.x, 0.1), snappedf(c.y, 0.1), snappedf(y, 0.01), snappedf(bank, 0.01), snappedf(floor_y, 0.01), snappedf(c.distance_to(LAKE_CENTER), 0.1), i]
+			above_banks = maxf(above_banks, y - bank)
+		var steep: float = clampf((last_y - y) / STREAM_STEP * 2.0, 0.0, 1.0)
+		steep_max = maxf(steep_max, steep)
+		last_y = y
+		for k: int in 3:
+			var off: float = (float(k) / 2.0 - 0.5) * 2.0 * half
+			var at: Vector2 = c + side * off
+			st.set_uv(Vector2(float(k) / 2.0, along / 40.0))
+			st.set_color(Color(steep, 0.0, 0.0))
+			st.add_vertex(Vector3(at.x, y, at.y))
+		along += STREAM_STEP
+	for j: int in _stream.size() - 1:
+		for k: int in 2:
+			var a: int = j * 3 + k
+			st.add_index(a); st.add_index(a + 3); st.add_index(a + 1)
+			st.add_index(a + 1); st.add_index(a + 3); st.add_index(a + 4)
+	st.generate_normals()
+	var water := ShaderMaterial.new()
+	water.shader = FALLS_SHADER
+	water.set_shader_parameter("stream", true)
+	_geology_materials.append(water)
+	var node := MeshInstance3D.new()
+	node.name = "WestFallsOutlet"
+	node.mesh = st.commit()
+	node.material_override = water
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
+	# Clearances: route and slice points to the carved valley's reach; carve depth at the needle
+	# crag's base; the shore camera's sightline to the pool over the rendered terrain.
+	var route_gap: float = INF
+	for path: Variant in [route, slice_route]:
+		if not is_instance_valid(path) or not path.valid: continue
+		for point: Vector3 in path._p:
+			var frame: Vector2 = _stream_distance(point.x, point.z)
+			route_gap = minf(route_gap, frame.x)
+	var crag := Vector2(-520.0, -520.0)
+	_stream_carving = false
+	var crag_before: float = terrain_height(crag.x, crag.y)
+	_stream_carving = true
+	var crag_carve: float = crag_before - terrain_height(crag.x, crag.y)
+	var eye := Vector3(387.12, -78.01 + 1.7, -300.14)
+	var target := Vector3(_basin.x, pool_y + 4.0, _basin.y)
+	var blocked: float = -INF
+	for k: int in range(1, 120):
+		var q: Vector3 = eye.lerp(target, float(k) / 120.0)
+		blocked = maxf(blocked, _coarse_height(q.x, q.z) - q.y)
+	var mouth: Vector3 = _stream[_stream.size() - 1]
+	var joins: bool = Vector2(mouth.x, mouth.z).distance_to(LAKE_CENTER) < 290.0 and _coarse_height(mouth.x, mouth.z) < LAKE_Y
+	stream_report.merge({"built": true, "ribbon_triangles": (_stream.size() - 1) * 4, "water_depth_over_rendered_floor_max_m": floating, "water_above_banks_max_m": above_banks, "worst_bank_point_x_z_water_bank_floor_lakedist_index": worst, "joins_lake_water": joins, "steepest_reach": steep_max, "route_slice_min_distance_m": route_gap, "crag_base_carve_m": crag_carve, "shore_sightline_max_terrain_above_m": blocked, "pool_visible_from_shore_eye": blocked < 0.0, "mouth": _v3(mouth), "collision": "none (far layer)"}, true)
+	stream_report["passed"] = route_gap > 60.0 and absf(crag_carve) < 5.0 and above_banks < 0.5 and joins and bool(stream_report.get("reached_lake", false))
 
 ## Alpine ice behind the falls: a snow peak standing behind the notch and a steep, fractured
 ## ice tongue descending from its flank through the widened notch to an ice cliff just above
@@ -3366,10 +3647,10 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
-	environment.fog_depth_begin = 200.0 if atmosphere_previous else FOG_BEGIN
-	environment.fog_depth_end = 1400.0 if atmosphere_previous else FOG_END
-	environment.fog_depth_curve = 1.8 if atmosphere_previous else FOG_CURVE
-	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(FOG_DENSITY.x, FOG_DENSITY.y, rain)))
+	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(FOG_BEGIN, 200.0, rain)
+	environment.fog_depth_end = 1400.0 if atmosphere_previous else lerpf(FOG_END, 1400.0, rain)
+	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
+	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(FOG_DENSITY, 0.8, rain)))
 	environment.fog_aerial_perspective = 0.15
 	environment.fog_sun_scatter = 0.1
 	environment.fog_sky_affect = 0.0
@@ -3392,4 +3673,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY.x, FOG_DENSITY.y], "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.8], "rain": "blends to the previous profile (full rain = previous)", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

@@ -148,6 +148,16 @@ void fragment() {
 		// Daylight sky bounce only: it fades out at night so the cliff never self-lights.
 		fill = albedo * rock_fill_tint * rock_fill * targeted * away * mix(1.0, 0.05, night);
 	}
+	// Riparian band (vertex colour r, prototype stream and plunge pool only): wet gravel and
+	// boulders on the eroded banks, darker toward the water; 0 elsewhere (no change).
+	float riparian = COLOR.r;
+	if (riparian > 0.0) {
+		float stones = fbm(v_world.xz * 0.35);
+		vec3 gravel = mix(vec3(0.13, 0.14, 0.14), vec3(0.30, 0.30, 0.29), smoothstep(0.35, 0.7, stones));
+		gravel *= mix(0.7, 1.0, smoothstep(0.85, 0.3, riparian));
+		albedo = mix(albedo, gravel, smoothstep(0.0, 0.6, riparian) * 0.9);
+		rockiness = max(rockiness, riparian * 0.6);
+	}
 	if (debug_unlit) {
 		EMISSION = albedo;
 		ALBEDO = vec3(0.0);

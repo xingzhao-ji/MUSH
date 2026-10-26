@@ -75,12 +75,13 @@ void fragment() {
 	float block = cell.z;
 	float block2 = hash21(vec2(cell.z * 91.7, 0.37));
 	float edge = cell.y - cell.x;
-	float open = smoothstep(0.45, 0.6, fbm(vec2(s * 0.012, h * 0.01) + 5.7));
+	// Fractures are discontinuous: only a minority of plate borders open, leaving broad quiet planes.
+	float open = smoothstep(0.56, 0.68, fbm(vec2(s * 0.009, h * 0.008) + 5.7));
 	float fracture_line = (1.0 - smoothstep(0.0, max(0.05, fwidth(edge) * 1.5), edge)) * open;
 	float sy = h / 90.0 + 0.8 * sin(s * 0.005) + fbm(vec2(s * 0.003, h * 0.004)) * 1.2;
 	float sheet_line = (1.0 - smoothstep(0.0, max(0.03, fwidth(sy) * 1.5), min(fract(sy), 1.0 - fract(sy)))) * smoothstep(0.5, 0.65, fbm(vec2(s * 0.006, floor(sy) * 3.3)));
 	float blocks = world_mapped ? 0.0 : face;
-	rock *= mix(1.0, mix(0.86, 1.1, block), blocks);
+	rock *= mix(1.0, mix(0.9, 1.07, block), blocks);
 	rock = mix(rock, rock * 0.42, max(fracture_line, sheet_line * 0.8) * 0.65 * blocks);
 	float sheet = fbm(vec2(s * 0.01, h * 0.02 + fbm(vec2(s * 0.003, h * 0.002)) * 4.0));
 	rock *= mix(0.86, 1.06, sheet);

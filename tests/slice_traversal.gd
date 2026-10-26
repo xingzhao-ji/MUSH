@@ -1030,22 +1030,35 @@ func _geology_scenario() -> void:
 	var wall: Dictionary = scenery.get_report().get("escarpment", {})
 	var skipped: bool = "no_geology" in scenery.diagnostic_skips
 	if skipped: _check("Landmark skipped for the before run (MUSH_SCENERY_DIAG=no_geology)", not wall.get("built", false), wall)
-	else: _check("West Wall: built, finite, face looks into the valley, falls clear of the face, route and giant caps clear of the toe", wall.get("passed", false), wall)
+	else:
+		_check("West Wall: built, finite, face looks into the valley, falls clear of the face, route and giant caps clear of the toe", wall.get("passed", false), wall)
+		var stream: Dictionary = scenery.get_report().get("stream", {})
+		_check("Outlet stream: reaches the lake, water on the rendered channel floor, route and slice clear of the valley, crag base not carved", stream.get("passed", false), stream)
+	_check("All seven giant footings unchanged (prototype footing check)", scenery.get_report().get("footing_ok", false), scenery.get_report().get("footing_ok"))
 	var falls_aim := Vector3(-600.0, 140.0, -560.0)
 	var knoll: Vector3 = route.get_end_point() + Vector3.UP * 1.7
 	var shore := Vector3(387.12, -78.01 + 1.7, -300.14)
 	var side := Vector3(-300.0, scenery.terrain_height(-300.0, -200.0) + 30.0, -200.0)
 	var pose: Dictionary = scenery.overlook_pose()
+	# Basin view (a new, labelled camera, not a matched pair): fixed in plan 260 m from the lake
+	# centre toward the falls' basin, 2.5 m above the ground or water there, aimed at the basin.
+	# Basin view (new, labelled camera): mid-ravine on the outlet stream looking upstream at the
+	# basin; without the landmark (before run) a fixed fallback from the lake's west shore.
+	var basin_pose: Dictionary = scenery.stream_view_pose()
+	var basin_xz := Vector2(-577.8, -448.5)
+	var basin_eye: Vector3 = basin_pose.get("position", Vector3(-150.0, scenery.terrain_height(-150.0, -400.0) + 8.0, -400.0))
+	var basin_aim: Vector3 = basin_pose.get("target", Vector3(basin_xz.x, 100.0, basin_xz.y))
 	var views: Array = [["overlook", pose.position, pose.target, pose.fov], ["knoll", knoll, Vector3(-60.0, 60.0, -700.0), 60.0], ["shore", shore, falls_aim, 60.0],
-		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0]]
+		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0], ["basin", basin_eye, basin_aim, 60.0]]
 	var review := Camera3D.new()
 	review.far = 2600.0
 	game.add_child(review)
-	for mood: Array in [["day", false], ["night", true]]:
-		game.world.set_appearance(mood[1], false, false)
+	for mood: Array in [["day", false, false], ["night", true, false], ["rain", false, true]]:
+		game.world.set_appearance(mood[1], mood[2], false)
 		await get_tree().create_timer(4.5).timeout
 		for view: Array in views:
 			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore"]: continue
+			if mood[0] == "rain" and not view[0] in ["overlook", "shore"]: continue
 			scenery.set_overview(view[0] == "overview")
 			review.fov = view[3]
 			review.position = view[1]
@@ -1058,7 +1071,7 @@ func _geology_scenario() -> void:
 	player._camera.make_current()
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
-	_check("Geology views captured (day 5, night 3)", images.size() == 8, images.size())
+	_check("Geology views captured (day 6 incl. the new basin view, night 3, rain 2)", images.size() == 11, images.size())
 
 ## Controlled geology diagnosis at the shore and side poses (day): the same frame in the final
 ## rendering, without depth fog, as unlit albedo, as world normals, as uniform grey lit by the

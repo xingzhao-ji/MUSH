@@ -2476,3 +2476,63 @@ The visible images are `geology-20261026-150353-39697`. `150607` is the same sta
 - **Not reviewed:** the knoll and overview do not show the valley floor well, and no view yet shows the glacier valley from above it.
 - **Scenic:** not rerun. Only a far-layer mesh was added; the last scenic is `151121`.
 - **Still open:** the route benchmark **failure**, the vista gate and overall art acceptance; the draw-loss trigger is unresolved.
+
+## Falls basin outlet to the lake, rain haze fix, quieter fractures (2026-10-26)
+
+**Status: bounded environment pass; the falls now connect to the lake; scene art not accepted.** Rollback: `git revert` this commit.
+
+**Night and rain review of `43c232e`** (`scenic-144010` against `scenic-151121`, inspected by eye):
+- **Night:** mean luma moved by at most 2 levels. Shadows on the dark cliff massif deepen (near-black share 3.4% → 6.9% in cliff-detail, 3.0% → 5.5% in landform-side), but the massif stays readable, so this was left as is.
+- **Rain: a regression.** Rim-overlook mean 123 → 107, and the mid massifs lost their rain haze, because the clearer profile also applied in rain.
+- **Fix:** every fog parameter now blends to the previous profile with the rain amount, so full rain equals the previous rain fog exactly. In `geology-20261026-155437-71755`, `geo-overlook-rain` matches the pre-atmosphere frame by eye (hazy mid massifs, the same mood).
+
+**Outlet stream** (`_plan_stream`, `_stream_carve`, `_add_stream_water`):
+- **Plan:** a 590 m centreline from the plunge basin's lake-facing rim, stepping downhill toward the lake (look-ahead steepest descent within ±40°, smoothed).
+  - **Order:** planned on the same terrain state the mesh is built from, after the route and slice beds.
+  - **Bed:** monotonic, from just under the pool level (60.8 m) to −85 m inside the lake's water.
+- **Carve:** downward only, never raising ground.
+  - **Shape:** a 16 m flat floor with banks at 0.55 rise per metre, out to 220 m; at most 8.9 m at the centreline.
+  - **Lookup:** precomputed once on an 8 m grid, so terrain queries stay constant-time.
+  - **Placement draws:** not applied during the seeded draws that use the legacy landform. The first version shifted the tree random stream and changed the left framing tree (`154932`, overlook −45k primitives); fixed and checked by eye in `155115`.
+- **Water:**
+  - a 236-triangle ribbon on the rendered coarse floor, following the thalweg, the lowest point within ±12 m;
+  - always under its lower bank (water − bank at most −0.15 m);
+  - joins the lake's water at (7.7, −85, −374.8);
+  - foam where reaches step down;
+  - the pool surface spills through the outlet;
+  - no collision.
+- **Banks:** a riparian vertex band in the terrain shader renders wet gravel. It is zero everywhere else, including the detail patches.
+- **Vegetation:** carpet clumps are filtered off the channel and the pool rim after their draws.
+- **Check** (asserted by the geology suite):
+  - reaches and joins the lake;
+  - water under its banks;
+  - the needle crag's base is not carved (0.0 m);
+  - route and slice are outside the valley's reach;
+  - all seven giant footings unchanged.
+
+**Granite:** fracture lines open on fewer plate borders (fbm threshold 0.56–0.68) and the per-plate tone range is narrower, leaving broader quiet planes. In the side view, fracture outlines are now discontinuous.
+
+**Evidence** (`geology-20261026-155437-71755`; the original frames are kept and matched against `151642`):
+- **Shore (original frame):** the outlet's lower reaches now descend the valley side and enter the lake beside the needle crag, linking the falls to the lake. The plunge pool itself stays hidden from this eye: rendered terrain rises 3.6 m above the sightline.
+- **`geo-basin-day` (new, labelled camera):** 40 m above the channel at 18% of its length, looking upstream. The falls land in the plunge pool and the outlet leaves through its gravel channel. It is not a matched pair.
+- **Overview:** basin → stream → lake reads as one watershed.
+- **Side:** the channel is visible behind the crag.
+- **Rain:** two rain views were added to the suite.
+- **Cost:** primitives within ±3k of `151642` in the matched views.
+
+**Runs and evidence retained:**
+- `152410` **timed out** (600 s). Its checks completed and it printed `SLICE_TRAVERSAL_COMPLETE` at about 37 s, but the process did not exit until killed. Startup was slower (first heartbeat 18 s against 10 s) with a per-query segment search. Exit behaviour is normal in the 9 runs since the carve was precomputed; the cause is not established.
+- **Rejected iterations:**
+  - `153524`: the stream ended on the shore, outside the water, and the camera was inside a tree.
+  - `153723` / `153934`: water 5.4 m above its banks, because it was planned before the trail beds existed.
+  - `154135`: 2.8 m above its banks.
+  - `154302` / `154430` / `154606` / `154718`: bank, camera and visibility iterations.
+  - `154932`: the tree regression.
+- **`155115`:** every in-game check passed, but the runner's preservation check failed. A file the user added, `design-reference/Ian_Millington-Game_Physics_Engine_Development-EN.pdf`, appeared during the run at 15:52:09. It was left untouched and unread. Clean reruns: `155304` and `155437`.
+
+**Limitations:**
+- **Pool from the shore:** not visible from the original shore frame; the labelled basin view is how it is shown.
+- **Upland:** the high ground and peak remain pale in the preserved far haze.
+- **Stream water:** a simple unlit-flow ribbon, with no edge foam on the banks and no sound.
+- **Scenic:** not rerun. The canopy coverage gate is unaffected (still failing, 0.0129); footings are checked in this suite.
+- **Still open:** the route benchmark **failure** (p95 19.834 ms); the draw-loss trigger is unresolved.
