@@ -230,21 +230,26 @@ func _eroded_mesa_height(x: float, z: float) -> float:
 	var talus: float = smoothstep(0.02, 0.3, n) * 38.0
 	var body: float = smoothstep(0.12, 0.46, n)
 	if body <= 0.0: return talus
+	var top: float = smoothstep(0.7, 1.0, body)
+	var face: float = smoothstep(0.15, 0.6, body) * (1.0 - top * 0.6)
 	var tall: float = 160.0 + 100.0 * (_terrace_noise.get_noise_2d(x * 0.5, z * 0.5) * 0.5 + 0.5)
 	var raw: float = body * tall
-	var step: float = 24.0 + 16.0 * (_hill_noise.get_noise_2d(x * 0.3 + 900.0, z * 0.3) * 0.5 + 0.5)
-	var strata: float = _terrace(raw + _terrace_noise.get_noise_2d(x * 2.1, z * 2.1) * 9.0, step, 0.55)
+	# Strata: step height varies over ~300 m; risers are wide enough to span several
+	# detail cells (no grid-aliased teeth) and fade out on the tops (no stepped crests).
+	var step: float = 22.0 + 20.0 * (_hill_noise.get_noise_2d(x * 0.9 + 900.0, z * 0.9) * 0.5 + 0.5)
+	var strata: float = _terrace(raw + _terrace_noise.get_noise_2d(x * 2.1, z * 2.1) * 9.0, step, 0.78)
 	var survive: float = smoothstep(-0.25, 0.35, _terrace_noise.get_noise_2d(x * 0.9 + 500.0, z * 0.9))
-	var shaped: float = lerpf(raw, strata, survive * smoothstep(0.2, 0.55, body))
+	var shaped: float = lerpf(raw, strata, survive * smoothstep(0.2, 0.55, body) * (1.0 - top * 0.85))
+	# Erosion at three scales, each domain-warped differently: large gullies (~220 m),
+	# medium couloirs (~90 m) and small breakup (~65 m); the finest term is kept weak.
 	var gully: float = pow(1.0 - absf(_hill_noise.get_noise_2d(x * 1.3 - 400.0, z * 1.3)), 6.0) * 34.0 * smoothstep(0.25, 0.7, body) * (1.0 - smoothstep(0.9, 1.0, body))
-	# Tops break into ridgelines and saddles instead of one flat plateau.
-	var top: float = smoothstep(0.7, 1.0, body)
-	var ridges: float = (pow(1.0 - absf(_ridge_noise.get_noise_2d(x * 2.2 + 900.0, z * 2.2)), 3.0) * 70.0 - 20.0) * top
+	var bend := Vector2(_terrace_noise.get_noise_2d(x * 1.1, z * 1.1 + 40.0), _terrace_noise.get_noise_2d(x * 1.1 - 40.0, z * 1.1)) * 45.0
+	var couloir: float = pow(1.0 - absf(_ridge_noise.get_noise_2d((x + bend.x) * 6.0, (z + bend.y) * 6.0)), 4.0) * 14.0 * face
+	var breakup: float = (_terrace_noise.get_noise_2d((x + bend.y) * 5.0, (z + bend.x) * 5.0) * 5.0 + _hill_noise.get_noise_2d(x * 9.0 + 200.0, z * 9.0) * 1.2) * face
+	# Tops: soft ridgelines and saddles instead of one flat plateau.
+	var ridges: float = (pow(1.0 - absf(_ridge_noise.get_noise_2d(x * 2.2 + 900.0, z * 2.2)), 2.2) * 55.0 - 15.0) * top
 	var crown: float = _hill_noise.get_noise_2d(x * 0.8, z * 0.8 + 700.0) * 22.0 * top
-	# Rock breakup on the faces (30-70 m); only the detail patch resolves it fully.
-	var face: float = smoothstep(0.15, 0.6, body) * (1.0 - top * 0.6)
-	var breakup: float = (_terrace_noise.get_noise_2d(x * 5.0, z * 5.0) * 6.0 + _hill_noise.get_noise_2d(x * 9.0 + 200.0, z * 9.0) * 2.5) * face
-	return maxf(shaped - gully + crown + ridges + breakup, talus)
+	return maxf(shaped - gully - couloir + crown + ridges + breakup, talus)
 
 func terrain_slope(x: float, z: float) -> float:
 	var e: float = 6.0
@@ -478,17 +483,24 @@ func _add_detail_patch(coarse: PackedFloat32Array, cells: Rect2i) -> void:
 	add_child(node)
 	_static.append(node)
 
-## Close review pose on the detailed cliff band (camera only, not walkable): from the
-## sun side, looking back at the lit faces, clear of every giant cap.
+## Medium-distance review pose on the detailed cliff band (camera only, not walkable):
+## about 600 m out on the sun side, raised to clear the terrain along its sightline.
 func cliff_detail_pose() -> Dictionary:
 	var rim: Vector2 = _rim_point(5.0)
 	var ahead: Vector2 = (HERO - rim).normalized()
 	var focus2: Vector2 = rim + ahead.rotated(deg_to_rad(14.0)) * 950.0
-	var focus := Vector3(focus2.x, terrain_height(focus2.x, focus2.y) + 60.0, focus2.y)
+	var focus := Vector3(focus2.x, terrain_height(focus2.x, focus2.y) + 50.0, focus2.y)
 	var sunward := Vector2(0.77, -0.64).normalized()
-	var eye2: Vector2 = focus2 + sunward * 360.0
-	var eye_y: float = maxf(terrain_height(eye2.x, eye2.y) + 70.0, focus.y + 30.0)
-	return {"position": Vector3(eye2.x, eye_y, eye2.y), "target": focus, "fov": 50.0}
+	var eye2: Vector2 = focus2 + sunward * 600.0
+	var eye_y: float = maxf(terrain_height(eye2.x, eye2.y) + 60.0, focus.y + 80.0)
+	# Clear the terrain along the first 70% of the sightline only: near the focus the
+	# cliff itself rises, and clearing it would push the camera far overhead.
+	for k: int in range(1, 15):
+		var t: float = float(k) / 20.0
+		var probe: Vector2 = eye2.lerp(focus2, t)
+		eye_y = maxf(eye_y, (terrain_height(probe.x, probe.y) + 25.0 - focus.y * t) / (1.0 - t))
+	eye_y = minf(eye_y, focus.y + 260.0)
+	return {"position": Vector3(eye2.x, eye_y, eye2.y), "target": focus, "fov": 40.0}
 
 func _giant_specs() -> Array:
 	return GIANTS

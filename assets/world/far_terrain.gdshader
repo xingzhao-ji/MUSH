@@ -57,23 +57,38 @@ void fragment() {
 	// Rock: triplanar Rock01 with erosion streaks that run down the slope, not bands.
 	vec3 w = pow(abs(n), vec3(4.0));
 	w /= (w.x + w.y + w.z);
-	vec3 rock = texture(rock_tex, v_world.zy * rock_scale).rgb * w.x + texture(rock_tex, v_world.xz * rock_scale).rgb * w.y + texture(rock_tex, v_world.xy * rock_scale).rgb * w.z;
-	// A second, 4x larger sample of the same texture breaks the visible 8 m tile grid.
+	// Texture scale by distance: near pair (8 m + 33 m tiles), far pair (33 m + 130 m),
+	// blended over 150-600 m so neither tiles visibly nor turns to noise.
+	float far_t = smoothstep(150.0, 600.0, dist);
 	float big = rock_scale * 0.25;
 	vec3 broad = texture(rock_tex, v_world.zy * big + 0.31).rgb * w.x + texture(rock_tex, v_world.xz * big + 0.57).rgb * w.y + texture(rock_tex, v_world.xy * big + 0.13).rgb * w.z;
-	rock = rock * mix(vec3(1.0), broad * 2.0, 0.5);
+	vec3 rock = broad;
+	if (far_t < 1.0) {
+		vec3 fine = texture(rock_tex, v_world.zy * rock_scale).rgb * w.x + texture(rock_tex, v_world.xz * rock_scale).rgb * w.y + texture(rock_tex, v_world.xy * rock_scale).rgb * w.z;
+		rock = mix(fine * broad * 2.0, rock, far_t);
+	}
+	if (far_t > 0.0) {
+		float huge = rock_scale * 0.0625;
+		vec3 vast = texture(rock_tex, v_world.zy * huge + 0.71).rgb * w.x + texture(rock_tex, v_world.xz * huge + 0.19).rgb * w.y + texture(rock_tex, v_world.xy * huge + 0.43).rgb * w.z;
+		rock = mix(rock, broad * vast * 2.0, far_t);
+	}
 	float streak = fbm(vec2((v_world.x + v_world.z) * 0.06, h * 0.008 + fbm(v_world.xz * 0.02) * 0.6));
 	rock *= mix(cool_rock, warm_rock, streak) * 1.35;
 	// Geological strata: warped, uneven-thickness layers of tone (not a periodic band).
 	float strata = fbm(vec2(h * 0.045 + fbm(v_world.xz * 0.006) * 1.6, 0.37));
 	rock *= mix(0.80, 1.12, strata);
 	float steep = 1.0 - clamp(n.y, 0.0, 1.0);
-	float rockiness = smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18);
-	// Moss creeps onto the tops of rock ledges.
-	rockiness *= 1.0 - smoothstep(0.55, 0.85, n.y) * 0.6;
-	// Far slopes below the massif faces carry scree: rock mixed into the moss.
-	float scree = smoothstep(0.12, 0.26, steep) * (1.0 - rockiness) * smoothstep(450.0, 650.0, length(v_world.xz)) * 0.55;
-	vec3 albedo = mix(mix(moss, rock * 0.9, scree), rock, rockiness);
+	// Moss coverage: mottled, warped world-space patches (~22 m and ~6 m), thinning on
+	// steep and high, exposed ground. Applied only on rugged or upland terrain, so the
+	// meadows stay mossy; nothing follows mesh triangles.
+	float mottle = fbm(v_world.xz * 0.045 + vec2(fbm(v_world.xz * 0.012), fbm(v_world.xz * 0.012 + 5.2)) * 1.5);
+	float fleck = fbm(v_world.xz * 0.16 + 3.1);
+	float exposure = smoothstep(0.18, 0.55, steep);
+	float dry = smoothstep(-20.0, 160.0, h) * 0.3;
+	float covered = (1.0 - exposure) * smoothstep(0.38, 0.62, mottle + (fleck - 0.5) * 0.35 - dry + 0.12);
+	float rugged = max(smoothstep(0.12, 0.30, steep), smoothstep(30.0, 120.0, h) * smoothstep(450.0, 700.0, length(v_world.xz)));
+	float rockiness = 1.0 - mix(1.0 - smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18), covered, rugged);
+	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= 0.88 + 0.24 * macro;
 	if (debug_unlit) {
 		EMISSION = albedo;
