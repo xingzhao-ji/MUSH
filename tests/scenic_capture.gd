@@ -116,7 +116,7 @@ func _run() -> void:
 				game.ui.hide()
 				hud["passed"] = hud.saved
 				passed = passed and hud.saved
-	var report := {"schema":"mush-scenic-capture/1","passed":passed,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"hud":hud,"world_living_motion_disabled":true,"environmental_shader_motion_frozen":false,"motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
+	var report := {"schema":"mush-scenic-capture/1","passed":passed,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"hud":hud,"world_living_motion_disabled":true,"prototype_shader_motion_frozen":prototype.frozen if has_prototype else null,"other_environment_shader_motion_frozen":bool(game.environment_controller.get("_applied_wind_strength")==0.0),"motion_note":"Prototype far-layer shimmer is frozen only when prototype_shader_motion_frozen is true. The shared environment controller (wind, clouds, water) keeps running during stills, so other_environment_shader_motion_frozen reports its measured wind strength being zero, not an intent. Stills do not establish motion, physics or performance.","motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
 	var file := FileAccess.open(output.path_join("scenic.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"\t"))
 	file.close()
