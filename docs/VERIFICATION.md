@@ -1313,3 +1313,27 @@ Branch `prototype/scenery-first`, profile `MUSH-proto-scenery-20261025`, Godot 4
   - one intermittent startup stall (`reports/scenic-20261026-001845-64501`);
   - route refusals for grade (24°) and turn radius (3.9 m), which prompted the redesign;
   - a rejected concave-knoll trial (4.3 m trail cut).
+
+## Scenery prototype: environment art pass (2026-10-26)
+
+What changed:
+- **Terrain:** existing moss albedo (flat ground) and Rock01 (steep ground), world-space at real scale. Moss has no mipmaps (import unchanged), so it is fetched only within 80 m and replaced by its measured mean (`#2d4006`) beyond that.
+- **Lake:** a transparent depth-tinted teal shader with ripple normals and a restrained horizon reflection.
+- **Giants:** organic asymmetric caps with a fleshy rim, fine gills, freckles and soft stem glow, on fluted, gently bending closed-top stems. The hero stands on a mound.
+- **Mesas:** domain-warped terraces.
+- **Trees:** 45 copies of the existing forest-ring trees (same meshes and materials).
+- **Distant forest:** a coarse clump forest only beyond 230 m, in 50 culled chunks.
+- **Trail:** existing Rock01 earth.
+
+Results on the committed source:
+- `route` **18/18** (`reports/route-20261026-022917-72264`).
+- Acceptance **295/295**, no exit leak (`reports/acceptance-20261026-023209-72404`). One earlier run on this pass passed every scenario but printed `2 resources still in use at exit`, and the runner failed it (`reports/acceptance-20261026-015518-70544`). A verbose rerun of the same command and a later official rerun were both clean. The cause is unconfirmed.
+- Benchmark **fails**: p95 17.572 ms (> 16.7), p99 20.498 ms, 9,333 frames, two loops, zero stalls (`reports/benchmark-20261026-023613-72598`). Under the same machine load the prototype layer fully off measured p95 16.435 ms (`reports/benchmark-20261026-022217-71958`), against 12.275 ms for that scene earlier. Most of the gap is outside load; the art layer's measured marginal cost is about 1.1–1.4 ms.
+- Bisection receipts:
+  - single-MultiMesh carpet: 18.352 ms;
+  - chunked carpet: 17.69 ms;
+  - half the trees: 17.83 ms;
+  - gated moss fetch: 17.864 ms;
+  - all new art off: 16.773 ms.
+- `MUSH_SCENERY_DIAG` (empty by default) is the diagnostic-only switch used for that bisection.
+- Scenic coverage gates still **fail**: ground-path 0.0034 < 0.004, vista 0.0119 < 0.02 (`reports/scenic-20261026-022455-72069`).
