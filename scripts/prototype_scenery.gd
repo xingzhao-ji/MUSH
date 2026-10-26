@@ -83,6 +83,9 @@ var _ridge_noise: FastNoiseLite
 var _hill_noise: FastNoiseLite
 var _terrace_noise: FastNoiseLite
 var _legacy_mesa: bool = false
+## World rect of the 5 m detail patch; fine flutes/peaks are weighted to it (coarse cells would alias them).
+var _detail_region := Rect2()
+var rock_triangles: int = 0
 var landform_checks: Dictionary = {}
 var detail_patch_triangles: int = 0
 ## [original material, softened duplicate] pairs; dynamic wind/night uniforms are copied.
@@ -230,17 +233,30 @@ func _landform_changed(x: float, z: float) -> bool:
 	_legacy_mesa = was
 	return absf(now - before) > 0.5
 
+## The legacy landform is kept only under the hero giant's footing, so the composition
+## anchor does not move. Small giants stand on the eroded landform at the same x/z (their
+## stems are grounded from terrain_height); keeping legacy discs under them left stepped
+## terrace columns standing out of the new massifs.
+## The preserved disc covers the hero's stem and buttress footprint (stem radius 0.15 x cap
+## radius), not its 220 m cap: a cap-sized disc kept a stepped legacy terrace tower standing
+## behind the stem.
 func _giant_footing(x: float, z: float) -> float:
-	var keep: float = 0.0
-	for row: Array in GIANTS:
-		keep = maxf(keep, 1.0 - smoothstep(float(row[2]) * 0.9, float(row[2]) * 1.5, Vector2(x, z).distance_to(Vector2(row[0], row[1]))))
-	return keep
+	var row: Array = GIANTS[0]
+	var stem_r: float = float(row[2]) * 0.15
+	return 1.0 - smoothstep(stem_r * 2.6, stem_r * 4.8, Vector2(x, z).distance_to(Vector2(row[0], row[1])))
 
 func _eroded_mesa_height(x: float, z: float) -> float:
 	var warp := Vector2(_hill_noise.get_noise_2d(x * 0.6 + 300.0, z * 0.6), _hill_noise.get_noise_2d(x * 0.6, z * 0.6 - 300.0)) * 90.0
 	var n: float = _ridge_noise.get_noise_2d(x + warp.x, z + warp.y)
 	var talus: float = smoothstep(0.02, 0.3, n) * 38.0
-	var body: float = smoothstep(0.12, 0.46, n)
+	# Cliff line crenellated into buttress spurs (~55 m) and, inside the detail patch,
+	# columnar flutes (~24 m): the face becomes vertical ribs and recesses, not a ramp.
+	var region: float = _detail_weight(x, z)
+	var edge: float = 1.0 - smoothstep(0.0, 0.16, absf(n - 0.28))
+	var spur: float = pow(1.0 - absf(_hill_noise.get_noise_2d(x * 2.6 + 1300.0, z * 2.6)), 2.0)
+	var flute: float = pow(1.0 - absf(_terrace_noise.get_noise_2d(x * 14.0, z * 14.0)), 3.0)
+	var n2: float = n + edge * ((spur - 0.45) * 0.07 + (flute - 0.35) * 0.03 * region)
+	var body: float = smoothstep(0.16, 0.40, n2)
 	if body <= 0.0: return talus
 	var top: float = smoothstep(0.7, 1.0, body)
 	var face: float = smoothstep(0.15, 0.6, body) * (1.0 - top * 0.6)
@@ -261,7 +277,10 @@ func _eroded_mesa_height(x: float, z: float) -> float:
 	# Tops: soft ridgelines and saddles instead of one flat plateau.
 	var ridges: float = (pow(1.0 - absf(_ridge_noise.get_noise_2d(x * 2.2 + 900.0, z * 2.2)), 2.2) * 55.0 - 15.0) * top
 	var crown: float = _hill_noise.get_noise_2d(x * 0.8, z * 0.8 + 700.0) * 22.0 * top
-	return maxf(shaped - gully - couloir + crown + ridges + breakup, talus)
+	# Occasional sharp skyline peaks along narrow crests (full strength only in the patch).
+	var peak_mask: float = smoothstep(0.1, 0.45, _terrace_noise.get_noise_2d(x * 0.7 + 2000.0, z * 0.7))
+	var peaks: float = pow(1.0 - absf(_ridge_noise.get_noise_2d(x * 4.0 + 333.0, z * 4.0)), 8.0) * 80.0 * top * peak_mask * (0.35 + 0.65 * region)
+	return maxf(shaped - gully - couloir + crown + ridges + breakup + peaks, talus)
 
 func terrain_slope(x: float, z: float) -> float:
 	var e: float = 6.0
@@ -312,6 +331,7 @@ func configure(world: Node3D) -> void:
 		_moss_mean = swatch.get_pixel(0, 0)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20261026
+	_detail_region = _detail_bounds()
 	_collect_soil(baked_extent.grow(6.0))
 	_sample_edges()
 	_plan_route()
@@ -374,13 +394,14 @@ func _add_terrain() -> void:
 		if normal.y < 0.25: near_vertical += 1
 	landform_checks["terrain_finite"] = finite
 	landform_checks["near_vertical_vertices"] = near_vertical
-	var footing_drift: float = 0.0
+	var regrounded: Array = []
 	for row: Array in GIANTS:
 		var now: float = terrain_height(row[0], row[1])
 		_legacy_mesa = true
-		footing_drift = maxf(footing_drift, absf(now - terrain_height(row[0], row[1])))
+		regrounded.append(snappedf(now - terrain_height(row[0], row[1]), 0.01))
 		_legacy_mesa = false
-	landform_checks["giant_footing_drift_m"] = footing_drift
+	landform_checks["hero_footing_drift_m"] = absf(regrounded[0])
+	landform_checks["small_giant_ground_shift_m"] = regrounded.slice(1)
 	var route_drift: float = 0.0
 	for point: Vector3 in _route_points:
 		var now: float = terrain_height(point.x, point.z)
@@ -421,13 +442,24 @@ func _add_terrain() -> void:
 
 ## Coarse cells under the rim view's central cliff band (520-1150 m out, about +/-20
 ## degrees around the hero direction), snapped to coarse grid lines.
-func _detail_patch_cells(coarse: PackedFloat32Array) -> Rect2i:
+func _detail_bounds() -> Rect2:
 	var rim: Vector2 = _rim_point(5.0)
 	var ahead: Vector2 = (HERO - rim).normalized()
 	var bounds := Rect2(rim + ahead * 520.0, Vector2.ZERO)
 	for distance: float in [520.0, 800.0, 1150.0]:
 		for degrees: float in [-20.0, -10.0, 0.0, 10.0, 20.0]:
 			bounds = bounds.expand(rim + ahead.rotated(deg_to_rad(degrees)) * distance)
+	return bounds
+
+## 1 well inside the detail patch, 0 at and beyond its border.
+func _detail_weight(x: float, z: float) -> float:
+	var r: Rect2 = _detail_region
+	if r.size == Vector2.ZERO: return 0.0
+	var inside: float = minf(minf(x - r.position.x, r.end.x - x), minf(z - r.position.y, r.end.y - z))
+	return smoothstep(20.0, 80.0, inside)
+
+func _detail_patch_cells(coarse: PackedFloat32Array) -> Rect2i:
+	var bounds: Rect2 = _detail_bounds()
 	var c0: int = maxi(0, coarse.bsearch(bounds.position.x) - 1)
 	var c1: int = mini(coarse.size() - 1, coarse.bsearch(bounds.end.x))
 	var r0: int = maxi(0, coarse.bsearch(bounds.position.y) - 1)
@@ -514,6 +546,23 @@ func cliff_detail_pose() -> Dictionary:
 	eye_y = minf(eye_y, focus.y + 260.0)
 	return {"position": Vector3(eye2.x, eye_y, eye2.y), "target": focus, "fov": 40.0}
 
+## Side review pose (camera only): perpendicular to the rim view, looking across the massif
+## band so cliff faces, spurs and crag spires read in silhouette against the sky.
+func landform_side_pose() -> Dictionary:
+	var rim: Vector2 = _rim_point(5.0)
+	var ahead: Vector2 = (HERO - rim).normalized()
+	var focus2: Vector2 = rim + ahead.rotated(deg_to_rad(8.0)) * 900.0
+	var focus := Vector3(focus2.x, terrain_height(focus2.x, focus2.y) + 90.0, focus2.y)
+	var side := Vector2(ahead.y, -ahead.x)
+	var eye2: Vector2 = focus2 + side * 750.0
+	var eye_y: float = maxf(terrain_height(eye2.x, eye2.y) + 50.0, focus.y - 20.0)
+	for k: int in range(1, 15):
+		var t: float = float(k) / 20.0
+		var probe: Vector2 = eye2.lerp(focus2, t)
+		eye_y = maxf(eye_y, (terrain_height(probe.x, probe.y) + 25.0 - focus.y * t) / (1.0 - t))
+	eye_y = minf(eye_y, focus.y + 220.0)
+	return {"position": Vector3(eye2.x, eye_y, eye2.y), "target": focus, "fov": 45.0}
+
 func _giant_specs() -> Array:
 	return GIANTS
 
@@ -559,16 +608,44 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 	_add(stem, stems, stem_tints, 1, "CanopyStems")
 
 func _add_pillars(rng: RandomNumberGenerator) -> void:
-	var pillar: ArrayMesh = _pillar_mesh()
+	# Fused clusters of slender, jagged needle crags replace the fat stacked pillar.
+	# Same three sites and draw call; rng draw count per site unchanged.
+	var crag: ArrayMesh = _crag_mesh()
 	var xs: Array[Transform3D] = []
 	var tints: Array[Color] = []
 	for spot: Vector3 in [Vector3(540.0, 190.0, -980.0), Vector3(120.0, 160.0, -930.0), Vector3(-520.0, 140.0, -520.0)]:
 		var ground: float = terrain_height(spot.x, spot.z)
-		var width: float = spot.y * rng.randf_range(0.38, 0.5)
-		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, spot.y, width)), Vector3(spot.x, ground - 15.0, spot.z)))
+		var height: float = spot.y * 1.25
+		var width: float = height * lerpf(0.2, 0.26, inverse_lerp(0.38, 0.5, rng.randf_range(0.38, 0.5)))
+		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(spot.x, ground - 15.0, spot.z)))
 		tints.append(Color(rng.randf(), 0, 0))
 	rock_count += xs.size()
-	_add(pillar, xs, tints, 2, "RockPillars")
+	rock_triangles = _triangle_count(crag) * xs.size()
+	_add(crag, xs, tints, 2, "RockPillars")
+
+## Four fused needles of different height, girth and lean; each has an angular cross-section
+## that twists with height, sharp columnar flutes, irregular ledge notches and a jagged tip.
+func _crag_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# offset x, offset z, height, radius, lean x, lean z, phase seed
+	for needle: Array in [[0.0, 0.0, 1.0, 1.0, 0.10, -0.05, 0.3], [0.62, 0.18, 0.74, 0.62, 0.22, 0.06, 1.9], [-0.42, 0.48, 0.58, 0.52, -0.16, 0.14, 3.4], [0.12, -0.6, 0.44, 0.58, 0.04, -0.2, 5.1]]:
+		var profile: Array[Vector3] = []
+		var rows := 36
+		for i: int in rows + 1:
+			var t: float = float(i) / rows
+			var radius: float = pow(1.0 - t, 0.78) * (1.0 + 0.25 * pow(1.0 - t, 6.0))
+			for notch: Vector2 in [Vector2(0.22, 0.07), Vector2(0.47, 0.05), Vector2(0.69, 0.06)]:
+				radius *= 1.0 - notch.y * (1.0 - smoothstep(0.0, 0.035, absf(t - notch.x - 0.08 * sin(needle[6] * 3.0))))
+			# Uneven ledges up the height (incommensurate frequencies), so edges are not straight.
+			radius *= 1.0 + 0.06 * sin(t * 31.0 + needle[6]) + 0.035 * sin(t * 53.0 + needle[6] * 2.0)
+			profile.append(Vector3(radius, t, t))
+		var seed: float = needle[6]
+		var phases := PackedFloat32Array([seed, seed * 1.7 + 0.4, seed * 2.3 + 1.1, needle[4] / needle[3], needle[5] / needle[3]])
+		var part: ArrayMesh = _lathe(profile, 28, "crag", false, phases)
+		st.append_from(part, 0, Transform3D(Basis.from_scale(Vector3(needle[3], needle[2], needle[3])), Vector3(needle[0], -0.02, needle[1])))
+	st.generate_normals()
+	return st.commit()
 
 func _add_boulders(rng: RandomNumberGenerator) -> void:
 	# Squat boulders along the clearing rim in the valley direction, framing the overlook.
@@ -1075,6 +1152,10 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 				"pillar":
 					# Cross-section drifts with height, so faces are not repeated bands.
 					radius *= 1.0 + 0.12 * sin(3.0 * a + 2.3 * p.z + 0.4) + 0.08 * sin(5.0 * a - 1.7 * p.z + 1.1) + 0.05 * sin(8.0 * a + 3.1 * p.z)
+				"crag":
+					var f: PackedFloat32Array = phases
+					radius *= 1.0 + 0.2 * sin(3.0 * a + f[0] + 2.1 * p.z) + 0.11 * sin(5.0 * a + f[1] - 1.4 * p.z) + 0.15 * (absf(sin(7.0 * a + f[2] + 0.6 * p.z)) - 0.64) + 0.06 * sin(13.0 * a + f[0] * 2.0)
+					height += smoothstep(0.82, 1.0, p.z) * 0.035 * sin(5.0 * a + f[2])
 				"boulder":
 					radius *= 1.0 + 0.14 * sin(3.0 * a + 0.4) + 0.07 * sin(7.0 * a + 1.9)
 				"blob":
@@ -1084,7 +1165,11 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 			# except the stem's green channel, which carries groove depth for shading.
 			st.set_color(Color(1, cavity, 1))
 			var bend: float = STEM_BEND * p.z * p.z if style == "stem" else (0.15 * p.z * p.z if style == "pillar" else 0.0)
-			st.add_vertex(Vector3(cos(a) * radius + bend, height, sin(a) * radius))
+			var bend_z: float = 0.0
+			if style == "crag":
+				bend = phases[3] * p.z * p.z
+				bend_z = phases[4] * p.z * p.z
+			st.add_vertex(Vector3(cos(a) * radius + bend, height, sin(a) * radius + bend_z))
 	for row: int in profile.size() - 1:
 		for column: int in segments:
 			var i0: int = row * columns + column
@@ -1346,4 +1431,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

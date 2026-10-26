@@ -1396,3 +1396,30 @@ The `lod-check` suite measures the dense-crown switch for the near batch closest
   - **After the fix** (`reports/lod-check-20261026-041612-77706`): 1.24% changed against a 0.07% noise floor. Visually the tone now matches, and the remaining difference is leaf density and pattern.
 - **Route:** **18/18** after the fix (`reports/route-20261026-041648-77760`).
 - **Limits:** these are stills with motion frozen. Continuous manual motion review is still unverified.
+
+## Landform craft pass (2026-10-26)
+
+Changes, checked against `design-reference/mush-concept-1.png`:
+- **Massifs:**
+  - The cliff line is broken into buttress spurs (~55 m) everywhere, plus columnar flutes (~24 m) inside the 5 m detail patch.
+  - Faces are steeper (body transition n 0.16–0.40, was 0.12–0.46).
+  - Sharp skyline peaks along narrow crests.
+- **Rock pillars:** each is now a fused cluster of four slender needle crags (faceted cross-section that twists with height, uneven ledges, jagged tip, lean), replacing the fat stacked lathe pillar. Same three sites and one draw call.
+- **Giant footings:**
+  - The old landform is now preserved only under the hero's stem and buttress footprint (about 86–158 m). Before, it was preserved under every giant's cap radius (hero: 198–330 m), which had left an unchanging stepped terrace tower standing behind the stem.
+  - The six small giants now stand on the new landform at the same x/z. Their vertical shifts are 60.42, 0, 10.03, 0, 1.19 and 0 m. All 7 stems are grounded.
+
+Cost:
+- **Terrain triangles:** unchanged (91,442 coarse + 51,520 detail patch).
+- **Rock spires:** 24,192 triangles, up from 7,872 for the previous pillars (computed from that mesh definition; +16,320).
+- **Draw nodes:** unchanged at 88.
+
+Checks:
+- Hero footing drift 0.0 m; route terrain drift 0.0 m; normals finite.
+- Near-vertical coarse vertices: 285 (was 169).
+- **Scenic:** all views pass framing and floor checks. The vista coverage gate still **fails** at 0.0129 (`reports/scenic-20261026-043649-78794`).
+- **Route:** **18/18** (`reports/route-20261026-043849-78884`).
+
+Not rerun or still failing:
+- **Benchmark:** not rerun. The p95 17.573 ms failure stands.
+- **LOD:** the leaf-density change at 94–96 m and 118–120 m remains.
