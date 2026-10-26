@@ -1610,3 +1610,65 @@ Lower frame (y ≥ 400, avatar excluded):
 - **Not done:** no ground-cover meshes, pebbles or normal map.
 - **Not measured:** frame time and GPU cost of the shader. It adds about 8 texture fetches per ribbon fragment.
 - **Still open:** the benchmark p95 failure (17.573 ms) stands, the LOD density change remains, and the art is not accepted.
+
+## Corridor foreground: ground plants and near-corridor trees (2026-10-26)
+
+**Status: local improvement, pending; scene art not accepted.** Visual only. Rollback: `git revert` this commit.
+
+**Where:** one limited stretch, the east shore and lower root approach (z −240 to −440), in `scripts/prototype_scenery.gd`.
+
+**Large forest-carpet blobs** (the low-poly clumps) are set aside non-destructively: kept, hidden, in `CorridorReplacedCarpet`.
+- **Within 60 m (body) of the path:** 17 clumps, replaced by open ground with plants.
+- **Centre within 125 m:** 15 more, the right-side walls seen in the root-offset, root-approach and bank-close-up views.
+  - They were identified per view by owner, position, size and screen box (`understory-pairs-20261026-093700-26497`).
+  - They are replaced by 28 copied native trees: bent trunks, ring crowns, grounded on the rendered terrain.
+  - Groups are sized to each clump: one tree, two, or three lower ones.
+- **Untouched:** clumps farther out stay as backdrop (visible ones are 166–306 m away).
+
+**Ground plants:** 42 composed groups made from the clearing's own understory meshes, at creature-scale heights.
+- **Fern-and-fungus groups:** fern crowns plus a fairy-mushroom cluster and moss.
+- **Mushroom-and-moss rings and flower drifts.**
+- **Fern materials:** darker duplicates of the clearing leaf materials. The originals are untouched, and the duplicates follow their night state.
+- **Clearance:** no plant within its distance of the path centre (closest 3.03 m; the walking surface edge is at 1.8 m).
+- **Attachment:** each mesh floor sits 2 cm below the lowest rendered surface under its footprint.
+  - Independent check: 2,332 transformed bottom corners, 17 more than 10 cm above the ground, worst 0.289 m.
+
+**Costs:**
+- **Ground plants:** 583 instances, 142,330 triangles, 26 nodes.
+- **Trees:** 145,968 triangles, 6 nodes. The dense near crowns were tried and dropped; they built 572,880 triangles.
+- **Colliders and shadows:** none added.
+- **Draw nodes:** 89 → 121.
+- **Root-approach view:** 602k → 855k primitives, 78 → 95 draw calls.
+- **Root-offset view:** 557k → 816k primitives, 74 → 93 draw calls.
+- **Copied trees elsewhere:** unchanged (918,196 triangles); their node construction now goes through a shared helper.
+
+**Evidence:**
+- **Before/after pairs:** `understory-pairs` suite, harness-placed, five poses, same pose and frame (`understory-pairs-20261026-094105-27928`). These are the root approach, shore, shore offset, root offset and a bank close-up.
+- **Frame time at those poses** (1280×720, uncapped, fixed physics step, 30 warm-up + 180 samples, engine drew all 180; not the route benchmark):
+
+| View | Wall p50, old → new look (ms) |
+|---|---|
+| Root approach | 8.466 → 8.325 |
+| Root offset | 8.483 → 8.325 |
+| Shore | 14.234 → 14.189 |
+
+  GPU time is unavailable on this driver.
+- **Scenic** (`scenic-20261026-094206-28006`): fails only the known vista coverage gate (0.0129).
+  - Slice and route geometry, collision and widths unchanged.
+  - Owned colliders stay at 3; far-layer colliders 0; shadow casters 0.
+  - Giant footing drift 0.0 (7/7).
+- **Not rerun:** the traversal suites (visual only).
+- **Route benchmark** `benchmark-20261026-091430-19224` stays **failed**: p95 18.086 ms, p99 22.728 ms.
+
+**Rejected iterations, retained:**
+- `understory-pairs` 085647–091126: plants too small or too sparse, pale shards, one floating leaf. `090741` and `091017` exceeded the triangle budget.
+- 092641–092833: too sparse, or the ferns could not be seen.
+- 093938: dense crowns.
+
+**Limitations:**
+- **Ferns** barely read against the moss.
+- **Ground plants** are sparse and mushroom-led.
+- **Groves** are lighter than the mass they replace.
+- **Backdrop clumps** beyond 125 m remain.
+- **LOD:** leaf density still visibly changes at 94–96 m and 118–120 m.
+- **Not checked:** night appearance of the corridor; any manual or device checks.

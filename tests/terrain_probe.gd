@@ -123,6 +123,33 @@ func _run() -> void:
 					at_longest = k * 0.01
 			gaps.append([lateral, longest * 0.01, at_longest])
 		report["junction_gap_widths"] = gaps
+	# Small-mesh inventory of the loaded clearing (candidate ground-plant assets): every mesh or
+	# multimesh under the world whose mesh is under 3 m tall, with triangles and instance count.
+	var inventory: Array = []
+	var stack: Array = [game.get("world")]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node == null: continue
+		stack.append_array(node.get_children())
+		var mesh: Mesh = null
+		var instances: int = 1
+		if node is MultiMeshInstance3D and (node as MultiMeshInstance3D).multimesh != null:
+			mesh = (node as MultiMeshInstance3D).multimesh.mesh
+			instances = (node as MultiMeshInstance3D).multimesh.instance_count
+		elif node is MeshInstance3D:
+			mesh = (node as MeshInstance3D).mesh
+		if mesh == null or String(node.get_path()).contains("PrototypeScenery"): continue
+		var box: AABB = mesh.get_aabb()
+		if box.size.y > 3.0: continue
+		var tris: int = 0
+		for s: int in mesh.get_surface_count():
+			var arrays: Array = mesh.surface_get_arrays(s)
+			var idx: Variant = arrays[Mesh.ARRAY_INDEX]
+			tris += (idx.size() if idx != null else arrays[Mesh.ARRAY_VERTEX].size()) / 3
+		var mat: Material = (node as GeometryInstance3D).material_override
+		if mat == null and mesh.get_surface_count() > 0: mat = mesh.surface_get_material(0)
+		inventory.append({"path": String(node.get_path()).trim_prefix("/root/"), "class": node.get_class(), "mesh": mesh.resource_name, "tris": tris, "instances": instances, "size": [snappedf(box.size.x, 0.01), snappedf(box.size.y, 0.01), snappedf(box.size.z, 0.01)], "material": (mat.get_class() + ":" + (mat.shader.resource_path if mat is ShaderMaterial and mat.shader else "")) if mat else ""})
+	report["small_mesh_inventory"] = inventory
 	report["junction_rows"] = junction_rows
 	report["capsule_casts"] = cast_rows
 	var file := FileAccess.open(output.path_join("terrain.json"), FileAccess.WRITE)

@@ -18,6 +18,7 @@ var shore_captured: bool = false
 var approach_captured: bool = false
 var approach_info: Dictionary = {}
 var _tree_boxes: Array = []
+var timings: Array = []
 
 func _ready() -> void:
 	game = get_parent()
@@ -272,11 +273,12 @@ func _run() -> void:
 		if "--junction" in arguments: await _junction_scenario()
 		elif "--endpoint" in arguments: await _endpoint_scenario()
 		elif "--path-pairs" in arguments: await _path_pairs_scenario()
+		elif "--understory-pairs" in arguments: await _understory_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else "full")),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else "full"))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -454,6 +456,188 @@ func _path_pairs_scenario() -> void:
 		_check("Pair %s captured at the recorded pose (within 0.3 m), camera clear" % pose[0], player.global_position.distance_to(at) < 0.3 and _camera_clearance() > 0.05, {"player":_v(player.global_position), "recorded":_v(at), "camera_clearance_m":_camera_clearance()})
 	route._mesh_instance.material_override = current
 	slice._mesh_instance.material_override = current
+
+## Corridor understory evidence (diagnostic; HARNESS-PLACED): before = the replaced forest
+## clumps shown and the understory hidden (the previous look), after = the shipped state; same
+## pose and frame. Two recorded walk poses plus two offset views for 3D composition. Each
+## capture records the engine's own frame counters (primitives, draw calls, objects).
+func _understory_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	var report: Dictionary = scenery.understory_report
+	_check("Corridor understory built: clearing assets, budget <= 4,000 instances / 300,000 triangles, no colliders or shadows", report.get("built", false) and int(report.instances) <= 4000 and int(report.triangles) <= 300000 and scenery.replaced_carpet != null and not scenery.replaced_carpet.visible, report)
+	var clear := true
+	for asset: String in report.get("min_lateral_m", {}):
+		clear = clear and float(report.min_lateral_m[asset]) >= float(report.min_lateral_required_m[asset]) - 0.001
+	_check("No plant inside its clearance from the path centre (tread edge 1.8 m)", clear, report.get("min_lateral_m"))
+	var attach: Dictionary = report.get("attachment", {})
+	_check("Attachment: every plant's mesh floor at or below the rendered surface under it (reported corner lift is the independent measure)", float(attach.get("max_base_above_surface_m", 1.0)) <= 0.0, attach)
+	var hero: Vector3 = scenery.hero.base
+	var shore_i: int = _nearest_sample(Vector3(387.12, -78.01, -300.14))
+	var root_i: int = _nearest_sample(Vector3(386.89, -78.71, -284.54))
+	var poses: Array = [
+		["root-approach", Vector3(386.89, -78.71, -284.54), hero, 0.0, -1.0],
+		["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0), 0.0, -4.0],
+		["shore-offset", slice._p[shore_i - 4], slice._p[shore_i] + Vector3(-8.0, 0.0, 0.0), 0.0, -6.0],
+		["root-offset", slice._p[root_i + 5], hero, -30.0, 2.0],
+		["bank-closeup", slice._p[_nearest_sample(Vector3(392.0, -78.0, -325.0))], null, 0.0, -12.0]]
+	for pose: Array in poses:
+		var at: Vector3 = pose[1]
+		await _place(at, 0.0)
+		if pose[0] == "bank-closeup":
+			# Attachment view: from the path, square to the inland (east) verge bank.
+			var i: int = _nearest_sample(at)
+			var along: Vector3 = (slice._p[i + 1] - slice._p[i - 1]).normalized()
+			var east: Vector3 = Vector3(-along.z, 0.0, along.x) * (1.0 if -along.z > 0.0 else -1.0)
+			_look(at + east * 10.0, pose[4])
+		elif pose[0] == "root-approach":
+			var to_root: float = Vector2(at.x - hero.x, at.z - hero.z).length()
+			var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (at.y + 0.7), to_root))
+			_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+			player.camera_yaw += deg_to_rad(10.0)
+		else:
+			_look(pose[2], pose[4])
+			player.camera_yaw += deg_to_rad(pose[3])
+		player._visual.rotation.y = player.camera_yaw
+		await _frames(45)
+		for state: String in ["before", "after"]:
+			_set_corridor_state(state == "after")
+			await _frames(6)
+			await _capture("understory-%s-%s-day" % [pose[0], state])
+			images[images.size() - 1]["plants"] = _plant_visibility() if state == "after" else null
+			images[images.size() - 1]["blobs"] = _visible_blobs() if state == "after" else null
+			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME), "objects": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)}
+		_check("Pair %s: placed on the path, camera clear" % pose[0], player.global_position.distance_to(at) < 0.3 and _camera_clearance() > 0.05, {"player":_v(player.global_position), "camera_clearance_m":_camera_clearance()})
+		if pose[0] in ["root-approach", "shore", "root-offset"]:
+			for state: String in ["before", "after"]:
+				_set_corridor_state(state == "after")
+				timings.append((await _time_view(30, 180)).merged({"pose": pose[0], "state": state}))
+	_set_corridor_state(true)
+	var drawn_ok := true
+	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
+	_check("Viewpoint timing (uncapped, fixed-step, harness-placed; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+func _set_corridor_state(after: bool) -> void:
+	scenery.replaced_carpet.visible = not after
+	scenery.understory.visible = after
+	for node: MultiMeshInstance3D in scenery.corridor_trees: node.visible = after
+
+## Frame timing at the current view: warmup frames, then per-frame wall time between process
+## frames, Godot's measured viewport render time (CPU, and GPU where the driver reports it),
+## and the engine's drawn-frame counter, which must advance once per sample.
+func _time_view(warmup: int, samples: int) -> Dictionary:
+	var viewport: RID = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(viewport, true)
+	await _frames(warmup)
+	var walls: Array = []
+	var cpus: Array = []
+	var gpus: Array = []
+	await RenderingServer.frame_post_draw
+	var drawn_before: int = Engine.get_frames_drawn()
+	var last: int = Time.get_ticks_usec()
+	for i: int in samples:
+		await RenderingServer.frame_post_draw
+		var now: int = Time.get_ticks_usec()
+		walls.append((now - last) / 1000.0)
+		last = now
+		cpus.append(RenderingServer.viewport_get_measured_render_time_cpu(viewport) + RenderingServer.get_frame_setup_time_cpu())
+		gpus.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport))
+	var drawn: int = Engine.get_frames_drawn() - drawn_before
+	RenderingServer.viewport_set_measure_render_time(viewport, false)
+	var pct := func(values: Array, q: float) -> float:
+		var sorted: Array = values.duplicate()
+		sorted.sort()
+		return snappedf(float(sorted[mini(int(ceil(q * sorted.size())) - 1, sorted.size() - 1)]), 0.001)
+	var gpu_available: bool = float(pct.call(gpus, 0.95)) > 0.0
+	return {"samples": samples, "warmup": warmup, "frames_drawn": drawn, "wall_p50_ms": pct.call(walls, 0.5), "wall_p95_ms": pct.call(walls, 0.95),
+		"render_cpu_p50_ms": pct.call(cpus, 0.5), "render_cpu_p95_ms": pct.call(cpus, 0.95), "render_gpu_p95_ms": pct.call(gpus, 0.95) if gpu_available else null, "gpu_timing_available": gpu_available,
+		"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+
+## Plants actually depicted: in the camera frustum, projected taller than 20 px, and with an
+## unblocked line of sight over the rendered terrain (sampled along the ray).
+func _plant_visibility() -> Dictionary:
+	var cam: Camera3D = player._camera
+	var focal: float = get_viewport().get_visible_rect().size.y * 0.5 / tan(deg_to_rad(cam.fov) * 0.5)
+	var result := {"in_frustum": 0, "over_20px": 0, "depicted": 0, "depicted_by_asset": {}, "nearest_depicted_m": INF}
+	for node: Node in scenery.understory.get_children():
+		var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		var height: float = multi.mesh.get_aabb().size.y
+		var asset: String = node.get_meta("asset", "")
+		for i: int in multi.instance_count:
+			var pose: Transform3D = (node as Node3D).global_transform * multi.get_instance_transform(i)
+			var tall: float = height * pose.basis.get_scale().y
+			var top: Vector3 = pose.origin + Vector3.UP * tall * 0.6
+			if not cam.is_position_in_frustum(top): continue
+			result.in_frustum += 1
+			var distance: float = cam.global_position.distance_to(top)
+			if tall / distance * focal < 20.0: continue
+			result.over_20px += 1
+			var blocked := false
+			for k: int in range(1, 12):
+				var on: Vector3 = cam.global_position.lerp(top, k / 12.0)
+				var ground: float = scenery.rendered_terrain_height(on.x, on.z)
+				if not is_nan(ground) and ground > on.y + 0.02:
+					blocked = true
+					break
+			if blocked: continue
+			result.depicted += 1
+			result.depicted_by_asset[asset] = int(result.depicted_by_asset.get(asset, 0)) + 1
+			result.nearest_depicted_m = minf(result.nearest_depicted_m, distance)
+	return result
+
+## Large prototype vegetation instances actually in view (forest-carpet clumps and copied-tree
+## parts): owner node, world position and size, camera distance, projected screen box and its
+## share of the frame, and whether the rendered terrain hides its centre. Sorted by screen share.
+func _visible_blobs() -> Array:
+	var cam: Camera3D = player._camera
+	var size: Vector2 = get_viewport().get_visible_rect().size
+	var found: Array = []
+	for node: Node in scenery.get_children():
+		var instance: MultiMeshInstance3D = node as MultiMeshInstance3D
+		if instance == null or not instance.visible or instance.multimesh == null: continue
+		var owner_name := String(instance.name)
+		if not (owner_name.begins_with("ForestCarpet_") or owner_name.begins_with("CopiedTrees_") or owner_name.begins_with("CorridorTrees_")): continue
+		var local: AABB = instance.multimesh.mesh.get_aabb()
+		for i: int in instance.multimesh.instance_count:
+			var pose: Transform3D = instance.global_transform * instance.multimesh.get_instance_transform(i)
+			var box: AABB = pose * local
+			var centre: Vector3 = box.get_center()
+			var distance: float = cam.global_position.distance_to(centre)
+			if distance > 400.0: continue
+			var d_end: float = instance.visibility_range_end
+			if (d_end > 0.0 and cam.global_position.distance_to(instance.global_position) > d_end) or cam.global_position.distance_to(instance.global_position) < instance.visibility_range_begin: continue
+			var lo := Vector2(INF, INF)
+			var hi := Vector2(-INF, -INF)
+			var any_front := false
+			for k: int in 8:
+				var corner: Vector3 = box.get_endpoint(k)
+				if cam.is_position_behind(corner): continue
+				any_front = true
+				var p: Vector2 = cam.unproject_position(corner)
+				lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.y))
+				hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.y))
+			if not any_front: continue
+			lo = lo.clamp(Vector2.ZERO, size)
+			hi = hi.clamp(Vector2.ZERO, size)
+			var share: float = (hi.x - lo.x) * (hi.y - lo.y) / (size.x * size.y)
+			if share < 0.004: continue
+			var hidden := false
+			for k: int in range(1, 16):
+				var on: Vector3 = cam.global_position.lerp(centre, k / 16.0)
+				var ground: float = scenery.rendered_terrain_height(on.x, on.z)
+				if not is_nan(ground) and ground > on.y + 0.5:
+					hidden = true
+					break
+			found.append({"owner": owner_name, "index": i, "position": _v(pose.origin), "size": _v(box.size), "distance_m": snappedf(distance, 0.1), "screen_box": [roundi(lo.x), roundi(lo.y), roundi(hi.x), roundi(hi.y)], "screen_share": snappedf(share, 0.0001), "centre_hidden_by_terrain": hidden})
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.screen_share > b.screen_share)
+	return found.slice(0, 25)
+
+func _nearest_sample(at: Vector3) -> int:
+	var best: int = 0
+	for i: int in slice._p.size():
+		if slice._p[i].distance_to(at) < slice._p[best].distance_to(at): best = i
+	return best
 
 func _offset(points: PackedVector3Array, i: int, lateral: float) -> Vector3:
 	var a: Vector3 = points[maxi(i - 1, 0)]

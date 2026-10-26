@@ -103,6 +103,22 @@ var tree_count: int = 0
 var tree_instances: int = 0
 var tree_report: Dictionary = {}
 var carpet_chunks: int = 0
+## Foreground corridor understory (see _add_corridor_understory).
+## Limited stretch: the east-shore and lower root-approach walk (z -240 .. -440).
+const UNDERSTORY_Z := Vector2(-240.0, -440.0)
+const UNDERSTORY_CLEAR := 60.0
+const UNDERSTORY_RANGE := 110.0
+const UNDERSTORY_CHUNK := 80.0
+var understory: Node3D
+var replaced_carpet: MultiMeshInstance3D
+var understory_report: Dictionary = {}
+var _understory_sync: Array = []
+var _tree_templates: Array = []
+var _near_crown: Dictionary = {}
+var corridor_trees: Array[MultiMeshInstance3D] = []
+## Visible near-corridor forest clumps (centre within this of the stretch's path) are replaced
+## by layered groups of the copied native trees; clumps beyond it stay as distant backdrop.
+const CORRIDOR_TREE_REACH := 125.0
 var leaf_materials_restrained: int = 0
 var diagnostic_skips: PackedStringArray = PackedStringArray()
 var _world: Node3D
@@ -429,6 +445,7 @@ func configure(world: Node3D) -> void:
 	_add_boulders(rng)
 	if not "no_trees" in skip: _add_trees(rng)
 	if not "no_carpet" in skip: _add_carpet(rng)
+	if not "no_understory" in skip: _add_corridor_understory()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
 	diagnostic_skips = skip
@@ -890,6 +907,38 @@ func _restrain_leaf(material: Material) -> void:
 	(material as ShaderMaterial).set_shader_parameter("roughness_value", 0.92)
 	leaf_materials_restrained += 1
 
+## One copied-tree MultiMesh node with its LOD role (near: dense crowns within
+## NEAR_CROWN_RANGE; far: ring crowns beyond it; all: trunks), added and registered.
+func _tree_node(batch: Dictionary, prefix: String) -> MultiMeshInstance3D:
+	# Node at the batch centre, so visibility ranges measure from the trees themselves.
+	var centre := Vector3.ZERO
+	for member: Transform3D in batch.poses: centre += member.origin
+	centre /= float(batch.poses.size())
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = batch.mesh
+	multi.instance_count = batch.poses.size()
+	for i: int in batch.poses.size(): multi.set_instance_transform(i, Transform3D(Basis(), -centre) * batch.poses[i])
+	var node := MultiMeshInstance3D.new()
+	node.name = prefix + str(batch.kind) + ("_" + str(batch.range) if batch.range != "all" else "")
+	# Node names may be uniquified by Godot; the LOD role is carried as metadata.
+	node.set_meta("lod_range", batch.range)
+	node.multimesh = multi
+	node.position = centre
+	node.material_override = batch.material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.extra_cull_margin = 2.0
+	node.visibility_range_end = 700.0
+	if batch.range == "near":
+		node.visibility_range_end = NEAR_CROWN_RANGE
+		node.visibility_range_end_margin = NEAR_CROWN_MARGIN
+	elif batch.range == "far":
+		node.visibility_range_begin = NEAR_CROWN_RANGE
+		node.visibility_range_begin_margin = NEAR_CROWN_MARGIN
+	add_child(node, true)
+	_static.append(node)
+	return node
+
 func _tree_batch(batches: Dictionary, kind: String, mesh: Mesh, material: Material, cell: Vector2i, range_name: String, pose: Transform3D) -> void:
 	var key: String = "%s|%d|%d|%d|%d|%s" % [kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y, range_name]
 	if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": kind, "range": range_name, "poses": []}
@@ -970,6 +1019,8 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	_legacy_mesa = false
 	_skip_slice_bed = false
 	var near_crown: Dictionary = _dense_crown(templates)
+	_tree_templates = templates
+	_near_crown = near_crown
 	# Separate generator: crown orientation must not shift any seeded placement.
 	var crown_rng := RandomNumberGenerator.new()
 	crown_rng.seed = 5150
@@ -1007,29 +1058,11 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	var lod: Dictionary = {"near_batches": 0, "far_batches": 0, "near_instances": 0, "near_triangles": 0, "rim_view_dense_instances": 0, "rim_view_dense_triangles": 0}
 	for key: String in batches:
 		var batch: Dictionary = batches[key]
-		# Node at the batch centre, so visibility ranges measure from the trees themselves.
-		var centre := Vector3.ZERO
-		for member: Transform3D in batch.poses: centre += member.origin
-		centre /= float(batch.poses.size())
-		var multi := MultiMesh.new()
-		multi.transform_format = MultiMesh.TRANSFORM_3D
-		multi.mesh = batch.mesh
-		multi.instance_count = batch.poses.size()
-		for i: int in batch.poses.size(): multi.set_instance_transform(i, Transform3D(Basis(), -centre) * batch.poses[i])
-		var node := MultiMeshInstance3D.new()
-		node.name = "CopiedTrees_" + str(batch.kind) + ("_" + str(batch.range) if batch.range != "all" else "")
-		# Node names may be uniquified by Godot; the LOD role is carried as metadata.
-		node.set_meta("lod_range", batch.range)
-		node.multimesh = multi
-		node.position = centre
-		node.material_override = batch.material
-		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		node.extra_cull_margin = 2.0
-		node.visibility_range_end = 700.0
+		var node: MultiMeshInstance3D = _tree_node(batch, "CopiedTrees_")
+		var multi: MultiMesh = node.multimesh
+		var centre: Vector3 = node.position
 		var triangles: int = _triangle_count(batch.mesh) * multi.instance_count
 		if batch.range == "near":
-			node.visibility_range_end = NEAR_CROWN_RANGE
-			node.visibility_range_end_margin = NEAR_CROWN_MARGIN
 			lod.near_batches += 1
 			lod.near_instances += multi.instance_count
 			lod.near_triangles += triangles
@@ -1037,11 +1070,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 				lod.rim_view_dense_instances += multi.instance_count
 				lod.rim_view_dense_triangles += triangles
 		elif batch.range == "far":
-			node.visibility_range_begin = NEAR_CROWN_RANGE
-			node.visibility_range_begin_margin = NEAR_CROWN_MARGIN
 			lod.far_batches += 1
-		add_child(node, true)
-		_static.append(node)
 		tree_instances += multi.instance_count
 	tree_report["lod"] = lod
 	tree_count = spots.size()
@@ -1138,6 +1167,426 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		add_child(node)
 		_static.append(node)
 	carpet_chunks = chunks.size()
+
+## Foreground corridor understory (prototype art pass; visual only). On one limited stretch of
+## the walked east shore and lower root approach (UNDERSTORY_Z), the large low-poly forest clumps
+## whose bodies come within UNDERSTORY_CLEAR of the path are set aside (kept, hidden, in
+## CorridorReplacedCarpet) and replaced by composed groups built from the clearing's own
+## understory meshes: fern crowns (scoped darker duplicates of the clearing leaf materials) with
+## fairy-mushroom clusters and moss at their foot, mushroom-and-moss rings, and flower drifts,
+## with open ground between groups. Each plant's mesh floor is anchored just below the lowest
+## rendered surface under its footprint (ribbon shoulder, or the higher of the rendered terrain
+## and the embankment skirt); nothing is placed on the tread. Creature/human-scale target
+## heights. No colliders, no shadows, own random stream; startup only.
+func _add_corridor_understory() -> void:
+	understory_report = {"built": false}
+	if not is_instance_valid(slice_route) or not slice_route.valid: return
+	var sources: Dictionary = _understory_sources()
+	understory_report["sources"] = sources.keys()
+	if sources.size() < 8:
+		understory_report["error"] = "clearing understory meshes not found"
+		return
+	var hero_xz := Vector2(hero.base.x, hero.base.z) if not hero.is_empty() else Vector2(INF, INF)
+	var section := PackedVector3Array()
+	for p: Vector3 in slice_route._p:
+		if p.z < UNDERSTORY_Z.x and p.z > UNDERSTORY_Z.y: section.append(p)
+	if section.size() < 10: return
+	var arc := PackedFloat32Array([0.0])
+	for i: int in range(1, section.size()): arc.append(arc[i - 1] + Vector2(section[i].x - section[i - 1].x, section[i].z - section[i - 1].z).length())
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for p: Vector3 in section:
+		lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.z))
+		hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.z))
+	var bounds := Rect2(lo, hi - lo)
+	# 1. Set aside the conspicuous clumps beside the path (non-destructive: kept, hidden).
+	var replaced: Array[Transform3D] = []
+	var replaced_colors: Array[Color] = []
+	var clump_mesh: Mesh = null
+	var clump_material: Material = null
+	var near_kept: Array = []
+	for node: GeometryInstance3D in _static:
+		if not String(node.name).begins_with("ForestCarpet_"): continue
+		var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		var keep: Array[Transform3D] = []
+		var keep_colors: Array[Color] = []
+		for i: int in multi.instance_count:
+			var pose: Transform3D = multi.get_instance_transform(i)
+			var at := Vector2(pose.origin.x, pose.origin.z)
+			var width: float = pose.basis.x.length()
+			if bounds.grow(UNDERSTORY_CLEAR + width).has_point(at) and _section_distance(section, at) - width * 0.45 < UNDERSTORY_CLEAR:
+				replaced.append(pose)
+				replaced_colors.append(multi.get_instance_color(i))
+				continue
+			keep.append(pose)
+			keep_colors.append(multi.get_instance_color(i))
+			if bounds.grow(60.0 + width).has_point(at):
+				var body: float = _section_distance(section, at) - width * 0.45
+				if body < 60.0: near_kept.append([snappedf(pose.origin.x, 0.1), snappedf(pose.origin.z, 0.1), snappedf(width, 0.1), snappedf(pose.basis.y.length(), 0.1), snappedf(body, 0.1)])
+		if keep.size() == multi.instance_count: continue
+		clump_mesh = multi.mesh
+		clump_material = (node as MultiMeshInstance3D).material_override
+		multi.instance_count = keep.size()
+		for i: int in keep.size():
+			multi.set_instance_transform(i, keep[i])
+			multi.set_instance_color(i, keep_colors[i])
+	# 1b. The larger clumps that still stood beside the stretch (centres within
+	# CORRIDOR_TREE_REACH of the path) become layered groups of copied native trees.
+	var tree_targets: Array = []
+	for node: GeometryInstance3D in _static:
+		if not String(node.name).begins_with("ForestCarpet_"): continue
+		var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		var keep: Array[Transform3D] = []
+		var keep_colors: Array[Color] = []
+		for i: int in multi.instance_count:
+			var pose: Transform3D = multi.get_instance_transform(i)
+			var at := Vector2(pose.origin.x, pose.origin.z)
+			if bounds.grow(CORRIDOR_TREE_REACH).has_point(at) and _section_distance(section, at) <= CORRIDOR_TREE_REACH:
+				replaced.append(pose)
+				replaced_colors.append(multi.get_instance_color(i))
+				var rendered: AABB = pose * multi.mesh.get_aabb()
+				tree_targets.append({"owner": String(node.name), "index": i, "position": [snappedf(pose.origin.x, 0.1), snappedf(pose.origin.y, 0.1), snappedf(pose.origin.z, 0.1)], "width": snappedf(maxf(rendered.size.x, rendered.size.z), 0.1), "height": snappedf(rendered.size.y, 0.1), "path_distance_m": snappedf(_section_distance(section, at), 0.1)})
+				continue
+			keep.append(pose)
+			keep_colors.append(multi.get_instance_color(i))
+		if keep.size() == multi.instance_count: continue
+		clump_mesh = multi.mesh
+		clump_material = (node as MultiMeshInstance3D).material_override
+		multi.instance_count = keep.size()
+		for i: int in keep.size():
+			multi.set_instance_transform(i, keep[i])
+			multi.set_instance_color(i, keep_colors[i])
+	var tree_report_corridor: Dictionary = _add_corridor_trees(tree_targets)
+	if not replaced.is_empty():
+		var hidden := MultiMesh.new()
+		hidden.transform_format = MultiMesh.TRANSFORM_3D
+		hidden.use_colors = true
+		hidden.mesh = clump_mesh
+		hidden.instance_count = replaced.size()
+		for i: int in replaced.size():
+			hidden.set_instance_transform(i, replaced[i])
+			hidden.set_instance_color(i, replaced_colors[i])
+		replaced_carpet = MultiMeshInstance3D.new()
+		replaced_carpet.name = "CorridorReplacedCarpet"
+		replaced_carpet.multimesh = hidden
+		replaced_carpet.material_override = clump_material
+		replaced_carpet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		replaced_carpet.visible = false
+		add_child(replaced_carpet)
+	# 2. Composed groups along both verges of the limited stretch (open ground between them):
+	# fern-and-fungus groups (2-3 fern crowns, a fairy-mushroom cluster at their foot, moss),
+	# mushroom-and-moss groups, and flower drifts. Where the shore strip is narrow a group
+	# slides toward the path (never past its clearance) instead of into the water.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261027
+	var plants: Array = []
+	var banks: Dictionary = {"groups": 0, "open_gaps": 0, "fern_crowns": 0, "fungal_clusters": 0, "flower_drifts": 0}
+	var s: float = rng.randf_range(2.0, 5.0)
+	var side: float = 1.0 if rng.randf() < 0.5 else -1.0
+	while s < arc[arc.size() - 1]:
+		if rng.randf() < 0.12:
+			banks.open_gaps += 1
+			s += rng.randf_range(4.0, 7.0)
+			continue
+		var frame: Array = _section_frame(section, arc, s)
+		var out: Vector2 = frame[2] * side
+		var dry := func(lateral: float, least: float) -> float:
+			var l: float = lateral
+			while l > least:
+				var at: Vector2 = frame[0] + out * l
+				var g: float = rendered_terrain_height(at.x, at.y)
+				if (g if not is_nan(g) else terrain_height(at.x, at.y)) > LAKE_Y + 0.3: return l
+				l -= 0.5
+			return least
+		var centre: Vector2 = frame[0] + out * dry.call(rng.randf_range(4.4, 6.5) if rng.randf() < 0.7 else rng.randf_range(6.5, 10.0), 4.4)
+		var scatter := func(radius: float) -> Vector2: return frame[1] * rng.randf_range(-radius, radius) * 1.4 + out * rng.randf_range(-radius, radius)
+		banks.groups += 1
+		var roll: float = rng.randf()
+		if roll < 0.4:
+			var leaf: String = "fern_dark" if rng.randf() < 0.5 else "fern_mid"
+			for c: int in 2:
+				banks.fern_crowns += 1
+				var base: Vector2 = centre + scatter.call(1.1) + out * 0.4
+				var turn: float = rng.randf_range(0.0, TAU)
+				var size: float = rng.randf_range(0.55, 0.8)
+				for f: int in 3:
+					var angle: float = turn + TAU * f / 3.0 + rng.randf_range(-0.35, 0.35)
+					var radial := Vector2(cos(angle), sin(angle))
+					plants.append(["fern_a" if rng.randf() < 0.7 else "fern_c", base + radial * rng.randf_range(0.08, 0.2),
+						{"height": [size * 0.85, size * 1.1], "yaw": -angle + PI * 0.5, "tilt_axis": Vector3(radial.y, 0.0, -radial.x), "tilt": deg_to_rad(rng.randf_range(4.0, 10.0)), "material": leaf}])
+			banks.fungal_clusters += 1
+			var foot: Vector2 = centre - out * 0.7 + scatter.call(0.4)
+			for m: int in rng.randi_range(4, 7): plants.append(["fairy", foot + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * 0.4, {}])
+			for m: int in rng.randi_range(3, 5): plants.append(["moss", centre + scatter.call(1.4), {}])
+			if rng.randf() < 0.4:
+				banks.flower_drifts += 1
+				var drift: Vector2 = centre - out * 1.1 + scatter.call(0.8)
+				var colour: String = ["flower_pink", "flower_white", "flower_blue"][rng.randi_range(0, 2)]
+				for g: int in rng.randi_range(4, 6): plants.append([colour, drift + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * 0.35, {}])
+		elif roll < 0.8:
+			banks.fungal_clusters += 1
+			var ring: float = rng.randf_range(0.6, 1.1)
+			for m: int in rng.randi_range(4, 7):
+				var angle: float = rng.randf_range(0.0, TAU)
+				plants.append(["fairy", centre + Vector2(cos(angle), sin(angle)) * ring * rng.randf_range(0.8, 1.15), {}])
+			for m: int in rng.randi_range(4, 6): plants.append(["moss", centre + scatter.call(1.0), {}])
+			banks.fern_crowns += 1
+			var base: Vector2 = centre + out * (ring + 0.5)
+			var turn: float = rng.randf_range(0.0, TAU)
+			for f: int in 3:
+				var angle: float = turn + TAU * f / 3.0
+				var radial := Vector2(cos(angle), sin(angle))
+				plants.append(["fern_a", base + radial * 0.12, {"height": [0.4, 0.55], "yaw": -angle + PI * 0.5, "tilt_axis": Vector3(radial.y, 0.0, -radial.x), "tilt": deg_to_rad(6.0), "material": "fern_dark"}])
+		else:
+			banks.flower_drifts += 1
+			var colour: String = ["flower_pink", "flower_white", "flower_blue"][rng.randi_range(0, 2)]
+			for g: int in rng.randi_range(6, 10): plants.append([colour, centre + scatter.call(0.7), {}])
+			for m: int in rng.randi_range(2, 3): plants.append(["moss", centre + scatter.call(1.0), {}])
+			var tuft: Vector2 = centre + out * 0.9
+			for g: int in rng.randi_range(6, 9): plants.append(["grass", tuft + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * (0.07 if g > 0 else 0.0), {"height": [0.25, 0.4]}])
+		s += rng.randf_range(3.0, 5.5)
+		if rng.randf() < 0.6: side = -side
+	# 3. Clearance, attachment and scale; then chunked multimeshes.
+	var min_lateral: Dictionary = {"moss": 2.7, "cushion": 2.7, "grass": 3.0, "broadleaf": 3.0, "flower_white": 3.0, "flower_pink": 3.0, "flower_blue": 3.0, "fern_a": 3.6, "fern_b": 3.6, "fern_c": 3.6, "fairy": 3.6}
+	# Target heights (m) at creature/human scale; the clearing authors these meshes as low
+	# ground cover (0.07-0.34 m), which vanishes at path distances. Moss and cushions are
+	# flattened into mounds (width factor).
+	var heights: Dictionary = {"moss": [0.08, 0.16], "cushion": [0.12, 0.25], "grass": [0.3, 0.55], "broadleaf": [0.25, 0.45], "flower_white": [0.3, 0.5], "flower_pink": [0.3, 0.5], "flower_blue": [0.3, 0.5], "fern_a": [0.7, 1.2], "fern_b": [0.7, 1.2], "fern_c": [0.65, 1.1], "fairy": [0.25, 0.7]}
+	var widen: Dictionary = {"moss": 2.6, "cushion": 2.0}
+	var batches: Dictionary = {}
+	var dropped: Dictionary = {}
+	var closest: Dictionary = {}
+	# Scoped fern materials: duplicates of the clearing's leaf materials (the originals are
+	# untouched), darker for open sun because the clearing's canopy dapple does not reach the
+	# corridor; their night state follows the originals (apply_look).
+	var leaf_variants: Array = []
+	var materials: Variant = _world.get("_materials")
+	if materials is Dictionary:
+		for pair: Array in [["fern_dark", "leaf_dark", Color("1d3b24"), Color("344f22")], ["fern_mid", "leaf", Color("34572a"), Color("66853a")]]:
+			if not materials.has(pair[1]) or not materials[pair[1]] is ShaderMaterial: continue
+			var copy: ShaderMaterial = (materials[pair[1]] as ShaderMaterial).duplicate()
+			copy.set_shader_parameter("base_color", pair[2])
+			copy.set_shader_parameter("accent_color", pair[3])
+			copy.set_shader_parameter("roughness_value", 0.94)
+			leaf_variants.append([pair[0], copy])
+			_understory_sync.append([materials[pair[1]], copy])
+	var attach := {"max_base_above_surface_m": -INF, "max_sink_m": 0.0, "max_bottom_corner_lift_m": 0.0, "corners_over_10cm": 0, "corners_checked": 0}
+	for plant: Array in plants:
+		var asset: String = plant[0]
+		if not sources.has(asset): continue
+		var at: Vector2 = plant[1]
+		var near: Array = _section_nearest(section, arc, at)
+		var off: float = near[1]
+		var reason: String = ""
+		if off < min_lateral[asset]: reason = "clearance"
+		elif at.distance_to(hero_xz) < 47.0: reason = "root"
+		var ground: float = NAN
+		if reason.is_empty():
+			ground = _understory_ground(section, arc, at)
+			if off > 3.95:
+				var rendered: float = rendered_terrain_height(at.x, at.y)
+				var terrain: float = rendered if not is_nan(rendered) else terrain_height(at.x, at.y)
+				if terrain < LAKE_Y + 0.25 and ground == terrain: reason = "water"
+				elif terrain_slope(at.x, at.y) > 0.75 and ground == terrain: reason = "steep"
+			if is_nan(ground): reason = "no ground"
+		if not reason.is_empty():
+			dropped[reason] = int(dropped.get(reason, 0)) + 1
+			continue
+		closest[asset] = minf(float(closest.get(asset, INF)), off)
+		var opts: Dictionary = plant[2]
+		var target: Array = opts.get("height", heights[asset])
+		var k: float = rng.randf_range(target[0], target[1]) / maxf(sources[asset].mesh.get_aabb().size.y, 0.01)
+		var w: float = k * float(widen.get(asset, 1.0))
+		var tilt := Basis(opts.get("tilt_axis", Vector3(rng.randf_range(-1.0, 1.0), 0.0, rng.randf_range(-1.0, 1.0)).normalized()), opts.get("tilt", deg_to_rad(rng.randf_range(0.0, 5.0))))
+		var basis: Basis = tilt * Basis(Vector3.UP, opts.get("yaw", rng.randf_range(0.0, TAU))) * Basis.from_scale(Vector3(w, k, w))
+		var chunk: int = floori(float(near[0]) / UNDERSTORY_CHUNK)
+		var variant: Array = ["", null]
+		for candidate: Array in leaf_variants:
+			if candidate[0] == opts.get("material", ""): variant = candidate
+		var key: String = "%s%s_%d" % [asset, ("_" + variant[0]) if variant[1] != null else "", chunk]
+		if not batches.has(key): batches[key] = {"asset": asset, "poses": [], "material": variant[1]}
+		# Root anchor: the mesh floor (its AABB bottom, scaled) sits 2 cm below the lowest rendered
+		# surface under the plant's footprint, so no side floats on a slope.
+		var box: AABB = sources[asset].mesh.get_aabb()
+		var reach: float = minf(0.5 * maxf(box.size.x, box.size.z) * w, 0.6)
+		var lowest: float = ground
+		for corner: Vector2 in [Vector2(reach, 0.0), Vector2(-reach, 0.0), Vector2(0.0, reach), Vector2(0.0, -reach)]:
+			var under: float = _understory_ground(section, arc, at + corner)
+			if not is_nan(under): lowest = minf(lowest, under)
+		var base: float = lowest - 0.02
+		var pose := Transform3D(basis, Vector3(at.x, base - box.position.y * k, at.y))
+		attach.max_base_above_surface_m = maxf(attach.max_base_above_surface_m, base - ground)
+		attach.max_sink_m = maxf(attach.max_sink_m, ground - base)
+		# Independent check: the transformed bottom corners of the mesh box against the rendered
+		# surface beneath each of them (includes yaw, tilt and the mesh's own offsets).
+		for cx: float in [box.position.x, box.end.x]:
+			for cz: float in [box.position.z, box.end.z]:
+				var corner_world: Vector3 = pose * Vector3(cx, box.position.y, cz)
+				var below: float = _understory_ground(section, arc, Vector2(corner_world.x, corner_world.z))
+				if is_nan(below): continue
+				attach.corners_checked += 1
+				attach.max_bottom_corner_lift_m = maxf(attach.max_bottom_corner_lift_m, corner_world.y - below)
+				if corner_world.y - below > 0.10: attach.corners_over_10cm += 1
+		batches[key].poses.append(pose)
+	understory = Node3D.new()
+	understory.name = "CorridorUnderstory"
+	add_child(understory)
+	var per_asset: Dictionary = {}
+	var triangles: int = 0
+	for key: String in batches:
+		var batch: Dictionary = batches[key]
+		var source: Dictionary = sources[batch.asset]
+		var centre := Vector3.ZERO
+		for pose: Transform3D in batch.poses: centre += pose.origin
+		centre /= float(batch.poses.size())
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.mesh = source.mesh
+		multi.instance_count = batch.poses.size()
+		for i: int in batch.poses.size(): multi.set_instance_transform(i, Transform3D(Basis(), -centre) * batch.poses[i])
+		var node := MultiMeshInstance3D.new()
+		node.name = "Understory_" + key
+		node.set_meta("asset", batch.asset)
+		node.multimesh = multi
+		node.position = centre
+		node.material_override = batch.material if batch.material != null else source.material
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		node.visibility_range_end = UNDERSTORY_RANGE
+		node.visibility_range_end_margin = 10.0
+		understory.add_child(node)
+		_static.append(node)
+		per_asset[batch.asset] = int(per_asset.get(batch.asset, 0)) + batch.poses.size()
+		triangles += int(source.triangles) * batch.poses.size()
+	var instances: int = 0
+	for asset: String in per_asset: instances += per_asset[asset]
+	understory_report = {"built": true, "section_samples": section.size(), "section_length_m": arc[arc.size() - 1],
+		"carpet_clumps_replaced": replaced.size(), "carpet_triangles_hidden": _triangle_count(clump_mesh) * replaced.size() if clump_mesh else 0,
+		"stretch_z": [UNDERSTORY_Z.x, UNDERSTORY_Z.y], "banks": banks, "attachment": attach,
+		"tree_targets": tree_targets, "corridor_trees": tree_report_corridor,
+		"source_aabb": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].mesh.get_aabb().position.y, 0.001), snappedf(sources[asset].mesh.get_aabb().size.y, 0.001)]), "fern_materials": leaf_variants.map(func(v: Array) -> String: return v[0]), "instances": instances, "per_asset": per_asset, "triangles": triangles, "nodes": batches.size(),
+		"dropped": dropped, "min_lateral_m": closest, "min_lateral_required_m": min_lateral, "draw_range_m": UNDERSTORY_RANGE,
+		"sources": sources.keys(), "colliders": 0, "shadow_casters": 0,
+		"source_scale": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].scale.x, 0.01), snappedf(sources[asset].scale.y, 0.01)]),
+		"near_kept_clumps": near_kept, "target_height_m": heights,
+		"source_height_m": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].mesh.get_aabb().size.y * sources[asset].scale.y, 0.01)])}
+
+## Layered copied-tree groups in place of the targeted clumps (rendered size): one tree for a
+## narrow clump, two for a medium one, three lower ones for a wide flat one; the main tree is
+## scaled toward the clump's height, companions to 55-80 % of it. Trunks root 0.35 m into the
+## rendered ground. Crowns keep the native ring crown (restrained far tone) at every distance:
+## the dense near crowns would add ~7,400 triangles per crown for trees 70-115 m off the path.
+func _add_corridor_trees(targets: Array) -> Dictionary:
+	if targets.is_empty() or _tree_templates.is_empty(): return {"trees": 0}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261028
+	var heights: Array = []
+	for template: Array in _tree_templates:
+		var top: float = 0.0
+		for part: Dictionary in template: top = maxf(top, (part.local * (part.mesh as Mesh).get_aabb()).end.y)
+		heights.append(maxf(top, 1.0))
+	var batches: Dictionary = {}
+	var trees: int = 0
+	var crowns: int = 0
+	for target: Dictionary in targets:
+		var width: float = target.width
+		var count: int = 1 if width < 25.0 else (2 if width < 40.0 else 3)
+		var centre := Vector2(target.position[0], target.position[2])
+		for n: int in count:
+			var pick: int = rng.randi_range(0, _tree_templates.size() - 1)
+			var template: Array = _tree_templates[pick]
+			var want: float = float(target.height) * (rng.randf_range(0.85, 1.05) if n == 0 else rng.randf_range(0.55, 0.8))
+			if count == 3: want = minf(want, 12.0)
+			var size: float = clampf(want / float(heights[pick]), 0.7, 2.6)
+			var spot: Vector2 = centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * (0.0 if n == 0 else rng.randf_range(0.2, 0.35) * width)
+			var ground: float = rendered_terrain_height(spot.x, spot.y)
+			if is_nan(ground): ground = terrain_height(spot.x, spot.y)
+			if ground < LAKE_Y + 1.0 or terrain_slope(spot.x, spot.y) > 0.6: continue
+			var root := Transform3D(Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3.ONE * size), Vector3(spot.x, ground - 0.35, spot.y))
+			var cell := Vector2i(floori(spot.x / 160.0), floori(spot.y / 160.0))
+			trees += 1
+			for part: Dictionary in template:
+				var tone: Material = _near_crown.far_material if part.kind == "LayeredCanopies" and not _near_crown.is_empty() else part.material
+				if part.kind == "LayeredCanopies": crowns += 1
+				_tree_batch(batches, part.kind, part.mesh, tone, cell, "all", root * part.local)
+	var built: Dictionary = {"all": 0, "far": 0, "near": 0}
+	for key: String in batches:
+		var node: MultiMeshInstance3D = _tree_node(batches[key], "CorridorTrees_")
+		corridor_trees.append(node)
+		built[batches[key].range] += _triangle_count(batches[key].mesh) * node.multimesh.instance_count
+	return {"trees": trees, "targets": targets.size(), "ring_crowns": crowns, "nodes": batches.size(), "triangles": built.all + built.far + built.near}
+
+## The clearing's own understory meshes and materials (SpatiallyChunkedFoliage), with each
+## asset's median authored scale so the corridor plants match the clearing's scale.
+func _understory_sources() -> Dictionary:
+	var foliage: Node = _world.get_node_or_null("SpatiallyChunkedFoliage")
+	if foliage == null: return {}
+	# asset: [node-name prefix, mesh resource name, triangles] (empty / 0 = not used to match)
+	var wanted: Dictionary = {"fern_a": ["", "Review09Understory_fern_a", 0], "fern_b": ["", "Review09Understory_fern_b", 0],
+		"fern_c": ["leaf_dark_-", "", 780], "grass": ["leaf_-", "", 18], "cushion": ["", "Review09Understory_cushion_b", 0],
+		"moss": ["", "Review18Clump_cushion_a", 0], "broadleaf": ["", "Review09Understory_broadleaf_a", 0],
+		"flower_white": ["flower_white_-", "", 94], "flower_pink": ["flower_pink_-", "", 94],
+		"flower_blue": ["flower_blue_-", "", 94], "fairy": ["fairy_-", "", 120]}
+	var found: Dictionary = {}
+	var scales: Dictionary = {}
+	for node: Node in foliage.get_children():
+		var instance: MultiMeshInstance3D = node as MultiMeshInstance3D
+		if instance == null or instance.multimesh == null or instance.multimesh.mesh == null: continue
+		var mesh: Mesh = instance.multimesh.mesh
+		for asset: String in wanted:
+			var rule: Array = wanted[asset]
+			if not String(rule[0]).is_empty() and not String(instance.name).begins_with(rule[0]): continue
+			if not String(rule[1]).is_empty() and mesh.resource_name != rule[1]: continue
+			var tris: int = _triangle_count(mesh)
+			if int(rule[2]) > 0 and tris != int(rule[2]): continue
+			if not found.has(asset): found[asset] = {"mesh": mesh, "material": instance.material_override, "triangles": tris}
+			if found[asset].mesh != mesh: continue
+			if not scales.has(asset): scales[asset] = []
+			for i: int in mini(instance.multimesh.instance_count, 24): scales[asset].append(instance.multimesh.get_instance_transform(i).basis.get_scale())
+	for asset: String in found:
+		var list: Array = scales.get(asset, [])
+		list.sort_custom(func(a: Vector3, b: Vector3) -> bool: return a.y < b.y)
+		found[asset]["scale"] = list[list.size() / 2] if not list.is_empty() else Vector3.ONE
+	return found
+
+func _section_distance(section: PackedVector3Array, at: Vector2) -> float:
+	var best: float = INF
+	for i: int in range(1, section.size()):
+		best = minf(best, at.distance_to(Geometry2D.get_closest_point_to_segment(at, Vector2(section[i - 1].x, section[i - 1].z), Vector2(section[i].x, section[i].z))))
+	return best
+
+## Visible ground under a corridor plant: the ribbon surface on the shoulders, beyond them the
+## higher of the rendered terrain and the embankment skirt.
+func _understory_ground(section: PackedVector3Array, arc: PackedFloat32Array, at: Vector2) -> float:
+	var near: Array = _section_nearest(section, arc, at)
+	if float(near[1]) <= 3.95:
+		var shoulder: float = slice_route.surface_height_at(at.x, at.y)
+		if not is_nan(shoulder): return shoulder
+	var rendered: float = rendered_terrain_height(at.x, at.y)
+	var terrain: float = rendered if not is_nan(rendered) else terrain_height(at.x, at.y)
+	return maxf(terrain, float(near[2]) - 2.2 * tan(deg_to_rad(18.0)) - (float(near[1]) - 4.0) / 0.7)
+
+## [arc length, lateral distance, centreline height] of the nearest point on the section.
+func _section_nearest(section: PackedVector3Array, arc: PackedFloat32Array, at: Vector2) -> Array:
+	var best: Array = [0.0, INF, 0.0]
+	for i: int in range(1, section.size()):
+		var a := Vector2(section[i - 1].x, section[i - 1].z)
+		var b := Vector2(section[i].x, section[i].z)
+		var q: Vector2 = Geometry2D.get_closest_point_to_segment(at, a, b)
+		var d: float = at.distance_to(q)
+		if d < best[1]:
+			var t: float = a.distance_to(q) / maxf(a.distance_to(b), 0.001)
+			best = [lerpf(arc[i - 1], arc[i], t), d, lerpf(section[i - 1].y, section[i].y, t)]
+	return best
+
+## [point, tangent, right] on the section at arc length s (XZ).
+func _section_frame(section: PackedVector3Array, arc: PackedFloat32Array, s: float) -> Array:
+	var i: int = 1
+	while i < arc.size() - 1 and arc[i] < s: i += 1
+	var a := Vector2(section[i - 1].x, section[i - 1].z)
+	var b := Vector2(section[i].x, section[i].z)
+	var t: float = clampf((s - arc[i - 1]) / maxf(arc[i] - arc[i - 1], 0.001), 0.0, 1.0)
+	var tangent: Vector2 = (b - a).normalized()
+	return [a.lerp(b, t), tangent, Vector2(-tangent.y, tangent.x)]
 
 func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode: int, label: String) -> void:
 	var material := ShaderMaterial.new()
@@ -1664,6 +2113,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for pair: Array in _crown_sync:
 		for key: String in ["wind_time", "wind_displacement_m", "night_amount"]:
 			(pair[1] as ShaderMaterial).set_shader_parameter(key, (pair[0] as ShaderMaterial).get_shader_parameter(key))
+	for pair: Array in _understory_sync:
+		(pair[1] as ShaderMaterial).set_shader_parameter("night_amount", (pair[0] as ShaderMaterial).get_shader_parameter("night_amount"))
 	_lake_material.set_shader_parameter("horizon", Color("f2b08e").lerp(Color("3a3466"), night))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material]:
 		material.set_shader_parameter("night", night)
@@ -1704,4 +2155,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
