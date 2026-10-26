@@ -1328,7 +1328,7 @@ What changed:
 Results on the committed source:
 - `route` **18/18** (`reports/route-20261026-022917-72264`).
 - Acceptance **295/295**, no exit leak (`reports/acceptance-20261026-023209-72404`). One earlier run on this pass passed every scenario but printed `2 resources still in use at exit`, and the runner failed it (`reports/acceptance-20261026-015518-70544`). A verbose rerun of the same command and a later official rerun were both clean. The cause is unconfirmed.
-- Benchmark **fails**: p95 17.572 ms (> 16.7), p99 20.498 ms, 9,333 frames, two loops, zero stalls (`reports/benchmark-20261026-023613-72598`). Under the same machine load the prototype layer fully off measured p95 16.435 ms (`reports/benchmark-20261026-022217-71958`), against 12.275 ms for that scene earlier. Most of the gap is outside load; the art layer's measured marginal cost is about 1.1–1.4 ms.
+- Benchmark **fails**: p95 17.572 ms (> 16.7), p99 20.498 ms, 9,333 frames, two loops, zero stalls (`reports/benchmark-20261026-023613-72598`). A later run with the prototype layer fully off measured p95 16.435 ms (`reports/benchmark-20261026-022217-71958`), against 12.275 ms for that scene in an earlier session. *Hypothesis, not causal proof:* most of that gap comes from changing machine state (other applications were active); no controlled measurement of machine load was made. Separate benchmark runs minutes apart put the art layer's marginal cost at about 1.1–1.4 ms, which is also uncontrolled.
 - Bisection receipts:
   - single-MultiMesh carpet: 18.352 ms;
   - chunked carpet: 17.69 ms;
@@ -1356,6 +1356,27 @@ Current-state results:
   - 88 draw nodes.
 - **Route:** **18/18** (`reports/route-20261026-034627-76262`).
 - **Acceptance:** **295/295**, no exit leak (`reports/acceptance-20261026-034912-76366`).
-- **Benchmark:** **fails**, p95 17.573 ms (> 16.7) / p99 19.984 ms, 9,365 frames, two loops, zero stalls (`reports/benchmark-20261026-034407-76147`). This is a single full-art run with the art enabled. It measures the existing clearing route, not the new views. Earlier same-session evidence attributes most of the gap to outside machine load.
+- **Benchmark:** **fails**, p95 17.573 ms (> 16.7) / p99 19.984 ms, 9,365 frames, two loops, zero stalls (`reports/benchmark-20261026-034407-76147`). This is a single full-art run with the art enabled. It measures the existing clearing route, not the new views. Outside machine load is a *hypothesis* for most of the gap, not causal proof (see the performance diagnosis below).
 - **Scenic:** the vista coverage gate still **fails** (0.0129 < 0.02) (`reports/scenic-20261026-034213-76048`).
 - **Not evidence of quality:** none of this is art acceptance or reference parity.
+
+## Performance diagnosis: in-process attribution (2026-10-26, diagnostic only)
+
+This section is diagnostic only. It is not a benchmark verdict and changes no threshold.
+
+What the measurements can and cannot show:
+- **GPU time:** `gpu_render_ms` is 0.00 in every benchmark CSV, so Godot's GPU timestamps do not report on this Metal path and GPU time is unmeasured.
+- **CPU submission:** CPU render submission is about 1.25 ms (p50).
+- **Geometry counts:** primitives and draw calls do not track the frame-time differences between runs. The passing early prototype and the current failing build both show about 2.9M median primitives and about 1,200 draws. The prototype-off run had fewer primitives (2.43M) and was still slower than that passing run.
+
+The `perf-probe` suite (`reports/perf-probe-20261026-040635-77196`) measures uncapped frame interval at 1920×1080, night and rain:
+- **Method:** at four benchmark-route poses and the rim overlook, each art component's visibility is toggled inside one process in ABBA order. The interval is application throughput, not GPU time.
+- **Cost of the whole art layer:** hiding all of it saved 0.0–1.4 ms per pose across three runs. The runs were `035657`, `040149` and `040635`; the first two have invalid tree rows because of a node-name detection bug, while the whole-layer rows are valid in all three.
+- **Original scene alone:** with the art hidden, frames still take 11.0–15.3 ms uncapped at the route poses, against a 120 Hz cadence of 8.33 ms.
+- **Individual components:** carpet, trees, near crowns, terrain, giants/rocks and water each sit within about ±0.7 ms of noise.
+- **Interpretation (unconfirmed):** frame cost is dominated by the existing scene at these poses. With VSync at 120 Hz, p95 sits close to the 16.7 ms limit, so roughly 1 ms of art cost plus run-to-run variance moves it across that limit.
+
+LOD walk:
+- **Events:** 4 dense-crown switch events while walking the route.
+- **Frames:** consecutive frames at the nominal 100 m crossings show no visible pop.
+- **Limit:** Godot applies the switch with a 12 m hysteresis margin, so these stills may miss the switch moment. Popping is unconfirmed either way, and continuous manual motion review remains unverified.

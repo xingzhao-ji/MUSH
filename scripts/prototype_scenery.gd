@@ -800,6 +800,8 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		for i: int in batch.poses.size(): multi.set_instance_transform(i, Transform3D(Basis(), -centre) * batch.poses[i])
 		var node := MultiMeshInstance3D.new()
 		node.name = "CopiedTrees_" + str(batch.kind) + ("_" + str(batch.range) if batch.range != "all" else "")
+		# Node names may be uniquified by Godot; the LOD role is carried as metadata.
+		node.set_meta("lod_range", batch.range)
 		node.multimesh = multi
 		node.position = centre
 		node.material_override = batch.material
@@ -820,7 +822,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 			node.visibility_range_begin = NEAR_CROWN_RANGE
 			node.visibility_range_begin_margin = NEAR_CROWN_MARGIN
 			lod.far_batches += 1
-		add_child(node)
+		add_child(node, true)
 		_static.append(node)
 		tree_instances += multi.instance_count
 	tree_report["lod"] = lod
