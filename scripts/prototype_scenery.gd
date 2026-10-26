@@ -13,6 +13,8 @@ const ROCK_TEXTURE := preload("res://assets/world/textures/rock_01_diff_1k.jpg")
 const HERO := Vector2(378.0, -648.0)
 ## Stem bend at the top, in stem radii; the cap sits on the bent top.
 const STEM_BEND := 2.0
+## Integrated buttress lobes: (angle, outward reach in stem radii), deliberately uneven.
+const STEM_BUTTRESSES: Array[Vector2] = [Vector2(0.3, 1.45), Vector2(1.55, 0.95), Vector2(2.7, 1.3), Vector2(3.95, 0.75), Vector2(5.1, 1.15)]
 ## Far plane and fog end are chosen together: every hero element is inside 0.55 x far
 ## and fog reaches full strength (FOG_END) well inside the far plane.
 const FAR_PLANE := 2600.0
@@ -60,7 +62,6 @@ var tree_count: int = 0
 var tree_instances: int = 0
 var tree_report: Dictionary = {}
 var carpet_chunks: int = 0
-var hero_root_triangles: int = 0
 var diagnostic_skips: PackedStringArray = PackedStringArray()
 var _world: Node3D
 var _ridge_noise: FastNoiseLite
@@ -346,7 +347,8 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 		if hero.is_empty(): hero_caps.append(cap_pose)
 		else: caps.append(cap_pose)
 		# One continuous stem from below local ground into the cap underside.
-		var base: float = ground - 12.0
+		# Deep enough that the integrated buttresses' outer edges end under the terrain.
+		var base: float = ground - maxf(12.0, stem_r * 0.9)
 		var length: float = underside + thickness * 0.22 - base
 		stems.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, length, stem_r)), Vector3(x, base, z)))
 		if base < ground and base + length > underside: grounded_stems += 1
@@ -362,99 +364,6 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 	_add(hero_cap, hero_caps, hero_tint, 0, "HeroCanopy")
 	_add(cap, caps, tints, 0, "LuminousCanopies")
 	_add(stem, stems, stem_tints, 1, "CanopyStems")
-	# Separate generator: adding the roots must not shift any other seeded placement.
-	var root_rng := RandomNumberGenerator.new()
-	root_rng.seed = 7311
-	_add_hero_roots(root_rng)
-
-## Hero buttress roots: five asymmetric curved root masses leave the stem low down,
-## each branches once, and every tip is buried in the terrain. Built once, world space.
-func _add_hero_roots(rng: RandomNumberGenerator) -> void:
-	if hero.is_empty(): return
-	var base: Vector3 = hero.base
-	var stem_r: float = float(hero.radius) * 0.15
-	var paths: Array = []
-	var count: int = 5
-	for i: int in count:
-		var a: float = TAU * float(i) / count + rng.randf_range(-0.5, 0.5)
-		var dir := Vector3(cos(a), 0.0, sin(a))
-		var reach: float = stem_r * rng.randf_range(1.8, 3.0)
-		var start: Vector3 = base + dir * stem_r * 0.7 + Vector3.UP * stem_r * rng.randf_range(0.7, 1.5)
-		var tip := Vector2(base.x, base.z) + Vector2(dir.x, dir.z) * (stem_r * 0.7 + reach)
-		var finish := Vector3(tip.x, terrain_height(tip.x, tip.y) - stem_r * 0.12, tip.y)
-		var bow: Vector3 = (start + finish) * 0.5 + dir * reach * 0.15 + Vector3.UP * stem_r * 0.25
-		var thick: float = stem_r * rng.randf_range(0.36, 0.52)
-		paths.append([start, bow, finish, thick, thick * 0.18])
-		var mid: Vector3 = _bezier(start, bow, finish, 0.45)
-		var side: Vector3 = dir.rotated(Vector3.UP, rng.randf_range(0.5, 0.9) * (1.0 if i % 2 == 0 else -1.0))
-		var branch := Vector2(mid.x, mid.z) + Vector2(side.x, side.z) * reach * 0.55
-		var branch_end := Vector3(branch.x, terrain_height(branch.x, branch.y) - stem_r * 0.08, branch.y)
-		paths.append([mid, (mid + branch_end) * 0.5 + Vector3.UP * stem_r * 0.1, branch_end, thick * 0.45, thick * 0.1])
-	var mesh: ArrayMesh = _sweep_roots(paths, false)
-	# Verify outward faces; rebuild with the other index order if needed.
-	var arrays: Array = mesh.surface_get_arrays(0)
-	var probe: Vector3 = (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array)[5 * 11 + 2]
-	var centre: Vector3 = _bezier(paths[0][0], paths[0][1], paths[0][2], 5.0 / 11.0)
-	if (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array)[5 * 11 + 2].dot(probe - centre) < 0.0:
-		mesh = _sweep_roots(paths, true)
-		arrays = mesh.surface_get_arrays(0)
-	winding_checks["hero_root_normal_outward"] = (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array)[5 * 11 + 2].dot((arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array)[5 * 11 + 2] - centre) > 0.0
-	var material := ShaderMaterial.new()
-	material.shader = SHADER
-	material.set_shader_parameter("mode", 1)
-	material.set_shader_parameter("rock_tex", ROCK_TEXTURE)
-	material.set_shader_parameter("moss_mean", _moss_mean)
-	_art.append(material)
-	var node := MeshInstance3D.new()
-	node.name = "HeroRoots"
-	node.mesh = mesh
-	node.material_override = material
-	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(node)
-	_static.append(node)
-	hero_root_triangles = (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
-
-func _bezier(a: Vector3, b: Vector3, c: Vector3, t: float) -> Vector3:
-	return a.lerp(b, t).lerp(b.lerp(c, t), t)
-
-## Sweeps a lumpy, vertically deepened (plank-like) cross-section along each quadratic
-## path; UV.y runs 0.42 at the stem to 0 at the buried tip so moss gathers at the tips.
-func _sweep_roots(paths: Array, flip: bool) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rings := 12
-	var sides := 10
-	var offset: int = 0
-	for path: Array in paths:
-		for i: int in rings:
-			var t: float = float(i) / (rings - 1)
-			var centre: Vector3 = _bezier(path[0], path[1], path[2], t)
-			var ahead: Vector3 = (_bezier(path[0], path[1], path[2], minf(t + 0.02, 1.0)) - _bezier(path[0], path[1], path[2], maxf(t - 0.02, 0.0))).normalized()
-			var across: Vector3 = ahead.cross(Vector3.UP)
-			across = across.normalized() if across.length() > 0.01 else Vector3.RIGHT
-			var lift: Vector3 = across.cross(ahead).normalized()
-			var radius: float = lerpf(path[3], path[4], pow(t, 0.8))
-			for j: int in sides + 1:
-				var a: float = TAU * float(j) / sides
-				var lump: float = 1.0 + 0.12 * sin(3.0 * a + float(i) * 0.7)
-				st.set_uv(Vector2(float(j) / sides, lerpf(0.42, 0.0, t)))
-				st.set_color(Color(1, clampf(0.5 + 0.5 * cos(2.0 * a), 0.0, 1.0), 1))
-				st.add_vertex(centre + (across * cos(a) * 1.0 + lift * sin(a) * 1.25) * radius * lump)
-		for i: int in rings - 1:
-			for j: int in sides:
-				var i0: int = offset + i * (sides + 1) + j
-				var i1: int = i0 + 1
-				var i2: int = i0 + sides + 1
-				var i3: int = i2 + 1
-				if flip:
-					st.add_index(i0); st.add_index(i2); st.add_index(i1)
-					st.add_index(i1); st.add_index(i2); st.add_index(i3)
-				else:
-					st.add_index(i0); st.add_index(i1); st.add_index(i2)
-					st.add_index(i1); st.add_index(i3); st.add_index(i2)
-		offset += rings * (sides + 1)
-	st.generate_normals()
-	return st.commit()
 
 func _add_pillars(rng: RandomNumberGenerator) -> void:
 	var pillar: ArrayMesh = _pillar_mesh()
@@ -731,17 +640,17 @@ func _cap_mesh(phases: PackedFloat32Array) -> ArrayMesh:
 
 func _stem_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = []
-	# Gentle base swell (the buttress roots are separate meshes), slight taper, and a
-	# collar that opens into the cap underside.
-	var rows := 32
+	# Gentle base swell, slight taper, and a collar that opens into the cap underside.
+	# Rows are denser near the base, where the integrated buttresses curve.
+	var rows := 34
 	for i: int in rows + 1:
-		var t: float = float(i) / rows
+		var t: float = pow(float(i) / rows, 1.5)
 		profile.append(Vector3((1.0 + 0.35 * pow(1.0 - t, 3.0)) * (1.0 - 0.18 * t) + 0.5 * pow(smoothstep(0.86, 1.0, t), 2.0), t, t))
 	# Closed top: the stem end is buried in the cap, never seen as an open tube.
 	profile.append(Vector3(0.0, 1.0, 1.0))
-	var mesh: ArrayMesh = _lathe(profile, 48, "stem", false)
+	var mesh: ArrayMesh = _lathe(profile, 72, "stem", false)
 	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	winding_checks["stem_side_normal_outward"] = normals[12 * 49].x > 0.0
+	winding_checks["stem_side_normal_outward"] = normals[20 * 73].x > 0.0
 	return mesh
 
 # Rock pillar: smooth angular fluting plus horizontal ledges, closed at the top.
@@ -792,7 +701,15 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 					var twist: float = p.z * 1.4
 					var lobes: float = 0.13 * cos(4.0 * a + twist + 0.6) + 0.07 * cos(7.0 * a - twist * 0.6 + 2.1) + 0.04 * cos(11.0 * a + 1.0)
 					radius *= 1.0 + lobes * (0.6 + 0.4 * p.z)
-					cavity = clampf(0.5 + lobes * 3.0, 0.0, 1.0)
+					# Low rounded buttresses grown from the same surface: five asymmetric
+					# angular lobes, strongest at the base and gone by a fifth of the height.
+					var reach: float = pow(1.0 - smoothstep(0.0, 0.2, p.z), 2.0)
+					var flare: float = 0.0
+					for lobe: Vector2 in STEM_BUTTRESSES:
+						var gap: float = fposmod(a - lobe.x + PI, TAU) - PI
+						flare += lobe.y * exp(-gap * gap / (2.0 * 0.26 * 0.26))
+					radius *= 1.0 + reach * flare
+					cavity = clampf(0.5 + lobes * 3.0 + reach * (minf(flare, 1.0) - 0.45) * 0.9, 0.0, 1.0)
 				"pillar":
 					radius *= 1.0 + 0.10 * sin(5.0 * a + 1.1) + 0.05 * sin(11.0 * a)
 				"boulder":
@@ -1059,4 +976,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "hero_root_triangles": hero_root_triangles, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

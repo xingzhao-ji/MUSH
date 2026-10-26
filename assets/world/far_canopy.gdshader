@@ -94,21 +94,23 @@ void fragment() {
 			rough = 0.85;
 		}
 	} else if (mode == 1) {
-		// Stem and roots: tone read at distance from large patches, long streaks and the
-		// fused-strand grooves (vertex G); fine grain only adds near detail.
-		float macro = fbm(vec2(UV.x * 4.0, UV.y * 2.2) + v_tint * 7.0);
-		float streak = fbm(vec2(UV.x * 14.0, UV.y * 0.8));
-		float grain = fbm(vec2(UV.x * 60.0, UV.y * 4.0));
-		vec3 dark = stem_bark * 0.5;
-		vec3 light = vec3(0.70, 0.60, 0.62);
-		albedo = mix(dark, light, clamp(v_cavity * 0.65 + macro * 0.4 + streak * 0.2 - 0.12, 0.0, 1.0));
-		albedo *= (0.72 + 0.32 * smoothstep(0.0, 0.6, UV.y)) * (0.92 + 0.12 * grain);
-		float moss_line = smoothstep(0.24, 0.03, UV.y + (fbm(vec2(UV.x * 20.0, 1.0)) - 0.5) * 0.08);
-		albedo = mix(albedo, moss_mean * 1.25, moss_line * 0.8);
+		// Stem: broad tonal patches and groove/buttress-valley shading carry the form at
+		// distance; a soft vertical fibre adds texture near and fades out far (no stripes).
+		float macro = fbm(vec2(UV.x * 3.0, UV.y * 1.6) + v_tint * 7.0);
+		float fibre = mix(0.5, fbm(vec2(UV.x * 26.0, UV.y * 1.2)), aa(UV.x * 26.0));
+		float grain = mix(0.5, fbm(vec2(UV.x * 70.0, UV.y * 5.0)), aa(UV.x * 70.0));
+		vec3 dark = stem_bark * 0.45;
+		vec3 light = vec3(0.66, 0.56, 0.54);
+		albedo = mix(dark, light, clamp(v_cavity * 0.7 + macro * 0.35 - 0.08, 0.0, 1.0));
+		albedo *= (0.9 + 0.14 * fibre) * (0.95 + 0.08 * grain);
+		albedo *= 0.68 + 0.36 * smoothstep(0.0, 0.5, UV.y);
+		float moss_line = smoothstep(0.24, 0.05, UV.y + (fbm(vec2(UV.x * 8.0, 1.0)) - 0.5) * 0.10);
+		albedo = mix(albedo, moss_mean * 1.2, moss_line * 0.75);
 		float collar = smoothstep(0.86, 1.0, UV.y);
 		emit = amber * collar * 0.24 * glow;
-		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.10 * glow;
-		rough = 0.9;
+		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.08 * glow;
+		rough = 0.96;
+		spec = 0.06;
 	} else if (mode == 2) {
 		vec3 w = pow(abs(n), vec3(4.0));
 		w /= (w.x + w.y + w.z);
