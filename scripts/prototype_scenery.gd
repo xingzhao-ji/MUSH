@@ -139,6 +139,12 @@ var _understory_sync: Array = []
 const STEM_FOCUS_RADIUS := 200.0
 const STEM_ORGANIC := 1.0
 var cap_material: ShaderMaterial
+## Hero cap margin lobes (angle rad, angular width rad, radial amplitude): two broad bulges and
+## two broad recessions at uneven spacing. Each is made zero-mean, so the mean plan radius is kept.
+const HERO_CAP_LOBES: Array[Vector3] = [Vector3(0.6, 0.55, 0.07), Vector3(2.3, 0.45, -0.05), Vector3(3.7, 0.65, 0.05), Vector3(5.1, 0.4, -0.04)]
+var _hero_cap_previous: ArrayMesh
+var _hero_cap_shaped: ArrayMesh
+var hero_cap_mesh_check: Dictionary = {}
 var stem_material: ShaderMaterial
 ## Cliff readability, applied by the shared terrain shader only inside the cliff detail patch's
 ## region (the near massif whose shaded faces read near-black from the root approach).
@@ -742,7 +748,11 @@ func _giant_specs() -> Array:
 	return GIANTS
 
 func _add_giants(rng: RandomNumberGenerator) -> void:
-	var hero_cap: ArrayMesh = _cap_mesh(PackedFloat32Array([0.4, 2.1, 4.0, 1.3, 5.2, 0.7]))
+	var hero_cap: ArrayMesh = _cap_mesh(PackedFloat32Array([0.4, 2.1, 4.0, 1.3, 5.2, 0.7]), "hero_cap")
+	# Previous hero cap mesh, kept only for same-frame before/after evidence (set_cap_shape).
+	_hero_cap_previous = _cap_mesh(PackedFloat32Array([0.4, 2.1, 4.0, 1.3, 5.2, 0.7]))
+	_hero_cap_shaped = hero_cap
+	hero_cap_mesh_check = _cap_mesh_check(hero_cap, _hero_cap_previous)
 	var cap: ArrayMesh = _cap_mesh(PackedFloat32Array([3.1, 0.6, 1.8, 4.4, 2.5, 3.6]))
 	var stem: ArrayMesh = _stem_mesh()
 	var hero_caps: Array[Transform3D] = []
@@ -1944,7 +1954,7 @@ func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode
 # gill underside. `phases` drive mixed integer-frequency rim variation with random
 # phase, so no two caps share a mechanical 360-degree symmetry. The profile runs from the
 # top centre outward then back under, so the front face needs the flipped index order.
-func _cap_mesh(phases: PackedFloat32Array) -> ArrayMesh:
+func _cap_mesh(phases: PackedFloat32Array, style: String = "cap") -> ArrayMesh:
 	var profile: Array[Vector3] = []
 	var top_rows := 24
 	for i: int in top_rows + 1:
@@ -1958,9 +1968,10 @@ func _cap_mesh(phases: PackedFloat32Array) -> ArrayMesh:
 	for i: int in under_rows + 1:
 		var u: float = float(i) / under_rows
 		profile.append(Vector3(lerpf(0.94, 0.08, u), -0.10 + 0.27 * pow(u, 1.4), 0.5 + 0.5 * u))
-	var mesh: ArrayMesh = _lathe(profile, 72, "cap", true, phases)
-	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	winding_checks["cap_top_normal_y"] = normals[3 * 73].y
+	var mesh: ArrayMesh = _lathe(profile, 72, style, true, phases)
+	if style == "cap":
+		var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+		winding_checks["cap_top_normal_y"] = normals[3 * 73].y
 	return mesh
 
 func _stem_mesh() -> ArrayMesh:
@@ -2022,11 +2033,29 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 			var height: float = p.y
 			var cavity: float = 1.0
 			match style:
-				"cap":
+				"cap", "hero_cap":
+					if style == "hero_cap":
+						# Hero only: the rim curl's cross-section thickens and thins slowly around the
+						# margin (scaled about the curl centre, before the shared modulation).
+						var curl: float = smoothstep(0.9, 0.97, p.x)
+						var thick: float = 1.0 + 0.3 * (0.6 * sin(2.0 * a + 0.9) + 0.4 * sin(3.0 * a + 2.6))
+						radius = 0.97 + (p.x - 0.97) * lerpf(1.0, thick, curl)
+						height = -0.075 + (p.y + 0.075) * lerpf(1.0, thick, curl)
 					var edge: float = pow(smoothstep(0.3, 1.0, p.x), 1.5)
 					var f: PackedFloat32Array = phases if phases.size() >= 6 else PackedFloat32Array([0, 0, 0, 0, 0, 0])
 					radius *= 1.0 + edge * (0.055 * sin(2.0 * a + f[0]) + 0.035 * sin(3.0 * a + f[1]) + 0.02 * sin(5.0 * a + f[2]) + 0.01 * sin(11.0 * a + f[3]))
 					height += edge * (0.07 * sin(a + f[4]) + 0.025 * sin(4.0 * a + f[5]))
+					if style == "hero_cap":
+						# Organic margin: broad asymmetric lobes, and a margin that droops more where it
+						# reaches further. All terms are periodic in the angle, so the seam stays closed.
+						var margin: float = smoothstep(0.55, 1.0, p.x)
+						var lobe: float = 0.0
+						for spec: Vector3 in HERO_CAP_LOBES:
+							var gap: float = fposmod(a - spec.x + PI, TAU) - PI
+							lobe += spec.z * (exp(-gap * gap / (2.0 * spec.y * spec.y)) - spec.y / sqrt(TAU))
+						var wave: float = 0.035 * sin(3.0 * a + 1.3) + 0.02 * sin(5.0 * a + 4.1)
+						radius *= 1.0 + margin * lobe
+						height += margin * (wave - 0.35 * maxf(lobe, 0.0))
 				"stem":
 					# A few fused strands twisting up the stem (macro grooves, not fine flutes).
 					var twist: float = p.z * 1.4
@@ -2446,6 +2475,76 @@ func set_lake_water(enabled: bool) -> void:
 	lake_water = enabled
 	_lake_material.shader = LAKE_SHADER if enabled else WATER_SHADER
 
+## Hero cap organic margin shape (current) or the previous lathe shape; diagnostic toggle.
+func set_cap_shape(enabled: bool) -> void:
+	for node: MultiMeshInstance3D in _nodes:
+		if String(node.name) == "HeroCanopy": node.multimesh.mesh = _hero_cap_shaped if enabled else _hero_cap_previous
+
+## Mesh validity of the shaped hero cap against the previous one. SurfaceTool re-indexes the
+## lathe into triangle order, so nothing here assumes row-major vertices: same index buffer,
+## finite vertices, closed seam (each u = 0 vertex has a coincident u = 1 vertex), top centre
+## facing up, underside centre (v = 1) facing down, no face whose normal flips against the
+## previous (validated) cap, and degenerate triangles only in the existing centre fan.
+func _cap_mesh_check(shaped: ArrayMesh, previous: ArrayMesh) -> Dictionary:
+	var arrays: Array = shaped.surface_get_arrays(0)
+	var old_arrays: Array = previous.surface_get_arrays(0)
+	var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var n: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var ov: PackedVector3Array = old_arrays[Mesh.ARRAY_VERTEX]
+	var old_idx: PackedInt32Array = old_arrays[Mesh.ARRAY_INDEX]
+	var same_topology: bool = v.size() == ov.size() and idx == old_idx
+	var finite := true
+	for p: Vector3 in v: finite = finite and p.is_finite()
+	var seam: float = 0.0
+	var seam_pairs: int = 0
+	var closing: PackedVector3Array = []
+	for j: int in v.size():
+		if uv[j].x > 1.0 - 1e-6: closing.append(v[j])
+	for i: int in v.size():
+		if uv[i].x > 1e-6: continue
+		var nearest: float = INF
+		for q: Vector3 in closing: nearest = minf(nearest, v[i].distance_to(q))
+		seam = maxf(seam, nearest)
+		seam_pairs += 1
+	var top_up: float = INF
+	var under_down: float = -INF
+	for i: int in v.size():
+		if Vector2(v[i].x, v[i].z).length() < 1e-4 and v[i].y > 0.0: top_up = minf(top_up, n[i].y)
+		if uv[i].y > 1.0 - 1e-6: under_down = maxf(under_down, n[i].y)
+	var flipped: int = 0
+	var min_face_dot: float = 1.0
+	var degenerate: int = 0
+	var degenerate_off_centre: int = 0
+	if same_topology:
+		for t: int in range(0, idx.size(), 3):
+			var a: int = idx[t]; var b: int = idx[t + 1]; var c: int = idx[t + 2]
+			var fn: Vector3 = (v[b] - v[a]).cross(v[c] - v[a])
+			var fo: Vector3 = (ov[b] - ov[a]).cross(ov[c] - ov[a])
+			if fn.length() < 1e-9 or fo.length() < 1e-9:
+				degenerate += 1
+				var centre: int = 0
+				for k: int in [a, b, c]: if Vector2(v[k].x, v[k].z).length() < 1e-4: centre += 1
+				if centre < 2: degenerate_off_centre += 1
+				continue
+			var d: float = fn.normalized().dot(fo.normalized())
+			min_face_dot = minf(min_face_dot, d)
+			if d <= 0.0: flipped += 1
+	var max_radius_change: float = 0.0
+	var max_height_change: float = 0.0
+	var centre_change: float = 0.0
+	if same_topology:
+		for i: int in v.size():
+			max_radius_change = maxf(max_radius_change, absf(Vector2(v[i].x, v[i].z).length() - Vector2(ov[i].x, ov[i].z).length()))
+			max_height_change = maxf(max_height_change, absf(v[i].y - ov[i].y))
+			if Vector2(ov[i].x, ov[i].z).length() < 0.5: centre_change = maxf(centre_change, v[i].distance_to(ov[i]))
+	var ok: bool = same_topology and finite and seam_pairs > 0 and seam < 1e-4 and top_up > 0.0 and under_down < 0.0 and flipped == 0 and degenerate_off_centre == 0 and centre_change < 1e-5
+	return {"passed": ok, "same_topology": same_topology, "vertices": v.size(), "vertices_previous": ov.size(), "triangles": idx.size() / 3, "triangles_previous": old_idx.size() / 3,
+		"finite": finite, "seam_gap": seam, "seam_pairs": seam_pairs, "top_centre_normal_y_min": top_up, "underside_centre_normal_y_max": under_down,
+		"flipped_faces": flipped, "min_face_normal_dot_vs_previous": min_face_dot, "degenerate_triangles": degenerate, "degenerate_off_centre": degenerate_off_centre,
+		"centre_change_inside_half_radius": centre_change, "max_plan_radius_change": max_radius_change, "max_height_change": max_height_change, "units": "cap-local (x scale = cap radius 220 m, y scale = thickness 110 m)"}
+
 ## Hero cap craft on (current) or the previous cap look; diagnostic toggle for same-frame evidence.
 func set_cap_craft(enabled: bool) -> void:
 	if cap_material != null: cap_material.set_shader_parameter("cap_craft", 1.0 if enabled else 0.0)
@@ -2528,4 +2627,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

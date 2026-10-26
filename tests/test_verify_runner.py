@@ -247,6 +247,15 @@ class CapPairsReport(unittest.TestCase):
                 verify.inspect("cap-pairs", Path("unused"), 120)
 
 
+class CapShapePairsReport(unittest.TestCase):
+    def test_failed_mesh_check_fails_the_suite(self):
+        report = {"schema": "mush-slice-traversal/1", "mode": "cap-shape-pairs", "passed": False, "legs": [], "images": [],
+                  "checks": [{"label": "Hero cap shape mesh check", "passed": False}]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Hero cap shape mesh check"):
+                verify.inspect("cap-shape-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):

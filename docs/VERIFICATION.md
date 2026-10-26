@@ -2052,3 +2052,70 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Close views:** the gill fan still reads somewhat regular when seen up close from below.
 - **Dome:** remains a smooth lathe, with no geometric gill depth.
 - **Still open:** the lake shader's GPU cost, the route benchmark **failure** (p95 19.834 ms), the vista gate, the grove night tone and full-scene art acceptance.
+
+## Hero cap shape: organic margin lobes and rim thickness variation (2026-10-26)
+
+**Status: local shape improvement; scene art not accepted.** Hero cap mesh only. Rollback: `git revert` this commit.
+
+**Target:** after the material pass, the dominant remaining cap defect was a smooth, manufactured disk silhouette.
+
+**Change** (`scripts/prototype_scenery.gd`, `_lathe` style `hero_cap`; the six other caps keep style `cap`):
+- **Lobes:** four broad, uneven Gaussian lobes in plan, given in `HERO_CAP_LOBES`.
+  - Two reach out (+0.07 and +0.05 of radius) and two recede (−0.05 and −0.04), with angular widths of 0.40–0.65 rad.
+  - Each lobe is zero-mean, so the mean plan radius is unchanged. Net peaks are about ±0.057.
+- **Droop and undulation:** the margin droops where it reaches further, with a low rim undulation of 3 and 5 cycles.
+- **Rim thickness:** the rim curl's cross-section thickens and thins slowly around the margin (0.7–1.3×).
+- **Unchanged:**
+  - The centre inside half the radius is identical, so the stem join is unchanged.
+  - The material (`cap_craft`), all seven footing transforms, stem and root meshes, collision, route and other scenery.
+- **Smoothness:** every term is periodic in the angle, and no term has a frequency above 5 cycles per turn. This avoids teeth and fluting.
+
+**Mesh validation** (`hero_cap_mesh_check`, reported by `cap-shape-pairs` and scenic):
+- **Topology:** identical to the previous cap, 3,577 vertices and 6,912 triangles, so the triangle and draw delta is 0.
+- **Seam:** gap 2.7e-16 over 49 pairs.
+- **Normals:** top-centre normals point up; underside-centre normals point down (y at most −0.917).
+- **Orientation:** 0 faces flip against the previous validated cap; the minimum face-normal dot is 0.963.
+- **Degenerate triangles:** only the existing 72 in the top-centre fan.
+- **Largest offsets:** radius 0.063 cap-local (about 14 m on the 220 m cap) and height 0.061 (about 7 m).
+- **Vertex order:** `SurfaceTool.generate_normals` re-indexes vertices, so the check does not assume row-major order.
+  - The existing `winding_checks.cap_top_normal_y` does assume it, at `normals[3 * 73]`. Its sampled vertex is therefore not necessarily row 3. That check was left unchanged.
+
+**Evidence** (`cap-shape-pairs` suite, `cap-shape-pairs-20261026-131857-76957`. Its source matches this commit except the check's label text. The identical-mesh run `131301` gives the same metrics): same-frame captures with the previous and shaped mesh swapped (`set_cap_shape`).
+- **Views:** rim overlook, recorded root approach and under-cap offset, by day and night.
+- **Overlook silhouette by day** (mask R−G > 6; trees excluded):
+
+| Metric | Before | After |
+|---|---|---|
+| Width (px) | 524 | 540 |
+| Area (px) | 53,584 | 55,470 |
+| Left edge (x) | 392 | 376 |
+| Right edge (x) | 917 | 917 |
+| Bottom-outline residual against a quadratic fit (px) | 2.72 | 4.22 |
+| Bottom-outline high-frequency roughness (px) | 0.57 | 0.58 |
+| Dome outline residual (px) | 1.20 | 1.17 |
+
+- **By eye:**
+  - **Overlook:** a broad drooping lobe at lower left, a slightly recessed right side and gently varying lip thickness.
+  - **Under-cap:** the night outline has broad irregular shoulders instead of a near-regular disk.
+  - **Root approach:** the left margin hangs slightly lower.
+  - No teeth, fluting or corrugation.
+
+**Retained runs:**
+- `cap-shape-pairs-125621`: the first mesh check assumed row-major vertices and failed. That was a check defect; the mesh was not at fault.
+- `125917`: the first lobe set was net positive (+3.7% mean radius). The cap became at least 6.5% wider in the overlook (525 → 559 px, with its right edge at the trees) and its area grew 8.1%; rejected.
+- `130149`: the runner stopped the run at its 600 s timeout after the first capture, with no error lines and the process reaped. It did not recur on rerun, and its cause is not established.
+
+**Cost:** primitives and draws are identical at every view.
+- **Timing:** ABBA, 2 × 180 samples after 30 warm-up, 1280×720, full art. Mean wall p50 deltas were −1.03 ms (overlook; the before pair spans 3.04 ms), −0.74 ms (root approach; 4.36 ms) and −1.00 ms (under-cap; 0.98 ms). In `131301` the same views gave +0.94, −0.63 and +0.73 ms. Every delta is within the observed variance, and the baseline wall time changed between runs (under-cap p50 8.4 ms in `124823`, about 17–20 ms here). GPU timing unavailable; GPU cost unresolved.
+
+**Scenic** (`scenic-20261026-131619-75393`; not rerun, by direction. Its source differs from this commit only in `_cap_mesh_check`: the seam loop, which now collects the u = 1 vertices first and gives the same result in `131857`, and the label text): fails only the known vista gate (0.0129).
+- **Coverage:** rim-overlook canopy coverage rose 0.0903 → 0.0927 by day, 0.0892 → 0.0909 at night and 0.0899 → 0.0925 in rain. All other canopy and clipped metrics are unchanged.
+- **Footing and collision:** drift 0.0 (7/7); 3 owned colliders; slice and route collision faces unchanged.
+
+**Limitations:**
+- **Scale:** the cap reads about 3% wider in the overlook, because a bulge sits at its left extreme. The mean plan radius is unchanged.
+- **Faceting:** the 72-segment lathe still shows straight facets on the outline in close under-cap views.
+- **Lip band:** keeps its pre-existing fine vertical banding in the overlook.
+- **Gills:** no gill geometry.
+- **Night overlook:** the moon disk draws in front of the cap. This is pre-existing and was not addressed.
+- **Still open:** the route benchmark **failure** (p95 19.834 ms), the vista gate, the lake shader's GPU cost, the grove night tone and full-scene art acceptance.

@@ -281,12 +281,12 @@ func _run() -> void:
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		elif "--water-motion" in arguments: await _water_motion_scenario()
-		elif "--cap-pairs" in arguments: await _cap_pairs_scenario()
+		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("--cap-shape" in arguments)
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else ("cap-pairs" if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else "cap-pairs") if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -905,10 +905,13 @@ func _motion_frame(kind: String, index: int, meta: Dictionary, full: bool) -> Di
 ## the rim-overlook review camera, the recorded root-approach walk pose, and an offset under-cap
 ## view (review camera 1.7 m above a slice sample ~160 m from the hero, looking up at the gills),
 ## day and night; per-view frame timing in ABBA order by day.
-func _cap_pairs_scenario() -> void:
+func _cap_pairs_scenario(shape: bool = false) -> void:
 	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
 	await _frames(60)
 	_check("Cap craft is on the hero cap material", scenery.get_report().get("cap_craft", {}).get("enabled", false), scenery.get_report().get("cap_craft"))
+	var toggle: Callable = scenery.set_cap_shape if shape else scenery.set_cap_craft
+	var prefix: String = "capshape" if shape else "cap"
+	if shape: _check("Hero cap shape mesh check: same topology, finite, closed seam, centre normals up/down, no face flipped against the previous cap, centre unchanged, degenerate triangles only in the unchanged centre fan", scenery.hero_cap_mesh_check.get("passed", false), scenery.hero_cap_mesh_check)
 	var hero: Vector3 = scenery.hero.base
 	var pose: Dictionary = scenery.overlook_pose()
 	var review := Camera3D.new()
@@ -943,17 +946,17 @@ func _cap_pairs_scenario() -> void:
 				player._camera.make_current()
 			await _frames(45)
 			for state: String in ["before", "after"]:
-				scenery.set_cap_craft(state == "after")
+				toggle.call(state == "after")
 				await _frames(6)
-				await _capture("cap-%s-%s-%s" % [view, state, mood[0]])
+				await _capture("%s-%s-%s-%s" % [prefix, view, state, mood[0]])
 				images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
 			if mood[0] == "day":
 				for state: String in ["before", "after", "after", "before"]:
-					scenery.set_cap_craft(state == "after")
+					toggle.call(state == "after")
 					timings.append((await _time_view(30, 180)).merged({"pose": view, "state": state}))
 	player._camera.make_current()
 	review.queue_free()
-	scenery.set_cap_craft(true)
+	toggle.call(true)
 	game.world.set_appearance(false, false, false)
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
