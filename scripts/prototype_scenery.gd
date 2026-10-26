@@ -225,9 +225,11 @@ var _near_crown_previous: Mesh
 ## to keep massifs and forest clumps out of the rock; empty when the landmark is skipped.
 var _wall: Array = []
 var _wall_grid := PackedFloat32Array()
-## Buttresses along the face (seeded): centre s, half-widths left/right, depth (negative = a
-## recessed dihedral), height band q0..q1 and lean (metres of centre shift per metre of height).
-var _buttresses: Array = []
+## Facet panels: broad near-planar granite faces between boundaries along the wall, in two
+## staggered height tiers. Each boundary: s, offset (m), tilt (offset change across the height),
+## fracture depth (a dark recess cut along it, 0 = none) and the tone of the panel that follows
+## (0 weathered dark .. 1 freshly spalled pale).
+var _facets: Array = [[], []]
 ## Gullies (seeded, plus the falls' drainage gully): centre s, half-width at the rim, depth into
 ## the face at the rim, rim notch depth. Bench levels: base height fraction, setback (m), and a
 ## seed for where along the wall each ledge exists.
@@ -2164,11 +2166,11 @@ func _plan_wall() -> void:
 		_wall[i]["relief"] = float(_wall[i].relief) - WALL_NOTCH.x * exp(-pow((float(_wall[i].s) - WALL_FALLS_S) / WALL_NOTCH.y, 2.0))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4242
-	var centre: float = rng.randf_range(40.0, 160.0)
-	while centre < s:
-		var w: float = rng.randf_range(60.0, 150.0)
-		_buttresses.append([centre, w * rng.randf_range(0.6, 1.4), w, rng.randf_range(-18.0, 40.0), rng.randf_range(0.0, 0.35), rng.randf_range(0.65, 1.0), rng.randf_range(-0.25, 0.25)])
-		centre += rng.randf_range(220.0, 420.0)
+	for tier: int in 2:
+		var edge_s: float = -rng.randf_range(0.0, 80.0)
+		while edge_s < s + 200.0:
+			_facets[tier].append([edge_s, rng.randf_range(-14.0, 18.0), rng.randf_range(-0.1, 0.1), rng.randf_range(9.0, 18.0) if rng.randf() < 0.35 else 0.0, rng.randf()])
+			edge_s += rng.randf_range(70.0, 190.0)
 	# Gullies carve the rim into separate masses; the falls run in their own drainage gully.
 	var g: float = rng.randf_range(120.0, 260.0)
 	while g < s - 80.0:
@@ -2277,18 +2279,35 @@ func _wall_face_offset(sample: Dictionary, q: float, h: float, y: float) -> floa
 		var cone: float = float(gully[1]) * 1.6
 		if ds < cone and float(gully[3]) > 0.0: n += 30.0 * pow(1.0 - ds / cone, 2.0) * (1.0 - smoothstep(0.0, 0.2, q))
 	var calm: float = 1.0 - exp(-pow((s - WALL_FALLS_S) / 80.0, 2.0))
-	n += (_hill_noise.get_noise_2d(s * 1.6, y * 1.4) * 10.0 + _terrace_noise.get_noise_2d(s * 4.0, y * 3.0) * 3.0) * calm * smoothstep(0.0, 0.08, q)
-	n -= pow(1.0 - absf(_ridge_noise.get_noise_2d(s * 2.5, 17.0)), 10.0) * 8.0 * calm
-	# Buttresses: uneven, asymmetric, sharp-crested, each over its own height band and leaning,
-	# so the face breaks into facets, aretes and dihedrals rather than a repeated pleat.
-	for b: Array in _buttresses:
-		var ds: float = s - (float(b[0]) + float(b[6]) * h * q)
-		var half: float = float(b[1]) if ds < 0.0 else float(b[2])
-		if absf(ds) >= half: continue
-		var band: float = smoothstep(float(b[4]), float(b[4]) + 0.1, q) * (1.0 - smoothstep(float(b[5]) - 0.1, float(b[5]), q))
-		n += float(b[3]) * pow(1.0 - absf(ds) / half, 1.3) * band * calm
+	n += _hill_noise.get_noise_2d(s * 1.6, y * 1.4) * 3.0 * calm * smoothstep(0.0, 0.08, q)
+	# Broad granite planes meeting at aretes and dihedrals, with dark fracture recesses.
+	n += _wall_facet(s, q, h).x * calm * smoothstep(0.0, 0.1, q)
 	n -= h * 0.06 * pow(maxf(0.0, (q - 0.8) / 0.2), 2.0)
 	return n
+
+## Facet field at (s, q) on a face of height h: x = offset (m), y = panel tone, z = recess
+## (1 at a fracture's floor). Linear between boundaries, so each panel is a near-planar face with
+## its own yaw and tilt; the two tiers blend across q 0.42-0.56 so panels do not stack.
+func _wall_facet(s: float, q: float, h: float) -> Vector3:
+	var out := Vector3.ZERO
+	for tier: int in 2:
+		var edges: Array = _facets[tier]
+		var k: int = 0
+		while k < edges.size() - 2 and float(edges[k + 1][0]) <= s: k += 1
+		var a: Array = edges[k]
+		var b: Array = edges[k + 1]
+		var t: float = clampf((s - float(a[0])) / maxf(float(b[0]) - float(a[0]), 1.0), 0.0, 1.0)
+		var offset: float = lerpf(float(a[1]) + float(a[2]) * h * (q - 0.5), float(b[1]) + float(b[2]) * h * (q - 0.5), t)
+		var recess: float = 0.0
+		for edge: Array in [a, b]:
+			var gap: float = absf(s - float(edge[0]))
+			if float(edge[3]) > 0.0 and gap < 14.0:
+				var cut: float = pow(1.0 - gap / 14.0, 1.2)
+				offset -= float(edge[3]) * cut
+				recess = maxf(recess, cut)
+		var here := Vector3(offset, float(a[4]), recess)
+		out = here if tier == 0 else out.lerp(here, smoothstep(0.42, 0.56, q))
+	return out
 
 func _add_wall() -> void:
 	var st := SurfaceTool.new()
@@ -2313,7 +2332,7 @@ func _add_wall() -> void:
 		sample["top"] = top
 		var dome: float = exp(-pow((float(sample.s) - WALL_DOME_S) / 140.0, 2.0))
 		var wet: float = exp(-pow((float(sample.s) - WALL_FALLS_S) / 70.0, 2.0))
-		var points: Array = [[0.0, base - 45.0, 1.0, 0.0, 0.0]]
+		var points: Array = [[0.0, base - 45.0, 1.0, 0.0, 0.0, 0.5, 0.0]]
 		for j: int in face_rows + 1:
 			var q: float = float(j) / face_rows
 			var y: float = base + h * q
@@ -2323,16 +2342,18 @@ func _add_wall() -> void:
 				var level: float = bench.x + _terrace_noise.get_noise_2d(float(sample.s) * 0.6, bench.z * 10.0) * 0.05
 				var present: float = smoothstep(-0.15, 0.15, _hill_noise.get_noise_2d(float(sample.s) * 0.45, bench.z * 13.0))
 				if q < level: drip = maxf(drip, present * (1.0 - smoothstep(0.0, 0.14, level - q)))
-			points.append([_wall_face_offset(sample, q, h, y), y, 1.0 - smoothstep(0.9, 1.0, q), q, drip])
+			var facet: Vector3 = _wall_facet(float(sample.s), q, h)
+			points.append([_wall_face_offset(sample, q, h, y), y, 1.0 - smoothstep(0.9, 1.0, q), q, drip, facet.y, facet.z])
 		var shoulder: float = points[points.size() - 1][0]
 		for row: Vector2 in crest:
-			points.append([shoulder + row.x * (0.4 + 0.6 * smoothstep(0.0, 200.0, h)), top + (row.y + 38.0 * dome * (1.0 - absf(row.x + 120.0) / 200.0)) * smoothstep(0.0, 120.0, h), 0.0, 1.0, 0.0])
-		points.append([shoulder - 420.0, base - 60.0, 0.0, 1.0, 0.0])
+			points.append([shoulder + row.x * (0.4 + 0.6 * smoothstep(0.0, 200.0, h)), top + (row.y + 38.0 * dome * (1.0 - absf(row.x + 120.0) / 200.0)) * smoothstep(0.0, 120.0, h), 0.0, 1.0, 0.0, 0.5, 0.0])
+		points.append([shoulder - 420.0, base - 60.0, 0.0, 1.0, 0.0, 0.5, 0.0])
 		for point: Array in points:
 			var at := Vector3(toe.x + nrm.x * float(point[0]), float(point[1]), toe.y + nrm.y * float(point[0]))
 			finite = finite and at.is_finite()
 			st.set_color(Color(float(point[2]), wet, float(point[3]), float(point[4])))
 			st.set_uv(Vector2(float(sample.s), float(point[1]) - base))
+			st.set_uv2(Vector2(float(point[5]), float(point[6])))
 			st.add_vertex(at)
 	for i: int in _wall.size() - 1:
 		for j: int in rows - 1:
@@ -2375,7 +2396,7 @@ func _add_wall() -> void:
 	for row: Array in GIANTS:
 		for i: int in range(0, _wall.size(), 2): giant_gap = minf(giant_gap, Vector2(row[0], row[1]).distance_to(_wall[i].toe) - float(row[2]))
 	escarpment_report.merge({"built": true, "vertices": _wall.size() * rows, "triangles": (_wall.size() - 1) * (rows - 1) * 2, "rows_per_sample": rows, "finite": finite,
-		"face_outward": [outward_ok, outward_checked], "tallest_face_m": tallest, "falls": falls, "ice": ice, "gullies": _gullies.size(), "benches": WALL_BENCHES.size(), "buttresses": _buttresses.size(), "route_clearance_m": route_gap, "giant_cap_clearance_m": giant_gap,
+		"face_outward": [outward_ok, outward_checked], "tallest_face_m": tallest, "falls": falls, "ice": ice, "gullies": _gullies.size(), "benches": WALL_BENCHES.size(), "facet_edges": [_facets[0].size(), _facets[1].size()], "route_clearance_m": route_gap, "giant_cap_clearance_m": giant_gap,
 		"collision": "none (far layer)", "shadows": "off"}, true)
 	escarpment_report["passed"] = finite and outward_checked > 0 and outward_ok == outward_checked and route_gap > 250.0 and giant_gap > 40.0 and bool(falls.get("built", false)) and bool(ice.get("built", false))
 
@@ -2507,7 +2528,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	var lip_n: float = _wall_face_offset(sample, 1.0, h, float(sample.top))
 	var lip_top: float = float(sample.top) + 45.0
 	var start_n: float = ICE_PEAK.x + 160.0
-	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.70
+	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.58
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	# Flat shading: serac blocks and moraine ridges read as broken facets, not a smooth capsule.
@@ -2551,33 +2572,62 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 				st.set_color(Color(cliff, maxf(0.0, float(vertex[2])), 0.0))
 				st.add_vertex(vertex[0])
 	st.generate_normals()
-	# Hanging-valley bed: a solid granite col under the ice from the lip back into the peak's
-	# flank, with steep rock sides down below the crest, so the tongue rests on rock.
+	# Upper valley: a U-shaped trough carved into the upland behind the notch, from the lip back
+	# into the peak's flank (a cirque). The tongue lies on its floor between lateral moraines;
+	# steep inner walls rise to snow-capped rims that climb toward the peak; outer flanks drop
+	# below the crest. A front cap closes the trough's end above the lip.
 	var bed := SurfaceTool.new()
 	bed.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var section: int = 6
+	# Across the trough (in tongue half-widths) and height (fraction of the rim height above the
+	# bed): outer drop, broad upland shoulder, rim, steep inner wall, floor; mirrored.
+	# The outer flanks step down in uneven segments (ribbed mountain flanks, not one plane).
+	var corners: Array[Vector2] = [Vector2(-7.0, 0.0), Vector2(-5.6, 0.18), Vector2(-4.7, 0.36), Vector2(-3.9, 0.55), Vector2(-2.15, 1.0), Vector2(-1.55, 0.85), Vector2(-1.12, 0.08), Vector2(-1.0, -0.02), Vector2(1.0, -0.02), Vector2(1.12, 0.08), Vector2(1.55, 0.85), Vector2(2.15, 1.0), Vector2(3.9, 0.55), Vector2(4.7, 0.36), Vector2(5.6, 0.18), Vector2(7.0, 0.0)]
+	var section: int = corners.size()
+	var deep: float = float(sample.base) - 60.0
+	var cap: Array[Vector3] = []
 	for j: int in flow_rows + 1:
 		var u: float = float(j) / flow_rows
 		var n_at: float = lerpf(start_n, lip_n - 4.0, u)
-		var y_at: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 10.0
-		var half: float = lerpf(100.0, 56.0, u) * 1.3
-		var deep: float = float(sample.base) - 60.0
+		var y_bed: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 10.0
+		var half: float = lerpf(100.0, 56.0, u)
+		# Rims fall to the wall crest at the lip (the front of the hanging valley meets the crest)
+		# and climb toward the cirque; the ridgelines are uneven along the valley.
+		var rim: float = (18.0 + 150.0 * pow(1.0 - u, 1.3)) * (1.0 + 0.22 * _hill_noise.get_noise_2d(u * 900.0, 77.0))
 		var mid: Vector2 = toe + nrm * n_at
-		for corner: Vector2 in [Vector2(-1.25, deep), Vector2(-1.0, y_at - 30.0), Vector2(-0.7, y_at - 4.0), Vector2(0.7, y_at - 4.0), Vector2(1.0, y_at - 30.0), Vector2(1.25, deep)]:
-			var edge: Vector2 = mid + dir * (corner.x * half)
-			bed.add_vertex(Vector3(edge.x, corner.y, edge.y))
+		for k: int in section:
+			var corner: Vector2 = corners[k]
+			var rib: float = 1.0 + (0.12 * _hill_noise.get_noise_2d(u * 1500.0, corner.x * 60.0) if absf(corner.x) > 3.0 else 0.0)
+			var edge: Vector2 = mid + dir * (corner.x * half * rib)
+			var uneven: float = 1.0 + 0.18 * _terrace_noise.get_noise_2d(u * 1200.0, corner.x * 90.0) if corner.y > 0.1 else 1.0
+			var y: float = deep if (k == 0 or k == section - 1) else y_bed + (corner.y * rim * uneven if corner.y > 0.1 else corner.y * 100.0)
+			bed.add_vertex(Vector3(edge.x, y, edge.y))
+			if j == flow_rows: cap.append(Vector3(edge.x, y, edge.y))
 	for j: int in flow_rows:
 		for k: int in section - 1:
 			var a: int = j * section + k
-			# Same winding rule as the wall (front = along x across): the top faces up.
+			# Same winding rule as the wall (front = along x across): the floor faces up.
 			bed.add_index(a); bed.add_index(a + 1); bed.add_index(a + section)
 			bed.add_index(a + section); bed.add_index(a + 1); bed.add_index(a + section + 1)
+	# Front cap: a fan from below the floor, each triangle wound to face the valley.
+	var hub_at: Vector2 = toe + nrm * (lip_n - 4.0)
+	var hub := Vector3(hub_at.x, deep, hub_at.y)
+	var forward := Vector3(nrm.x, 0.0, nrm.y)
+	var first: int = (flow_rows + 1) * section
+	bed.add_vertex(hub)
+	for k: int in section: bed.add_vertex(cap[k])
+	for k: int in section - 1:
+		var a: Vector3 = cap[k]
+		var b: Vector3 = cap[k + 1]
+		if (b - hub).cross(a - hub).dot(forward) > 0.0:
+			bed.add_index(first); bed.add_index(first + 1 + k); bed.add_index(first + 2 + k)
+		else:
+			bed.add_index(first); bed.add_index(first + 2 + k); bed.add_index(first + 1 + k)
 	bed.generate_normals()
 	var bed_mesh: ArrayMesh = bed.commit()
 	var bed_normals: PackedVector3Array = bed_mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 2].y > 0.0
+	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 7].y > 0.0 and bed_normals[(flow_rows / 2) * section + 4].y > 0.0
 	var col := MeshInstance3D.new()
-	col.name = "IceBed"
+	col.name = "IceUpperValley"
 	col.mesh = bed_mesh
 	col.material_override = rock
 	col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -2594,7 +2644,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	add_child(tongue)
 	_static.append(tongue)
 	var summit: Vector3 = peak.transform * Vector3(0.0, 1.0, 0.0)
-	return {"built": bed_up, "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "bed_triangles": flow_rows * (section - 1) * 2, "bed_top_faces_up": bed_up, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
+	return {"built": bed_up, "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "upper_valley_triangles": flow_rows * (section - 1) * 2 + section - 1, "upper_valley_floor_and_rims_face_up": bed_up, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
 
 func _v3(value: Vector3) -> Array:
 	return [snappedf(value.x, 0.1), snappedf(value.y, 0.1), snappedf(value.z, 0.1)]

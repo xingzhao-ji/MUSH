@@ -2277,7 +2277,7 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 
 **Harness health:**
 - **`geology-20261026-142040-12963` timed out** (600.1 s, reaped). Its heartbeat shows the cause: during `capture geo-knoll-night`, `window_can_draw` went false and focus was lost in the same 2 s interval (t = 22.5 s). Frames drawn froze at 796 while process and physics frames passed 429,000. The display was on.
-- **Cause:** the window became non-drawable from outside the process; which outside event caused it is not established.
+- **Cause:** unresolved. The loss of `window_can_draw` and focus is observed, but no evidence establishes what triggered it, inside or outside the process.
 - **Earlier stalls:** `cap-shape-pairs-130149` and `lod-check-133140` fit the same pattern, but they had no heartbeat.
 - **Guard:** `harness_heartbeat.gd` now has `await_draw`. Slice captures record an explicit failed check with the window state and skip later captures, and `lod_check` exits with `HARNESS_DRAW_LOST`, both within 20 s instead of reaching the runner timeout. Other draw waits in `slice_traversal.gd`, used by other suites, are unchanged.
   - **Coverage:** the slice guard ran in the passing geology runs. The `lod_check` guard is syntax-checked only, since no `lod-check` run has exercised it.
@@ -2293,3 +2293,49 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Not verified:** motion of the falls, live display, device and audio.
 - **Cost:** not measured beyond primitives.
 - **Still open:** the route benchmark **failure** (p95 19.834 ms) and the vista gate.
+
+## Geology correction: broad granite planes and a grounded upper-valley glacier (2026-10-26)
+
+**Status: local credibility improvement on the West Wall; art not accepted.** Rollback: `git revert` this commit.
+
+**Responding to review of `geology-143416`:**
+- the wall had weak rock structure;
+- the glacier was a suspended, capsule-like strip.
+
+**Rock:**
+- **Facets replace the buttress bumps:**
+  - boundaries in two staggered height tiers (21 per tier), blended across q 0.42–0.56;
+  - the offset is linear between boundaries, so each panel is a broad near-planar face with its own yaw and tilt, meeting its neighbours in arêtes and dihedrals;
+  - about 35% of boundaries carry a dark fracture recess 9–18 m deep.
+- **Tone:** each panel carries its own tone (UV2.x), from weathered dark cool grey to freshly spalled pale warm grey, and recesses are dark (UV2.y). The scattered noise "scar" blobs are gone, and the smoothing noise on the face drops from ±10 m to ±3 m.
+- **Kept:** benches, gullies, talus, drip streaks and snow.
+
+**Ice:**
+- **Upper valley:** the narrow col is replaced by a U-shaped trough (1,695 triangles), running from the lip back into the peak's flank. It has:
+  - steep inner walls;
+  - rims that fall to the wall crest at the lip and climb toward the peak as a cirque, with uneven ridgelines;
+  - ribbed outer flanks stepping down in uneven segments;
+  - a front cap that sits inside the wall body.
+- **Glacier:** the tongue (lateral moraines, serac steps, blue terminus ice cliff) lies on the trough floor and now starts lower on the peak, at 0.58 of its height (drop 119 m). The trough floor and rims face up (checked).
+
+**Unchanged:** the falls (source under the terminus, gully contact, free fall, spray, plunge pool), terrain, vegetation filtering, route, slice and footings. Scenic was not rerun because only far-layer meshes and the granite shader changed; the last scenic is `144010`.
+
+**Evidence** (`geology` suite):
+- **Runs:** "before" is `141947` (`no_geology`); "after" is `geology-20261026-145129-31680`.
+- **Side:** both the near wall and the headwall read as broad planar granite faces of different tones, broken by benches, streaks and dark recesses.
+- **Shore:** the upland beside the peak reads as a stepped table mountain. The glacier terminus sits in the notch directly above the falls, which now emerge from ice.
+- **Overview:** the falls descend their gully into the turquoise plunge pool, which is readable from above.
+- **Knoll:** a benched granite face with the falls on its flank.
+
+**Rejected and retained iterations:**
+- `144633`: facets in place, but the trough's sheer outer flanks read as fins.
+- `144821`: a flat front cap face about 600 m wide stood above the crest.
+- `144952`: rims tapered, but a single outer plane per side remained.
+
+**Limitations:**
+- **Haze:** the wall and upland still read pale and pastel in the haze from the shore, and the upland's outer flanks are large smooth planes.
+- **Glacier:** from lake level the hanging valley floor cannot be seen, so the glacier shows only as a small, blocky white terminus.
+- **Shading:** the facet planes use smooth normals at 8 × 9 m resolution, so edges are softened.
+- **Falls:** the foot and pool remain hidden from the shore by the western hills, and there is no outflow to the lake.
+- **Cost:** startup cost of the facet lookup was not measured.
+- **Draw-loss cause:** unresolved (see the previous section).

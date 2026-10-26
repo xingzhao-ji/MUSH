@@ -2,7 +2,8 @@ shader_type spatial;
 render_mode cull_back;
 // West Wall granite (prototype geology landmark). UV = (metres along the toe, metres above the
 // toe); COLOR.r = 1 on the sheer face, 0 on the crest; COLOR.g = wetness near the falls;
-// COLOR.b = height fraction up the face; COLOR.a = drip (just below a ledge lip).
+// COLOR.b = height fraction up the face; COLOR.a = drip (just below a ledge lip);
+// UV2.x = facet panel tone (0 weathered dark .. 1 freshly spalled pale), UV2.y = fracture recess.
 // Pale warm-grey slabs, faint exfoliation sheets, dark vertical water streaks hanging from the
 // crest (strongest around the falls), and dark vegetation only on ledges and the crest.
 uniform float night = 0.0;
@@ -38,11 +39,13 @@ void fragment() {
 	float wet = world_mapped ? 0.0 : COLOR.g;
 	float rise = world_mapped ? clamp((v_world.y + 80.0) / 1000.0, 0.0, 1.0) : COLOR.b;
 	// Slabs: broad tonal panels, warmer and lighter where fresh rock spalled off.
+	// Panel tone: each broad facet is weathered (dark, cool) or freshly spalled (pale, warm),
+	// with only a slow tonal drift inside it; fracture recesses are dark and cool.
+	float tone = world_mapped ? 0.25 : UV2.x;
+	float recess = world_mapped ? 0.0 : UV2.y;
 	float slab = fbm(vec2(s * 0.004, h * 0.003));
-	vec3 rock = mix(vec3(0.30, 0.30, 0.30), vec3(0.48, 0.46, 0.43), smoothstep(0.25, 0.75, slab));
-	// Fresh spall scars: sharp-edged paler, warmer patches where sheets broke away.
-	float scar = smoothstep(0.58, 0.62, fbm(vec2(s * 0.005, h * 0.006) + 7.3)) * face;
-	rock = mix(rock, vec3(0.70, 0.64, 0.55), scar * 0.6);
+	vec3 rock = mix(vec3(0.25, 0.25, 0.26), vec3(0.52, 0.49, 0.44), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
+	rock = mix(rock, vec3(0.11, 0.12, 0.13), recess * 0.85 * face);
 	float sheet = fbm(vec2(s * 0.01, h * 0.02 + fbm(vec2(s * 0.003, h * 0.002)) * 4.0));
 	rock *= mix(0.86, 1.06, sheet);
 	// Water streaks: narrow across, long downward, hanging from the crest and fading toward
