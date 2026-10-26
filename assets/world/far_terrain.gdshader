@@ -60,11 +60,16 @@ void fragment() {
 	vec3 rock = texture(rock_tex, v_world.zy * rock_scale).rgb * w.x + texture(rock_tex, v_world.xz * rock_scale).rgb * w.y + texture(rock_tex, v_world.xy * rock_scale).rgb * w.z;
 	float streak = fbm(vec2((v_world.x + v_world.z) * 0.06, h * 0.008 + fbm(v_world.xz * 0.02) * 0.6));
 	rock *= mix(cool_rock, warm_rock, streak) * 1.35;
+	// Geological strata: warped, uneven-thickness layers of tone (not a periodic band).
+	float strata = fbm(vec2(h * 0.045 + fbm(v_world.xz * 0.006) * 1.6, 0.37));
+	rock *= mix(0.80, 1.12, strata);
 	float steep = 1.0 - clamp(n.y, 0.0, 1.0);
 	float rockiness = smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18);
 	// Moss creeps onto the tops of rock ledges.
 	rockiness *= 1.0 - smoothstep(0.55, 0.85, n.y) * 0.6;
-	vec3 albedo = mix(moss, rock, rockiness);
+	// Far slopes below the massif faces carry scree: rock mixed into the moss.
+	float scree = smoothstep(0.12, 0.26, steep) * (1.0 - rockiness) * smoothstep(450.0, 650.0, length(v_world.xz)) * 0.55;
+	vec3 albedo = mix(mix(moss, rock * 0.9, scree), rock, rockiness);
 	albedo *= 0.88 + 0.24 * macro;
 	if (debug_unlit) {
 		EMISSION = albedo;

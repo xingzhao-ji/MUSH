@@ -11,6 +11,9 @@ const WATER_SHADER := preload("res://assets/world/far_water.gdshader")
 const MOSS_TEXTURE := preload("res://assets/world/textures/moss-albedo-proposal-v1.png")
 const ROCK_TEXTURE := preload("res://assets/world/textures/rock_01_diff_1k.jpg")
 const HERO := Vector2(378.0, -648.0)
+## Giants: x, z, cap radius, underside height above local ground. The hero stands about
+## 20 degrees from the sun direction as seen from the clearing, so it is backlit.
+const GIANTS: Array = [[378.0, -648.0, 220.0, 264.0], [-280.0, -760.0, 110.0, 140.0], [700.0, -420.0, 90.0, 120.0], [480.0, -900.0, 36.0, 55.0], [-60.0, -850.0, 30.0, 48.0], [820.0, -760.0, 40.0, 60.0], [250.0, -1000.0, 34.0, 50.0]]
 ## Stem bend at the top, in stem radii; the cap sits on the bent top.
 const STEM_BEND := 2.0
 ## Integrated buttress lobes: (angle, outward reach in stem radii), deliberately uneven.
@@ -67,6 +70,8 @@ var _world: Node3D
 var _ridge_noise: FastNoiseLite
 var _hill_noise: FastNoiseLite
 var _terrace_noise: FastNoiseLite
+var _legacy_mesa: bool = false
+var landform_checks: Dictionary = {}
 var route: Node3D
 var route_report: Dictionary = {}
 var seam_height: float = NAN
@@ -165,12 +170,8 @@ func _raw_height(x: float, z: float) -> float:
 	# Lake basin sits low in the valley.
 	var to_lake: float = Vector2(x, z).distance_to(LAKE_CENTER)
 	height -= exp(-(to_lake * to_lake) / (2.0 * 120.0 * 120.0)) * 25.0
-	# Far terraced mesas in the valley half.
-	var mesa_mask: float = smoothstep(550.0, 900.0, r) * smoothstep(0.0, 0.6, dir.dot(VALLEY_DIR))
-	var mesa: float = smoothstep(0.25, 0.4, _ridge_noise.get_noise_2d(x, z)) * 220.0
-	# Domain-warped terraces: ledge heights wander, so mesas do not read as stacked boxes.
-	var warped: float = mesa + _terrace_noise.get_noise_2d(x * 1.7, z * 1.7) * 26.0 * smoothstep(0.0, 40.0, mesa)
-	height += _terrace(warped, 55.0, 0.3) * mesa_mask
+	# Far eroded massifs in the valley half (see _mesa_height).
+	height += _mesa_height(x, z, r, dir)
 	# The hero giant stands on its own grassy rise above the valley floor, not in water.
 	height += 30.0 * smoothstep(190.0, 0.0, Vector2(x, z).distance_to(HERO))
 	# South and west keep clearing height, then rise into forested hills behind the home.
@@ -183,6 +184,57 @@ func _raw_height(x: float, z: float) -> float:
 	# Rim hills close the horizon.
 	height += maxf(0.0, r - 1000.0) * 0.1
 	return height
+
+## Eroded layered massifs: broad warped bodies with talus feet, uneven strata ledges
+## that survive only where an erosion mask allows, gullies cut down the faces and
+## undulating crowns. The previous stacked-terrace form is kept (_legacy_mesa_height)
+## under every giant's footing, so giants do not move, and for vegetation placement
+## decisions, so the seeded placement stream does not shift.
+func _mesa_height(x: float, z: float, r: float, dir: Vector2) -> float:
+	var mask: float = smoothstep(550.0, 900.0, r) * smoothstep(0.0, 0.6, dir.dot(VALLEY_DIR))
+	if mask <= 0.0: return 0.0
+	var legacy: float = _legacy_mesa_height(x, z)
+	if _legacy_mesa: return legacy * mask
+	var keep: float = _giant_footing(x, z)
+	if keep >= 1.0: return legacy * mask
+	return lerpf(_eroded_mesa_height(x, z), legacy, keep) * mask
+
+func _legacy_mesa_height(x: float, z: float) -> float:
+	var mesa: float = smoothstep(0.25, 0.4, _ridge_noise.get_noise_2d(x, z)) * 220.0
+	var warped: float = mesa + _terrace_noise.get_noise_2d(x * 1.7, z * 1.7) * 26.0 * smoothstep(0.0, 40.0, mesa)
+	return _terrace(warped, 55.0, 0.3)
+
+## True where the eroded massif changed the height relative to the legacy form.
+func _landform_changed(x: float, z: float) -> bool:
+	var was: bool = _legacy_mesa
+	_legacy_mesa = false
+	var now: float = terrain_height(x, z)
+	_legacy_mesa = true
+	var before: float = terrain_height(x, z)
+	_legacy_mesa = was
+	return absf(now - before) > 0.5
+
+func _giant_footing(x: float, z: float) -> float:
+	var keep: float = 0.0
+	for row: Array in GIANTS:
+		keep = maxf(keep, 1.0 - smoothstep(float(row[2]) * 0.9, float(row[2]) * 1.5, Vector2(x, z).distance_to(Vector2(row[0], row[1]))))
+	return keep
+
+func _eroded_mesa_height(x: float, z: float) -> float:
+	var warp := Vector2(_hill_noise.get_noise_2d(x * 0.6 + 300.0, z * 0.6), _hill_noise.get_noise_2d(x * 0.6, z * 0.6 - 300.0)) * 90.0
+	var n: float = _ridge_noise.get_noise_2d(x + warp.x, z + warp.y)
+	var talus: float = smoothstep(0.02, 0.3, n) * 38.0
+	var body: float = smoothstep(0.12, 0.46, n)
+	if body <= 0.0: return talus
+	var tall: float = 160.0 + 100.0 * (_terrace_noise.get_noise_2d(x * 0.5, z * 0.5) * 0.5 + 0.5)
+	var raw: float = body * tall
+	var step: float = 24.0 + 16.0 * (_hill_noise.get_noise_2d(x * 0.3 + 900.0, z * 0.3) * 0.5 + 0.5)
+	var strata: float = _terrace(raw + _terrace_noise.get_noise_2d(x * 2.1, z * 2.1) * 9.0, step, 0.55)
+	var survive: float = smoothstep(-0.25, 0.35, _terrace_noise.get_noise_2d(x * 0.9 + 500.0, z * 0.9))
+	var shaped: float = lerpf(raw, strata, survive * smoothstep(0.2, 0.55, body))
+	var gully: float = pow(1.0 - absf(_hill_noise.get_noise_2d(x * 1.3 - 400.0, z * 1.3)), 6.0) * 34.0 * smoothstep(0.25, 0.7, body) * (1.0 - smoothstep(0.9, 1.0, body))
+	var crown: float = _hill_noise.get_noise_2d(x * 0.8, z * 0.8 + 700.0) * 16.0 * smoothstep(0.85, 1.0, body)
+	return maxf(shaped - gully + crown, talus)
 
 func terrain_slope(x: float, z: float) -> float:
 	var e: float = 6.0
@@ -281,6 +333,27 @@ func _add_terrain() -> void:
 	var mesh: ArrayMesh = st.commit()
 	terrain_triangles = TERRAIN_CELLS * TERRAIN_CELLS * 2
 	var centre: int = (TERRAIN_CELLS / 2) * columns + TERRAIN_CELLS / 2
+	var near_vertical: int = 0
+	var finite: bool = true
+	for normal: Vector3 in (mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] as PackedVector3Array):
+		finite = finite and normal.is_finite()
+		if normal.y < 0.25: near_vertical += 1
+	landform_checks["terrain_finite"] = finite
+	landform_checks["near_vertical_vertices"] = near_vertical
+	var footing_drift: float = 0.0
+	for row: Array in GIANTS:
+		var now: float = terrain_height(row[0], row[1])
+		_legacy_mesa = true
+		footing_drift = maxf(footing_drift, absf(now - terrain_height(row[0], row[1])))
+		_legacy_mesa = false
+	landform_checks["giant_footing_drift_m"] = footing_drift
+	var route_drift: float = 0.0
+	for point: Vector3 in _route_points:
+		var now: float = terrain_height(point.x, point.z)
+		_legacy_mesa = true
+		route_drift = maxf(route_drift, absf(now - terrain_height(point.x, point.z)))
+		_legacy_mesa = false
+	landform_checks["route_terrain_drift_m"] = route_drift
 	winding_checks["terrain_centre_normal_y"] = (mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] as PackedVector3Array)[centre].y
 	_terrain_material = ShaderMaterial.new()
 	_terrain_material.shader = TERRAIN_SHADER
@@ -312,17 +385,7 @@ func _add_terrain() -> void:
 	_static.append(lake)
 
 func _giant_specs() -> Array:
-	# x, z, cap radius, underside height above local ground. The hero stands about
-	# 20 degrees from the sun direction as seen from the clearing, so it is backlit.
-	return [
-		[378.0, -648.0, 220.0, 264.0],
-		[-280.0, -760.0, 110.0, 140.0],
-		[700.0, -420.0, 90.0, 120.0],
-		[480.0, -900.0, 36.0, 55.0],
-		[-60.0, -850.0, 30.0, 48.0],
-		[820.0, -760.0, 40.0, 60.0],
-		[250.0, -1000.0, 34.0, 50.0],
-	]
+	return GIANTS
 
 func _add_giants(rng: RandomNumberGenerator) -> void:
 	var hero_cap: ArrayMesh = _cap_mesh(PackedFloat32Array([0.4, 2.1, 4.0, 1.3, 5.2, 0.7]))
@@ -453,6 +516,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	var shelf: int = 0
 	var shore: int = 0
 	var flank: int = 0
+	_legacy_mesa = true
 	while tries < 6000 and (shelf < 14 or shore < 12 or flank < 14):
 		tries += 1
 		var spot: Vector2
@@ -486,12 +550,16 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		if group == 2: shelf += 1
 		elif group == 3: shore += 1
 		else: flank += 1
+	_legacy_mesa = false
 	var batches: Dictionary = {}
 	for index: int in spots.size():
 		var spot: Vector2 = spots[index]
 		var template: Array = templates[rng.randi_range(0, templates.size() - 1)]
 		var size: float = rng.randf_range(0.9, 1.3) if index >= framing else rng.randf_range(1.05, 1.3)
 		var root := Transform3D(Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3.ONE * size), Vector3(spot.x, terrain_height(spot.x, spot.y) - 0.35, spot.y))
+		# A tree whose ground the new landform changed, and that now falls on a cliff
+		# face, is dropped after its draws; unchanged ground (e.g. the rim) keeps it.
+		if _landform_changed(spot.x, spot.y) and terrain_slope(spot.x, spot.y) > 0.6: continue
 		var cell := Vector2i(floori(spot.x / 160.0), floori(spot.y / 160.0))
 		for part: Dictionary in template:
 			var key: String = "%s|%d|%d|%d" % [part.kind, part.mesh.get_instance_id(), cell.x, cell.y]
@@ -531,6 +599,7 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 	var xs: Array[Transform3D] = []
 	var colors: Array[Color] = []
 	var tries: int = 0
+	_legacy_mesa = true
 	while xs.size() < 3000 and tries < 60000:
 		tries += 1
 		# Denser near the clearing: squared radius sampling, then far scatter.
@@ -546,15 +615,20 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		if Vector2(x, z).distance_to(KNOLL) < 140.0: continue
 		var width: float = rng.randf_range(12.0, 22.0)
 		var height: float = rng.randf_range(11.0, 19.0)
-		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, ground - 1.0, z)))
+		_legacy_mesa = false
+		var placed: float = terrain_height(x, z)
+		var on_cliff: bool = _landform_changed(x, z) and terrain_slope(x, z) > 0.6
+		_legacy_mesa = true
+		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, placed - 1.0, z)))
 		var shade: float = rng.randf_range(0.92, 1.08)
 		var tone: Color = base_color.lerp(accent_color, rng.randf_range(0.0, 0.55)) * shade
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
-		if not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75:
+		if on_cliff or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
 			xs.pop_back()
 			continue
 		colors.append(tone)
+	_legacy_mesa = false
 	carpet_count = xs.size()
 	carpet_triangles = (clump.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * carpet_count
 	# One shared material; 400 m spatial chunks so off-screen forest is frustum-culled
@@ -654,15 +728,21 @@ func _stem_mesh() -> ArrayMesh:
 	return mesh
 
 # Rock pillar: smooth angular fluting plus horizontal ledges, closed at the top.
+# Eroded rock stack: a few uneven lips at irregular heights, a cross-section that shifts
+# with height (lathe "pillar" style), a slight lean and a rounded, uneven crown.
 func _pillar_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = []
-	var rows := 28
+	var lips: Array[Vector2] = [Vector2(0.16, 0.07), Vector2(0.33, 0.04), Vector2(0.41, 0.08), Vector2(0.58, 0.05), Vector2(0.74, 0.06), Vector2(0.87, 0.04)]
+	var rows := 40
 	for i: int in rows + 1:
 		var t: float = float(i) / rows
-		var ledge: float = 1.0 - 0.09 * fposmod(t * 5.0, 1.0)
-		profile.append(Vector3(lerpf(1.0, 0.62, t) * ledge, t, t))
-	profile.append(Vector3(0.0, 1.0, 1.0))
-	return _lathe(profile, 24, "pillar", false)
+		var radius: float = lerpf(1.0, 0.56, pow(t, 0.9))
+		for lip: Vector2 in lips:
+			radius += lip.y * smoothstep(lip.x - 0.06, lip.x - 0.008, t) * (1.0 - smoothstep(lip.x - 0.008, lip.x + 0.004, t))
+		radius *= sqrt(1.0 - smoothstep(0.93, 1.0, t) * 0.85)
+		profile.append(Vector3(radius, t, t))
+	profile.append(Vector3(0.0, 1.015, 1.0))
+	return _lathe(profile, 32, "pillar", false)
 
 func _boulder_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = [Vector3(0.0, -0.1, 0.0), Vector3(0.9, 0.0, 0.1), Vector3(1.0, 0.3, 0.3), Vector3(0.78, 0.7, 0.6), Vector3(0.4, 0.95, 0.85), Vector3(0.0, 1.0, 1.0)]
@@ -711,7 +791,8 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 					radius *= 1.0 + reach * flare
 					cavity = clampf(0.5 + lobes * 3.0 + reach * (minf(flare, 1.0) - 0.45) * 0.9, 0.0, 1.0)
 				"pillar":
-					radius *= 1.0 + 0.10 * sin(5.0 * a + 1.1) + 0.05 * sin(11.0 * a)
+					# Cross-section drifts with height, so faces are not repeated bands.
+					radius *= 1.0 + 0.12 * sin(3.0 * a + 2.3 * p.z + 0.4) + 0.08 * sin(5.0 * a - 1.7 * p.z + 1.1) + 0.05 * sin(8.0 * a + 3.1 * p.z)
 				"boulder":
 					radius *= 1.0 + 0.14 * sin(3.0 * a + 0.4) + 0.07 * sin(7.0 * a + 1.9)
 				"blob":
@@ -720,7 +801,7 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 			# Godot multiplies vertex colour into the MultiMesh instance colour: keep it white,
 			# except the stem's green channel, which carries groove depth for shading.
 			st.set_color(Color(1, cavity, 1))
-			var bend: float = STEM_BEND * p.z * p.z if style == "stem" else 0.0
+			var bend: float = STEM_BEND * p.z * p.z if style == "stem" else (0.15 * p.z * p.z if style == "pillar" else 0.0)
 			st.add_vertex(Vector3(cos(a) * radius + bend, height, sin(a) * radius))
 	for row: int in profile.size() - 1:
 		for column: int in segments:
@@ -976,4 +1057,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
