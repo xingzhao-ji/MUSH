@@ -16,11 +16,22 @@ uniform float wind_time = 0.0;
 uniform float wind_displacement_m = 0.0;
 uniform float backlight_scale = 1.0;
 uniform float leaf_specular = 0.5;
+// Near-crown LOD crossfade (prototype copied trees only; role 0 = off, exact previous output).
+// Each tree's camera distance gives the dense-crown share across [lod_fade_start, lod_fade_end];
+// role 1 (dense near crown) keeps pixels whose screen dither is below that share, role 2 (ring
+// far crown of the same tree) keeps the rest, so the two LODs dissolve into each other instead
+// of swapping at one distance.
+uniform float lod_fade_start = 0.0;
+uniform float lod_fade_end = 0.0;
+uniform float lod_fade_role = 0.0;
+varying flat float v_lod_keep;
 varying vec3 world_pos;
 void vertex() {
  // Only four canopy resource families are assigned this material. The root at
  // local0 is fixed; world displacement length never exceeds the uniform bound.
  vec3 root=(MODEL_MATRIX*vec4(0.0,0.0,0.0,1.0)).xyz;
+ v_lod_keep=1.0;
+ if(lod_fade_end>lod_fade_start) { v_lod_keep=1.0-smoothstep(lod_fade_start,lod_fade_end,distance(root,INV_VIEW_MATRIX[3].xyz)); }
  float phase=dot(root.xz,vec2(.173,.117));
  float gust=.68*sin(wind_time*.79+phase)+.32*sin(wind_time*1.31+phase*.73);
  vec3 world_shift=env_enabled ? env_root_shift(root,phase)*wind_displacement_m : normalize(vec3(.92,0.0,.38))*wind_displacement_m*gust;
@@ -36,6 +47,10 @@ void vertex() {
  world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
 }
 void fragment() {
+ if(lod_fade_role>.5) {
+  float dither=fract(52.9829189*fract(dot(FRAGCOORD.xy,vec2(.06711056,.00583715))));
+  if((lod_fade_role<1.5)==(dither>=v_lod_keep)) { discard; }
+ }
  if(!FRONT_FACING) { NORMAL=-NORMAL; }
  float patch=sin(world_pos.x*2.3+world_pos.z*1.7+world_pos.y*0.2)*0.5+0.5;
  float center=sin(clamp(UV.x,0.0,1.0)*3.14159265)*sin(clamp(UV.y,0.0,1.0)*3.14159265);

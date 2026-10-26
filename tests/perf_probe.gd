@@ -85,6 +85,9 @@ func _run() -> void:
 	game.set_appearance("night","rain")
 	player.set_glow(true)
 	await get_tree().create_timer(4.5).timeout
+	if "--lod-cost" in arguments:
+		await _lod_cost()
+		return
 	var sets: Dictionary = _groups()
 	# Poses on the actual benchmark route (player camera), plus the two scenic overlooks.
 	var poses: Array = [
@@ -133,6 +136,93 @@ func _run() -> void:
 	# LOD switches along the actual route walk: consecutive frames near each 100 m switch.
 	var lod: Dictionary = await _route_lod_walk(sets)
 	_finish({"attribution":attribution, "lod_walk":lod, "refresh_hz":DisplayServer.screen_get_refresh_rate(DisplayServer.window_get_current_screen()), "resolution":[SIZE.x,SIZE.y]}, true)
+
+## Controlled LOD-only comparison (--lod-cost): at the benchmark-route poses (night + rain, the
+## benchmark's "worst" scenario), the rim overlook and a transition view 106 m from the near batch
+## nearest the route, only scenery.set_lod_crossfade() is toggled (swap = original instant swap,
+## crossfade = current), in two ABBA rounds with the existing WARM/SAMPLES. VSync is disabled only
+## while sampling (application frame interval, not GPU time). Visible LOD node/instance counts use
+## each node's range against the camera-to-AABB-centre distance (the swap state's 12 m hysteresis
+## makes its counts nominal).
+func _lod_cost() -> void:
+	var near_route: Node3D = null
+	var best: float = INF
+	for node: Node in scenery.get_children():
+		if node.get_meta("lod_range", "") != "near": continue
+		for point: Vector3 in scenery.route._p:
+			if (node as Node3D).global_position.distance_to(point) < best:
+				best = (node as Node3D).global_position.distance_to(point)
+				near_route = node
+	var centre: Vector3 = near_route.global_position
+	var route_point: Vector3 = scenery.route._p[0]
+	for point: Vector3 in scenery.route._p:
+		if point.distance_to(centre) < route_point.distance_to(centre): route_point = point
+	var heading: Vector3 = Vector3(route_point.x - centre.x, 0.0, route_point.z - centre.z).normalized()
+	var poses: Array = [
+		{"name":"route-spawn","player":Vector3(-1,0.08,11),"look":Vector3(4,1,9)},
+		{"name":"route-bridge","player":Vector3(11.3,0.08,7.5),"look":Vector3(14,1,2)},
+		{"name":"route-north","player":Vector3(12,0.08,-6),"look":Vector3(-5,1,-7)},
+		{"name":"route-west","player":Vector3(-7,0.08,5),"look":Vector3(-1,1,11)},
+		{"name":"rim-overlook","camera":scenery.overlook_pose()},
+		{"name":"transition-106m","camera":{"position":centre + heading * 106.0 + Vector3.UP * 10.0, "target":centre + Vector3.UP * 6.0, "fov":50.0}},
+	]
+	var viewport: RID = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(viewport, true)
+	var vsync_before: int = DisplayServer.window_get_vsync_mode()
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	var results: Array = []
+	for pose: Dictionary in poses:
+		var camera: Camera3D
+		if pose.has("camera"):
+			camera = game.review_camera
+			camera.global_position = pose.camera.position
+			camera.fov = pose.camera.fov
+			camera.look_at(pose.camera.target)
+		else:
+			var aim: Vector3 = pose.look - pose.player
+			player._camera_pitch = deg_to_rad(-6.0)
+			player.teleport_safe(pose.player, atan2(-aim.x,-aim.z))
+			camera = player._camera
+		camera.make_current()
+		await get_tree().create_timer(1.0).timeout
+		var rows: Dictionary = {"swap": [], "crossfade": []}
+		for round_index: int in 2:
+			for state: String in ["swap", "crossfade", "crossfade", "swap"]:
+				scenery.set_lod_crossfade(state == "crossfade")
+				var m: Dictionary = await _measure()
+				m["render_cpu_ms"] = snappedf(RenderingServer.viewport_get_measured_render_time_cpu(viewport) + RenderingServer.get_frame_setup_time_cpu(), 0.001)
+				m["render_gpu_ms"] = RenderingServer.viewport_get_measured_render_time_gpu(viewport)
+				m["objects"] = Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)
+				m["lod"] = _visible_lod(camera.global_position)
+				rows[state].append(m)
+		scenery.set_lod_crossfade(true)
+		var summary: Dictionary = {}
+		for state: String in rows:
+			var list: Array = rows[state]
+			var mean: float = 0.0
+			for m: Dictionary in list: mean += float(m.mean_ms) / list.size()
+			summary[state] = {"mean_ms": snappedf(mean, 0.001), "median_ms": list.map(func(m: Dictionary) -> float: return snappedf(m.median_ms, 0.001)), "p95_ms": list.map(func(m: Dictionary) -> float: return snappedf(m.p95_ms, 0.001)),
+				"render_cpu_ms": list.map(func(m: Dictionary) -> float: return m.render_cpu_ms), "gpu_timing_available": list.any(func(m: Dictionary) -> bool: return float(m.render_gpu_ms) > 0.0),
+				"primitives": list[0].primitives, "draw_calls": list[0].draw_calls, "objects": list[0].objects, "lod": list[0].lod}
+		summary["crossfade_minus_swap"] = {"mean_ms": snappedf(summary.crossfade.mean_ms - summary.swap.mean_ms, 0.001), "primitives": summary.crossfade.primitives - summary.swap.primitives, "draw_calls": summary.crossfade.draw_calls - summary.swap.draw_calls}
+		results.append({"pose": pose.name, "camera_position": _v(camera.global_position), "states": summary})
+	DisplayServer.window_set_vsync_mode(vsync_before)
+	RenderingServer.viewport_set_measure_render_time(viewport, false)
+	_finish({"schema_mode": "lod-cost", "lod_cost": results, "warmup_frames": WARM, "samples": SAMPLES, "rounds": "2 x ABBA (swap, crossfade, crossfade, swap)", "resolution": [SIZE.x, SIZE.y], "appearance": "night + rain (benchmark worst)", "lod_config": scenery.get_report().trees.get("lod", {}).get("crossfade")}, true)
+
+func _visible_lod(eye: Vector3) -> Dictionary:
+	var out := {"near_nodes": 0, "near_instances": 0, "near_triangles": 0, "far_nodes": 0, "far_instances": 0, "far_triangles": 0}
+	for node: Node in scenery.get_children():
+		var role: String = node.get_meta("lod_range", "")
+		if not role in ["near", "far"]: continue
+		var g: MultiMeshInstance3D = node as MultiMeshInstance3D
+		var d: float = eye.distance_to(g.global_transform * g.get_aabb().get_center())
+		if d < g.visibility_range_begin or (g.visibility_range_end > 0.0 and d > g.visibility_range_end): continue
+		var tris: int = scenery._triangle_count(g.multimesh.mesh) * g.multimesh.instance_count
+		out[role + "_nodes"] += 1
+		out[role + "_instances"] += g.multimesh.instance_count
+		out[role + "_triangles"] += tris
+	return out
 
 func _route_lod_walk(sets: Dictionary) -> Dictionary:
 	var route: Node3D = scenery.route

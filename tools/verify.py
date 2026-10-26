@@ -619,13 +619,21 @@ def inspect(suite, output, duration, expected_vsync=1):
                 "full_png_decodes": decoded, "manual_feel_verified": False, "performance_measured": False}
     if suite == "lod-check":
         report = read_report(output / "lod.json")
-        assert report["schema"] == "mush-lod-check/1" and report["diagnostic_only"] and report["passed"], report.get("error")
+        assert report["schema"] == "mush-lod-check/2" and report["diagnostic_only"], report.get("error")
+        failed = [c["label"] for c in report.get("checks", []) if not c["passed"]]
+        assert report.get("checks") and not failed and report["passed"], failed or report.get("error")
         spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        files = report["isolated"]["files"] + [name for jump in report["jumps"] for name in jump["files"]]
-        return {"diagnostic_only": True, "jumps": len(report["jumps"]), "isolated": report["isolated"],
-                "full_png_decodes": [module.decode(output / name) for name in files], "manual_motion_verified": False}
+        files = [name for sequence in report["sequences"].values() for name in sequence["crops"] + sequence["max_step_files"]]
+        decoded = [module.decode(output / name) for name in files]
+        return {"diagnostic_only": True, "sequences": {key: {"analysis": s["analysis"], "motion": s["motion"]} for key, s in report["sequences"].items()},
+                "images": len(decoded), "manual_motion_verified": False}
+    if suite == "lod-cost":
+        report = read_report(output / "perf.json")
+        assert report["schema"] == "mush-perf-probe/1" and report.get("schema_mode") == "lod-cost" and report["diagnostic_only"] and report["passed"], report.get("error")
+        assert len(report["lod_cost"]) == 6 and all(set(p["states"]) >= {"swap", "crossfade"} for p in report["lod_cost"]), "Expected both LOD states at every pose"
+        return {"diagnostic_only": True, "poses": {p["pose"]: p["states"]["crossfade_minus_swap"] for p in report["lod_cost"]}, "gpu_time_measured": False, "verdict": "none (diagnostic)"}
     if suite == "perf-probe":
         report = read_report(output / "perf.json")
         assert report["schema"] == "mush-perf-probe/1" and report["diagnostic_only"] and report["passed"], report.get("error")
@@ -712,7 +720,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs", "lod-cost"), required=True)
     parser.add_argument("--prototype-scenery", choices=("on", "off"), help="scenic-only: select the presentation look for matched captures")
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
@@ -808,9 +816,12 @@ def main():
         # than real time for the ~1.7 km walk plus return.
         command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--slice", "--report-dir", str(output)]
     elif args.suite == "lod-check":
-        command += ["--resolution", "1280x720", "--", "--capture", "--lod", "--report-dir", str(output)]
+        # Fixed 60 Hz steps: one rendered frame per physics tick during the walks.
+        command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--lod", "--report-dir", str(output)]
     elif args.suite == "perf-probe":
         command += ["--", "--capture", "--perf", "--report-dir", str(output)]
+    elif args.suite == "lod-cost":
+        command += ["--", "--capture", "--perf", "--lod-cost", "--report-dir", str(output)]
     elif args.suite == "route":
         command += ["--resolution", "1280x720", "--", "--capture", "--route", "--report-dir", str(output)]
     elif args.suite == "scenic":
@@ -830,11 +841,11 @@ def main():
     # Prototype capture suites load their fixture at runtime; check it parses before launch.
     fixture = {"slice": "res://tests/slice_traversal.gd", "junction": "res://tests/slice_traversal.gd",
                "endpoint": "res://tests/slice_traversal.gd", "path-pairs": "res://tests/slice_traversal.gd", "understory-pairs": "res://tests/slice_traversal.gd", "rock-pairs": "res://tests/slice_traversal.gd", "stem-pairs": "res://tests/slice_traversal.gd", "look-pairs": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
-               "scenic": "res://tests/scenic_capture.gd"}.get(args.suite)
+               "scenic": "res://tests/scenic_capture.gd", "lod-check": "res://tests/lod_check.gd", "lod-cost": "res://tests/perf_probe.gd"}.get(args.suite)
     try:
         if fixture:
             result["preflight"] = preflight(engine, fixture, output)
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs") else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check", "lod-cost") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs") else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

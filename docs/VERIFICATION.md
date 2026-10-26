@@ -1794,3 +1794,48 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Rain:** blends from the new day colours and is bluer.
 - **Not added:** mist layers.
 - **Still open:** the route benchmark **fails** (p95 18.086 ms), the vista gate fails, the LOD density change is open, and the full-scene art is not accepted.
+
+## Near-crown LOD: dithered crossfade (2026-10-26)
+
+**Status: local transition improvement; not a performance fix.** The full-art benchmark still **fails**. Rollback: `git revert` this commit.
+
+**Finding:** the original copied-tree LOD did more than change leaf density. The near (dense) crown node used range end 100 m and the far (ring) node range begin 100 m, each with a 12 m hysteresis margin. Between about 98 and 118 m from a batch's centre, **both LODs were culled and the crowns vanished.**
+- **The documented "pops":** at 94–96 m and 118–120 m they were the two edges of that gap.
+- **Physical walk:** the target tree showed bare trunks at 87–89 m from the tree, because the swap followed batch distance, not tree distance.
+
+**Fix:**
+- **Crossfade** (`assets/world/prototype_leaf.gdshader`): a per-tree dithered crossfade over 96–116 m of camera distance.
+  - Dense crowns keep the pixels whose screen dither lies below the tree's dense share; the ring crown of the same tree keeps the rest, so coverage is exactly complementary.
+  - The shader's new lod-fade uniforms (`lod_fade_start`, `lod_fade_end`, `lod_fade_role`) are off (0) by default.
+- **Node ranges** (`scripts/prototype_scenery.gd`, `set_lod_crossfade`): no hysteresis. Each near node is drawn to 116 m plus its radius and each far node from 96 m minus its radius, where the radius is the farthest crown origin from the node's AABB centre (26.8–69.7 m).
+- **Isolation:** the far LOD gets its own duplicate material, so corridor trees, which draw the far material at every distance, are unaffected.
+- **Unchanged:** near shapes inside 96 m, triangles (918,196, 93 crowns) and draw nodes.
+
+**Motion evidence** (`lod-check` v2, `lod-check-20261026-112634-36076`; same runtime source, with later test-tool edits only). Both states run in one process, and every step re-renders the paused pose with the near or far LOD nodes hidden, to get the dense share and total crown coverage.
+- **Harness-driven:** the review camera moves 130 → 76 → 130 m in 0.5 m steps.
+- **Physical:** the character walks the route with real analog move input through CharacterBody physics, toward one tree and back away from it. The follow camera's aim is set by the harness.
+- **Original:** pops (share jumps 0.47–0.76) and crownless gaps in 3 of 3 sequences.
+- **Crossfade:** largest step 0.061–0.093 and no gaps. Zero steps were excluded for terrain occlusion, and both walks crossed 88–124 m with no recovery.
+- **Superseded fixture iterations, retained:**
+  - `110017`: motion swamped the detector.
+  - `110555`: the coverage jump flagged a camera clip.
+  - `111205`: its validity floor could hide gaps; an explicit gap check was added.
+  - `112007`: the walk camera pitch pressed the camera into a bank.
+
+**Cost:**
+- **Benchmark** (`benchmark-20261026-113256-36371`): **fails** at p95 19.834 ms and p99 24.402 ms (8,517 frames, 2 loops, 0 stalls, render CPU p95 2.609 ms, GPU timing unavailable). The previous run, `091430`, measured 18.086 / 22.728 ms. **Cause not established.**
+- **Controlled LOD-only comparison** (`lod-cost` suite, `lod-cost-20261026-113942-36986`):
+  - **Setup:** same process, 1920×1080, night and rain, two rounds of swap/crossfade/crossfade/swap, 20 warm-up + 90 samples, VSync off while sampling.
+  - **Timing:** crossfade minus swap ranged from −0.31 to +0.11 ms across four route poses, the rim overlook and a transition view, while individual measurements vary by up to 2.6 ms.
+  - **Primitives:** unchanged at 4 of 6 poses; +171,120 at route-west and +21,620 at the transition view.
+  - **Limit:** both states use the same compiled shader, so the cost of the shader's discard path itself is not isolated.
+
+**Scenic** (`scenic-20261026-114143-37485`): fails only the known vista gate (0.0129).
+- Canopy and clipped metrics are unchanged.
+- Rim overlook, cliff detail, landform side and world overview differ by 0.06% or less.
+- Ground path differs by 1.8%, within its run-to-run range of 1.3–5.8%.
+
+**Limitations:**
+- **Stipple:** the dither shows as a stipple inside the 20 m band during motion; there is no anti-aliasing.
+- **Not verified:** live display motion.
+- **Still open:** the benchmark failure, the vista gate and full-scene art acceptance.

@@ -209,6 +209,15 @@ class LookPairsReport(unittest.TestCase):
                 verify.inspect("look-pairs", Path("unused"), 120)
 
 
+class LodCheckReport(unittest.TestCase):
+    def test_pop_in_crossfade_fails(self):
+        report = {"schema": "mush-lod-check/2", "diagnostic_only": True, "passed": False, "sequences": {},
+                  "checks": [{"label": "Crossfade: no pop spike", "passed": False}]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Crossfade"):
+                verify.inspect("lod-check", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):

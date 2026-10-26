@@ -37,6 +37,13 @@ const NEAR_CROWN_MAX_RATIO := 8
 ## Dense near crowns are drawn only within this distance; the ring crown is their far LOD.
 const NEAR_CROWN_RANGE := 100.0
 const NEAR_CROWN_MARGIN := 12.0
+## Dithered per-tree crossfade between the dense near crown and the ring far crown, replacing the
+## instant swap at NEAR_CROWN_RANGE +- NEAR_CROWN_MARGIN (seen at 94-96 m approaching, 118-120 m
+## retreating). The band brackets the old switch distances.
+const LOD_FADE_START := 96.0
+const LOD_FADE_END := 116.0
+var lod_crossfade: bool = false
+var _lod_materials: Dictionary = {"near": [], "far": []}
 const FOREST_HUES: Array[Color] = [Color("2f5a2a"), Color("3f6e2e"), Color("5a7a30"), Color("5d6b2c"), Color("2a4a2c")]
 const VALLEY_DIR := Vector2(0.447, -0.894)
 const LAKE_CENTER := Vector2(190.0, -330.0)
@@ -922,7 +929,14 @@ func _dense_crown(templates: Array) -> Dictionary:
 			var tone: Variant = (softs[0] as ShaderMaterial).get_shader_parameter(key)
 			if tone is Color: (far_tone as ShaderMaterial).set_shader_parameter(key, tone)
 		_crown_sync.append([ring_material, far_tone])
-	return {"mesh": mesh, "materials": softs, "far_material": far_tone, "scale": ratio}
+	# The far LOD of near trees gets its own duplicate for the crossfade; far_tone itself stays
+	# unfaded (corridor trees draw it at every distance).
+	var far_fade: Material = far_tone
+	if far_tone is ShaderMaterial and far_tone != ring_material:
+		far_fade = far_tone.duplicate()
+		_crown_sync.append([ring_material, far_fade])
+	_lod_materials = {"near": softs, "far": [far_fade]}
+	return {"mesh": mesh, "materials": softs, "far_material": far_tone, "far_fade_material": far_fade, "scale": ratio}
 
 ## Duplicate leaf materials only: switch to the prototype copy of the source leaf shader
 ## and damp backlight transmission and specular glare, so backlit leaves stay green.
@@ -1073,7 +1087,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		for part: Dictionary in template:
 			if near and part.kind == "LayeredCanopies":
 				# Far LOD: the original ring crown, drawn only beyond NEAR_CROWN_RANGE.
-				_tree_batch(batches, part.kind, part.mesh, near_crown.far_material, cell, "far", root * part.local)
+				_tree_batch(batches, part.kind, part.mesh, near_crown.far_fade_material, cell, "far", root * part.local)
 				# Near: the dense cluster, turned and tilted per crown so leaves do not align.
 				var turn := Basis(Vector3.UP, crown_rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, crown_rng.randf_range(-0.35, 0.35)) * Basis(Vector3.FORWARD, crown_rng.randf_range(-0.35, 0.35))
 				var dense := Transform3D(part.local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)) * turn, part.local.origin)
@@ -1100,6 +1114,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 			lod.far_batches += 1
 		tree_instances += multi.instance_count
 	tree_report["lod"] = lod
+	set_lod_crossfade(true)
 	tree_count = spots.size()
 	var tree_triangles: int = 0
 	for key: String in batches:
@@ -2109,6 +2124,37 @@ func _process(delta: float) -> void:
 	_time += delta
 	for material: ShaderMaterial in _art + [_lake_material]:
 		material.set_shader_parameter("shimmer_time", _time)
+
+## Switches the copied-tree near/far LOD between the original instant swap (enabled false:
+## NEAR_CROWN_RANGE with NEAR_CROWN_MARGIN hysteresis, shader fade off) and the dithered
+## crossfade. Godot culls a node by the distance to its AABB centre, so for the crossfade each
+## near node stays drawn up to LOD_FADE_END + its radius and each far node from LOD_FADE_START -
+## its radius (radius = farthest crown origin from that centre); the shader decides per tree.
+func set_lod_crossfade(enabled: bool) -> void:
+	lod_crossfade = enabled
+	var radii: Array = []
+	for node: GeometryInstance3D in _static:
+		var lod: String = node.get_meta("lod_range", "")
+		if not lod in ["near", "far"] or not node is MultiMeshInstance3D: continue
+		var multi: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		var centre: Vector3 = node.global_transform * node.get_aabb().get_center()
+		var radius: float = 0.0
+		for i: int in multi.instance_count: radius = maxf(radius, (node.global_transform * multi.get_instance_transform(i)).origin.distance_to(centre))
+		radii.append(snappedf(radius, 0.1))
+		if lod == "near":
+			node.visibility_range_end = LOD_FADE_END + radius + 1.0 if enabled else NEAR_CROWN_RANGE
+			node.visibility_range_end_margin = 0.0 if enabled else NEAR_CROWN_MARGIN
+		else:
+			node.visibility_range_begin = maxf(0.0, LOD_FADE_START - radius - 1.0) if enabled else NEAR_CROWN_RANGE
+			node.visibility_range_begin_margin = 0.0 if enabled else NEAR_CROWN_MARGIN
+	for role: String in ["near", "far"]:
+		for material: Variant in _lod_materials[role]:
+			if not material is ShaderMaterial: continue
+			(material as ShaderMaterial).set_shader_parameter("lod_fade_start", LOD_FADE_START if enabled else 0.0)
+			(material as ShaderMaterial).set_shader_parameter("lod_fade_end", LOD_FADE_END if enabled else 0.0)
+			(material as ShaderMaterial).set_shader_parameter("lod_fade_role", (1.0 if role == "near" else 2.0) if enabled else 0.0)
+	if tree_report.has("lod"):
+		tree_report.lod["crossfade"] = {"enabled": enabled, "band_m": [LOD_FADE_START, LOD_FADE_END], "node_radii_m": radii, "materials": {"near": _lod_materials.near.size(), "far": _lod_materials.far.size()}}
 
 func set_frozen(value: bool) -> void:
 	frozen = value
