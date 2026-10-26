@@ -8,6 +8,10 @@ const Route := preload("res://scripts/prototype_route.gd")
 const TERRAIN_SHADER := preload("res://assets/world/far_terrain.gdshader")
 const PATH_SHADER := preload("res://assets/world/prototype_path.gdshader")
 const WATER_SHADER := preload("res://assets/world/far_water.gdshader")
+## Lake surface in use (vertical-depth colour, screen-space reflection, soft shore contact);
+## WATER_SHADER is kept as the previous look for same-frame before/after evidence.
+const LAKE_SHADER := preload("res://assets/world/lake_water.gdshader")
+var lake_water: bool = true
 const LEAF_SHADER := preload("res://assets/world/prototype_leaf.gdshader")
 const SOURCE_LEAF_SHADER := preload("res://lineage/living-scenery37-proposal01/canopy-wind37.gdshader")
 ## Existing detailed project textures (import settings unchanged; moss has no mipmaps).
@@ -590,7 +594,7 @@ func _add_terrain() -> void:
 	disc.radial_segments = 64
 	disc.rings = 1
 	_lake_material = ShaderMaterial.new()
-	_lake_material.shader = WATER_SHADER
+	_lake_material.shader = LAKE_SHADER
 	var lake := MeshInstance3D.new()
 	lake.name = "WorldLake"
 	lake.mesh = disc
@@ -2432,6 +2436,12 @@ func set_lod_crossfade(enabled: bool) -> void:
 	if tree_report.has("lod"):
 		tree_report.lod["crossfade"] = {"enabled": enabled, "band_m": [LOD_FADE_START, LOD_FADE_END], "node_radii_m": radii, "materials": {"near": _lod_materials.near.size(), "far": _lod_materials.far.size()}}
 
+## The lake surface in use (enabled) or the previous far_water look; diagnostic toggle for
+## same-frame evidence and the cost comparison (only the new shader reads the screen texture).
+func set_lake_water(enabled: bool) -> void:
+	lake_water = enabled
+	_lake_material.shader = LAKE_SHADER if enabled else WATER_SHADER
+
 func set_frozen(value: bool) -> void:
 	frozen = value
 
@@ -2445,11 +2455,13 @@ func set_debug_colors(enabled: bool) -> void:
 	_terrain_material.set_shader_parameter("debug_unlit", enabled)
 	_lake_material.set_shader_parameter("debug_unlit", enabled)
 
-## Capture-only: paint just the giant caps and stems magenta for coverage metrics.
+## Capture-only: paint just the giant caps and stems magenta for coverage metrics. The lake's
+## screen-space reflection is suspended meanwhile, so it cannot mirror the mask into the count.
 func set_debug_mask(enabled: bool) -> void:
 	for node: MultiMeshInstance3D in _nodes:
 		if not String(node.name) in ["HeroCanopy", "LuminousCanopies", "CanopyStems"]: continue
 		node.material_override = _mask if enabled else _art[_nodes.find(node)]
+	_lake_material.set_shader_parameter("screen_reflection", not enabled)
 
 func set_reduced_motion(value: bool) -> void:
 	_reduced_motion = value
@@ -2495,6 +2507,9 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		# reads violet-to-gold rather than one pink wash.
 		sky.set_shader_parameter("top_color", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 		sky.set_shader_parameter("horizon_color", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+	# The lake's sky-gradient fallback follows the same sky colours.
+	_lake_material.set_shader_parameter("sky_top", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
+	_lake_material.set_shader_parameter("sky_horizon", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
 
 func get_report() -> Dictionary:
 	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.
@@ -2505,4 +2520,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

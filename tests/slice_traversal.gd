@@ -278,11 +278,12 @@ func _run() -> void:
 		elif "--stem-pairs" in arguments: await _stem_pairs_scenario()
 		elif "--look-pairs" in arguments: await _look_pairs_scenario()
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
+		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else "full"))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else "full")))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -735,6 +736,55 @@ func _shore_pairs_scenario() -> void:
 		var drawn_ok := true
 		for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 		_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Lake material evidence (diagnostic): previous far_water look and the current lake shader in
+## the same frame at the shore walk pose, an offset east-shore view and the rim overlook (day),
+## then the shore and overlook at night; per-view frame timing in ABBA order at the day views.
+func _water_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	_check("Lake surface uses the current lake shader", scenery.get_report().get("lake_water", {}).get("enabled", false), scenery.get_report().get("lake_water"))
+	var pose: Dictionary = scenery.overlook_pose()
+	var review := Camera3D.new()
+	review.fov = pose.fov
+	game.add_child(review)
+	var offset_at: Vector3 = slice._p[_nearest_sample(Vector3(402.0, -78.0, -418.0))]
+	var views: Array = [["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0), "day"], ["shore-offset", offset_at, Vector3(200.0, -80.0, -420.0), "day"], ["overlook", null, null, "day"],
+		["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0), "night"], ["overlook", null, null, "night"]]
+	var current_mood: String = "day"
+	for view: Array in views:
+		if view[3] != current_mood:
+			current_mood = view[3]
+			game.world.set_appearance(current_mood == "night", current_mood == "rain", false)
+			await get_tree().create_timer(4.5).timeout
+		if view[1] == null:
+			review.position = pose.position
+			review.look_at(pose.target)
+			review.make_current()
+		else:
+			await _place(view[1], 0.0)
+			_look(view[2], -4.0)
+			player._visual.rotation.y = player.camera_yaw
+			player._camera.make_current()
+		await _frames(45)
+		for state: String in ["before", "after"]:
+			scenery.set_lake_water(state == "after")
+			await _frames(8)
+			await _capture("water-%s-%s-%s" % [view[0], state, view[3]])
+			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+		# Day cost: ABBA order (before, after, after, before) so drift cancels.
+		if view[3] == "day":
+			for state: String in ["before", "after", "after", "before"]:
+				scenery.set_lake_water(state == "after")
+				timings.append((await _time_view(30, 180)).merged({"pose": view[0], "state": state}))
+	player._camera.make_current()
+	review.queue_free()
+	scenery.set_lake_water(true)
+	game.world.set_appearance(false, false, false)
+	var drawn_ok := true
+	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
+	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.

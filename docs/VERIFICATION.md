@@ -1921,3 +1921,47 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Night:** a darker band beside the pale-cyan blobs.
 - **Overlook:** slightly sparser lower-left grove.
 - **Still open:** the route benchmark (p95 19.834 ms) and the vista gate. Full-scene art is not accepted.
+
+## Lake material: depth colour, reflections, soft shore (2026-10-26)
+
+**Status: local improvement; scene art not accepted.** Material only: the lake disc and its geometry, the shoreline, physics and global lighting are unchanged. Rollback: `git revert` this commit.
+
+**Problem:** at ground level the lake read as a flat lilac strip.
+- **Colour:** it was tinted by view-ray thickness, so at grazing angles it was always "deep".
+- **Reflection:** a flat lilac emission colour, plus the engine's own sky reflection (SPECULAR 0.14).
+
+**Change** (`assets/world/lake_water.gdshader`, swapped in for the lake only; `far_water.gdshader` is kept as the before state for `set_lake_water`):
+- **Colour:** follows vertical water depth to the opaque lake bed, reconstructed from the depth buffer. Warm shallows, then teal, then deep blue-green.
+- **Reflection:**
+  - Schlick fresnel (F0 0.02).
+  - A 14-step geometric screen-space march along the ripple-perturbed reflected ray, with 4 bisection steps, over the opaque scene (far bank, cliffs, giant stem).
+  - Rays that leave the screen sideways march against the nearest screen column.
+  - Rays that reach open sky sample the on-screen sky, otherwise the sky gradient fed from `apply_look`.
+- **Engine reflection off:** SPECULAR 0 removes the duplicate engine reflection. A broad, weak sun glint on a smoothed normal is added instead, fading out at night and in rain.
+- **Shore contact:** opacity and reflection fade over the first ~0.45 m of depth.
+- **Mask captures:** `set_debug_mask` suspends the screen reflection, so the coverage metric cannot count reflected magenta. The first scenic run, `121918`, showed rim-overlook canopy +0.006 from exactly that. It is fixed in `122149`.
+
+**Evidence** (`water-pairs` suite, `water-pairs-20261026-122408-45372`): before and after in the same frame, at the shore, shore-offset and rim-overlook views by day and the shore and overlook at night. The frames are pixel-identical to the earlier run `121736` (same shader output).
+
+| Region | Before | After |
+|---|---|---|
+| Shore water, left (mean RGB) | (115,108,127) lilac | (55,52,24) dark bank reflection |
+| Offset-view water | (124,114,113) | (100,95,67) |
+| Overlook lake | (104,97,99) | (85,90,89) teal-grey with the stem reflected |
+| Night lake body (luma) | 28 | 17 dark blue, no glow |
+| Night pale ring around the overlook lake (luma) | 56 | 59 (existing terrain sand band) |
+
+**Cost** (1280×720, full art, uncapped, fixed step, ABBA 2 × 180 samples after 30 warm-up, all frames drawn; GPU timing unavailable):
+- **Primitives and draws:** identical.
+- **`121736`** (functionally identical shader, quieter machine): mean wall p50 change after − before was −0.20 ms (shore), −0.01 ms (offset) and +0.09 ms (overlook). That is within noise.
+- **Final `122408`:** inconclusive. Another workload roughly doubled frame times, and the overlook's own before samples drift from 11.4 to 17.8 ms within one ABBA pass. Deltas measured +0.62, +0.28 and +4.58 ms p50.
+- **Real but unmeasured GPU work:** one screen copy per frame plus up to ~20 depth taps per water pixel.
+
+**Scenic** (`scenic-20261026-122149-44174`): fails only the known vista gate (0.0129). Canopy and clipped metrics are unchanged; geometry and collision are unchanged; footing drift 0.0.
+
+**Limitations:**
+- **Mirror-like:** the reflection is calm and fairly mirror-like, with restrained ripples.
+- **Missing from reflections:** screen-space reflections cannot show anything off-screen or hidden behind the camera.
+- **Sky fallback:** has no clouds when the sky is off-screen.
+- **Not added:** no foam or shoreline wetness on the land.
+- **Still open:** the route benchmark **fails** (p95 19.834 ms); the vista gate; the grove night tone; full-scene art acceptance.

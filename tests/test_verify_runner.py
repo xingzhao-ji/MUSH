@@ -218,6 +218,16 @@ class LodCheckReport(unittest.TestCase):
                 verify.inspect("lod-check", Path("unused"), 120)
 
 
+class WaterPairsReport(unittest.TestCase):
+    def test_missing_night_pair_fails(self):
+        files = [f"water-{view}-{state}-day.png" for view in ("shore", "shore-offset", "overlook") for state in ("before", "after")]
+        report = {"schema": "mush-slice-traversal/1", "mode": "water-pairs", "passed": True, "legs": [],
+                  "checks": [{"label": "lake", "passed": True}], "images": [{"file": name} for name in files]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every before/after pair"):
+                verify.inspect("water-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
