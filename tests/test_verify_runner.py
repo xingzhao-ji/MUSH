@@ -228,6 +228,15 @@ class WaterPairsReport(unittest.TestCase):
                 verify.inspect("water-pairs", Path("unused"), 120)
 
 
+class WaterMotionReport(unittest.TestCase):
+    def test_failed_strafe_fails_the_suite(self):
+        report = {"schema": "mush-slice-traversal/1", "mode": "water-motion", "passed": False, "legs": [], "images": [], "motion_steps": [],
+                  "checks": [{"label": "Strafe: physical walk", "passed": False}]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Strafe"):
+                verify.inspect("water-motion", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):

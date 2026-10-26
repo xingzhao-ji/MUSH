@@ -23,6 +23,8 @@ uniform float shimmer_amount = 1.0;
 uniform bool debug_unlit = false;
 // Capture-only switch (set_debug_mask): false keeps the sky-gradient reflection only.
 uniform bool screen_reflection = true;
+// Diagnostic only: tint pixels whose accepted reflection sample needed the sideways clamp.
+uniform bool debug_side_clamp = false;
 uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
 varying vec3 v_world;
 
@@ -86,6 +88,7 @@ void fragment() {
 	float t = 3.0;
 	float hit = 0.0;
 	vec2 hit_uv = vec2(0.0);
+	bool side_clamped = false;
 	for (int i = 0; i < (screen_reflection ? 14 : 0); i++) {
 		vec4 qv = VIEW_MATRIX * vec4(v_world + r * t, 1.0);
 		vec4 clip = PROJECTION_MATRIX * qv;
@@ -106,6 +109,8 @@ void fragment() {
 			}
 			vec4 fv = VIEW_MATRIX * vec4(v_world + r * hi, 1.0);
 			vec4 fc = PROJECTION_MATRIX * fv;
+			float raw_x = fc.x / fc.w * 0.5 + 0.5;
+			side_clamped = raw_x < 0.002 || raw_x > 0.998;
 			vec2 fuv = clamp_side(fc.xy / fc.w * 0.5 + 0.5);
 			if (on_screen(fuv) && scene_view(fuv, INV_PROJECTION_MATRIX).z - fv.z < (t - t_prev) * 0.25 + 1.5) {
 				hit_uv = fuv;
@@ -137,7 +142,10 @@ void fragment() {
 	float body_alpha = (1.0 - exp(-thickness * 0.3)) * soft;
 	float f = fresnel * soft;
 	float alpha = clamp(body_alpha + f * (1.0 - body_alpha), 0.0, 1.0);
-	if (debug_unlit) {
+	if (debug_side_clamp && hit > 0.0 && side_clamped) {
+		ALBEDO = vec3(0.0);
+		EMISSION = vec3(1.0, 0.0, 1.0);
+	} else if (debug_unlit) {
 		EMISSION = body;
 		ALBEDO = vec3(0.0);
 	} else {

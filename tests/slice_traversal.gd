@@ -19,6 +19,7 @@ var approach_captured: bool = false
 var approach_info: Dictionary = {}
 var _tree_boxes: Array = []
 var timings: Array = []
+var motion_steps: Array = []
 
 func _ready() -> void:
 	game = get_parent()
@@ -279,11 +280,12 @@ func _run() -> void:
 		elif "--look-pairs" in arguments: await _look_pairs_scenario()
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
+		elif "--water-motion" in arguments: await _water_motion_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else "full")))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else "full"))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -785,6 +787,118 @@ func _water_pairs_scenario() -> void:
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Lake reflection in motion (diagnostic): at the shore walk pose with ripple, wind and cloud
+## motion frozen (camera motion is the only change), (A) the harness turns the follow camera's yaw
+## 0 -> +20 -> -20 -> 0 degrees in 2-degree steps, and (B) the character strafes with real analog
+## move input along the path, right 5 m, left 10 m, right 5 m, a frame every 0.5 m. Each step
+## saves the bank-and-water band (rows 280-480, full width); key steps also save full frames.
+func _water_motion_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	await get_tree().create_timer(4.5).timeout
+	game.world.set_living_motion_enabled(false)
+	game.environment_controller.set_foreground(false)
+	game.world.set_environment_foreground(false)
+	scenery.set_frozen(true)
+	_check("Lake surface uses the current lake shader", scenery.get_report().get("lake_water", {}).get("enabled", false), scenery.get_report().get("lake_water"))
+	var at := Vector3(387.12, -78.01, -300.14)
+	await _place(at, 0.0)
+	_look(Vector3(190.0, -80.0, -330.0), -4.0)
+	var base_yaw: float = player.camera_yaw
+	player._visual.rotation.y = base_yaw
+	player._camera.make_current()
+	await _frames(45)
+	var steps: Array = []
+	var yaws: Array = []
+	for k: int in range(0, 11): yaws.append(k * 2.0)
+	for k: int in range(9, -11, -1): yaws.append(k * 2.0)
+	for k: int in range(-9, 1): yaws.append(k * 2.0)
+	for i: int in yaws.size():
+		player.camera_yaw = base_yaw + deg_to_rad(yaws[i])
+		await _frames(4)
+		steps.append(await _motion_frame("yaw", i, {"yaw_deg": yaws[i]}, yaws[i] in [20.0, -20.0] and not _saved_full("yaw", yaws[i])))
+	player.camera_yaw = base_yaw
+	await _frames(20)
+	var right := Vector3(cos(base_yaw), 0.0, -sin(base_yaw))
+	var start: Vector3 = player.global_position
+	var legs: Array = [[1.0, 5.0], [-1.0, -5.0], [1.0, 0.0]]
+	var index: int = 0
+	var last_offset: float = 0.0
+	var recovered := false
+	var ticks: int = 0
+	for leg: Array in legs:
+		var sign: float = leg[0]
+		var goal: float = leg[1]
+		while ticks < 3000:
+			var offset: float = (player.global_position - start).dot(right)
+			if (sign > 0.0 and offset >= goal) or (sign < 0.0 and offset <= goal): break
+			player.camera_yaw = base_yaw
+			Input.action_press("move_right" if sign > 0.0 else "move_left", 0.6)
+			Input.action_release("move_left" if sign > 0.0 else "move_right")
+			await get_tree().physics_frame
+			ticks += 1
+			if player.state == "Recovering":
+				recovered = true
+				break
+			offset = (player.global_position - start).dot(right)
+			if absf(offset - last_offset) >= 0.5:
+				last_offset = offset
+				index += 1
+				steps.append(await _motion_frame("strafe", index, {"offset_m": snappedf(offset, 0.01), "player": _v(player.global_position)}, absf(absf(offset) - 5.0) < 0.3 and not _saved_full("strafe", signf(offset))))
+		_release()
+		if recovered: break
+	_release()
+	_check("Strafe: physical left/right walk along the path with no recovery", not recovered and index >= 30, {"frames": index, "ticks": ticks})
+	# Side-clamp extent (diagnostic tint): accepted reflection samples that needed the clamp.
+	await _place(at, 0.0)
+	var mat: ShaderMaterial = scenery._lake_material
+	for yaw_deg: float in [0.0, 20.0, -20.0]:
+		player.camera_yaw = base_yaw + deg_to_rad(yaw_deg)
+		await _frames(30)
+		mat.set_shader_parameter("debug_side_clamp", true)
+		await _frames(4)
+		await RenderingServer.frame_post_draw
+		var frame: Image = get_viewport().get_texture().get_image()
+		frame.convert(Image.FORMAT_RGBA8)
+		var name: String = "motion-clampmask-yaw%+03d.png" % roundi(yaw_deg)
+		frame.save_png(output.path_join(name))
+		var tinted: int = 0
+		var columns: Dictionary = {}
+		for y: int in range(300, 480, 2):
+			for x: int in range(0, frame.get_width(), 2):
+				var p: Color = frame.get_pixel(x, y)
+				if p.r > 0.9 and p.b > 0.9 and p.g < 0.2:
+					tinted += 1
+					columns[x] = true
+		var xs: Array = columns.keys()
+		xs.sort()
+		motion_steps.append({"kind": "clampmask", "yaw_deg": yaw_deg, "band": name, "tinted_samples": tinted, "sampled": 90 * frame.get_width() / 2, "columns_min_max": [xs.front() if not xs.is_empty() else null, xs.back() if not xs.is_empty() else null]})
+		mat.set_shader_parameter("debug_side_clamp", false)
+	_check("Motion frames captured (yaw sweep and strafe)", steps.size() >= 60, steps.size())
+	motion_steps = steps + motion_steps
+	scenery.set_frozen(false)
+
+var _full_saved: Dictionary = {}
+func _saved_full(kind: String, key: float) -> bool:
+	return _full_saved.has("%s%+.0f" % [kind, key])
+
+## Saves the bank-and-water band of the current frame (and optionally the full frame).
+func _motion_frame(kind: String, index: int, meta: Dictionary, full: bool) -> Dictionary:
+	await RenderingServer.frame_post_draw
+	var frame: Image = get_viewport().get_texture().get_image()
+	frame.convert(Image.FORMAT_RGBA8)
+	var name: String = "motion-%s-%03d.png" % [kind, index]
+	frame.get_region(Rect2i(0, 280, frame.get_width(), 200)).save_png(output.path_join(name))
+	var entry: Dictionary = meta.merged({"kind": kind, "index": index, "band": name, "band_rows": [280, 480], "camera": _v(player._camera.global_position)})
+	if full:
+		var key: String = "%s%+.0f" % [kind, float(meta.get("yaw_deg", signf(float(meta.get("offset_m", 0.0)))))]
+		_full_saved[key] = true
+		var full_name: String = "motion-full-%s-%03d.png" % [kind, index]
+		frame.save_png(output.path_join(full_name))
+		entry["full"] = full_name
+	return entry
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.

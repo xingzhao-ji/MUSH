@@ -1969,3 +1969,32 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Still open:** the route benchmark **fails** (p95 19.834 ms); the vista gate; the grove night tone; full-scene art acceptance.
 
 **Wording correction (2026-10-26):** earlier text, and the commit message of `e69efee`, called one run "quieter" and attributed timing variance to another workload or machine load. Concurrent work is known context, not a measured cause. The corrected text above states only the observed variance and the unresolved GPU cost.
+
+## Lake reflections in motion (2026-10-26)
+
+**Status: diagnostic check; no shader correction needed on this evidence.**
+
+**Method** (`water-motion` suite, `water-motion-20261026-123342-49108`): the shore walk pose, with ripple, wind and cloud animation frozen, so camera motion is the only change.
+- **Yaw sweep (harness-driven):** the follow camera's yaw turns 0 → +20° → −20° → 0 in 2° steps; 41 frames.
+- **Physical strafe:** real analog move input along the path, right 5 m, left 10 m, right 5 m, a frame every 0.5 m; 35 frames, no recovery.
+- **Saved per step:** the bank-and-water band (rows 280–480), plus full frames at the extremes.
+- **Clamp extent:** a diagnostic shader tint (`debug_side_clamp`, off by default) marks pixels whose accepted reflection sample needed the sideways screen clamp.
+
+**Results:**
+
+| Check | Yaw sweep | Strafe |
+|---|---|---|
+| Changed pixels per step: reflection ÷ bank above it | median 0.99, max 1.09 | — |
+| Reflection change per step | — | median 0.197, max 0.241, no spikes |
+| Bank change per step | — | 0.053 |
+
+- **Popping:** none. Under yaw the reflection moves with the bank. Under strafe, the larger reflection change is near-water parallax and ripple remapping. In consecutive frames the reflected stem and forest hold position while ripple detail shifts.
+- **Side clamp:** used only in strips at most 22 px wide on the left and 26 px on the right, 0.06–0.23% of the frame, never more than 40 px from an edge. The horizontal streaks further into the left water reflect the near dark cliff; the clamp does not cause them.
+- **Waterline:** no bright line or gap. The waterline-row metric's +12.8 swing during the strafe comes from camera height moving the waterline across the measured rows.
+
+**Limitations:**
+- **Edge strips:** the clamped strips do stretch the edge column slightly.
+- **Off-screen content:** cannot appear in reflections.
+- **Ripples frozen:** this check isolates camera motion. Live ripple animation and live-display motion are not reviewed.
+- **Still open:** the shader's GPU cost (unresolved), the route benchmark failure, the vista gate and the grove night tone.
+
