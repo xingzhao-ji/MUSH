@@ -76,6 +76,16 @@ const SLICE_PATCH := Rect2(60.0, -393.0, 460.0, 663.0)
 ## the square no longer reads by colour from afar; measured from the overview capture.
 const CLEARING_GAIN := Color(2.6, 2.2, 2.0)
 const DAY_SUN := Color("ffc07e")
+## Palette/depth pass: warm sunlit foreground and cooler, layered distance. Day endpoints only
+## (night and rain endpoints, fog density and distances are unchanged); with look_depth false
+## apply_look writes exactly the previous values. The ambient stays as before: a cooler ambient
+## darkened and cooled the shaded clearing (scenic-20261026-103711-32659).
+## Sky: the live sky (drifting-clouds37) is mix(horizon, top, pow(height, 0.45)), so at the
+## 10-30 degree elevations these views see, about half of every sky pixel is the horizon colour;
+## a peach horizon blended with a violet top reads as lavender. A pale warm cream horizon and a
+## clear cool blue top give a warm horizon line under a cooler blue sky.
+const DEPTH_LOOK := {"sun": Color("ffbc72"), "ambient": Color("d2d0ca"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
+var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
 var canopy_count: int = 0
@@ -2132,21 +2142,22 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 			(pair[1] as ShaderMaterial).set_shader_parameter(key, (pair[0] as ShaderMaterial).get_shader_parameter(key))
 	for pair: Array in _understory_sync:
 		(pair[1] as ShaderMaterial).set_shader_parameter("night_amount", (pair[0] as ShaderMaterial).get_shader_parameter("night_amount"))
-	_lake_material.set_shader_parameter("horizon", Color("f2b08e").lerp(Color("3a3466"), night))
+	var day: Dictionary = DEPTH_LOOK if look_depth else {"sun": DAY_SUN, "ambient": Color("d2d0ca"), "fog": Color("a2b3d4"), "sky_top": Color("41529f"), "sky_horizon": Color("f4c49a"), "lake_horizon": Color("f2b08e")}
+	_lake_material.set_shader_parameter("horizon", (day.lake_horizon as Color).lerp(Color("3a3466"), night))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material]:
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
-	sun.light_color = DAY_SUN.lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
+	sun.light_color = (day.sun as Color).lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
 	sun.light_energy = lerpf(1.55, 0.60, night) * lerpf(1.0, 0.65, rain)
 	sun.rotation_degrees.x = lerpf(-22.0, -27.45, night)
 	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
 	sun.light_angular_distance = 2.2
 	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
-	environment.ambient_light_color = Color("d2d0ca").lerp(Color("8f90c8"), night)
+	environment.ambient_light_color = (day.ambient as Color).lerp(Color("8f90c8"), night)
 	environment.ambient_light_energy = 0.32
 	environment.fog_enabled = not _debug_colors
-	environment.fog_light_color = Color("a2b3d4").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
+	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
 	environment.fog_depth_begin = 200.0
@@ -2160,8 +2171,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	if sky != null:
 		# Less pink: a bluer top and a golden (not peach-pink) horizon, so their blend
 		# reads violet-to-gold rather than one pink wash.
-		sky.set_shader_parameter("top_color", Color("41529f").lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
-		sky.set_shader_parameter("horizon_color", Color("f4c49a").lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+		sky.set_shader_parameter("top_color", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
+		sky.set_shader_parameter("horizon_color", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
 
 func get_report() -> Dictionary:
 	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.
@@ -2172,4 +2183,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

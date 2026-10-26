@@ -276,11 +276,12 @@ func _run() -> void:
 		elif "--understory-pairs" in arguments: await _understory_pairs_scenario()
 		elif "--rock-pairs" in arguments: await _rock_pairs_scenario()
 		elif "--stem-pairs" in arguments: await _stem_pairs_scenario()
+		elif "--look-pairs" in arguments: await _look_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else "full"))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else "full")))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -629,6 +630,54 @@ func _stem_pairs_scenario() -> void:
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
 	material.set_shader_parameter("stem_organic", scenery.STEM_ORGANIC)
+	var drawn_ok := true
+	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
+	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Palette/depth evidence (diagnostic): previous look (look_depth false) and the new one in the
+## same frame at the root approach, the shore, the rim-overlook review camera (day) and the root
+## approach and overlook at night; per-view frame timing before/after at the three day views.
+func _look_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	_check("Depth look present on the prototype (day endpoints only)", scenery.get("look_depth") != null and scenery.DEPTH_LOOK.size() == 6, scenery.get_report().depth_look)
+	var hero: Vector3 = scenery.hero.base
+	var pose: Dictionary = scenery.overlook_pose()
+	var review := Camera3D.new()
+	review.fov = pose.fov
+	game.add_child(review)
+	for mood: Array in [["day", false, ["root-approach", "shore", "overlook"]], ["night", true, ["root-approach", "overlook"]]]:
+		game.world.set_appearance(mood[1], false, false)
+		await get_tree().create_timer(4.5).timeout
+		for view: String in mood[2]:
+			if view == "overlook":
+				review.position = pose.position
+				review.look_at(pose.target)
+				review.make_current()
+			else:
+				var at := Vector3(386.89, -78.71, -284.54) if view == "root-approach" else Vector3(387.12, -78.01, -300.14)
+				await _place(at, 0.0)
+				if view == "root-approach":
+					var to_root: float = Vector2(at.x - hero.x, at.z - hero.z).length()
+					var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (at.y + 0.7), to_root))
+					_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+					player.camera_yaw += deg_to_rad(10.0)
+				else:
+					_look(Vector3(190.0, -80.0, -330.0), -4.0)
+				player._visual.rotation.y = player.camera_yaw
+				player._camera.make_current()
+			await _frames(45)
+			for state: String in ["before", "after"]:
+				scenery.look_depth = state == "after"
+				await _frames(12)
+				await _capture("look-%s-%s-%s" % [view, state, mood[0]])
+				images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+				if mood[0] == "day":
+					timings.append((await _time_view(30, 180)).merged({"pose": view, "state": state}))
+	player._camera.make_current()
+	review.queue_free()
+	scenery.look_depth = true
+	game.world.set_appearance(false, false, false)
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)

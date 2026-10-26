@@ -1753,3 +1753,44 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Not the references' look:** no luminous veining.
 - **Not captured:** rain.
 - **Still open:** the route benchmark **fails** (p95 18.086 ms), the vista gate fails, and leaf density visibly changes at 94–96 m and 118–120 m.
+
+## Atmosphere: cooler layered distance and blue sky (2026-10-26)
+
+**Status: local improvement; scene art not accepted.** This is a prototype-only lighting change. Rollback: `git revert` this commit.
+
+**Change** (`scripts/prototype_scenery.gd`, `apply_look`, which runs only with the prototype on): new `DEPTH_LOOK` day endpoints.
+- **Sun:** `ffc07e` → `ffbc72`.
+- **Fog colour:** `a2b3d4` → `8ea4d4`.
+- **Lake reflection:** `f2b08e` → `c2b4d6`.
+- **Sky top:** `41529f` → `3d74c8`.
+- **Sky horizon:** `f4c49a` → `f0dcbc`.
+- **Unchanged:** ambient, night and rain endpoints, exposure, fog density and distances, and geometry. With the prototype off, nothing runs.
+
+**Sky cause:** the live sky is `lineage/living-scenery37-proposal01/drifting-clouds37.gdshader`, which computes `mix(horizon, top, pow(height, 0.45))`. At 10–30° elevation, about half of every pixel is the horizon colour, so a peach horizon over a violet top read as lavender.
+- **Fix:** a pale cream horizon under a clear blue top.
+- **No lineage edit:** the same material and shader objects are kept.
+
+**Evidence** (`look-pairs-20261026-104548-33253`: before (previous look) and after in the same frame; root approach, shore and rim overlook by day; root approach and overlook at night):
+
+| Measure | Before → after |
+|---|---|
+| Visible sky lavender index ((R+B)/2 − G) | +16 to +27 → +7 to +11 |
+| Visible sky blue index (B − R) | −10 to +11 → +18 to +42 |
+| Horizon bands | stay warm (blue −22 to −3) |
+| Overlook mid massif | L143, warmth −16 → L132, warmth −28 |
+| Lake warmth | +40 / +64 → −3 |
+
+- **Foreground:** within 1–2 luma.
+- **Night:** 0.08% of pixels change.
+- **Timing** (1280×720, full art, uncapped, fixed step, 30 warm-up + 180 samples, all drawn; GPU time unavailable; not the route benchmark): wall p50 8.42 → 8.34 ms (root approach), 15.34 → 15.55 (shore), 8.42 → 8.30 (overlook). That is within noise; primitives and draws are identical.
+
+**Rejected first version, retained** (`look-pairs-20261026-103600-32580` and `scenic-20261026-103711-32659`): a cooler ambient darkened and cooled the shaded clearing (home 71 → 66 luma, warmth +31 → +23).
+
+**Scenic** (`scenic-20261026-104658-33335`): fails only the known vista coverage gate (0.0128). Footing drift 0.0 (7/7), and geometry and collision are unchanged.
+
+**Limitations:**
+- **Sky:** it reads pale, a soft daytime blue rather than the references' golden-hour gradient, and the warm horizon is a thin band.
+- **Prototype-on clearing:** shifts brighter and cooler through visible sky and sky reflections (home 71 → 74 luma, warmth +31 → +25). The house and windows keep their warmth.
+- **Rain:** blends from the new day colours and is bluer.
+- **Not added:** mist layers.
+- **Still open:** the route benchmark **fails** (p95 18.086 ms), the vista gate fails, the LOD density change is open, and the full-scene art is not accepted.

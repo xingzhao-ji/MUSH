@@ -199,6 +199,16 @@ class StemPairsReport(unittest.TestCase):
                 verify.inspect("stem-pairs", Path("unused"), 120)
 
 
+class LookPairsReport(unittest.TestCase):
+    def test_missing_night_pair_fails(self):
+        files = [f"look-{view}-{state}-day.png" for view in ("root-approach", "shore", "overlook") for state in ("before", "after")]
+        report = {"schema": "mush-slice-traversal/1", "mode": "look-pairs", "passed": True, "legs": [],
+                  "checks": [{"label": "look", "passed": True}], "images": [{"file": name} for name in files]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every before/after pair"):
+                verify.inspect("look-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
