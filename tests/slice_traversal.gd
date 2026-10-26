@@ -1069,7 +1069,8 @@ func _geology_diag_scenario() -> void:
 	var wall: Dictionary = scenery.get_report().get("escarpment", {})
 	_check("West Wall built for diagnosis", wall.get("passed", false), wall.get("passed"))
 	var views: Array = [["shore", Vector3(387.12, -78.01 + 1.7, -300.14), Vector3(-600.0, 140.0, -560.0)], ["side", Vector3(-300.0, scenery.terrain_height(-300.0, -200.0) + 30.0, -200.0), Vector3(-600.0, 200.0, -800.0)]]
-	var states: Array = [["final", 0, false], ["nofog", 0, true], ["albedo", 1, true], ["normal", 2, true], ["greylit", 3, false], ["greylit-nofog", 3, true], ["mask", 4, true]]
+	# fog-previous: the same final rendering with the previous fog profile (matched atmosphere pair).
+	var states: Array = [["final", 0, false], ["fog-previous", 0, false], ["nofog", 0, true], ["albedo", 1, true], ["normal", 2, true], ["greylit", 3, false], ["greylit-nofog", 3, true], ["mask", 4, true]]
 	var review := Camera3D.new()
 	review.far = 2600.0
 	review.fov = 60.0
@@ -1082,15 +1083,17 @@ func _geology_diag_scenario() -> void:
 		review.make_current()
 		await _frames(30)
 		for state: Array in states:
+			scenery.atmosphere_previous = state[0] == "fog-previous"
 			scenery.set_geology_debug(state[1], state[2])
 			await _frames(8)
 			await _capture("geodiag-%s-%s" % [view[0], state[0]])
+	scenery.atmosphere_previous = false
 	scenery.set_geology_debug(0, false)
 	await _frames(4)
 	player._camera.make_current()
 	review.queue_free()
-	_check("Final rendering restored after diagnosis (debug view 0, fog on)", scenery.geology_debug == 0 and not scenery._debug_fog_off, {"debug": scenery.geology_debug, "fog_off": scenery._debug_fog_off})
-	_check("Diagnosis frames captured (2 views x 7 states)", images.size() == 14, images.size())
+	_check("Final rendering restored after diagnosis (debug view 0, fog on, current atmosphere)", scenery.geology_debug == 0 and not scenery._debug_fog_off and not scenery.atmosphere_previous, {"debug": scenery.geology_debug, "fog_off": scenery._debug_fog_off, "atmosphere_previous": scenery.atmosphere_previous})
+	_check("Diagnosis frames captured (2 views x 8 states)", images.size() == 16, images.size())
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.

@@ -2401,3 +2401,46 @@ The visible images are `geology-20261026-150353-39697`. `150607` is the same sta
 - **Faces:** pale, smooth faces remain on the left wall and the headwall.
 - **Falls and pool:** the falls foot and pool are still hidden from the shore.
 - **Draw-loss trigger:** unresolved.
+
+## Prototype atmosphere: clearer near and mid distance, far haze kept (2026-10-26)
+
+**Status: bounded, prototype-only atmosphere correction; a moderate measured gain; overall art not accepted.** Rollback: `git revert` this commit.
+
+**Cause:** measured in `geology-diag-145539`. Depth fog lifted the wall's mean luma by 32–48 and removed about 40% of its contrast at 0.3–1.2 km.
+
+**Change** (`apply_look`, which runs only when the prototype scenery is present; the default `environment_controller.gd` path is untouched):
+
+| Depth fog | Previous | New |
+|---|---|---|
+| Begin | 200 m | 320 m |
+| End | 1,400 m | 1,600 m |
+| Curve | 1.8 | 2.6 |
+| Density, day / rain | 0.5 / 0.8 | 0.55 / 0.85 |
+
+- **Effect** (fog = `pow(smoothstep(begin, end, d), curve) × density`): about 0.29 → 0.12 at 1 km. It stays about 0.46–0.55 beyond 1.4 km, and near distances stay clear.
+- **Unchanged:** fog colour, aerial perspective, night and the overview fog.
+- **Evidence switch:** `atmosphere_previous` is a capture-only switch to the previous profile.
+
+**Matched pair** (`geology-diag-20261026-151005-43799`: same process, geometry, light and weather; `fog-previous` against `final`):
+
+| | Shore: previous → new | Side: previous → new |
+|---|---|---|
+| Rock local contrast | 2.09 → 2.64 (+26%) | 1.67 → 2.01 (+20%) |
+| Rock tonal spread | 97 → 115 | 84 → 92 |
+| Rock mean luma | 162 → 146 | 148 → 135 |
+| Upper half, non-rock (sky, far) | 197 → 196 | 194 → 194 |
+| Lower half, non-rock | 71 → 61 | 90 → 86 |
+
+- **By eye:**
+  - **Shore:** the headwall shows its fracture plates, and the dark massif and mushroom are richer.
+  - **Side:** the far headwall is clearer but still cool and layered, and the near wall is warmer.
+  - **Upper-left upland:** still pale (geometry, next pass).
+- **Scenic** (`scenic-20261026-151121-44606`): fails only the known vista gate (0.0129).
+  - **Unchanged:** footing drift 0.0 (7/7); slice and route faces at 5,520 and 1,590; 3 owned colliders and 0 shadow casters.
+  - **Small changes:** rim-overlook rain canopy coverage 0.0912 → 0.0931; cliff-detail at night has 0.16% clipped pixels where it had none.
+  - **Rim overlook (by eye):** composition intact, with mid massifs slightly more defined.
+
+**Limits:**
+- **Contrast:** haze still costs the wall about 40% of its no-fog contrast at the shore.
+- **Not verified:** rain and night were not reviewed by eye, and nothing was checked on a device.
+- **Still open:** the route benchmark **failure**, the vista gate and overall art acceptance.

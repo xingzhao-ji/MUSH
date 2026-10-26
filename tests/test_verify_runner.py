@@ -278,7 +278,7 @@ class GeologyReport(unittest.TestCase):
 
 class GeologyDiagReport(unittest.TestCase):
     def test_missing_mask_frame_fails(self):
-        files = [f"geodiag-{view}-{state}.png" for view in ("shore", "side") for state in ("final", "nofog", "albedo", "normal", "greylit", "greylit-nofog")]
+        files = [f"geodiag-{view}-{state}.png" for view in ("shore", "side") for state in ("final", "fog-previous", "nofog", "albedo", "normal", "greylit", "greylit-nofog")]
         report = {"schema": "mush-slice-traversal/1", "mode": "geology-diag", "passed": True, "legs": [],
                   "checks": [{"label": "diag", "passed": True}], "images": [{"file": name} for name in files]}
         with patch.object(verify, "read_report", return_value=report):

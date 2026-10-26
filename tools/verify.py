@@ -500,7 +500,7 @@ def inspect(suite, output, duration, expected_vsync=1):
         assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "geology-diag"
         failed = [c["label"] for c in report["checks"] if not c["passed"]]
         assert report["checks"] and not failed and report["passed"], failed or "geology-diag report not passed"
-        expected = [f"geodiag-{view}-{state}.png" for view in ("shore", "side") for state in ("final", "nofog", "albedo", "normal", "greylit", "greylit-nofog", "mask")]
+        expected = [f"geodiag-{view}-{state}.png" for view in ("shore", "side") for state in ("final", "fog-previous", "nofog", "albedo", "normal", "greylit", "greylit-nofog", "mask")]
         assert [image["file"] for image in report["images"]] == expected, "Expected every diagnosis frame"
         return {"diagnostic_only": True, "art_approved": False}
     if suite == "geology":
