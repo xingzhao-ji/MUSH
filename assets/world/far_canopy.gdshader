@@ -126,7 +126,7 @@ void fragment() {
 		spec = 0.1;
 	} else {
 		// Distant forest clump: foliage palette in instance COLOR, darker toward the base.
-		albedo = v_col * 0.72 * (0.5 + 0.55 * UV.y) * (0.85 + 0.3 * sun_side) * (0.85 + 0.3 * fbm(v_world.xz * 0.15));
+		albedo = v_col * 0.95 * (0.5 + 0.55 * UV.y) * (0.85 + 0.3 * sun_side) * (0.85 + 0.3 * fbm(v_world.xz * 0.15));
 		rough = 0.9;
 		spec = 0.05;
 	}

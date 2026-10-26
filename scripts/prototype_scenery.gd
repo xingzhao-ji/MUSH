@@ -26,6 +26,9 @@ const TERRAIN_HALF := 1500.0
 const TERRAIN_CELLS := 220
 ## Local detail patch over the rim view's central cliff band (target cell size, metres).
 const DETAIL_CELL := 6.0
+## Near-tree crowns may use a denser existing canopy mesh up to this many vertices.
+const NEAR_CROWN_VERTEX_CAP := 2400
+const FOREST_HUES: Array[Color] = [Color("2f5a2a"), Color("3d6b30"), Color("2c5a4a"), Color("556b2f"), Color("6b6a2e")]
 const VALLEY_DIR := Vector2(0.447, -0.894)
 const LAKE_CENTER := Vector2(190.0, -330.0)
 const LAKE_Y := -82.0
@@ -75,6 +78,8 @@ var _terrace_noise: FastNoiseLite
 var _legacy_mesa: bool = false
 var landform_checks: Dictionary = {}
 var detail_patch_triangles: int = 0
+## [original material, softened duplicate] pairs; dynamic wind/night uniforms are copied.
+var _crown_sync: Array = []
 var detail_cells_replaced: int = 0
 var route: Node3D
 var route_report: Dictionary = {}
@@ -614,6 +619,52 @@ func _forest_templates() -> Array:
 	for key: int in parts: templates.append(parts[key])
 	return templates
 
+## Denser existing leaf-cluster mesh for near trees: the largest original canopy mesh
+## under NEAR_CROWN_VERTEX_CAP, scaled to the forest-ring crown volume, with a softened
+## duplicate of its material. The original meshes and materials are never modified.
+func _dense_crown(templates: Array) -> Dictionary:
+	var small: Mesh = null
+	for part: Dictionary in templates[0]:
+		if part.kind == "LayeredCanopies":
+			small = part.mesh
+			break
+	var canopies: Variant = _world.get("_m37_canopies")
+	if small == null or not canopies is Array: return {}
+	var counts: Array = []
+	var best: MultiMeshInstance3D = null
+	var best_count: int = 0
+	for entry: Dictionary in canopies:
+		var source: MultiMeshInstance3D = entry.node
+		if source.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY: continue
+		var count: int = (source.multimesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+		counts.append(count)
+		if count <= NEAR_CROWN_VERTEX_CAP and count > best_count and source.material_override is ShaderMaterial:
+			best = source
+			best_count = count
+	if best == null: return {}
+	var mesh: Mesh = best.multimesh.mesh
+	var ratio: float = small.get_aabb().size.length() / maxf(mesh.get_aabb().size.length(), 0.001)
+	var original: ShaderMaterial = best.material_override
+	var soft: ShaderMaterial = original.duplicate()
+	var base: Variant = original.get_shader_parameter("base_color")
+	var accent: Variant = original.get_shader_parameter("accent_color")
+	if base is Color and accent is Color:
+		# Softer, warmer and lower-contrast than the source palette.
+		soft.set_shader_parameter("base_color", (base as Color).darkened(0.12).lerp(Color("4a5a2a"), 0.15))
+		soft.set_shader_parameter("accent_color", (base as Color).lerp(accent, 0.45))
+	_crown_sync.append([original, soft])
+	tree_report["near_crown"] = {"vertices": best_count, "small_vertices": (small.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), "candidate_vertices": counts, "volume_scale": ratio}
+	return {"mesh": mesh, "material": soft, "scale": ratio}
+
+## Triangles in a mesh, for indexed or non-indexed surfaces.
+func _triangle_count(mesh: Mesh) -> int:
+	var total: int = 0
+	for surface: int in mesh.get_surface_count():
+		var arrays: Array = mesh.surface_get_arrays(surface)
+		var index: Variant = arrays[Mesh.ARRAY_INDEX]
+		total += ((index as PackedInt32Array).size() if index is PackedInt32Array else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	return total
+
 func _add_trees(rng: RandomNumberGenerator) -> void:
 	var templates: Array = _forest_templates()
 	tree_report = {"templates": templates.size()}
@@ -621,6 +672,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		tree_report["error"] = "ForestMiddleLayer templates not found"
 		return
 	var spots: Array[Vector2] = []
+	var groups: Array[int] = []
 	# 1. Framing trees beside the rim overlook, kept out of the central view.
 	var pose: Dictionary = overlook_pose()
 	var eye: Vector3 = pose.position
@@ -628,6 +680,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	var right := Vector2(-forward.y, forward.x)
 	for frame: Vector2 in [Vector2(10.0, -9.5), Vector2(14.0, 10.5), Vector2(22.0, -15.5), Vector2(27.0, 17.0), Vector2(7.0, 14.0)]:
 		spots.append(Vector2(eye.x, eye.z) + forward * frame.x + right * frame.y)
+		groups.append(1)
 	var framing: int = spots.size()
 	# 2. Terrace shelves, 3. lake-shore groves, 4. route flanks.
 	var tries: int = 0
@@ -665,10 +718,13 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 			var ahead: float = off.dot(gaze)
 			if ahead > 0.0 and ahead < 260.0 and absf(off.dot(Vector2(-gaze.y, gaze.x))) < ahead * 0.45 + 8.0: continue
 		spots.append(spot)
+		groups.append(group)
 		if group == 2: shelf += 1
 		elif group == 3: shore += 1
 		else: flank += 1
 	_legacy_mesa = false
+	var near_crown: Dictionary = _dense_crown(templates)
+	var near_trees: int = 0
 	var batches: Dictionary = {}
 	for index: int in spots.size():
 		var spot: Vector2 = spots[index]
@@ -679,10 +735,20 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		# face, is dropped after its draws; unchanged ground (e.g. the rim) keeps it.
 		if _landform_changed(spot.x, spot.y) and terrain_slope(spot.x, spot.y) > 0.6: continue
 		var cell := Vector2i(floori(spot.x / 160.0), floori(spot.y / 160.0))
+		# Near trees (framing and route flanks) get full leaf clusters at their branch ends.
+		var near: bool = not near_crown.is_empty() and groups[index] in [1, 4]
+		if near: near_trees += 1
 		for part: Dictionary in template:
-			var key: String = "%s|%d|%d|%d" % [part.kind, part.mesh.get_instance_id(), cell.x, cell.y]
-			if not batches.has(key): batches[key] = {"mesh": part.mesh, "material": part.material, "kind": part.kind, "poses": []}
-			batches[key].poses.append(root * part.local)
+			var mesh: Mesh = part.mesh
+			var material: Material = part.material
+			var local: Transform3D = part.local
+			if near and part.kind == "LayeredCanopies":
+				mesh = near_crown.mesh
+				material = near_crown.material
+				local = Transform3D(local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)), local.origin)
+			var key: String = "%s|%d|%d|%d|%d" % [part.kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y]
+			if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": part.kind, "poses": []}
+			batches[key].poses.append(root * local)
 	for key: String in batches:
 		var batch: Dictionary = batches[key]
 		var multi := MultiMesh.new()
@@ -701,7 +767,10 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		_static.append(node)
 		tree_instances += multi.instance_count
 	tree_count = spots.size()
-	tree_report.merge({"trees": tree_count, "framing": framing, "shelf": shelf, "shore": shore, "flank": flank, "instances": tree_instances, "batches": batches.size()})
+	var tree_triangles: int = 0
+	for key: String in batches:
+		tree_triangles += _triangle_count(batches[key].mesh) * batches[key].poses.size()
+	tree_report.merge({"trees": tree_count, "near_trees": near_trees, "tree_triangles": tree_triangles, "framing": framing, "shelf": shelf, "shore": shore, "flank": flank, "instances": tree_instances, "batches": batches.size()})
 
 func _add_carpet(rng: RandomNumberGenerator) -> void:
 	var base_color := Color("48752e")
@@ -731,15 +800,21 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		if terrain_slope(x, z) > 0.5: continue
 		if is_instance_valid(route) and route.valid and route.is_in_corridor(Vector3(x, ground, z), 2.0): continue
 		if Vector2(x, z).distance_to(KNOLL) < 140.0: continue
-		var width: float = rng.randf_range(12.0, 22.0)
-		var height: float = rng.randf_range(11.0, 19.0)
+		# Groves and gaps: sparse where the grove field is low, dense elsewhere.
+		if _hill_noise.get_noise_2d(x * 0.6 + 1700.0, z * 0.6) < -0.15 and rng.randf() > 0.15: continue
+		# Varied silhouettes from one mesh: spires, rounded crowns and spreading crowns.
+		var form: float = rng.randf()
+		var width: float = rng.randf_range(6.0, 10.0) if form < 0.3 else (rng.randf_range(11.0, 20.0) if form < 0.8 else rng.randf_range(16.0, 26.0))
+		var height: float = rng.randf_range(16.0, 26.0) if form < 0.3 else (rng.randf_range(10.0, 17.0) if form < 0.8 else rng.randf_range(7.0, 11.0))
 		_legacy_mesa = false
 		var placed: float = terrain_height(x, z)
 		var on_cliff: bool = _landform_changed(x, z) and terrain_slope(x, z) > 0.6
 		_legacy_mesa = true
 		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, placed - 1.0, z)))
-		var shade: float = rng.randf_range(0.92, 1.08)
-		var tone: Color = base_color.lerp(accent_color, rng.randf_range(0.0, 0.55)) * shade
+		var shade: float = rng.randf_range(0.8, 1.05)
+		var tone: Color = FOREST_HUES[rng.randi_range(0, FOREST_HUES.size() - 1)].lerp(base_color.lerp(accent_color, rng.randf_range(0.0, 0.4)), 0.25) * shade
+		# Damp valley floors lean blue-green.
+		tone = tone.lerp(Color("2c5a4a"), smoothstep(-40.0, -70.0, placed) * 0.4)
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
 		if on_cliff or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
@@ -1142,6 +1217,9 @@ func set_reduced_motion(value: bool) -> void:
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
 	var toward_sun: Vector3 = sun.global_basis.z.normalized()
+	for pair: Array in _crown_sync:
+		for key: String in ["wind_time", "wind_displacement_m", "night_amount"]:
+			(pair[1] as ShaderMaterial).set_shader_parameter(key, (pair[0] as ShaderMaterial).get_shader_parameter(key))
 	_lake_material.set_shader_parameter("horizon", Color("f2b08e").lerp(Color("3a3466"), night))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material]:
 		material.set_shader_parameter("night", night)
@@ -1152,17 +1230,18 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	sun.rotation_degrees.x = lerpf(-22.0, -27.45, night)
 	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
 	sun.light_angular_distance = 2.2
-	environment.ambient_light_color = Color("e2c9cf").lerp(Color("8f90c8"), night)
+	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
+	environment.ambient_light_color = Color("c9ccd6").lerp(Color("8f90c8"), night)
 	environment.ambient_light_energy = 0.32
 	environment.fog_enabled = not _debug_colors
-	environment.fog_light_color = Color("c3a4d0").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
+	environment.fog_light_color = Color("a9b6cf").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
 	environment.fog_depth_begin = 200.0
 	environment.fog_depth_end = FOG_END
 	environment.fog_depth_curve = 1.8
 	environment.fog_density = (0.14 if _overview else lerpf(0.5, 0.8, rain))
-	environment.fog_aerial_perspective = 0.25
+	environment.fog_aerial_perspective = 0.15
 	environment.fog_sun_scatter = 0.1
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
