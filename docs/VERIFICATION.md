@@ -1862,7 +1862,7 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 **Cost:**
 - **Primitives:** +380k at shore and offset (+9%), +380k at the overlook (+39%). Draw calls +1; draw nodes 121 → 124.
 - **Timing:** per-view wall p50 rose 1.0–2.1 ms after sequential before/after sampling. Render CPU p50 was about the same, and GPU time is unavailable.
-- **Noise:** another workload shared the machine, and the same shore view's before p50 ranged from 29.7 to 40.9 ms across runs. These timings are **not** a reliable cost measure.
+- **Noise:** the same shore view's before p50 ranged from 29.7 to 40.9 ms across runs, so these timings are **not** a reliable cost measure. The source of that variance was not measured.
 
 **Scenic** (`scenic-20261026-115653-39655`): fails only the known vista gate (0.0128).
 - Canopy and clipped metrics are unchanged.
@@ -1902,7 +1902,7 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 | Offset view primitives | +379,544 | +102,008 |
 
 - **Draw calls:** +1 in each view; 2 nodes.
-- **Timing:** wall p50 changes of −1.3 to +1.4 ms are within noise under a shared-machine workload. GPU time is unavailable.
+- **Timing:** wall p50 changes of −1.3 to +1.4 ms are within the observed run-to-run variance. GPU time is unavailable.
 
 **Image tradeoff** (zoomed three-way comparison of blobs, full detail and simplified):
 - **Shore band:** trunks and the ragged forest edge are preserved.
@@ -1953,8 +1953,10 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 
 **Cost** (1280×720, full art, uncapped, fixed step, ABBA 2 × 180 samples after 30 warm-up, all frames drawn; GPU timing unavailable):
 - **Primitives and draws:** identical.
-- **`121736`** (functionally identical shader, quieter machine): mean wall p50 change after − before was −0.20 ms (shore), −0.01 ms (offset) and +0.09 ms (overlook). That is within noise.
-- **Final `122408`:** inconclusive. Another workload roughly doubled frame times, and the overlook's own before samples drift from 11.4 to 17.8 ms within one ABBA pass. Deltas measured +0.62, +0.28 and +4.58 ms p50.
+- **`121736`** (functionally identical shader): mean wall p50 change after − before was −0.20 ms (shore), −0.01 ms (offset) and +0.09 ms (overlook).
+- **Final `122408`:** mean wall p50 deltas of +0.62, +0.28 and +4.58 ms.
+- **Variance:** in `122408` the shore baseline p50 was about 30 ms against about 16 ms in `121736`, and the overlook's own before samples ranged from 11.4 to 17.8 ms within one ABBA pass. The cause of that variance was not measured.
+- **Verdict:** the two runs do not agree, and the shader's GPU cost is **unresolved**.
 - **Real but unmeasured GPU work:** one screen copy per frame plus up to ~20 depth taps per water pixel.
 
 **Scenic** (`scenic-20261026-122149-44174`): fails only the known vista gate (0.0129). Canopy and clipped metrics are unchanged; geometry and collision are unchanged; footing drift 0.0.
@@ -1965,3 +1967,5 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Sky fallback:** has no clouds when the sky is off-screen.
 - **Not added:** no foam or shoreline wetness on the land.
 - **Still open:** the route benchmark **fails** (p95 19.834 ms); the vista gate; the grove night tone; full-scene art acceptance.
+
+**Wording correction (2026-10-26):** earlier text, and the commit message of `e69efee`, called one run "quieter" and attributed timing variance to another workload or machine load. Concurrent work is known context, not a measured cause. The corrected text above states only the observed variance and the unresolved GPU cost.
