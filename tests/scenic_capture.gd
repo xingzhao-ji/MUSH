@@ -23,13 +23,13 @@ func _bridge_bounds() -> AABB:
 
 func _views() -> Array[Dictionary]:
 	var bridge: AABB = _bridge_bounds()
-	var overlook: Dictionary = game.prototype_scenery.overlook_pose() if is_instance_valid(game.get("prototype_scenery")) else {"position":Vector3(-30,45,215),"target":Vector3(-190,12,-385),"fov":80.0}
+	var overlook: Dictionary = game.prototype_scenery.overlook_pose() if is_instance_valid(game.get("prototype_scenery")) else {"position":Vector3(40,3,-40),"target":Vector3(378,100,-648),"fov":48.0}
 	var middle: Vector3 = bridge.get_center()
 	return [
 		{"view":"scenic-home","camera":"review","position":Vector3(6,3.3,20),"target":Vector3(3.2,1.65,0),"fov":60.0,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":HOME_ANCHOR},
 		{"view":"scenic-vista","camera":"review","position":Vector3(-1,2.6,22),"target":Vector3(22,9,-40),"fov":55.0,"player":Vector3(-5.0,0.08,13.0),"yaw":-0.03,"anchor":HOME_ANCHOR},
-		{"view":"overlook","camera":"review","position":overlook.position,"target":overlook.target,"fov":overlook.fov,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":overlook.target},
-		{"view":"world-overview","camera":"review","position":Vector3(40,430,480),"target":Vector3(0,40,-420),"fov":62.0,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":Vector3(0,0,0)},
+		{"view":"rim-overlook","camera":"review","position":overlook.position,"target":overlook.target,"fov":overlook.fov,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":overlook.target},
+		{"view":"world-overview","camera":"review","position":Vector3(-320,620,520),"target":Vector3(150,-40,-480),"fov":62.0,"player":Vector3(4,0.08,14),"yaw":0.278,"anchor":Vector3(0,0,0)},
 		{"view":"ground-path","camera":"player","player":Vector3(-2,0.08,18),"look_at":HOME_ANCHOR,"pitch":-4.0,"anchor":HOME_ANCHOR},
 		{"view":"ground-bridge","camera":"player","player":Vector3(middle.x-4.0,0.08,middle.z+2.0),"look_at":middle,"pitch":-6.0,"anchor":middle,"found":bridge.size != Vector3.ZERO},
 	]
@@ -116,7 +116,22 @@ func _run() -> void:
 				game.ui.hide()
 				hud["passed"] = hud.saved
 				passed = passed and hud.saved
-	var report := {"schema":"mush-scenic-capture/1","passed":passed,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"hud":hud,"world_living_motion_disabled":true,"prototype_shader_motion_frozen":prototype.frozen if has_prototype else null,"other_environment_shader_motion_frozen":bool(game.environment_controller.get("_applied_wind_strength")==0.0),"motion_note":"Prototype far-layer shimmer is frozen only when prototype_shader_motion_frozen is true. The shared environment controller (wind, clouds, water) keeps running during stills, so other_environment_shader_motion_frozen reports its measured wind strength being zero, not an intent. Stills do not establish motion, physics or performance.","motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
+	var debug_files: Array = []
+	if has_prototype:
+		# Diagnostic colours are taken in day/no-rain: restore that appearance after the
+		# rain loop and let the 2 s appearance transition settle before capturing.
+		game.world.set_appearance(false,false,false)
+		prototype.set_overview(false)
+		await get_tree().create_timer(4.5).timeout
+		prototype.set_debug_colors(true)
+		for spec: Dictionary in _views():
+			if spec.view != "rim-overlook" and spec.view != "scenic-vista": continue
+			await _pose(spec)
+			var shot: Dictionary = await _capture(spec.view+"-day-debug-colors")
+			shot.merge({"view":spec.view,"night_amount":game.world.night_amount,"rain_amount":game.world.rain_amount,"lighting":"unlit terrain/lake albedo; fog disabled; other materials lit"})
+			debug_files.append(shot)
+		prototype.set_debug_colors(false)
+	var report := {"schema":"mush-scenic-capture/1","passed":passed,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"debug_color_files":debug_files,"hud":hud,"world_living_motion_disabled":true,"prototype_shader_motion_frozen":prototype.frozen if has_prototype else null,"environment_wind_strength_measured":game.environment_controller.get("_applied_wind_strength"),"other_shader_freeze_state":null,"motion_note":"prototype_shader_motion_frozen is the prototype far layer only. environment_wind_strength_measured is the shared controller wind value at report time; it says nothing about clouds, water or other shaders, whose freeze state is not enforced or verified here (null). Stills do not establish motion, physics or performance.","motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
 	var file := FileAccess.open(output.path_join("scenic.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"\t"))
 	file.close()

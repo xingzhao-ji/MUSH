@@ -50,6 +50,7 @@ func _ready() -> void:
 		prototype_scenery = PrototypeScenery.new()
 		add_child(prototype_scenery)
 		prototype_scenery.configure(world)
+		player.movement_extension = prototype_scenery
 		review_camera.far = PrototypeScenery.FAR_PLANE
 	var arguments := OS.get_cmdline_user_args()
 	verification = "--mobile-save-review" in arguments or "--verify" in arguments or "--capture" in arguments or "--benchmark" in arguments or "--traversal" in arguments or "--crash-probe" in arguments or "--smoke" in arguments or "--ui-review" in arguments or "--growth-timing" in arguments or "--wake-review" in arguments
@@ -202,7 +203,7 @@ func _snapshot() -> Dictionary:
 	return snapshot
 
 func _capture_review() -> void:
-	var runner: Node = load("res://tests/scenic_capture.gd" if "--scenic" in OS.get_cmdline_user_args() else "res://tests/capture_current.gd").new()
+	var runner: Node = load("res://tests/route_traversal.gd" if "--route" in OS.get_cmdline_user_args() else "res://tests/scenic_capture.gd" if "--scenic" in OS.get_cmdline_user_args() else "res://tests/capture_current.gd").new()
 	add_child.call_deferred(runner)
 
 func _build_ui() -> void:

@@ -1291,3 +1291,25 @@ The downloadable mac066 app remains unchanged and predates this source refinemen
 No new export, continuous-motion, live-listening or physical-phone acceptance
 is claimed. Native UI automation still fails to start its pipe. Whole-game art
 and the independent paving contact-coverage gate remain open.
+
+## Scenery prototype: terrain blockout and walkable knoll route (2026-10-26)
+
+Branch `prototype/scenery-first`, profile `MUSH-proto-scenery-20261025`, Godot 4.7.2 (SHA256 `c7cccbf8…718ccf`). Rollback: `git revert` the commit, or launch with `--prototype-scenery=off`.
+
+- **Geometry correctness:** terrain, cap-top and stem normals are checked in the prototype report (`winding_ok`). The far layer (terrain, lake, giants, pillars, carpet) has no colliders and is a labelled visual blockout.
+- **Route:** one `NaturalRoute` ribbon with its own collider starts flush on the baked collider seam (−2, 29), measured within 3 cm, and climbs 261 m to a southern knoll. The player's movement-only extension (`scripts/air_capsule_guard.gd`) adds the exact route corridor plus a 3 m approach strip. Safe, save and teleport positions still require the original box.
+- **`route` suite: 18/18 checks** (`reports/route-20261026-012839-69055`):
+  - continuous real-input walk from the original box to the knoll in 7,397 ticks, 100% grounded, no recovery;
+  - camera clearance at least 0.77 m;
+  - Glow twice and Float on the route end grounded;
+  - both shoulders and the open end recover into the original box;
+  - snapshot and teleport stay in the box.
+- **Not covered by the route suite:** automated input only. No manual feel, no new-process reload, no Float hover near route edges beyond the tested press.
+- **Regression and benchmark:**
+  - Acceptance **295/295** with the route active (`reports/acceptance-20261026-013255-69263`).
+  - Benchmark **p95 13.157 ms / p99 14.633 ms**, 13,143 frames, two loops, zero stalls (`reports/benchmark-20261026-013617-69441`). It measures the existing night/rain clearing route, not the knoll views.
+- **Scenic suite:** 18 frames pass framing and floor checks. The vista canopy coverage gate **fails** (0.0177 < 0.02) and is recorded, not retuned (`reports/scenic-20261026-013128-69181`).
+- **Earlier failures retained:**
+  - one intermittent startup stall (`reports/scenic-20261026-001845-64501`);
+  - route refusals for grade (24°) and turn radius (3.9 m), which prompted the redesign;
+  - a rejected concave-knoll trial (4.3 m trail cut).

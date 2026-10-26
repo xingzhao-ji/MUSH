@@ -151,7 +151,7 @@ def inspect_render_progress(progress, frames):
     return {"engine_draw_progress_valid": True, "samples": frames}
 
 
-SCENIC_VIEWS = ("scenic-home", "scenic-vista", "overlook", "world-overview", "ground-path", "ground-bridge")
+SCENIC_VIEWS = ("scenic-home", "scenic-vista", "rim-overlook", "world-overview", "ground-path", "ground-bridge")
 SCENIC_APPEARANCES = ("day", "night", "rain")
 SCENIC_SIZE = [1280, 720]
 
@@ -466,6 +466,21 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "traversal_verified": False}
+    if suite == "route":
+        report = read_report(output / "route.json")
+        assert report["schema"] == "mush-route-traversal/1"
+        failed = [c["label"] for c in report["checks"] if not c["passed"]]
+        assert report["checks"] and not failed and report["passed"], failed or "route report not passed"
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        decoded = []
+        for image in report["images"]:
+            item = module.decode(output / image["file"])
+            assert item["dimensions"] == [1280, 720] and item["png_sha256"] == image["png_sha256"]
+            decoded.append(item)
+        return {"checks": len(report["checks"]), "legs": [{k: leg[k] for k in ("label", "ticks", "reached", "recovered", "floor_ratio")} for leg in report["legs"]],
+                "full_png_decodes": decoded, "manual_feel_verified": False, "performance_measured": False}
     if suite == "scenic":
         report = read_report(output / "scenic.json")
         expected = [(view, mood) for mood in SCENIC_APPEARANCES for view in SCENIC_VIEWS]
@@ -528,7 +543,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route"), required=True)
     parser.add_argument("--prototype-scenery", choices=("on", "off"), help="scenic-only: select the presentation look for matched captures")
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
@@ -605,6 +620,8 @@ def main():
         command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-capture":
         command += ["--script", "res://tests/paving_shape_compare.gd", "--", "--report-dir=" + str(output / "native"), "--candidate=" + str(args.candidate)]
+    elif args.suite == "route":
+        command += ["--resolution", "1280x720", "--", "--capture", "--route", "--report-dir", str(output)]
     elif args.suite == "scenic":
         command += ["--resolution", "1280x720", "--", "--capture", "--scenic", "--report-dir", str(output)]
         if args.prototype_scenery:
@@ -620,7 +637,7 @@ def main():
               "timing_mode": "uncapped_throughput_diagnostic" if args.uncapped else "default_vsync",
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     try:
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite == "route" else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

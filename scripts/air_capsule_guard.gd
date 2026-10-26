@@ -2,6 +2,25 @@ extends "res://lineage/entrance48-player-step-proposal02/player.gd"
 ## Candidate AIR planar clearance guard; native resolution and settings are inherited.
 ## Zero planar displacement keeps ordinary vertical Float and landing support.
 
+## Prototype movement-only extension (scripts/prototype_scenery.gd allows_movement).
+## Null keeps the original box exactly. Safe/save/teleport positions still require the
+## original box: _valid_safe_position re-applies it, and _resolve_safe_position accepts
+## candidates only through that validator.
+var movement_extension: Node = null
+
+func _outside_playable(point: Vector3) -> bool:
+	if not super._outside_playable(point):
+		return false
+	return not (is_instance_valid(movement_extension) and movement_extension.allows_movement(point))
+
+func _outside_original_box(point: Vector3) -> bool:
+	return super._outside_playable(point)
+
+func _valid_safe_position(point: Vector3) -> bool:
+	if _outside_original_box(point):
+		return false
+	return super._valid_safe_position(point)
+
 func _safe_hover_support(feet: Vector3) -> bool:
 	if not super._safe_hover_support(feet):
 		return false

@@ -1,27 +1,70 @@
 extends Node3D
-## Reversible far-layer scenery: luminous umbrella canopies, their stems and
-## natural rock spires. Built once at startup; no colliders, shadows or per-frame
-## geometry. Selected by project setting mush/prototype/scenery or the
-## --prototype-scenery=on|off user argument.
+## Reversible far-layer scenery for the clearing: a graded terraced valley, forest
+## carpet, fungal giants and rock pillars. Built once at startup; no colliders, no
+## shadows, no per-frame geometry. LABELED VISUAL BLOCKOUT: none of this is walkable.
+## Selected by project setting mush/prototype/scenery or --prototype-scenery=on|off.
 const SHADER := preload("res://assets/world/far_canopy.gdshader")
-const FAR_PLANE := 1400.0
+const Route := preload("res://scripts/prototype_route.gd")
+const TERRAIN_SHADER := preload("res://assets/world/far_terrain.gdshader")
+## Far plane and fog end are chosen together: every hero element is inside 0.55 x far
+## and fog reaches full strength (FOG_END) well inside the far plane.
+const FAR_PLANE := 2600.0
+const FOG_END := 1400.0
+const TERRAIN_HALF := 1500.0
+const TERRAIN_CELLS := 220
+const VALLEY_DIR := Vector2(0.447, -0.894)
+const LAKE_CENTER := Vector2(190.0, -330.0)
+const LAKE_Y := -82.0
+## Southern overlook knoll and the walkable route that climbs to it from the baked
+## collider seam. The original collision box is x -24..25, z -24..29; the player's
+## original movement box ends at z 26, so a short explicit approach strip joins them.
+const KNOLL := Vector2(72.0, 215.0)
+const ROUTE_SEAM := Vector2(-2.0, 29.0)
+const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0), Vector2(-1.0, 62.0), Vector2(6.0, 80.0), Vector2(24.0, 96.0), Vector2(48.0, 108.0), Vector2(76.0, 118.0), Vector2(100.0, 135.0), Vector2(110.0, 160.0), Vector2(104.0, 185.0), Vector2(88.0, 205.0), Vector2(72.0, 215.0)]
+## Tread grade limit (route module rejects beyond 14 degrees after its own smoothing).
+const ROUTE_GRADE := 0.194
+const SOIL_BUCKET := 8.0
+const APPROACH_Z_FROM := 25.5
 const DAY_SUN := Color("ffc07e")
 const NIGHT_SUN := Color("a9a6ee")
 
-var canopy_triangles: int = 0
-var spire_triangles: int = 0
 var canopy_count: int = 0
-var spire_count: int = 0
+var rock_count: int = 0
+var carpet_count: int = 0
+var terrain_triangles: int = 0
+var carpet_triangles: int = 0
+var grounded_stems: int = 0
 var frozen: bool = false
+var baked_extent: Rect2 = Rect2(-25.0, -24.0, 50.0, 53.0)
+var winding_checks: Dictionary = {}
+var hero: Dictionary = {}
 var _time: float = 0.0
 var _reduced_motion: bool = false
-var _night: float = 0.0
-var _rain: float = 0.0
+var _overview: bool = false
+var _debug_colors: bool = false
 var _art: Array[ShaderMaterial] = []
 var _mask: StandardMaterial3D
 var _nodes: Array[MultiMeshInstance3D] = []
-var _masked: bool = false
+var _static: Array[GeometryInstance3D] = []
+var _terrain_material: ShaderMaterial
+var _lake_material: ShaderMaterial
 var _world: Node3D
+var _ridge_noise: FastNoiseLite
+var _hill_noise: FastNoiseLite
+var _terrace_noise: FastNoiseLite
+var route: Node3D
+var route_report: Dictionary = {}
+var seam_height: float = NAN
+var _approach := Rect2()
+var _soil_tris: PackedVector3Array = PackedVector3Array()
+var _soil_boxes: Array[Rect2] = []
+var _soil_buckets: Dictionary = {}
+var _edge_heights: PackedFloat32Array = PackedFloat32Array()
+var _edge_inner: PackedFloat32Array = PackedFloat32Array()
+var _edge_step: float = 2.0
+var _route_points: PackedVector3Array = PackedVector3Array()
+var _route_box := Rect2()
+var _shaping_route: bool = false
 
 static func is_enabled() -> bool:
 	for argument: String in OS.get_cmdline_user_args():
@@ -29,129 +72,154 @@ static func is_enabled() -> bool:
 		if argument == "--prototype-scenery=on": return true
 	return bool(ProjectSettings.get_setting("mush/prototype/scenery", false))
 
+# --- Terrain: one height source for the mesh, stems, pillars, carpet and cameras ---
+
+func _box_distance(x: float, z: float) -> float:
+	var e: Rect2 = baked_extent
+	var dx: float = maxf(maxf(e.position.x - x, x - e.end.x), 0.0)
+	var dz: float = maxf(maxf(e.position.y - z, z - e.end.y), 0.0)
+	return Vector2(dx, dz).length()
+
+func _terrace(value: float, step: float, width: float) -> float:
+	var scaled: float = value / step
+	return step * floorf(scaled) + step * smoothstep(1.0 - width, 1.0, scaled - floorf(scaled))
+
+## Final terrain: landforms plus the graded trail bed along the walkable route.
+func terrain_height(x: float, z: float) -> float:
+	var raw: float = _raw_height(x, z)
+	if _route_points.is_empty() or _shaping_route or not _route_box.has_point(Vector2(x, z)) or _box_distance(x, z) <= 0.0:
+		return raw
+	var best: float = INF
+	var tread: float = raw
+	for i: int in _route_points.size() - 1:
+		var a := Vector2(_route_points[i].x, _route_points[i].z)
+		var ab := Vector2(_route_points[i + 1].x, _route_points[i + 1].z) - a
+		var t: float = clampf((Vector2(x, z) - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		var dist: float = Vector2(x, z).distance_to(a + ab * t)
+		if dist < best:
+			best = dist
+			tread = lerpf(_route_points[i].y, _route_points[i + 1].y, t)
+	return lerpf(tread - 0.12, raw, smoothstep(4.0, 11.0, best))
+
+## Baked-ground continuity: outside the baked extent, the measured height of the baked
+## soil at the nearest perimeter point; inside it, just below that soil (hidden).
+func _edge_base(x: float, z: float) -> float:
+	if _edge_heights.is_empty(): return -0.3
+	var e: Rect2 = baked_extent
+	var px: float = clampf(x, e.position.x, e.end.x)
+	var pz: float = clampf(z, e.position.y, e.end.y)
+	var inside: bool = px == x and pz == z
+	if inside:
+		var to_edge: float = minf(minf(x - e.position.x, e.end.x - x), minf(z - e.position.y, e.end.y - z))
+		if to_edge > 8.0: return -1.5
+		var gaps := [x - e.position.x, e.end.x - x, z - e.position.y, e.end.y - z]
+		var side: int = gaps.find(to_edge)
+		if side == 0: px = e.position.x
+		elif side == 1: px = e.end.x
+		elif side == 2: pz = e.position.y
+		else: pz = e.end.y
+	var u: float = _perimeter_u(px, pz) / _edge_step
+	var i0: int = int(floorf(u)) % _edge_heights.size()
+	var i1: int = (i0 + 1) % _edge_heights.size()
+	var f: float = u - floorf(u)
+	var edge: float = lerpf(_edge_heights[i0], _edge_heights[i1], f)
+	if inside:
+		return minf(edge, lerpf(_edge_inner[i0], _edge_inner[i1], f)) - 0.3
+	return edge
+
+func _perimeter_u(px: float, pz: float) -> float:
+	var e: Rect2 = baked_extent
+	if absf(pz - e.position.y) < 0.001: return px - e.position.x
+	if absf(px - e.end.x) < 0.001: return e.size.x + (pz - e.position.y)
+	if absf(pz - e.end.y) < 0.001: return e.size.x + e.size.y + (e.end.x - px)
+	return 2.0 * e.size.x + e.size.y + (e.end.y - pz)
+
+func _raw_height(x: float, z: float) -> float:
+	var d: float = _box_distance(x, z)
+	var r: float = Vector2(x, z).length()
+	var dir: Vector2 = Vector2(x, z) / maxf(r, 0.001)
+	var valley: float = smoothstep(0.15, 0.7, dir.dot(VALLEY_DIR))
+	var apron: float = smoothstep(12.0, 57.0, d)
+	# Valley sector: the clearing's rim drops about 70 m in terraces to a valley floor.
+	var drop: float = -70.0 * apron * valley
+	var terraced: float = _terrace(drop, 20.0, 0.3)
+	var terrace_mask: float = smoothstep(0.1, 0.5, _terrace_noise.get_noise_2d(x, z) * 0.5 + 0.5)
+	var height: float = _edge_base(x, z) + lerpf(drop, terraced, terrace_mask)
+	height += _hill_noise.get_noise_2d(x, z) * 8.0 * apron * valley
+	# Lake basin sits low in the valley.
+	var to_lake: float = Vector2(x, z).distance_to(LAKE_CENTER)
+	height -= exp(-(to_lake * to_lake) / (2.0 * 120.0 * 120.0)) * 25.0
+	# Far terraced mesas in the valley half.
+	var mesa_mask: float = smoothstep(550.0, 900.0, r) * smoothstep(0.0, 0.6, dir.dot(VALLEY_DIR))
+	var mesa: float = smoothstep(0.25, 0.4, _ridge_noise.get_noise_2d(x, z)) * 220.0
+	height += _terrace(mesa, 55.0, 0.25) * mesa_mask
+	# South and west keep clearing height, then rise into forested hills behind the home.
+	var enclosed: float = (1.0 - valley) * smoothstep(40.0, 420.0, d)
+	height += enclosed * 55.0 + _hill_noise.get_noise_2d(x + 900.0, z) * 12.0 * smoothstep(80.0, 400.0, d) * (1.0 - valley * 0.7)
+	# Southern overlook knoll; zero within 10 m of the baked ground so it never rises over it.
+	# Broad knoll the grade-limited route can climb without a deep cut. (A concave summit
+	# was tried and rejected: the tread lagged it by 4.3 m and the bank crowded the camera.)
+	height += 16.0 * smoothstep(300.0, 0.0, Vector2(x, z).distance_to(KNOLL)) * smoothstep(10.0, 160.0, d)
+	# Rim hills close the horizon.
+	height += maxf(0.0, r - 1000.0) * 0.1
+	return height
+
+func terrain_slope(x: float, z: float) -> float:
+	var e: float = 6.0
+	var dx: float = terrain_height(x + e, z) - terrain_height(x - e, z)
+	var dz: float = terrain_height(x, z + e) - terrain_height(x, z - e)
+	return Vector2(dx, dz).length() / (2.0 * e)
+
+func _compute_baked_extent() -> Rect2:
+	var rect := Rect2()
+	var first := true
+	var roots: Array[Node] = []
+	var ground: Node = _world.get_node_or_null("GroundAndPaths")
+	if ground != null: roots.append(ground)
+	var backdrop: Variant = _world.get("forest_backdrop")
+	if backdrop != null and backdrop.get("root") is Node: roots.append(backdrop.get("root"))
+	for root: Node in roots:
+		for mesh: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+			var box: AABB = mesh.global_transform * mesh.get_aabb()
+			var flat := Rect2(Vector2(box.position.x, box.position.z), Vector2(box.size.x, box.size.z))
+			rect = flat if first else rect.merge(flat)
+			first = false
+	return rect if not first else baked_extent
+
+# --- Setup ---
+
 func configure(world: Node3D) -> void:
 	_world = world
 	name = "PrototypeScenery"
-	_mask = StandardMaterial3D.new()
-	_mask.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_mask.albedo_color = Color(1, 0, 1)
-	_mask.disable_fog = true
-	_mask.cull_mode = BaseMaterial3D.CULL_DISABLED
+	baked_extent = _compute_baked_extent()
 	_ridge_noise = FastNoiseLite.new()
 	_ridge_noise.seed = 4242
-	_ridge_noise.frequency = 0.0022
+	_ridge_noise.frequency = 0.0016
 	_ridge_noise.fractal_octaves = 3
 	_hill_noise = FastNoiseLite.new()
 	_hill_noise.seed = 77
 	_hill_noise.frequency = 0.0035
-	var cap: ArrayMesh = _cap_mesh()
-	var stem: ArrayMesh = _stem_mesh()
-	var spire: ArrayMesh = _spire_mesh()
+	_terrace_noise = FastNoiseLite.new()
+	_terrace_noise.seed = 91
+	_terrace_noise.frequency = 0.003
+	_mask = StandardMaterial3D.new()
+	_mask.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mask.albedo_color = Color(1, 0, 1)
+	_mask.disable_fog = true
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 20261025
-	# Hero giants sit beyond the playable ring and rise above the tree line; the
-	# smaller companions step down in scale so distance reads as layers.
-	var caps: Array[Transform3D] = []
-	var stems: Array[Transform3D] = []
-	var tints: Array[Color] = []
-	var stem_tints: Array[Color] = []
-	var specs: Array = [
-		# x, z, cap radius, underside height ABOVE LOCAL GROUND, cap thickness. Mostly far and low-contrast;
-		# one clear focal giant keeps its silhouette against open sky.
-		[110.0, -380.0, 90.0, 140.0, 70.0],
-		[-290.0, -720.0, 120.0, 210.0, 90.0],
-		[430.0, -470.0, 78.0, 150.0, 60.0],
-		[60.0, -1120.0, 175.0, 300.0, 130.0],
-		[-520.0, -520.0, 62.0, 115.0, 48.0],
-	]
-	for row: Array in specs:
-		var x: float = row[0]; var z: float = row[1]; var r: float = row[2]; var h: float = row[3]; var t: float = row[4]
-		var yaw: float = rng.randf_range(0.0, TAU)
-		var tilt := Basis(Vector3(1, 0, 0), rng.randf_range(-0.04, 0.04)) * Basis(Vector3(0, 0, 1), rng.randf_range(-0.04, 0.04))
-		var ground: float = terrain_height(x, z)
-		var underside: float = ground + h
-		var basis: Basis = Basis(Vector3.UP, yaw) * tilt * Basis.from_scale(Vector3(r, t, r))
-		caps.append(Transform3D(basis, Vector3(x, underside, z)))
-		# One continuous stem from below the local ground up into the cap.
-		var stem_base: float = ground - 12.0
-		var stem_r: float = r * 0.12
-		var sb: Basis = Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, underside + t * 0.15 - stem_base, stem_r))
-		stems.append(Transform3D(sb, Vector3(x, stem_base, z)))
-		if stem_base < ground and stem_base + sb.get_scale().y > underside: grounded_bases += 1
-		tints.append(Color(rng.randf(), 0, 0))
-		stem_tints.append(Color(rng.randf(), 0, 0))
-	canopy_count = caps.size()
-	_add(cap, caps, tints, 0)
-	_add(stem, stems, stem_tints, 1)
-	canopy_triangles = (cap.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * caps.size() + (stem.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * stems.size()
-	var rocks: Array[Transform3D] = []
-	var rock_tints: Array[Color] = []
-	var clusters: Array = [[-380.0, -700.0, 6], [560.0, -480.0, 5], [-60.0, -900.0, 7], [-760.0, -300.0, 4], [760.0, -220.0, 4]]
-	for cluster: Array in clusters:
-		for i: int in int(cluster[2]):
-			var sx: float = cluster[0] + rng.randf_range(-45, 45)
-			var sz: float = cluster[1] + rng.randf_range(-40, 40)
-			var spot := Vector3(sx, terrain_height(sx, sz) - 8.0, sz)
-			var height: float = rng.randf_range(60.0, 150.0) * (1.5 if i == 0 else 1.0)
-			var width: float = height * rng.randf_range(0.14, 0.24)
-			var b: Basis = Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis(Vector3(0, 0, 1), rng.randf_range(-0.08, 0.08)) * Basis.from_scale(Vector3(width, height, width))
-			rocks.append(Transform3D(b, spot))
-			rock_tints.append(Color(rng.randf(), 0, 0))
-	spire_count = rocks.size()
-	_add(spire, rocks, rock_tints, 2)
-	spire_triangles = (spire.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * rocks.size()
+	rng.seed = 20261026
+	_collect_soil(baked_extent.grow(6.0))
+	_sample_edges()
+	_plan_route()
 	_add_terrain()
-	var ledge_rocks: Array[Transform3D] = []
-	var ledge_tints: Array[Color] = []
-	for spot: Vector2 in [Vector2(-64, 188), Vector2(-2, 190), Vector2(-50, 172), Vector2(16, 176), Vector2(-78, 205), Vector2(24, 200)]:
-		var height: float = rng.randf_range(3.5, 8.0)
-		var width: float = height * rng.randf_range(0.5, 0.8)
-		var b: Basis = Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis(Vector3(0, 0, 1), rng.randf_range(-0.12, 0.12)) * Basis.from_scale(Vector3(width, height, width))
-		ledge_rocks.append(Transform3D(b, Vector3(spot.x, terrain_height(spot.x, spot.y) - 1.5, spot.y)))
-		ledge_tints.append(Color(rng.randf(), 0, 0))
-	_add(spire, ledge_rocks, ledge_tints, 2)
+	_add_route()
+	_add_giants(rng)
+	_add_pillars(rng)
+	_add_boulders(rng)
+	_add_carpet(rng)
 	var player: Node = _world.get_parent().get("player")
 	if player != null and is_instance_valid(player.get("_camera")):
 		player._camera.far = FAR_PLANE
-
-const TERRAIN_HALF := 1500.0
-const TERRAIN_CELLS := 100
-const LEDGE := Vector2(-30.0, 215.0)
-const LAKE_CENTER := Vector2(-430.0, -200.0)
-const LAKE_Y := -8.0
-var _static: Array[MeshInstance3D] = []
-var _terrain_material: ShaderMaterial
-var _lake_material: ShaderMaterial
-var terrain_triangles: int = 0
-var _overview: bool = false
-var _ridge_noise: FastNoiseLite
-var _hill_noise: FastNoiseLite
-var grounded_bases: int = 0
-
-## Map-inspection haze: lighter fog so the whole world layout reads. Capture/inspection only.
-func set_overview(value: bool) -> void:
-	_overview = value
-
-func terrain_height(x: float, z: float) -> float:
-	var ridge: FastNoiseLite = _ridge_noise
-	var hills: FastNoiseLite = _hill_noise
-	var r: float = Vector2(x, z).length()
-	var calm: float = smoothstep(110.0, 380.0, r)
-	var lake: float = exp(-(pow(x - LAKE_CENTER.x, 2.0) + pow(z - LAKE_CENTER.y, 2.0)) / (2.0 * 110.0 * 110.0))
-	var rolling: float = hills.get_noise_2d(x, z) * 20.0 * (1.0 - lake)
-	# Northern highlands: a belt of ridges, steepest far from the clearing.
-	var north: float = smoothstep(-250.0, -750.0, z) * (0.35 + 0.65 * (1.0 - absf(ridge.get_noise_2d(x, z))))
-	var highlands: float = north * 170.0
-	# Eastern meadow shelf, raised and gently terraced.
-	var shelf: float = smoothstep(180.0, 520.0, x) * smoothstep(250.0, -150.0, z) * 28.0
-	# Western lake basin: its shoreline is where this surface crosses LAKE_Y.
-	var basin: float = lake * 70.0
-	# Rim hills close the horizon on every side.
-	var rim: float = maxf(0.0, r - 950.0) * 0.12
-	var wanted: float = rolling + highlands + shelf - basin + rim
-	# South overlook ledge: a raised promontory above the tree line, outside the playable bounds.
-	var ledge: float = smoothstep(125.0, 0.0, Vector2(x - LEDGE.x, z - LEDGE.y).length()) * 44.0
-	return lerpf(-1.5, wanted, calm) + ledge
 
 func _add_terrain() -> void:
 	var st := SurfaceTool.new()
@@ -159,8 +227,11 @@ func _add_terrain() -> void:
 	var columns: int = TERRAIN_CELLS + 1
 	for row: int in columns:
 		for column: int in columns:
-			var x: float = lerpf(-TERRAIN_HALF, TERRAIN_HALF, float(column) / TERRAIN_CELLS)
-			var z: float = lerpf(-TERRAIN_HALF, TERRAIN_HALF, float(row) / TERRAIN_CELLS)
+			var sx: float = lerpf(-1.0, 1.0, float(column) / TERRAIN_CELLS)
+			var sz: float = lerpf(-1.0, 1.0, float(row) / TERRAIN_CELLS)
+			# Graded grid: dense near the clearing, coarse toward the horizon.
+			var x: float = TERRAIN_HALF * signf(sx) * pow(absf(sx), 1.7)
+			var z: float = TERRAIN_HALF * signf(sz) * pow(absf(sz), 1.7)
 			st.set_color(Color(0, 0, 0))
 			st.set_uv(Vector2(float(column) / TERRAIN_CELLS, float(row) / TERRAIN_CELLS))
 			st.add_vertex(Vector3(x, terrain_height(x, z), z))
@@ -170,14 +241,17 @@ func _add_terrain() -> void:
 			var i1: int = i0 + 1
 			var i2: int = i0 + columns
 			var i3: int = i2 + 1
-			st.add_index(i0); st.add_index(i2); st.add_index(i1)
-			st.add_index(i1); st.add_index(i2); st.add_index(i3)
+			# Clockwise as seen from above (Godot front face), verified in get_report().
+			st.add_index(i0); st.add_index(i1); st.add_index(i2)
+			st.add_index(i1); st.add_index(i3); st.add_index(i2)
 	st.generate_normals()
 	var mesh: ArrayMesh = st.commit()
 	terrain_triangles = TERRAIN_CELLS * TERRAIN_CELLS * 2
+	var centre: int = (TERRAIN_CELLS / 2) * columns + TERRAIN_CELLS / 2
+	winding_checks["terrain_centre_normal_y"] = (mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] as PackedVector3Array)[centre].y
 	_terrain_material = ShaderMaterial.new()
-	_terrain_material.shader = SHADER
-	_terrain_material.set_shader_parameter("mode", 3)
+	_terrain_material.shader = TERRAIN_SHADER
+	_terrain_material.set_shader_parameter("kind", 0)
 	var terrain := MeshInstance3D.new()
 	terrain.name = "WorldTerrain"
 	terrain.mesh = mesh
@@ -185,25 +259,132 @@ func _add_terrain() -> void:
 	terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(terrain)
 	_static.append(terrain)
-	var plane := CylinderMesh.new()
-	plane.top_radius = 280.0
-	plane.bottom_radius = 280.0
-	plane.height = 0.2
-	plane.radial_segments = 64
-	plane.rings = 1
+	var disc := CylinderMesh.new()
+	disc.top_radius = 300.0
+	disc.bottom_radius = 300.0
+	disc.height = 0.2
+	disc.radial_segments = 64
+	disc.rings = 1
 	_lake_material = ShaderMaterial.new()
-	_lake_material.shader = SHADER
-	_lake_material.set_shader_parameter("mode", 4)
+	_lake_material.shader = TERRAIN_SHADER
+	_lake_material.set_shader_parameter("kind", 1)
 	var lake := MeshInstance3D.new()
 	lake.name = "WorldLake"
-	lake.mesh = plane
+	lake.mesh = disc
 	lake.material_override = _lake_material
 	lake.position = Vector3(LAKE_CENTER.x, LAKE_Y, LAKE_CENTER.y)
 	lake.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(lake)
 	_static.append(lake)
 
-func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode: int) -> void:
+func _giant_specs() -> Array:
+	# x, z, cap radius, underside height above local ground. The hero stands about
+	# 20 degrees from the sun direction as seen from the clearing, so it is backlit.
+	return [
+		[378.0, -648.0, 220.0, 264.0],
+		[-280.0, -760.0, 110.0, 140.0],
+		[700.0, -420.0, 90.0, 120.0],
+		[480.0, -900.0, 36.0, 55.0],
+		[-60.0, -850.0, 30.0, 48.0],
+		[820.0, -760.0, 40.0, 60.0],
+		[250.0, -1000.0, 34.0, 50.0],
+	]
+
+func _add_giants(rng: RandomNumberGenerator) -> void:
+	var cap: ArrayMesh = _cap_mesh()
+	var stem: ArrayMesh = _stem_mesh()
+	var caps: Array[Transform3D] = []
+	var stems: Array[Transform3D] = []
+	var tints: Array[Color] = []
+	for row: Array in _giant_specs():
+		var x: float = row[0]; var z: float = row[1]; var r: float = row[2]; var h: float = row[3]
+		var yaw: float = rng.randf_range(0.0, TAU)
+		var ground: float = terrain_height(x, z)
+		var underside: float = ground + h
+		var thickness: float = r * 0.5
+		var tilt := Basis(Vector3(1, 0, 0), rng.randf_range(-0.03, 0.03)) * Basis(Vector3(0, 0, 1), rng.randf_range(-0.03, 0.03))
+		caps.append(Transform3D(Basis(Vector3.UP, yaw) * tilt * Basis.from_scale(Vector3(r, thickness, r)), Vector3(x, underside, z)))
+		# One continuous stem from below local ground into the cap underside.
+		var base: float = ground - 12.0
+		var length: float = underside + thickness * 0.1 - base
+		var stem_r: float = r * 0.2
+		stems.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, length, stem_r)), Vector3(x, base, z)))
+		if base < ground and base + length > underside: grounded_stems += 1
+		tints.append(Color(rng.randf(), 0, 0))
+		if hero.is_empty(): hero = {"position": Vector3(x, underside, z), "radius": r, "ground": ground}
+	canopy_count = caps.size()
+	_add(cap, caps, tints, 0, "LuminousCanopies")
+	_add(stem, stems, tints, 1, "CanopyStems")
+
+func _add_pillars(rng: RandomNumberGenerator) -> void:
+	var pillar: ArrayMesh = _pillar_mesh()
+	var xs: Array[Transform3D] = []
+	var tints: Array[Color] = []
+	for spot: Vector3 in [Vector3(540.0, 190.0, -980.0), Vector3(120.0, 160.0, -930.0), Vector3(-520.0, 140.0, -520.0)]:
+		var ground: float = terrain_height(spot.x, spot.z)
+		var width: float = spot.y * rng.randf_range(0.38, 0.5)
+		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, spot.y, width)), Vector3(spot.x, ground - 15.0, spot.z)))
+		tints.append(Color(rng.randf(), 0, 0))
+	rock_count += xs.size()
+	_add(pillar, xs, tints, 2, "RockPillars")
+
+func _add_boulders(rng: RandomNumberGenerator) -> void:
+	# Squat boulders along the clearing rim in the valley direction, framing the overlook.
+	var boulder: ArrayMesh = _boulder_mesh()
+	var xs: Array[Transform3D] = []
+	var tints: Array[Color] = []
+	var edge: Vector2 = _rim_point(6.0)
+	var side := Vector2(-VALLEY_DIR.y, VALLEY_DIR.x)
+	for offset: Vector2 in [Vector2(-1.0, -9.0), Vector2(-4.0, 10.0), Vector2(3.0, 13.0), Vector2(1.0, -14.0), Vector2(-6.0, -12.0)]:
+		var p: Vector2 = edge + VALLEY_DIR * offset.x + side * offset.y
+		var size: float = rng.randf_range(1.2, 2.6)
+		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(size * 1.3, size, size * 1.1)), Vector3(p.x, terrain_height(p.x, p.y) - 0.3, p.y)))
+		tints.append(Color(rng.randf(), 0, 0))
+	rock_count += xs.size()
+	_add(boulder, xs, tints, 2, "RimBoulders")
+
+func _add_carpet(rng: RandomNumberGenerator) -> void:
+	var base_color := Color("48752e")
+	var accent_color := Color("a3ac49")
+	var materials: Variant = _world.get("_materials")
+	var leaf: Variant = materials.get("leaf") if materials is Dictionary else null
+	if leaf is ShaderMaterial:
+		var a: Variant = leaf.get_shader_parameter("base_color")
+		var b: Variant = leaf.get_shader_parameter("accent_color")
+		if a is Color: base_color = a
+		if b is Color: accent_color = b
+	var clump: ArrayMesh = _clump_mesh()
+	var xs: Array[Transform3D] = []
+	var colors: Array[Color] = []
+	var tries: int = 0
+	while xs.size() < 2600 and tries < 50000:
+		tries += 1
+		# Denser near the clearing: squared radius sampling, then far scatter.
+		var reach: float = 1300.0 * pow(rng.randf(), 1.6)
+		var bearing: float = rng.randf_range(0.0, TAU)
+		var x: float = cos(bearing) * reach
+		var z: float = sin(bearing) * reach
+		if _box_distance(x, z) < 22.0: continue
+		var ground: float = terrain_height(x, z)
+		if ground < LAKE_Y + 4.0 and Vector2(x, z).distance_to(LAKE_CENTER) < 320.0: continue
+		if terrain_slope(x, z) > 0.5: continue
+		if is_instance_valid(route) and route.valid and route.is_in_corridor(Vector3(x, ground, z), 2.0): continue
+		if Vector2(x, z).distance_to(KNOLL) < 120.0: continue
+		var width: float = rng.randf_range(7.0, 13.0)
+		var height: float = rng.randf_range(9.0, 16.0)
+		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, ground - 1.0, z)))
+		var shade: float = rng.randf_range(0.92, 1.08)
+		colors.append(base_color.lerp(accent_color, rng.randf_range(0.0, 0.55)) * shade)
+	carpet_count = xs.size()
+	carpet_triangles = (clump.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * carpet_count
+	_add(clump, xs, colors, 5, "ForestCarpet")
+	# Far forest mass only: never drawn near the camera, where the low-poly lobes read as rocks.
+	var carpet: MultiMeshInstance3D = _nodes[_nodes.size() - 1]
+	carpet.visibility_range_begin = 55.0
+	carpet.visibility_range_begin_margin = 10.0
+	carpet.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+
+func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode: int, label: String) -> void:
 	var material := ShaderMaterial.new()
 	material.shader = SHADER
 	material.set_shader_parameter("mode", mode)
@@ -217,7 +398,7 @@ func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode
 		multi.set_instance_transform(index, transforms[index])
 		multi.set_instance_color(index, colors[index])
 	var node := MultiMeshInstance3D.new()
-	node.name = ["LuminousCanopies", "CanopyStems", "RockSpires"][mode]
+	node.name = label
 	node.multimesh = multi
 	node.material_override = material
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -225,40 +406,64 @@ func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode
 	add_child(node)
 	_nodes.append(node)
 
-# Unit umbrella: radius 1, rim near y 0, dome rising to about +1, gills below.
+# --- Meshes (profile x = radius, y = height, z = v parameter) ---
+
+# Flat umbrella: radius 1, slightly upturned lip, gill underside. The profile runs from
+# the top centre outward then back under, so the front face needs the flipped index order.
 func _cap_mesh() -> ArrayMesh:
-	var profile: Array[Vector3] = []  # x radius, y height, z v-parameter
+	var profile: Array[Vector3] = []
 	var top_rows := 22
 	for i: int in top_rows + 1:
 		var s: float = float(i) / top_rows
-		profile.append(Vector3(s, 0.10 + 0.95 * (1.0 - pow(s, 2.3)) + 0.05 * sin(s * 3.1), 0.5 * s))
-	for i: int in 1:
-		profile.append(Vector3(1.01, 0.0, 0.5))
-	profile.append(Vector3(0.96, -0.08, 0.5))
+		profile.append(Vector3(s, 0.10 + 0.40 * (1.0 - pow(s, 2.3)) + 0.10 * smoothstep(0.8, 1.0, s), 0.5 * s))
+	profile.append(Vector3(1.02, 0.04, 0.5))
+	profile.append(Vector3(0.97, -0.08, 0.5))
 	var under_rows := 16
 	for i: int in under_rows + 1:
 		var u: float = float(i) / under_rows
-		profile.append(Vector3(lerpf(0.94, 0.07, u), -0.08 + 0.34 * pow(u, 1.5), 0.5 + 0.5 * u))
-	return _lathe(profile, 56, true)
+		profile.append(Vector3(lerpf(0.94, 0.07, u), -0.08 + 0.26 * pow(u, 1.5), 0.5 + 0.5 * u))
+	var mesh: ArrayMesh = _lathe(profile, 56, "cap", true)
+	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	winding_checks["cap_top_normal_y"] = normals[3 * 57].y
+	return mesh
 
 func _stem_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = []
 	var rows := 24
 	for i: int in rows + 1:
 		var t: float = float(i) / rows
-		var flare: float = 1.0 + 4.5 * pow(1.0 - t, 7.0)
-		profile.append(Vector3(flare * (1.0 - 0.28 * t), t, t))
-	return _lathe(profile, 28, false)
+		profile.append(Vector3((1.0 + 2.2 * pow(1.0 - t, 6.0)) * (1.0 - 0.25 * t), t, t))
+	var mesh: ArrayMesh = _lathe(profile, 32, "stem", false)
+	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	winding_checks["stem_side_normal_outward"] = normals[12 * 33].x > 0.0
+	return mesh
 
-func _spire_mesh() -> ArrayMesh:
+# Rock pillar: smooth angular fluting plus horizontal ledges, closed at the top.
+func _pillar_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = []
-	var rows := 20
+	var rows := 28
 	for i: int in rows + 1:
 		var t: float = float(i) / rows
-		profile.append(Vector3(pow(1.0 - t, 0.85) * 0.98 + 0.02, t, t))
-	return _lathe(profile, 14, false, true)
+		var ledge: float = 1.0 - 0.09 * fposmod(t * 5.0, 1.0)
+		profile.append(Vector3(lerpf(1.0, 0.62, t) * ledge, t, t))
+	profile.append(Vector3(0.0, 1.0, 1.0))
+	return _lathe(profile, 24, "pillar", false)
 
-func _lathe(profile: Array[Vector3], segments: int, scallop: bool, craggy: bool = false) -> ArrayMesh:
+func _boulder_mesh() -> ArrayMesh:
+	var profile: Array[Vector3] = [Vector3(0.0, -0.1, 0.0), Vector3(0.9, 0.0, 0.1), Vector3(1.0, 0.3, 0.3), Vector3(0.78, 0.7, 0.6), Vector3(0.4, 0.95, 0.85), Vector3(0.0, 1.0, 1.0)]
+	return _lathe(profile, 14, "boulder", false)
+
+# Forest clump: three lumpy lobes in one 108-triangle mesh.
+func _clump_mesh() -> ArrayMesh:
+	var profile: Array[Vector3] = [Vector3(0.0, 0.0, 0.0), Vector3(1.0, 0.4, 0.35), Vector3(0.8, 0.95, 0.8), Vector3(0.0, 1.1, 1.0)]
+	var lobe: ArrayMesh = _lathe(profile, 6, "blob", false)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for placement: Array in [[Vector3(-0.35, 0.0, 0.0), 0.62, 0.9], [Vector3(0.3, 0.0, 0.2), 0.55, 0.8], [Vector3(0.0, 0.0, -0.32), 0.5, 1.0]]:
+		st.append_from(lobe, 0, Transform3D(Basis.from_scale(Vector3(placement[1], placement[2], placement[1])), placement[0]))
+	return st.commit()
+
+func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var columns := segments + 1
@@ -269,16 +474,22 @@ func _lathe(profile: Array[Vector3], segments: int, scallop: bool, craggy: bool 
 			var a: float = u * TAU
 			var radius: float = p.x
 			var height: float = p.y
-			if scallop:
-				var edge: float = pow(clampf(absf(p.x), 0.0, 1.0), 3.0)
-				radius *= 1.0 + edge * (0.05 * sin(a * 7.0 + 0.6) + 0.03 * sin(a * 13.0 + 2.0))
-				height += edge * 0.05 * sin(a * 9.0 + 1.3)
-			if craggy:
-				var wedge: float = 0.78 + 0.45 * fposmod(sin(float(column % segments) * 12.9898 + float(row) * 78.233) * 43758.5453, 1.0)
-				radius *= wedge
-				height += 0.02 * sin(a * 3.0 + p.y * 9.0)
+			match style:
+				"cap":
+					var edge: float = pow(clampf(p.x, 0.0, 1.0), 3.0)
+					radius *= 1.0 + edge * (0.05 * sin(a * 7.0 + 0.6) + 0.03 * sin(a * 13.0 + 2.0))
+					height += edge * 0.04 * sin(a * 9.0 + 1.3)
+				"stem":
+					radius *= 1.0 + 0.6 * pow(1.0 - p.z, 4.0) * maxf(0.0, sin(6.0 * a + 0.7))
+				"pillar":
+					radius *= 1.0 + 0.10 * sin(5.0 * a + 1.1) + 0.05 * sin(11.0 * a)
+				"boulder":
+					radius *= 1.0 + 0.14 * sin(3.0 * a + 0.4) + 0.07 * sin(7.0 * a + 1.9)
+				"blob":
+					radius *= 1.0 + 0.16 * sin(3.0 * a + 0.8)
 			st.set_uv(Vector2(u, p.z))
-			st.set_color(Color(0, 0, 0))
+			# Godot multiplies vertex colour into the MultiMesh instance colour: keep it white.
+			st.set_color(Color(1, 1, 1))
 			st.add_vertex(Vector3(cos(a) * radius, height, sin(a) * radius))
 	for row: int in profile.size() - 1:
 		for column: int in segments:
@@ -286,10 +497,178 @@ func _lathe(profile: Array[Vector3], segments: int, scallop: bool, craggy: bool 
 			var i1: int = i0 + 1
 			var i2: int = i0 + columns
 			var i3: int = i2 + 1
-			st.add_index(i0); st.add_index(i1); st.add_index(i2)
-			st.add_index(i1); st.add_index(i3); st.add_index(i2)
+			if flip:
+				st.add_index(i0); st.add_index(i2); st.add_index(i1)
+				st.add_index(i1); st.add_index(i2); st.add_index(i3)
+			else:
+				st.add_index(i0); st.add_index(i1); st.add_index(i2)
+				st.add_index(i1); st.add_index(i3); st.add_index(i2)
 	st.generate_normals()
 	return st.commit()
+
+# --- Walkable route (the only collider this layer owns) ---
+
+func _collect_soil(region: Rect2) -> void:
+	var roots: Array[Node] = []
+	var ground: Node = _world.get_node_or_null("GroundAndPaths")
+	if ground != null: roots.append(ground)
+	var backdrop: Variant = _world.get("forest_backdrop")
+	if backdrop != null and backdrop.get("root") is Node: roots.append(backdrop.get("root"))
+	for root: Node in roots:
+		for mesh_node: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+			if mesh_node.mesh == null: continue
+			var box: AABB = mesh_node.global_transform * mesh_node.get_aabb()
+			if not Rect2(Vector2(box.position.x, box.position.z), Vector2(box.size.x, box.size.z)).intersects(region): continue
+			var faces: PackedVector3Array = mesh_node.mesh.get_faces()
+			for i: int in range(0, faces.size(), 3):
+				var a: Vector3 = mesh_node.global_transform * faces[i]
+				var b: Vector3 = mesh_node.global_transform * faces[i + 1]
+				var c: Vector3 = mesh_node.global_transform * faces[i + 2]
+				var tri := Rect2(Vector2(a.x, a.z), Vector2.ZERO).expand(Vector2(b.x, b.z)).expand(Vector2(c.x, c.z))
+				if not tri.intersects(region): continue
+				var index: int = _soil_boxes.size()
+				_soil_tris.append(a); _soil_tris.append(b); _soil_tris.append(c)
+				_soil_boxes.append(tri)
+				for bx: int in range(floori(tri.position.x / SOIL_BUCKET), floori(tri.end.x / SOIL_BUCKET) + 1):
+					for bz: int in range(floori(tri.position.y / SOIL_BUCKET), floori(tri.end.y / SOIL_BUCKET) + 1):
+						var key := Vector2i(bx, bz)
+						if not _soil_buckets.has(key): _soil_buckets[key] = PackedInt32Array()
+						var list: PackedInt32Array = _soil_buckets[key]
+						list.append(index)
+						_soil_buckets[key] = list
+
+## Highest baked visual surface (render mesh, not collision) at x,z below 20 m, or NAN.
+## Startup only; bucketed so each query tests only nearby triangles.
+func baked_visual_height(x: float, z: float) -> float:
+	var best: float = NAN
+	var here := Vector2(x, z)
+	var key := Vector2i(floori(x / SOIL_BUCKET), floori(z / SOIL_BUCKET))
+	if not _soil_buckets.has(key): return best
+	for t: int in _soil_buckets[key]:
+		if not _soil_boxes[t].grow(0.01).has_point(here): continue
+		var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x, 20.0, z), Vector3.DOWN, _soil_tris[t * 3], _soil_tris[t * 3 + 1], _soil_tris[t * 3 + 2])
+		if hit is Vector3 and (is_nan(best) or (hit as Vector3).y > best): best = (hit as Vector3).y
+	return best
+
+## Baked soil height around the extent perimeter (0.5 m and 6 m inside), every 2 m.
+func _sample_edges() -> void:
+	var e: Rect2 = baked_extent
+	var perimeter: float = 2.0 * (e.size.x + e.size.y)
+	var count: int = int(ceil(perimeter / _edge_step))
+	_edge_heights.resize(count)
+	_edge_inner.resize(count)
+	var centre: Vector2 = e.get_center()
+	for i: int in count:
+		var u: float = float(i) * _edge_step
+		var p: Vector2
+		if u < e.size.x: p = Vector2(e.position.x + u, e.position.y)
+		elif u < e.size.x + e.size.y: p = Vector2(e.end.x, e.position.y + u - e.size.x)
+		elif u < 2.0 * e.size.x + e.size.y: p = Vector2(e.end.x - (u - e.size.x - e.size.y), e.end.y)
+		else: p = Vector2(e.position.x, e.end.y - (u - 2.0 * e.size.x - e.size.y))
+		var inward: Vector2 = (centre - p).normalized()
+		var edge: float = baked_visual_height(p.x + inward.x * 0.5, p.y + inward.y * 0.5)
+		var inner: float = baked_visual_height(p.x + inward.x * 6.0, p.y + inward.y * 6.0)
+		_edge_heights[i] = edge if not is_nan(edge) else -0.3
+		_edge_inner[i] = inner if not is_nan(inner) else _edge_heights[i]
+
+## Dense tread points: surface = max(baked soil, landform), then a forward grade limit
+## from the pinned seam so the ribbon never exceeds ROUTE_GRADE. The terrain is later
+## graded to this tread outside the baked extent (cut and fill), never inside it.
+func _plan_route() -> void:
+	seam_height = _measure_seam()
+	_shaping_route = true
+	var profile: Array = []
+	# Catmull-Rom through the waypoints, sampled every 4 m: continuous curvature.
+	var curve := Curve2D.new()
+	var count: int = ROUTE_WAYPOINTS.size()
+	for i: int in count:
+		var before: Vector2 = ROUTE_WAYPOINTS[maxi(i - 1, 0)]
+		var after: Vector2 = ROUTE_WAYPOINTS[mini(i + 1, count - 1)]
+		var tangent: Vector2 = (after - before) * 0.5
+		curve.add_point(ROUTE_WAYPOINTS[i], -tangent / 3.0, tangent / 3.0)
+	curve.bake_interval = 0.5
+	var raw := PackedVector3Array()
+	var length: float = curve.get_baked_length()
+	var steps: int = int(ceil(length / 4.0))
+	for k: int in steps + 1:
+		var q: Vector2 = curve.sample_baked(minf(length, float(k) * length / steps))
+		raw.append(Vector3(q.x, 0.0, q.y))
+	_route_points.resize(raw.size())
+	for i: int in raw.size():
+		var surface: float = _raw_height(raw[i].x, raw[i].z)
+		var soil: float = baked_visual_height(raw[i].x, raw[i].z)
+		var wanted: float = (maxf(surface, soil) if not is_nan(soil) else surface) + 0.06
+		var y: float = wanted
+		if i == 0:
+			y = seam_height if not is_nan(seam_height) else 0.04
+		else:
+			var run: float = Vector2(raw[i].x - raw[i - 1].x, raw[i].z - raw[i - 1].z).length()
+			var previous: float = _route_points[i - 1].y
+			y = clampf(wanted, previous - ROUTE_GRADE * run, previous + ROUTE_GRADE * run)
+			if not is_nan(soil): y = maxf(y, soil + 0.04)
+		_route_points[i] = Vector3(raw[i].x, y, raw[i].z)
+		profile.append([snappedf(raw[i].x, 0.1), snappedf(raw[i].z, 0.1), snappedf(surface, 0.01), snappedf(soil, 0.01) if not is_nan(soil) else null, snappedf(y, 0.01)])
+	_route_box = Rect2(Vector2(_route_points[0].x, _route_points[0].z), Vector2.ZERO)
+	for point: Vector3 in _route_points: _route_box = _route_box.expand(Vector2(point.x, point.z))
+	_route_box = _route_box.grow(14.0)
+	_shaping_route = false
+	route_report["profile_x_z_raw_soil_tread"] = profile
+
+func _measure_seam() -> float:
+	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state if is_inside_tree() else null
+	if space == null: return NAN
+	var hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(ROUTE_SEAM.x, 5.0, ROUTE_SEAM.y - 0.05), Vector3(ROUTE_SEAM.x, -5.0, ROUTE_SEAM.y - 0.05), 1))
+	return (hit.position as Vector3).y if not hit.is_empty() else NAN
+
+func _add_route() -> void:
+	route = Route.new()
+	route.name = "NaturalRoute"
+	add_child(route)
+	var profile: Variant = route_report.get("profile_x_z_raw_soil_tread")
+	var built: bool = route.configure({"centerline": _route_points, "tread_width": 3.6, "shoulder_width": 2.2, "max_grade_deg": 14.0,
+		"exclusion_rects": [Rect2(-24.0, -24.0, 49.0, 53.0)], "ground_height": Callable(self, "terrain_height")})
+	route_report = route.get_report()
+	route_report["profile_x_z_raw_soil_tread"] = profile
+	route_report["requested_points"] = _route_points.size()
+	route_report["seam_height_measured"] = seam_height
+	route_report["soil_triangles"] = _soil_boxes.size()
+	route_report["edge_samples"] = _edge_heights.size()
+	if built:
+		var start: Vector3 = route.get_start_point()
+		_approach = Rect2(start.x - 1.8, APPROACH_Z_FROM, 3.6, start.z - APPROACH_Z_FROM + 0.3)
+
+## Movement-only extension used by the player: the exact route corridor, or the short
+## approach strip over baked collider ground between the old movement box (z 26) and the
+## seam (z 29). Saves and teleports do NOT use this; they keep the original box.
+func allows_movement(point: Vector3) -> bool:
+	if not is_instance_valid(route) or not route.valid or not point.is_finite(): return false
+	if _approach.has_point(Vector2(point.x, point.z)) and point.y > -1.0 and point.y < 4.0: return true
+	return route.is_in_corridor(point)
+
+## Camera on the route's end at eye height, facing back over the clearing to the valley.
+func route_overlook_pose() -> Dictionary:
+	var end: Vector3 = route.get_end_point() if is_instance_valid(route) and route.valid else Vector3(KNOLL.x, terrain_height(KNOLL.x, KNOLL.y), KNOLL.y)
+	return {"player": end + Vector3(0.0, 0.08, 0.0), "look_at": Vector3(150.0, 20.0, -500.0)}
+
+# --- Camera poses ---
+
+# Point on the valley-side edge of the baked ground, pushed `outset` metres outward.
+func _rim_point(outset: float) -> Vector2:
+	var e: Rect2 = baked_extent
+	var t: float = INF
+	if VALLEY_DIR.x > 0.0: t = minf(t, e.end.x / VALLEY_DIR.x)
+	if VALLEY_DIR.y < 0.0: t = minf(t, e.position.y / VALLEY_DIR.y)
+	return VALLEY_DIR * (t + outset)
+
+## Rim overlook: eye height 2.4 m on the clearing's valley edge, 48 degree vertical FOV,
+## aimed between the hero giant's stem and cap. This is a camera pose, not a walkable place.
+func overlook_pose() -> Dictionary:
+	var rim: Vector2 = _rim_point(5.0)
+	var ground: float = terrain_height(rim.x, rim.y)
+	var focus: Vector3 = hero.get("position", Vector3(378.0, 260.0, -648.0))
+	return {"position": Vector3(rim.x, ground + 2.4, rim.y), "target": Vector3(focus.x, focus.y * 0.55, focus.z), "fov": 48.0}
+
+# --- Runtime state ---
 
 func _process(delta: float) -> void:
 	if frozen or _reduced_motion or (is_inside_tree() and get_tree().paused): return
@@ -300,9 +679,20 @@ func _process(delta: float) -> void:
 func set_frozen(value: bool) -> void:
 	frozen = value
 
+func set_overview(value: bool) -> void:
+	_overview = value
+
+## Capture-only: terrain/lake own colour with no lighting and no fog, to separate
+## colour from lighting and haze when diagnosing the grade.
+func set_debug_colors(enabled: bool) -> void:
+	_debug_colors = enabled
+	_terrain_material.set_shader_parameter("debug_unlit", enabled)
+	_lake_material.set_shader_parameter("debug_unlit", enabled)
+
+## Capture-only: paint just the giant caps and stems magenta for coverage metrics.
 func set_debug_mask(enabled: bool) -> void:
-	_masked = enabled
 	for node: MultiMeshInstance3D in _nodes:
+		if node.name != "LuminousCanopies" and node.name != "CanopyStems": continue
 		node.material_override = _mask if enabled else _art[_nodes.find(node)]
 
 func set_reduced_motion(value: bool) -> void:
@@ -312,8 +702,6 @@ func set_reduced_motion(value: bool) -> void:
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
-	_night = night
-	_rain = rain
 	var toward_sun: Vector3 = sun.global_basis.z.normalized()
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material]:
 		material.set_shader_parameter("night", night)
@@ -324,30 +712,27 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	sun.rotation_degrees.x = lerpf(-22.0, -27.45, night)
 	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
 	sun.light_angular_distance = 2.2
-	environment.ambient_light_color = Color("d4bcd8").lerp(Color("8f90c8"), night)
-	environment.ambient_light_energy = lerpf(0.30, 0.30, night)
-	var fog: Color = Color("c3a4d0").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
-	environment.fog_light_color = fog
+	environment.ambient_light_color = Color("e2c9cf").lerp(Color("8f90c8"), night)
+	environment.ambient_light_energy = 0.32
+	environment.fog_enabled = not _debug_colors
+	environment.fog_light_color = Color("c3a4d0").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
-	environment.fog_depth_begin = 60.0
-	environment.fog_depth_end = 1100.0
-	environment.fog_depth_curve = 1.6
-	environment.fog_density = (0.14 if _overview else lerpf(0.55, 0.80, rain))
+	environment.fog_depth_begin = 120.0
+	environment.fog_depth_end = FOG_END
+	environment.fog_depth_curve = 1.2
+	environment.fog_density = (0.14 if _overview else lerpf(0.5, 0.8, rain))
 	environment.fog_aerial_perspective = 0.35
+	environment.fog_sun_scatter = 0.2
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:
 		sky.set_shader_parameter("top_color", Color("4a4aa0").lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 		sky.set_shader_parameter("horizon_color", Color("ffb88a").lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
 
-## Camera pose on the overlook ledge: above the tree line, looking over forest, lake and giants.
-func overlook_pose() -> Dictionary:
-	var ground: float = terrain_height(LEDGE.x, LEDGE.y)
-	return {"position": Vector3(LEDGE.x, ground + 3.5, LEDGE.y), "target": Vector3(-190.0, 12.0, -385.0), "fov": 80.0}
-
 func get_report() -> Dictionary:
-	var colliders: int = find_children("*", "CollisionObject3D", true, false).size()
+	var colliders: int = find_children("*", "CollisionObject3D", true, false).size() - (route_report.get("colliders", 0) as int)
 	var shadows: int = 0
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
-	return {"passed": colliders == 0 and shadows == 0, "canopies": canopy_count, "spires": spire_count, "triangles": canopy_triangles + spire_triangles + terrain_triangles, "terrain_triangles": terrain_triangles, "draw_nodes": _nodes.size() + _static.size(), "colliders": colliders, "grounded_stems": grounded_bases, "shadow_casters": shadows, "built_at_startup_only": true}
+	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

@@ -121,6 +121,15 @@ class ScenicCaptureCoverage(unittest.TestCase):
         self.assertIn("clipped scenic-home-day", failures)
 
 
+class RouteTraversalReport(unittest.TestCase):
+    def test_one_failed_check_fails_the_suite(self):
+        report = {"schema": "mush-route-traversal/1", "passed": True, "images": [], "legs": [],
+                  "checks": [{"label": "walk", "passed": True}, {"label": "seam", "passed": False}]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "seam"):
+                verify.inspect("route", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
