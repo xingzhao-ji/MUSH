@@ -495,6 +495,14 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "traversal_verified": False}
+    if suite == "geology-diag":
+        report = read_report(output / "slice.json")
+        assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "geology-diag"
+        failed = [c["label"] for c in report["checks"] if not c["passed"]]
+        assert report["checks"] and not failed and report["passed"], failed or "geology-diag report not passed"
+        expected = [f"geodiag-{view}-{state}.png" for view in ("shore", "side") for state in ("final", "nofog", "albedo", "normal", "greylit", "greylit-nofog", "mask")]
+        assert [image["file"] for image in report["images"]] == expected, "Expected every diagnosis frame"
+        return {"diagnostic_only": True, "art_approved": False}
     if suite == "geology":
         report = read_report(output / "slice.json")
         assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "geology"
@@ -797,7 +805,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs", "lod-cost", "shore-pairs", "water-pairs", "water-motion", "cap-pairs", "cap-shape-pairs", "leaf-pairs", "geology"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs", "lod-cost", "shore-pairs", "water-pairs", "water-motion", "cap-pairs", "cap-shape-pairs", "leaf-pairs", "geology", "geology-diag"), required=True)
     parser.add_argument("--prototype-scenery", choices=("on", "off"), help="scenic-only: select the presentation look for matched captures")
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
@@ -874,6 +882,8 @@ def main():
         command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-capture":
         command += ["--script", "res://tests/paving_shape_compare.gd", "--", "--report-dir=" + str(output / "native"), "--candidate=" + str(args.candidate)]
+    elif args.suite == "geology-diag":
+        command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--slice", "--geology-diag", "--report-dir", str(output)]
     elif args.suite == "geology":
         command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--slice", "--geology", "--report-dir", str(output)]
     elif args.suite == "leaf-pairs":
@@ -931,12 +941,12 @@ def main():
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     # Prototype capture suites load their fixture at runtime; check it parses before launch.
     fixture = {"slice": "res://tests/slice_traversal.gd", "junction": "res://tests/slice_traversal.gd",
-               "endpoint": "res://tests/slice_traversal.gd", "path-pairs": "res://tests/slice_traversal.gd", "understory-pairs": "res://tests/slice_traversal.gd", "rock-pairs": "res://tests/slice_traversal.gd", "stem-pairs": "res://tests/slice_traversal.gd", "look-pairs": "res://tests/slice_traversal.gd", "shore-pairs": "res://tests/slice_traversal.gd", "water-pairs": "res://tests/slice_traversal.gd", "water-motion": "res://tests/slice_traversal.gd", "cap-pairs": "res://tests/slice_traversal.gd", "cap-shape-pairs": "res://tests/slice_traversal.gd", "leaf-pairs": "res://tests/slice_traversal.gd", "geology": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
+               "endpoint": "res://tests/slice_traversal.gd", "path-pairs": "res://tests/slice_traversal.gd", "understory-pairs": "res://tests/slice_traversal.gd", "rock-pairs": "res://tests/slice_traversal.gd", "stem-pairs": "res://tests/slice_traversal.gd", "look-pairs": "res://tests/slice_traversal.gd", "shore-pairs": "res://tests/slice_traversal.gd", "water-pairs": "res://tests/slice_traversal.gd", "water-motion": "res://tests/slice_traversal.gd", "cap-pairs": "res://tests/slice_traversal.gd", "cap-shape-pairs": "res://tests/slice_traversal.gd", "leaf-pairs": "res://tests/slice_traversal.gd", "geology": "res://tests/slice_traversal.gd", "geology-diag": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
                "scenic": "res://tests/scenic_capture.gd", "lod-check": "res://tests/lod_check.gd", "lod-cost": "res://tests/perf_probe.gd"}.get(args.suite)
     try:
         if fixture:
             result["preflight"] = preflight(engine, fixture, output)
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check", "lod-cost") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs", "shore-pairs", "water-pairs", "water-motion", "cap-pairs", "cap-shape-pairs", "leaf-pairs", "geology") else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check", "lod-cost") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs", "stem-pairs", "look-pairs", "shore-pairs", "water-pairs", "water-motion", "cap-pairs", "cap-shape-pairs", "leaf-pairs", "geology", "geology-diag") else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

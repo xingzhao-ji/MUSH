@@ -2339,3 +2339,65 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Falls:** the foot and pool remain hidden from the shore by the western hills, and there is no outflow to the lake.
 - **Cost:** startup cost of the facet lookup was not measured.
 - **Draw-loss cause:** unresolved (see the previous section).
+
+## Geology diagnosis: why granite relief disappears in the shore and side views (2026-10-26)
+
+**Status: diagnosis plus a bounded correction; the shore view is still rejected and art is not accepted.** Rollback: `git revert` this commit.
+
+**Method** (`geology-diag` suite; capture-only modes restored afterwards and checked):
+- **States:** the same shore and side frames rendered as the final image, without depth fog, as unlit albedo, as world normals, as uniform grey lit by the scene (with and without fog), and as a flat rock and ice mask.
+- **Measurement:** over rock-mask pixels, tonal spread (p95−p5) and local contrast (mean |luma − 9 px box mean|).
+
+**Baseline findings** (`geology-diag-20261026-145539-34459`; wall pixels: shore 28%, side 42%):
+
+| Finding | Shore | Side |
+|---|---|---|
+| Fog: mean luma (with fog vs without) | 166 vs 118 | 156 vs 125 |
+| Fog: tonal spread | 102 vs 148 | 81 vs 125 |
+| Fog: local contrast | 1.97 vs 3.61 | 1.38 vs 2.20 |
+| Unlit albedo: mean luma | 187 | 183 |
+| Unlit albedo: local contrast | 2.87 | 1.53 |
+| Grey lit, no fog: local contrast | 2.99 | 1.84 |
+| Normals: tonal spread | 56 | 19 |
+
+1. **Haze is the largest single cause.** Depth fog lifts the wall's mean luma by 32–48 and removes about 40% of its spread and local contrast.
+2. **The shader painted no mid-scale structure.** Its variation was panel-scale (70–190 m) or fine grain faded beyond 260 m. The 10–60 m band, which spans 6–40 px at 0.3–1.2 km, was empty, and the albedo was bright.
+3. **Normals barely varied at pixel scale**, so lighting added little relief.
+4. **The ice showed only as one flat quad** above the falls (822 px, visible only in the mask).
+5. **Long parallel edges** came from extrusion rows: wall crest rows and trough flank rows run unchanged along the whole length.
+
+**Correction** (each change tied to a cause; no extra primitives; fog unchanged):
+- **Granite shader:**
+  - irregular fracture plates (domain-warped Worley cells, about 55 × 80 m), each with its own tone and its own normal tilt through a tangent frame built from the face coordinates;
+  - dark fracture lines along plate borders that fade in and out, so fractures terminate;
+  - a few partially present sheeting joints;
+  - base albedo about 15% darker.
+- **Ice terminus:** a 74 m cliff in five ragged rows, with alternating serac columns standing proud and vertical blue fracture lines.
+- **Wall crest rows:** setbacks and heights vary along the wall, giving an irregular upland instead of parallel terraces.
+- **Trough outer flank:** one irregular slope with fast jitter, replacing parallel steps.
+
+**After** (`geology-diag-20261026-150206-38465`):
+
+| | Shore | Side |
+|---|---|---|
+| Local contrast, final render | 1.97 → 2.16 | 1.38 → 1.65 |
+| Local contrast, unlit albedo | 2.87 → 3.70 | 1.53 → 2.25 |
+| Local contrast, grey lit without fog | 2.99 → 3.85 | 1.84 → 2.23 |
+| Visible ice pixels | 822 → 1,275 | — |
+
+The visible images are `geology-20261026-150353-39697`. `150607` is the same state after reverting a rejected attempt; its day frames are byte-identical to `150353`, and `geo-knoll-night` differs, most likely from animated night elements (not checked).
+
+**By eye:**
+- **Side:** the faces read as irregular fractured granite plates of different tone and tilt, with terminating fractures and no lattice.
+- **Shore:** the right mass shows fractured plates, and the ice terminus reads as blue fractured ice, clearly different from rock.
+
+**Rejected and retained iterations:**
+- `geology-20261026-145949-37068` (diagnosis `145921`): a regular joint lattice. It gave the largest contrast gain but read as masonry blocks, so it was rejected despite the numbers.
+- `geology-20261026-150507-40475`: trough outer flanks ending at crest level left a floating slab with an inverted cap fan under it; reverted.
+
+**Still rejected / limitations:**
+- **Upland block:** the upper-left upland, the trough's outer flanks south of the falls, still reads as a layered block. The cause is identified: an extruded cross-section whose flanks drop to the deep base in front of a much lower wall crest. The attempted fix floated it, and a correct fix needs real upland terrain there.
+- **Haze:** it still halves the remaining contrast. Whether the landmark keeps the global aerial perspective is a decision, not something this pass changed.
+- **Faces:** pale, smooth faces remain on the left wall and the headwall.
+- **Falls and pool:** the falls foot and pool are still hidden from the shore.
+- **Draw-loss trigger:** unresolved.

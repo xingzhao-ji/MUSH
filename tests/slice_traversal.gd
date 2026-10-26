@@ -293,13 +293,14 @@ func _run() -> void:
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		elif "--water-motion" in arguments: await _water_motion_scenario()
+		elif "--geology-diag" in arguments: await _geology_diag_scenario()
 		elif "--geology" in arguments: await _geology_scenario()
 		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("shape" if "--cap-shape" in arguments else ("leaf" if "--leaf-craft" in arguments else "craft"))
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"geology" if "--geology" in arguments else "junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else ("leaf-pairs" if "--leaf-craft" in arguments else "cap-pairs")) if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"geology-diag" if "--geology-diag" in arguments else "geology" if "--geology" in arguments else "junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else ("leaf-pairs" if "--leaf-craft" in arguments else "cap-pairs")) if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -1058,6 +1059,38 @@ func _geology_scenario() -> void:
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
 	_check("Geology views captured (day 5, night 3)", images.size() == 8, images.size())
+
+## Controlled geology diagnosis at the shore and side poses (day): the same frame in the final
+## rendering, without depth fog, as unlit albedo, as world normals, as uniform grey lit by the
+## scene (with and without fog) and as a flat rock/ice mask; then the final rendering is restored.
+func _geology_diag_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	var wall: Dictionary = scenery.get_report().get("escarpment", {})
+	_check("West Wall built for diagnosis", wall.get("passed", false), wall.get("passed"))
+	var views: Array = [["shore", Vector3(387.12, -78.01 + 1.7, -300.14), Vector3(-600.0, 140.0, -560.0)], ["side", Vector3(-300.0, scenery.terrain_height(-300.0, -200.0) + 30.0, -200.0), Vector3(-600.0, 200.0, -800.0)]]
+	var states: Array = [["final", 0, false], ["nofog", 0, true], ["albedo", 1, true], ["normal", 2, true], ["greylit", 3, false], ["greylit-nofog", 3, true], ["mask", 4, true]]
+	var review := Camera3D.new()
+	review.far = 2600.0
+	review.fov = 60.0
+	game.add_child(review)
+	game.world.set_appearance(false, false, false)
+	await get_tree().create_timer(4.5).timeout
+	for view: Array in views:
+		review.position = view[1]
+		review.look_at(view[2])
+		review.make_current()
+		await _frames(30)
+		for state: Array in states:
+			scenery.set_geology_debug(state[1], state[2])
+			await _frames(8)
+			await _capture("geodiag-%s-%s" % [view[0], state[0]])
+	scenery.set_geology_debug(0, false)
+	await _frames(4)
+	player._camera.make_current()
+	review.queue_free()
+	_check("Final rendering restored after diagnosis (debug view 0, fog on)", scenery.geology_debug == 0 and not scenery._debug_fog_off, {"debug": scenery.geology_debug, "fog_off": scenery._debug_fog_off})
+	_check("Diagnosis frames captured (2 views x 7 states)", images.size() == 14, images.size())
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.

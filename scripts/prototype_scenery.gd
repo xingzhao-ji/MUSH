@@ -244,6 +244,10 @@ var _wall_grid_box := Rect2()
 const WALL_GRID_CELL := 25.0
 var _geology_materials: Array[ShaderMaterial] = []
 var escarpment_report: Dictionary = {"built": false}
+## Capture-only geology diagnosis: shader view for the rock and ice materials (0 final) and
+## whether depth fog is removed; set_geology_debug(0, false) restores the final rendering.
+var geology_debug: int = 0
+var _debug_fog_off: bool = false
 ## Every material switched to LEAF_SHADER (near palettes, far tone, far crossfade copy).
 var _prototype_leaf_materials: Array[ShaderMaterial] = []
 var leaf_craft: bool = false
@@ -2345,8 +2349,13 @@ func _add_wall() -> void:
 			var facet: Vector3 = _wall_facet(float(sample.s), q, h)
 			points.append([_wall_face_offset(sample, q, h, y), y, 1.0 - smoothstep(0.9, 1.0, q), q, drip, facet.y, facet.z])
 		var shoulder: float = points[points.size() - 1][0]
-		for row: Vector2 in crest:
-			points.append([shoulder + row.x * (0.4 + 0.6 * smoothstep(0.0, 200.0, h)), top + (row.y + 38.0 * dome * (1.0 - absf(row.x + 120.0) / 200.0)) * smoothstep(0.0, 120.0, h), 0.0, 1.0, 0.0, 0.5, 0.0])
+		# Crest: setbacks and heights vary along the wall, so the rows behind the shoulder form an
+		# irregular rounded upland instead of parallel terraces running the whole length.
+		for r: int in crest.size():
+			var row: Vector2 = crest[r]
+			var setback: float = row.x * (0.4 + 0.6 * smoothstep(0.0, 200.0, h)) * (1.0 + 0.35 * _terrace_noise.get_noise_2d(float(sample.s) * 1.3, float(r) * 40.0))
+			var rise: float = row.y + 38.0 * dome * (1.0 - absf(row.x + 120.0) / 200.0) + 24.0 * _hill_noise.get_noise_2d(float(sample.s) * 1.7, float(r) * 55.0)
+			points.append([shoulder + setback, top + rise * smoothstep(0.0, 120.0, h), 0.0, 1.0, 0.0, 0.5, 0.0])
 		points.append([shoulder - 420.0, base - 60.0, 0.0, 1.0, 0.0, 0.5, 0.0])
 		for point: Array in points:
 			var at := Vector3(toe.x + nrm.x * float(point[0]), float(point[1]), toe.y + nrm.y * float(point[0]))
@@ -2526,7 +2535,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	_static.append(peak)
 	# The tongue: from inside the peak's flank down to the ice cliff above the lip.
 	var lip_n: float = _wall_face_offset(sample, 1.0, h, float(sample.top))
-	var lip_top: float = float(sample.top) + 45.0
+	var lip_top: float = float(sample.top) + 70.0
 	var start_n: float = ICE_PEAK.x + 160.0
 	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.58
 	var st := SurfaceTool.new()
@@ -2554,11 +2563,12 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.72, 0.9, absf(v))])
 		grid.append(row)
 	# Ice cliff at the snout: ragged blue front in three rows down to the rock lip.
-	for drop: float in [0.33, 0.66, 1.0]:
+	for drop: float in [0.2, 0.4, 0.6, 0.8, 1.0]:
 		var row: Array = []
 		for k: int in across:
 			var v: float = float(k) / (across - 1) * 2.0 - 1.0
-			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 6.0
+			# Serac columns: alternate columns stand proud of the cliff, ragged down its height.
+			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 9.0 + (5.0 if k % 2 == 0 else -3.0)
 			var p: Vector2 = toe + nrm * (lip_n - 1.0 + ragged * (0.5 + drop)) + dir * (v * 56.0)
 			row.append([Vector3(p.x, lerpf(lip_top, float(sample.top) - 4.0, drop) + ragged * (1.0 - drop), p.y), Vector2(1.0, v), -1.0])
 		grid.append(row)
@@ -2581,7 +2591,8 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	# Across the trough (in tongue half-widths) and height (fraction of the rim height above the
 	# bed): outer drop, broad upland shoulder, rim, steep inner wall, floor; mirrored.
 	# The outer flanks step down in uneven segments (ribbed mountain flanks, not one plane).
-	var corners: Array[Vector2] = [Vector2(-7.0, 0.0), Vector2(-5.6, 0.18), Vector2(-4.7, 0.36), Vector2(-3.9, 0.55), Vector2(-2.15, 1.0), Vector2(-1.55, 0.85), Vector2(-1.12, 0.08), Vector2(-1.0, -0.02), Vector2(1.0, -0.02), Vector2(1.12, 0.08), Vector2(1.55, 0.85), Vector2(2.15, 1.0), Vector2(3.9, 0.55), Vector2(4.7, 0.36), Vector2(5.6, 0.18), Vector2(7.0, 0.0)]
+	# One irregular outer slope per side (no parallel steps), jittered quickly along the valley.
+	var corners: Array[Vector2] = [Vector2(-6.6, 0.0), Vector2(-5.1, 0.26), Vector2(-3.9, 0.55), Vector2(-2.15, 1.0), Vector2(-1.55, 0.85), Vector2(-1.12, 0.08), Vector2(-1.0, -0.02), Vector2(1.0, -0.02), Vector2(1.12, 0.08), Vector2(1.55, 0.85), Vector2(2.15, 1.0), Vector2(3.9, 0.55), Vector2(5.1, 0.26), Vector2(6.6, 0.0)]
 	var section: int = corners.size()
 	var deep: float = float(sample.base) - 60.0
 	var cap: Array[Vector3] = []
@@ -2596,9 +2607,9 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 		var mid: Vector2 = toe + nrm * n_at
 		for k: int in section:
 			var corner: Vector2 = corners[k]
-			var rib: float = 1.0 + (0.12 * _hill_noise.get_noise_2d(u * 1500.0, corner.x * 60.0) if absf(corner.x) > 3.0 else 0.0)
+			var rib: float = 1.0 + (0.25 * _terrace_noise.get_noise_2d(u * 5000.0, corner.x * 60.0) if absf(corner.x) > 3.0 else 0.0)
 			var edge: Vector2 = mid + dir * (corner.x * half * rib)
-			var uneven: float = 1.0 + 0.18 * _terrace_noise.get_noise_2d(u * 1200.0, corner.x * 90.0) if corner.y > 0.1 else 1.0
+			var uneven: float = 1.0 + (0.35 if absf(corner.x) > 3.0 else 0.18) * _terrace_noise.get_noise_2d(u * 4000.0, corner.x * 90.0) if corner.y > 0.1 else 1.0
 			var y: float = deep if (k == 0 or k == section - 1) else y_bed + (corner.y * rim * uneven if corner.y > 0.1 else corner.y * 100.0)
 			bed.add_vertex(Vector3(edge.x, y, edge.y))
 			if j == flow_rows: cap.append(Vector3(edge.x, y, edge.y))
@@ -2625,7 +2636,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	bed.generate_normals()
 	var bed_mesh: ArrayMesh = bed.commit()
 	var bed_normals: PackedVector3Array = bed_mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 7].y > 0.0 and bed_normals[(flow_rows / 2) * section + 4].y > 0.0
+	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 6].y > 0.0 and bed_normals[(flow_rows / 2) * section + 3].y > 0.0
 	var col := MeshInstance3D.new()
 	col.name = "IceUpperValley"
 	col.mesh = bed_mesh
@@ -2645,6 +2656,13 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	_static.append(tongue)
 	var summit: Vector3 = peak.transform * Vector3(0.0, 1.0, 0.0)
 	return {"built": bed_up, "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "upper_valley_triangles": flow_rows * (section - 1) * 2 + section - 1, "upper_valley_floor_and_rims_face_up": bed_up, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
+
+## Capture-only: 1 unlit albedo, 2 world normal, 3 uniform grey lit by the scene, 4 flat mask
+## (rock magenta, ice cyan); fog_off removes depth fog. (0, false) is the final rendering.
+func set_geology_debug(view: int, fog_off: bool) -> void:
+	geology_debug = view
+	_debug_fog_off = fog_off
+	for material: ShaderMaterial in _geology_materials: material.set_shader_parameter("debug_view", view)
 
 func _v3(value: Vector3) -> Array:
 	return [snappedf(value.x, 0.1), snappedf(value.y, 0.1), snappedf(value.z, 0.1)]
@@ -3305,7 +3323,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_depth_begin = 200.0
 	environment.fog_depth_end = FOG_END
 	environment.fog_depth_curve = 1.8
-	environment.fog_density = (0.14 if _overview else lerpf(0.5, 0.8, rain))
+	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else lerpf(0.5, 0.8, rain))
 	environment.fog_aerial_perspective = 0.15
 	environment.fog_sun_scatter = 0.1
 	environment.fog_sky_affect = 0.0

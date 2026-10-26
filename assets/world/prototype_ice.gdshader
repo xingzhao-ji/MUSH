@@ -6,6 +6,8 @@ render_mode cull_disabled;
 // steepens, blue on steep serac faces and the cliff, dark rubble on the moraines.
 uniform float night = 0.0;
 uniform float rain = 0.0;
+// Capture-only diagnosis (0 = final): 1 unlit albedo, 2 world normal, 3 grey lit, 4 mask.
+uniform int debug_view = 0;
 varying vec3 v_up;
 
 float hash21(vec2 p) {
@@ -34,9 +36,17 @@ void fragment() {
 	glacier = mix(glacier, vec3(0.20, 0.42, 0.62), crevasse * 0.8);
 	float steep = 1.0 - smoothstep(0.35, 0.75, abs(normalize(v_up).y));
 	glacier = mix(glacier, vec3(0.38, 0.60, 0.76), steep * 0.8 * (1.0 - snow * 0.7));
-	glacier = mix(glacier, vec3(0.42, 0.63, 0.78) * (0.85 + 0.3 * fbm(vec2(UV.y * 8.0, 3.0))), COLOR.r);
+	// Terminus cliff: blue ice split by vertical fracture lines between serac columns.
+	float fracture = smoothstep(0.86, 0.97, abs(fract(UV.y * 9.0 + fbm(vec2(UV.y * 3.0, 1.7)) * 0.8) - 0.5) * 2.0);
+	vec3 cliff = vec3(0.40, 0.62, 0.80) * (0.85 + 0.3 * fbm(vec2(UV.y * 8.0, 3.0)));
+	cliff = mix(cliff, vec3(0.12, 0.30, 0.48), fracture * 0.75);
+	glacier = mix(glacier, cliff, COLOR.r);
 	glacier = mix(glacier, vec3(0.30, 0.28, 0.26) * (0.8 + 0.4 * fbm(vec2(u * 30.0, UV.y * 9.0))), COLOR.g * 0.9);
 	ALBEDO = mix(glacier, glacier * vec3(0.6, 0.65, 0.9), night * 0.5);
 	ROUGHNESS = mix(0.35, 0.75, snow);
 	SPECULAR = 0.45;
+	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
+	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
+	else if (debug_view == 3) { ALBEDO = vec3(0.5); }
+	else if (debug_view == 4) { EMISSION = vec3(0.0, 1.0, 1.0); ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 }
