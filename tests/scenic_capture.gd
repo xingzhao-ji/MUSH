@@ -133,7 +133,14 @@ func _run() -> void:
 			shot.merge({"view":spec.view,"night_amount":game.world.night_amount,"rain_amount":game.world.rain_amount,"lighting":"unlit terrain/lake albedo; fog disabled; other materials lit"})
 			debug_files.append(shot)
 		prototype.set_debug_colors(false)
-	var report := {"schema":"mush-scenic-capture/1","passed":passed,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"debug_color_files":debug_files,"hud":hud,"world_living_motion_disabled":true,"prototype_shader_motion_frozen":prototype.frozen if has_prototype else null,"environment_wind_strength_measured":game.environment_controller.get("_applied_wind_strength"),"other_shader_freeze_state":null,"motion_note":"prototype_shader_motion_frozen is the prototype far layer only. environment_wind_strength_measured is the shared controller wind value at report time; it says nothing about clouds, water or other shaders, whose freeze state is not enforced or verified here (null). Stills do not establish motion, physics or performance.","motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
+	# Near-tree crown replacement must actually engage on every target tree.
+	var near_check: Dictionary = {}
+	if has_prototype:
+		var trees: Dictionary = prototype.get_report().trees
+		near_check = {"target": trees.get("near_trees_target", 0), "replaced": trees.get("near_trees_replaced", 0), "crown_instances": trees.get("crown_instances_replaced", 0)}
+		near_check["passed"] = int(near_check.target) > 0 and near_check.replaced == near_check.target and int(near_check.crown_instances) > 0
+		passed = passed and near_check.passed
+	var report := {"schema":"mush-scenic-capture/1","passed":passed,"near_crown_check":near_check,"build":"0.6.0","look":"prototype" if has_prototype else "baseline","prototype_report":prototype.get_report() if has_prototype else null,"views":rows,"ground_probe":probe,"debug_color_files":debug_files,"hud":hud,"world_living_motion_disabled":true,"prototype_shader_motion_frozen":prototype.frozen if has_prototype else null,"environment_wind_strength_measured":game.environment_controller.get("_applied_wind_strength"),"other_shader_freeze_state":null,"motion_note":"prototype_shader_motion_frozen is the prototype far layer only. environment_wind_strength_measured is the shared controller wind value at report time; it says nothing about clouds, water or other shaders, whose freeze state is not enforced or verified here (null). Stills do not establish motion, physics or performance.","motion_verified":false,"art_approved":false,"concept_images_loaded":false,"renderer_capabilities":game.world.get_renderer_capabilities_report()}
 	var file := FileAccess.open(output.path_join("scenic.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"\t"))
 	file.close()

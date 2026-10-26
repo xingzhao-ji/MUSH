@@ -27,8 +27,9 @@ const TERRAIN_CELLS := 220
 ## Local detail patch over the rim view's central cliff band (target cell size, metres).
 const DETAIL_CELL := 6.0
 ## Near-tree crowns may use a denser existing canopy mesh up to this many vertices.
-const NEAR_CROWN_VERTEX_CAP := 2400
-const FOREST_HUES: Array[Color] = [Color("2f5a2a"), Color("3d6b30"), Color("2c5a4a"), Color("556b2f"), Color("6b6a2e")]
+## Near-tree crowns may use a distinct existing canopy mesh up to this many times the ring mesh's triangles.
+const NEAR_CROWN_MAX_RATIO := 8
+const FOREST_HUES: Array[Color] = [Color("2f5a2a"), Color("3f6e2e"), Color("5a7a30"), Color("5d6b2c"), Color("2a4a2c")]
 const VALLEY_DIR := Vector2(0.447, -0.894)
 const LAKE_CENTER := Vector2(190.0, -330.0)
 const LAKE_Y := -82.0
@@ -619,9 +620,10 @@ func _forest_templates() -> Array:
 	for key: int in parts: templates.append(parts[key])
 	return templates
 
-## Denser existing leaf-cluster mesh for near trees: the largest original canopy mesh
-## under NEAR_CROWN_VERTEX_CAP, scaled to the forest-ring crown volume, with a softened
-## duplicate of its material. The original meshes and materials are never modified.
+## Denser existing leaf-cluster mesh for near trees. Every candidate canopy mesh is
+## recorded first; the choice is the densest distinct mesh up to NEAR_CROWN_MAX_RATIO x the
+## ring mesh's triangles (else the least dense one above it), scaled to the ring crown's
+## volume, with a softened duplicate material. Originals are never modified.
 func _dense_crown(templates: Array) -> Dictionary:
 	var small: Mesh = null
 	for part: Dictionary in templates[0]:
@@ -629,31 +631,47 @@ func _dense_crown(templates: Array) -> Dictionary:
 			small = part.mesh
 			break
 	var canopies: Variant = _world.get("_m37_canopies")
-	if small == null or not canopies is Array: return {}
-	var counts: Array = []
-	var best: MultiMeshInstance3D = null
-	var best_count: int = 0
+	var candidates: Array = []
+	tree_report["crown_candidates"] = candidates
+	if small == null or not canopies is Array:
+		tree_report["crown_selection"] = "no ring crown mesh or no canopy list"
+		return {}
+	var small_tris: int = _triangle_count(small)
+	var picks: Array = []
 	for entry: Dictionary in canopies:
-		var source: MultiMeshInstance3D = entry.node
-		if source.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY: continue
-		var count: int = (source.multimesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
-		counts.append(count)
-		if count <= NEAR_CROWN_VERTEX_CAP and count > best_count and source.material_override is ShaderMaterial:
-			best = source
-			best_count = count
-	if best == null: return {}
-	var mesh: Mesh = best.multimesh.mesh
+		var source: MultiMeshInstance3D = entry.get("node")
+		if not is_instance_valid(source) or source.multimesh == null or source.multimesh.mesh == null: continue
+		var mesh: Mesh = source.multimesh.mesh
+		var material: Material = source.material_override if source.material_override != null else mesh.surface_get_material(0)
+		var row: Dictionary = {"node": String(source.name), "mesh_id": mesh.get_instance_id(), "vertices": (mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), "triangles": _triangle_count(mesh), "shadow_mode": int(source.cast_shadow), "material": material.get_class() if material != null else "none", "material_source": "override" if source.material_override != null else "surface", "size_m": snappedf(mesh.get_aabb().size.length(), 0.01), "is_ring_mesh": mesh == small}
+		candidates.append(row)
+		if mesh != small and material != null and source.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			picks.append([row.triangles, mesh, material, row])
+	picks.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var chosen: Array = []
+	for pick: Array in picks:
+		if pick[0] > small_tris and pick[0] <= small_tris * NEAR_CROWN_MAX_RATIO: chosen = pick
+	if chosen.is_empty():
+		for pick: Array in picks:
+			if pick[0] > small_tris:
+				chosen = pick
+				break
+	if chosen.is_empty():
+		tree_report["crown_selection"] = "no denser distinct canopy mesh"
+		return {}
+	var mesh: Mesh = chosen[1]
+	var original: Material = chosen[2]
+	var soft: Material = original.duplicate()
+	if original is ShaderMaterial:
+		var base: Variant = (original as ShaderMaterial).get_shader_parameter("base_color")
+		var accent: Variant = (original as ShaderMaterial).get_shader_parameter("accent_color")
+		if base is Color and accent is Color:
+			# Softer, warmer and lower-contrast than the source palette.
+			(soft as ShaderMaterial).set_shader_parameter("base_color", (base as Color).darkened(0.12).lerp(Color("4a5a2a"), 0.15))
+			(soft as ShaderMaterial).set_shader_parameter("accent_color", (base as Color).lerp(accent, 0.45))
+		_crown_sync.append([original, soft])
 	var ratio: float = small.get_aabb().size.length() / maxf(mesh.get_aabb().size.length(), 0.001)
-	var original: ShaderMaterial = best.material_override
-	var soft: ShaderMaterial = original.duplicate()
-	var base: Variant = original.get_shader_parameter("base_color")
-	var accent: Variant = original.get_shader_parameter("accent_color")
-	if base is Color and accent is Color:
-		# Softer, warmer and lower-contrast than the source palette.
-		soft.set_shader_parameter("base_color", (base as Color).darkened(0.12).lerp(Color("4a5a2a"), 0.15))
-		soft.set_shader_parameter("accent_color", (base as Color).lerp(accent, 0.45))
-	_crown_sync.append([original, soft])
-	tree_report["near_crown"] = {"vertices": best_count, "small_vertices": (small.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), "candidate_vertices": counts, "volume_scale": ratio}
+	tree_report["crown_selection"] = {"chosen": chosen[3], "ring_triangles": small_tris, "volume_scale": ratio}
 	return {"mesh": mesh, "material": soft, "scale": ratio}
 
 ## Triangles in a mesh, for indexed or non-indexed surfaces.
@@ -725,6 +743,8 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	_legacy_mesa = false
 	var near_crown: Dictionary = _dense_crown(templates)
 	var near_trees: int = 0
+	var near_target: int = 0
+	var crowns_replaced: int = 0
 	var batches: Dictionary = {}
 	for index: int in spots.size():
 		var spot: Vector2 = spots[index]
@@ -736,6 +756,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		if _landform_changed(spot.x, spot.y) and terrain_slope(spot.x, spot.y) > 0.6: continue
 		var cell := Vector2i(floori(spot.x / 160.0), floori(spot.y / 160.0))
 		# Near trees (framing and route flanks) get full leaf clusters at their branch ends.
+		if groups[index] in [1, 4]: near_target += 1
 		var near: bool = not near_crown.is_empty() and groups[index] in [1, 4]
 		if near: near_trees += 1
 		for part: Dictionary in template:
@@ -746,6 +767,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 				mesh = near_crown.mesh
 				material = near_crown.material
 				local = Transform3D(local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)), local.origin)
+				crowns_replaced += 1
 			var key: String = "%s|%d|%d|%d|%d" % [part.kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y]
 			if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": part.kind, "poses": []}
 			batches[key].poses.append(root * local)
@@ -770,7 +792,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 	var tree_triangles: int = 0
 	for key: String in batches:
 		tree_triangles += _triangle_count(batches[key].mesh) * batches[key].poses.size()
-	tree_report.merge({"trees": tree_count, "near_trees": near_trees, "tree_triangles": tree_triangles, "framing": framing, "shelf": shelf, "shore": shore, "flank": flank, "instances": tree_instances, "batches": batches.size()})
+	tree_report.merge({"trees": tree_count, "near_trees_target": near_target, "near_trees_replaced": near_trees, "crown_instances_replaced": crowns_replaced, "tree_triangles": tree_triangles, "framing": framing, "shelf": shelf, "shore": shore, "flank": flank, "instances": tree_instances, "batches": batches.size()})
 
 func _add_carpet(rng: RandomNumberGenerator) -> void:
 	var base_color := Color("48752e")
@@ -814,7 +836,7 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		var shade: float = rng.randf_range(0.8, 1.05)
 		var tone: Color = FOREST_HUES[rng.randi_range(0, FOREST_HUES.size() - 1)].lerp(base_color.lerp(accent_color, rng.randf_range(0.0, 0.4)), 0.25) * shade
 		# Damp valley floors lean blue-green.
-		tone = tone.lerp(Color("2c5a4a"), smoothstep(-40.0, -70.0, placed) * 0.4)
+		tone = tone.lerp(Color("35603a"), smoothstep(-40.0, -70.0, placed) * 0.25)
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
 		if on_cliff or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
@@ -1231,7 +1253,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
 	sun.light_angular_distance = 2.2
 	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
-	environment.ambient_light_color = Color("c9ccd6").lerp(Color("8f90c8"), night)
+	environment.ambient_light_color = Color("d2d0ca").lerp(Color("8f90c8"), night)
 	environment.ambient_light_energy = 0.32
 	environment.fog_enabled = not _debug_colors
 	environment.fog_light_color = Color("a9b6cf").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
