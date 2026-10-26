@@ -179,6 +179,16 @@ class UnderstoryPairsReport(unittest.TestCase):
                 verify.inspect("understory-pairs", Path("unused"), 120)
 
 
+class RockPairsReport(unittest.TestCase):
+    def test_missing_offset_pair_fails(self):
+        files = [f"rock-{pose}-{state}-day.png" for pose in ("root-approach", "root-offset", "rock-offset") for state in ("before", "after")]
+        report = {"schema": "mush-slice-traversal/1", "mode": "rock-pairs", "passed": True, "legs": [],
+                  "checks": [{"label": "rock", "passed": True}], "images": [{"file": name} for name in files]}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every before/after pair"):
+                verify.inspect("rock-pairs", Path("unused"), 120)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):

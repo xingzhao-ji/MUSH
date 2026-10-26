@@ -495,6 +495,24 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "traversal_verified": False}
+    if suite == "rock-pairs":
+        report = read_report(output / "slice.json")
+        assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "rock-pairs"
+        failed = [c["label"] for c in report["checks"] if not c["passed"]]
+        assert report["checks"] and not failed and report["passed"], failed or "rock-pairs report not passed"
+        poses = ("root-approach", "root-offset", "rock-offset")
+        expected = [f"rock-{pose}-{state}-{mood}.png" for mood in ("day", "night", "rain") for pose in poses for state in ("before", "after")]
+        assert [image["file"] for image in report["images"]] == expected, "Expected every before/after pair"
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        pixels = {}
+        for image in report["images"]:
+            item = module.decode(output / image["file"], keep_pixels=True)
+            assert item["dimensions"] == [1280, 720] and item["png_sha256"] == image["png_sha256"]
+            pixels[image["file"]] = item["pixels"]
+        return {"diagnostic_only": True, "harness_placed": True, "picks": {pose: next(i["picks"] for i in report["images"] if i["file"].startswith(f"rock-{pose}-")) for pose in poses},
+                "pairs": {pose: changed_fraction(pixels[f"rock-{pose}-before-day.png"], pixels[f"rock-{pose}-after-day.png"]) for pose in poses}}
     if suite == "understory-pairs":
         report = read_report(output / "slice.json")
         assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "understory-pairs"
@@ -657,7 +675,7 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic", "route", "perf-probe", "lod-check", "slice", "junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs"), required=True)
     parser.add_argument("--prototype-scenery", choices=("on", "off"), help="scenic-only: select the presentation look for matched captures")
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
@@ -734,6 +752,8 @@ def main():
         command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-capture":
         command += ["--script", "res://tests/paving_shape_compare.gd", "--", "--report-dir=" + str(output / "native"), "--candidate=" + str(args.candidate)]
+    elif args.suite == "rock-pairs":
+        command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--slice", "--rock-pairs", "--report-dir", str(output)]
     elif args.suite == "understory-pairs":
         command += ["--fixed-fps", "60", "--disable-vsync", "--resolution", "1280x720", "--", "--capture", "--slice", "--understory-pairs", "--report-dir", str(output)]
     elif args.suite == "path-pairs":
@@ -768,12 +788,12 @@ def main():
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     # Prototype capture suites load their fixture at runtime; check it parses before launch.
     fixture = {"slice": "res://tests/slice_traversal.gd", "junction": "res://tests/slice_traversal.gd",
-               "endpoint": "res://tests/slice_traversal.gd", "path-pairs": "res://tests/slice_traversal.gd", "understory-pairs": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
+               "endpoint": "res://tests/slice_traversal.gd", "path-pairs": "res://tests/slice_traversal.gd", "understory-pairs": "res://tests/slice_traversal.gd", "rock-pairs": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
                "scenic": "res://tests/scenic_capture.gd"}.get(args.suite)
     try:
         if fixture:
             result["preflight"] = preflight(engine, fixture, output)
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs") else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint", "path-pairs", "understory-pairs", "rock-pairs") else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

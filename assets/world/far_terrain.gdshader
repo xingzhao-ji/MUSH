@@ -19,6 +19,20 @@ uniform vec3 cool_rock : source_color = vec3(0.46, 0.45, 0.50);
 // that matches the clearing's average colour, applied with an irregular boundary.
 uniform vec4 clearing_rect = vec4(0.0);
 uniform vec3 clearing_gain = vec3(1.0);
+// Rock readability inside one region only (the cliff detail patch: x0, z0, x1, z1), fading out
+// over an irregular ~250 m band inside its edges (no visible rectangle) and weighted by
+// rockiness; outside the region and at zero strengths it renders exactly as before.
+// breakup: neutral mineral tone, isotropic multi-scale mottling, broken strata and ledge
+// lichen; relief: procedural normal
+// variation; fill: sky-bounce fill on faces turned from the sun (still fogged, dimmed at night).
+uniform vec4 rock_focus_rect = vec4(0.0);
+uniform float rock_breakup = 0.0;
+uniform float rock_relief = 0.0;
+uniform float rock_fill = 0.0;
+// At 300-600 m the far texture pair multiplies two dark layers and collapses rock albedo to
+// ~0.03-0.05 (darker than coal); albedo_lift restores a natural rock range inside the region.
+uniform float rock_albedo_lift = 1.0;
+uniform vec3 rock_fill_tint : source_color = vec3(0.62, 0.60, 0.72);
 varying vec3 v_world;
 varying vec3 v_normal;
 
@@ -84,6 +98,28 @@ void fragment() {
 	// Geological strata: warped, uneven-thickness layers of tone (not a periodic band).
 	float strata = fbm(vec2(h * 0.045 + fbm(v_world.xz * 0.006) * 1.6, 0.37));
 	rock *= mix(0.80, 1.12, strata);
+	float focus = 0.0;
+	if (rock_focus_rect.z > rock_focus_rect.x) {
+		vec2 inside = min(v_world.xz - rock_focus_rect.xy, rock_focus_rect.zw - v_world.xz);
+		float edge = min(inside.x, inside.y);
+		focus = edge > 0.0 ? smoothstep(0.0, 250.0, edge + (fbm(v_world.xz * 0.004) - 0.5) * 120.0) : 0.0;
+	}
+	if (focus > 0.0 && rock_breakup > 0.0) {
+		// Restrained mineral colour: pull the warm far-texture product halfway to neutral stone.
+		float lum = dot(rock, vec3(0.299, 0.587, 0.114));
+		vec3 stone = mix(rock, vec3(lum) * vec3(1.04, 1.0, 0.96), 0.5);
+		// Irregular multi-scale mottling, equal scale across and up the face so it never streaks.
+		float m_big = fbm(vec2((v_world.x - v_world.z) * 0.018, h * 0.018));
+		float m_mid = fbm(vec2((v_world.x + v_world.z) * 0.07, h * 0.07) + 7.3);
+		vec3 mottle = mix(vec3(0.80, 0.81, 0.84), vec3(1.16, 1.11, 1.04), m_big) * mix(0.86, 1.12, m_mid);
+		// Discontinuous strata: thin, uneven, slightly tilted bands that break off along the face.
+		float level = h + 9.0 * fbm(v_world.xz * 0.008);
+		float band = smoothstep(0.75, 0.95, sin(level * 0.42) * 0.5 + 0.5);
+		float breaks = smoothstep(0.45, 0.62, fbm(v_world.xz * 0.025 + vec2(h * 0.01)));
+		vec3 strata_tone = mix(vec3(1.0), vec3(0.80, 0.79, 0.78), band * breaks);
+		rock = mix(rock, stone * mottle * strata_tone, rock_breakup * focus);
+	}
+	if (focus > 0.0) rock *= mix(1.0, rock_albedo_lift, focus);
 	float steep = 1.0 - clamp(n.y, 0.0, 1.0);
 	// Moss coverage: mottled, warped world-space patches (~22 m and ~6 m), thinning on
 	// steep and high, exposed ground. Applied only on rugged or upland terrain, so the
@@ -97,11 +133,27 @@ void fragment() {
 	float rockiness = 1.0 - mix(1.0 - smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18), covered, rugged);
 	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= 0.88 + 0.24 * macro;
+	vec3 fill = vec3(0.0);
+	float targeted = focus * rockiness;
+	if (targeted > 0.0) {
+		float ledge = smoothstep(0.35, 0.8, n.y) * smoothstep(0.45, 0.7, fbm(v_world.xz * 0.04 + h * 0.02));
+		albedo = mix(albedo, mix(moss_mean, vec3(0.55, 0.60, 0.45), 0.4), ledge * 0.45 * rock_breakup * targeted);
+		vec3 lit_n = n;
+		if (rock_relief > 0.0) {
+			vec3 bump = vec3(fbm(v_world.zy * 0.08) - 0.5, fbm(v_world.xz * 0.08 + 4.0) - 0.5, fbm(v_world.xy * 0.08 + 9.0) - 0.5);
+			lit_n = normalize(n + bump * rock_relief * targeted);
+			NORMAL = normalize((VIEW_MATRIX * vec4(lit_n, 0.0)).xyz);
+		}
+		float away = 1.0 - clamp(dot(lit_n, normalize(sun_dir)) * 0.5 + 0.5, 0.0, 1.0);
+		// Daylight sky bounce only: it fades out at night so the cliff never self-lights.
+		fill = albedo * rock_fill_tint * rock_fill * targeted * away * mix(1.0, 0.05, night);
+	}
 	if (debug_unlit) {
 		EMISSION = albedo;
 		ALBEDO = vec3(0.0);
 	} else {
 		ALBEDO = albedo;
+		EMISSION = fill;
 	}
 	ROUGHNESS = mix(0.95, 0.82, rockiness);
 	SPECULAR = 0.12;

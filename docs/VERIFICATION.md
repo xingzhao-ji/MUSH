@@ -1672,3 +1672,44 @@ Lower frame (y ≥ 400, avatar excluded):
 - **Backdrop clumps** beyond 125 m remain.
 - **LOD:** leaf density still visibly changes at 94–96 m and 118–120 m.
 - **Not checked:** night appearance of the corridor; any manual or device checks.
+
+## Cliff rock readability (2026-10-26)
+
+**Status: local material improvement; the sawtooth silhouette is unchanged; scene art not accepted.** Rollback: `git revert` this commit.
+
+**Owner:** a camera-ray pick against every prototype mesh's triangles (`rock-pairs` suite) hit **`CliffDetailPatch`** for every near-black pixel in the root-approach and root-offset views. That is the massif's 5 m detail terrain, about 390–460 m away near (537–571, 3–99, −631 to −647).
+- **First guess retracted:** I first attributed the black face to the needle crags. Changing those had no effect (`rock-pairs-20261026-095041-28575`) and was reverted.
+
+**Cause:**
+- **Albedo collapse:** at 300–600 m the terrain shader's far texture pair multiplies two dark Rock01 layers, giving rock albedo of about 0.03–0.05.
+- **Facing:** these faces are turned away from the sun.
+- **Tonemap:** the tonemap crushes the result to near black.
+
+**Change** (`assets/world/far_terrain.gdshader`; values in `scripts/prototype_scenery.gd`): new terrain uniforms, applied only inside the cliff patch's region.
+- **Mask:** an irregular ~250 m fade inside its edges, weighted by rockiness. Outside the region, and at zero strengths, rendering is exactly as before.
+- **`rock_albedo_lift` 2.2:** restores a natural rock range.
+- **`rock_breakup` 1.0:** neutral mineral tone, isotropic two-scale mottling, broken strata and ledge lichen.
+- **`rock_relief` 0.5:** procedural normal variation.
+- **`rock_fill` 1.0:** daylight sky-bounce on faces turned from the sun. It is scaled by albedo, fogged, and fades to 5% at night.
+- **Unchanged:** geometry, collision, route, anchors, giants, global lighting and the haze.
+
+**Evidence** (`rock-pairs-20261026-100918-30016`): before (neutral defaults) and after in the same frame, at three views — root approach, root offset and a rock-offset view — in day, night and rain.
+- **Shaded face, mean luma (0–255):**
+  - Root offset: day 13.4 → 28.8; night 5.2 → 13.1, moonlit and not glowing; rain 14.1 → 29.3.
+  - Root approach: day 19.6 → 33.7.
+- **Colour:** saturation 0.553 → 0.320, so no bark-brown.
+- **Streaks:** vertical-gradient anisotropy 1.97 → 1.67, below the untreated value. The fluted geometry keeps some vertical bias.
+- **Control:** a distant hazed massif outside the region is identical.
+- **Rejected iterations, retained:** rock-pairs `095237` and `095355` (too dark); `095457` (warm vertical ribs read as bark).
+
+**Boundary:** the overview's tone gap between the hero-side massif and the left massifs predates this pass (105.1 vs 85.9 luma in the untreated `scenic-20261026-094206-28006`). The treatment changes the hero-side massif's overview tone by only +1.7 luma (`scenic-20261026-101031-30105`); the untreated massifs are pixel-identical. No regional seam is visible.
+
+**Scenic** (`scenic-20261026-101031-30105`): fails only the known vista coverage gate (0.0130). Terrain triangles, slice and route geometry, collision, root collider, colliders, shadow casters and draw nodes are unchanged. Footing drift is 0.0 (7/7).
+
+**Limitations, retained:**
+- **Silhouette:** the sawtooth crests and vertical flutes are geometry and remain.
+- **Strata:** faint at 400+ m.
+- **Shaded faces:** deliberately still dark.
+- **Shader cost:** a few more noise lookups per terrain fragment inside the region; frame time not measured.
+- **Benchmark not rerun:** the route benchmark still **fails** (p95 18.086 ms).
+- **Still open:** the vista coverage gate and the leaf-density change at 94–96 m and 118–120 m. Manual and device checks are not done, and the overall art is not accepted.

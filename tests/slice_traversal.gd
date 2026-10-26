@@ -274,11 +274,12 @@ func _run() -> void:
 		elif "--endpoint" in arguments: await _endpoint_scenario()
 		elif "--path-pairs" in arguments: await _path_pairs_scenario()
 		elif "--understory-pairs" in arguments: await _understory_pairs_scenario()
+		elif "--rock-pairs" in arguments: await _rock_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else "full"))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else "full")))),"passed":passed,"checks":checks,"legs":legs,"images":images,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -517,6 +518,108 @@ func _understory_pairs_scenario() -> void:
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 	_check("Viewpoint timing (uncapped, fixed-step, harness-placed; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Rock readability evidence (diagnostic; HARNESS-PLACED): picks the owner of the dark pixels
+## by casting the camera ray through them against every prototype mesh's real triangles, then
+## captures before (the new rock uniforms at their neutral defaults) and after in the same frame.
+func _rock_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	game.world.set_appearance(false, false, false)
+	var material: ShaderMaterial = scenery.rock_material
+	var patch: GeometryInstance3D = scenery.get_node_or_null("CliffDetailPatch") as GeometryInstance3D
+	_check("Cliff detail patch (the picked owner) carries the region-masked readability uniforms", material != null and patch != null and patch.material_override == material and (material.get_shader_parameter("rock_focus_rect") as Vector4).z > (material.get_shader_parameter("rock_focus_rect") as Vector4).x, scenery.get_report().rock_readability)
+	var hero: Vector3 = scenery.hero.base
+	var root_i: int = _nearest_sample(Vector3(386.89, -78.71, -284.54))
+	var poses: Array = [
+		["root-approach", Vector3(386.89, -78.71, -284.54), [Vector2(1060, 150), Vector2(1010, 300)]],
+		["root-offset", slice._p[root_i + 5], [Vector2(610, 130), Vector2(620, 260)]],
+		["rock-offset", slice._p[root_i - 30], [Vector2(640, 250), Vector2(760, 200)]]]
+	for pose: Array in poses:
+		var at: Vector3 = pose[1]
+		await _place(at, 0.0)
+		if pose[0] == "root-approach":
+			var to_root: float = Vector2(at.x - hero.x, at.z - hero.z).length()
+			var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (at.y + 0.7), to_root))
+			_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+			player.camera_yaw += deg_to_rad(10.0)
+		elif pose[0] == "root-offset":
+			_look(hero, 2.0)
+			player.camera_yaw += deg_to_rad(-30.0)
+		else:
+			_look(Vector3(555.0, 0.0, -640.0), 6.0)
+		player._visual.rotation.y = player.camera_yaw
+		await _frames(45)
+		var picks: Array = []
+		for pixel: Vector2 in pose[2]: picks.append(_pick(pixel))
+		for state: String in ["before", "after"]:
+			for key: String in scenery.ROCK_READABILITY: material.set_shader_parameter(key, (1.0 if key == "rock_albedo_lift" else 0.0) if state == "before" else scenery.ROCK_READABILITY[key])
+			await _frames(6)
+			await _capture("rock-%s-%s-day" % [pose[0], state])
+			images[images.size() - 1]["picks"] = picks
+			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+		_check("Rock pose %s: placed on the path, camera clear; dark-pixel owners picked" % pose[0], player.global_position.distance_to(at) < 0.3 and _camera_clearance() > 0.05, picks)
+	# Night and rain at the same poses: the shared appearance transition settles, then the same
+	# before/after toggle (the fill must not light the cliff at night).
+	for mood: Array in [["night", true, false], ["rain", false, true]]:
+		game.world.set_appearance(mood[1], mood[2], false)
+		await get_tree().create_timer(4.5).timeout
+		for pose: Array in poses:
+			await _place(pose[1], 0.0)
+			if pose[0] == "root-approach":
+				var to_root: float = Vector2(pose[1].x - hero.x, pose[1].z - hero.z).length()
+				var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (pose[1].y + 0.7), to_root))
+				_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+				player.camera_yaw += deg_to_rad(10.0)
+			elif pose[0] == "root-offset":
+				_look(hero, 2.0)
+				player.camera_yaw += deg_to_rad(-30.0)
+			else:
+				_look(Vector3(555.0, 0.0, -640.0), 6.0)
+			player._visual.rotation.y = player.camera_yaw
+			await _frames(45)
+			for state: String in ["before", "after"]:
+				for key: String in scenery.ROCK_READABILITY: material.set_shader_parameter(key, (1.0 if key == "rock_albedo_lift" else 0.0) if state == "before" else scenery.ROCK_READABILITY[key])
+				await _frames(6)
+				await _capture("rock-%s-%s-%s" % [pose[0], state, mood[0]])
+	game.world.set_appearance(false, false, false)
+	for key: String in scenery.ROCK_READABILITY: material.set_shader_parameter(key, scenery.ROCK_READABILITY[key])
+
+## Owner of the surface under a screen pixel: nearest hit of the camera ray against the real
+## triangles of every visible prototype mesh and multimesh instance (bounding boxes first).
+func _pick(pixel: Vector2) -> Dictionary:
+	var cam: Camera3D = player._camera
+	var from: Vector3 = cam.project_ray_origin(pixel)
+	var dir: Vector3 = cam.project_ray_normal(pixel)
+	var best := {"pixel": [pixel.x, pixel.y], "owner": null, "distance_m": INF}
+	for node: Node in scenery.find_children("*", "GeometryInstance3D", true, false):
+		var geometry: GeometryInstance3D = node as GeometryInstance3D
+		if not geometry.is_visible_in_tree(): continue
+		var poses: Array = []
+		var mesh: Mesh = null
+		if geometry is MultiMeshInstance3D and (geometry as MultiMeshInstance3D).multimesh != null:
+			var multi: MultiMesh = (geometry as MultiMeshInstance3D).multimesh
+			mesh = multi.mesh
+			for i: int in multi.instance_count: poses.append([i, geometry.global_transform * multi.get_instance_transform(i)])
+		elif geometry is MeshInstance3D:
+			mesh = (geometry as MeshInstance3D).mesh
+			poses.append([0, geometry.global_transform])
+		if mesh == null: continue
+		var faces: PackedVector3Array = PackedVector3Array()
+		for entry: Array in poses:
+			var pose: Transform3D = entry[1]
+			if (pose * mesh.get_aabb()).intersects_ray(from, dir) == null: continue
+			if faces.is_empty(): faces = mesh.get_faces()
+			var local_from: Vector3 = pose.affine_inverse() * from
+			var local_dir: Vector3 = (pose.affine_inverse().basis * dir).normalized()
+			for k: int in range(0, faces.size(), 3):
+				var hit: Variant = Geometry3D.ray_intersects_triangle(local_from, local_dir, faces[k], faces[k + 1], faces[k + 2])
+				if hit == null: continue
+				var world: Vector3 = pose * (hit as Vector3)
+				var distance: float = from.distance_to(world)
+				if distance < float(best.distance_m):
+					best = {"pixel": [pixel.x, pixel.y], "owner": String(geometry.name), "instance": entry[0], "hit": _v(world), "distance_m": snappedf(distance, 0.1)}
+	return best
 
 func _set_corridor_state(after: bool) -> void:
 	scenery.replaced_carpet.visible = not after
