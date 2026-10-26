@@ -60,6 +60,7 @@ var tree_count: int = 0
 var tree_instances: int = 0
 var tree_report: Dictionary = {}
 var carpet_chunks: int = 0
+var hero_root_triangles: int = 0
 var diagnostic_skips: PackedStringArray = PackedStringArray()
 var _world: Node3D
 var _ridge_noise: FastNoiseLite
@@ -337,7 +338,7 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 		var ground: float = terrain_height(x, z)
 		var underside: float = ground + h
 		var thickness: float = r * 0.5
-		var stem_r: float = r * 0.2
+		var stem_r: float = r * 0.15
 		# The stem leans gently; its bent top carries the cap.
 		var lean: Vector3 = Basis(Vector3.UP, yaw) * Vector3(STEM_BEND * stem_r, 0.0, 0.0)
 		var tilt := Basis(Vector3(1, 0, 0), rng.randf_range(-0.05, 0.05)) * Basis(Vector3(0, 0, 1), rng.randf_range(-0.05, 0.05))
@@ -350,13 +351,110 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 		stems.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, length, stem_r)), Vector3(x, base, z)))
 		if base < ground and base + length > underside: grounded_stems += 1
 		if not hero.is_empty(): tints.append(Color(rng.randf(), 0, 0))
-		stem_tints.append(Color(rng.randf(), 0, 0))
-		if hero.is_empty(): hero = {"position": Vector3(x + lean.x, underside, z + lean.z), "base": Vector3(x, ground, z), "radius": r, "ground": ground}
+		stem_tints.append(Color(rng.randf(), 1, 1))
+		if hero.is_empty():
+			# Camera framing anchor stays where the previous checkpoint framed it, so the
+			# rim composition (and the framing trees placed from it) is unchanged.
+			var anchor: Vector3 = Basis(Vector3.UP, yaw) * Vector3(STEM_BEND * r * 0.2, 0.0, 0.0)
+			hero = {"position": Vector3(x + lean.x, underside, z + lean.z), "view_focus": Vector3(x + anchor.x, underside, z + anchor.z), "base": Vector3(x, ground, z), "radius": r, "ground": ground}
 	canopy_count = hero_caps.size() + caps.size()
 	var hero_tint: Array[Color] = [Color(0.5, 0, 0)]
 	_add(hero_cap, hero_caps, hero_tint, 0, "HeroCanopy")
 	_add(cap, caps, tints, 0, "LuminousCanopies")
 	_add(stem, stems, stem_tints, 1, "CanopyStems")
+	# Separate generator: adding the roots must not shift any other seeded placement.
+	var root_rng := RandomNumberGenerator.new()
+	root_rng.seed = 7311
+	_add_hero_roots(root_rng)
+
+## Hero buttress roots: five asymmetric curved root masses leave the stem low down,
+## each branches once, and every tip is buried in the terrain. Built once, world space.
+func _add_hero_roots(rng: RandomNumberGenerator) -> void:
+	if hero.is_empty(): return
+	var base: Vector3 = hero.base
+	var stem_r: float = float(hero.radius) * 0.15
+	var paths: Array = []
+	var count: int = 5
+	for i: int in count:
+		var a: float = TAU * float(i) / count + rng.randf_range(-0.5, 0.5)
+		var dir := Vector3(cos(a), 0.0, sin(a))
+		var reach: float = stem_r * rng.randf_range(1.8, 3.0)
+		var start: Vector3 = base + dir * stem_r * 0.7 + Vector3.UP * stem_r * rng.randf_range(0.7, 1.5)
+		var tip := Vector2(base.x, base.z) + Vector2(dir.x, dir.z) * (stem_r * 0.7 + reach)
+		var finish := Vector3(tip.x, terrain_height(tip.x, tip.y) - stem_r * 0.12, tip.y)
+		var bow: Vector3 = (start + finish) * 0.5 + dir * reach * 0.15 + Vector3.UP * stem_r * 0.25
+		var thick: float = stem_r * rng.randf_range(0.36, 0.52)
+		paths.append([start, bow, finish, thick, thick * 0.18])
+		var mid: Vector3 = _bezier(start, bow, finish, 0.45)
+		var side: Vector3 = dir.rotated(Vector3.UP, rng.randf_range(0.5, 0.9) * (1.0 if i % 2 == 0 else -1.0))
+		var branch := Vector2(mid.x, mid.z) + Vector2(side.x, side.z) * reach * 0.55
+		var branch_end := Vector3(branch.x, terrain_height(branch.x, branch.y) - stem_r * 0.08, branch.y)
+		paths.append([mid, (mid + branch_end) * 0.5 + Vector3.UP * stem_r * 0.1, branch_end, thick * 0.45, thick * 0.1])
+	var mesh: ArrayMesh = _sweep_roots(paths, false)
+	# Verify outward faces; rebuild with the other index order if needed.
+	var arrays: Array = mesh.surface_get_arrays(0)
+	var probe: Vector3 = (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array)[5 * 11 + 2]
+	var centre: Vector3 = _bezier(paths[0][0], paths[0][1], paths[0][2], 5.0 / 11.0)
+	if (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array)[5 * 11 + 2].dot(probe - centre) < 0.0:
+		mesh = _sweep_roots(paths, true)
+		arrays = mesh.surface_get_arrays(0)
+	winding_checks["hero_root_normal_outward"] = (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array)[5 * 11 + 2].dot((arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array)[5 * 11 + 2] - centre) > 0.0
+	var material := ShaderMaterial.new()
+	material.shader = SHADER
+	material.set_shader_parameter("mode", 1)
+	material.set_shader_parameter("rock_tex", ROCK_TEXTURE)
+	material.set_shader_parameter("moss_mean", _moss_mean)
+	_art.append(material)
+	var node := MeshInstance3D.new()
+	node.name = "HeroRoots"
+	node.mesh = mesh
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
+	hero_root_triangles = (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+
+func _bezier(a: Vector3, b: Vector3, c: Vector3, t: float) -> Vector3:
+	return a.lerp(b, t).lerp(b.lerp(c, t), t)
+
+## Sweeps a lumpy, vertically deepened (plank-like) cross-section along each quadratic
+## path; UV.y runs 0.42 at the stem to 0 at the buried tip so moss gathers at the tips.
+func _sweep_roots(paths: Array, flip: bool) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rings := 12
+	var sides := 10
+	var offset: int = 0
+	for path: Array in paths:
+		for i: int in rings:
+			var t: float = float(i) / (rings - 1)
+			var centre: Vector3 = _bezier(path[0], path[1], path[2], t)
+			var ahead: Vector3 = (_bezier(path[0], path[1], path[2], minf(t + 0.02, 1.0)) - _bezier(path[0], path[1], path[2], maxf(t - 0.02, 0.0))).normalized()
+			var across: Vector3 = ahead.cross(Vector3.UP)
+			across = across.normalized() if across.length() > 0.01 else Vector3.RIGHT
+			var lift: Vector3 = across.cross(ahead).normalized()
+			var radius: float = lerpf(path[3], path[4], pow(t, 0.8))
+			for j: int in sides + 1:
+				var a: float = TAU * float(j) / sides
+				var lump: float = 1.0 + 0.12 * sin(3.0 * a + float(i) * 0.7)
+				st.set_uv(Vector2(float(j) / sides, lerpf(0.42, 0.0, t)))
+				st.set_color(Color(1, clampf(0.5 + 0.5 * cos(2.0 * a), 0.0, 1.0), 1))
+				st.add_vertex(centre + (across * cos(a) * 1.0 + lift * sin(a) * 1.25) * radius * lump)
+		for i: int in rings - 1:
+			for j: int in sides:
+				var i0: int = offset + i * (sides + 1) + j
+				var i1: int = i0 + 1
+				var i2: int = i0 + sides + 1
+				var i3: int = i2 + 1
+				if flip:
+					st.add_index(i0); st.add_index(i2); st.add_index(i1)
+					st.add_index(i1); st.add_index(i2); st.add_index(i3)
+				else:
+					st.add_index(i0); st.add_index(i1); st.add_index(i2)
+					st.add_index(i1); st.add_index(i3); st.add_index(i2)
+		offset += rings * (sides + 1)
+	st.generate_normals()
+	return st.commit()
 
 func _add_pillars(rng: RandomNumberGenerator) -> void:
 	var pillar: ArrayMesh = _pillar_mesh()
@@ -541,7 +639,13 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		var height: float = rng.randf_range(11.0, 19.0)
 		xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * Basis.from_scale(Vector3(width, height, width)), Vector3(x, ground - 1.0, z)))
 		var shade: float = rng.randf_range(0.92, 1.08)
-		colors.append(base_color.lerp(accent_color, rng.randf_range(0.0, 0.55)) * shade)
+		var tone: Color = base_color.lerp(accent_color, rng.randf_range(0.0, 0.55)) * shade
+		# Leave the hero's rooted base open; filtered after every draw, so the random
+		# stream (and every other clump) is unchanged.
+		if not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75:
+			xs.pop_back()
+			continue
+		colors.append(tone)
 	carpet_count = xs.size()
 	carpet_triangles = (clump.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * carpet_count
 	# One shared material; 400 m spatial chunks so off-screen forest is frustum-culled
@@ -627,15 +731,17 @@ func _cap_mesh(phases: PackedFloat32Array) -> ArrayMesh:
 
 func _stem_mesh() -> ArrayMesh:
 	var profile: Array[Vector3] = []
-	var rows := 24
+	# Gentle base swell (the buttress roots are separate meshes), slight taper, and a
+	# collar that opens into the cap underside.
+	var rows := 32
 	for i: int in rows + 1:
 		var t: float = float(i) / rows
-		profile.append(Vector3((1.0 + 2.2 * pow(1.0 - t, 6.0)) * (1.0 - 0.25 * t), t, t))
+		profile.append(Vector3((1.0 + 0.35 * pow(1.0 - t, 3.0)) * (1.0 - 0.18 * t) + 0.5 * pow(smoothstep(0.86, 1.0, t), 2.0), t, t))
 	# Closed top: the stem end is buried in the cap, never seen as an open tube.
 	profile.append(Vector3(0.0, 1.0, 1.0))
-	var mesh: ArrayMesh = _lathe(profile, 40, "stem", false)
+	var mesh: ArrayMesh = _lathe(profile, 48, "stem", false)
 	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	winding_checks["stem_side_normal_outward"] = normals[12 * 41].x > 0.0
+	winding_checks["stem_side_normal_outward"] = normals[12 * 49].x > 0.0
 	return mesh
 
 # Rock pillar: smooth angular fluting plus horizontal ledges, closed at the top.
@@ -674,6 +780,7 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 			var a: float = u * TAU
 			var radius: float = p.x
 			var height: float = p.y
+			var cavity: float = 1.0
 			match style:
 				"cap":
 					var edge: float = pow(smoothstep(0.3, 1.0, p.x), 1.5)
@@ -681,7 +788,11 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 					radius *= 1.0 + edge * (0.055 * sin(2.0 * a + f[0]) + 0.035 * sin(3.0 * a + f[1]) + 0.02 * sin(5.0 * a + f[2]) + 0.01 * sin(11.0 * a + f[3]))
 					height += edge * (0.07 * sin(a + f[4]) + 0.025 * sin(4.0 * a + f[5]))
 				"stem":
-					radius *= 1.0 + 0.6 * pow(1.0 - p.z, 4.0) * maxf(0.0, sin(6.0 * a + 0.7)) + 0.035 * cos(14.0 * a)
+					# A few fused strands twisting up the stem (macro grooves, not fine flutes).
+					var twist: float = p.z * 1.4
+					var lobes: float = 0.13 * cos(4.0 * a + twist + 0.6) + 0.07 * cos(7.0 * a - twist * 0.6 + 2.1) + 0.04 * cos(11.0 * a + 1.0)
+					radius *= 1.0 + lobes * (0.6 + 0.4 * p.z)
+					cavity = clampf(0.5 + lobes * 3.0, 0.0, 1.0)
 				"pillar":
 					radius *= 1.0 + 0.10 * sin(5.0 * a + 1.1) + 0.05 * sin(11.0 * a)
 				"boulder":
@@ -689,8 +800,9 @@ func _lathe(profile: Array[Vector3], segments: int, style: String, flip: bool, p
 				"blob":
 					radius *= 1.0 + 0.16 * sin(3.0 * a + 0.8)
 			st.set_uv(Vector2(u, p.z))
-			# Godot multiplies vertex colour into the MultiMesh instance colour: keep it white.
-			st.set_color(Color(1, 1, 1))
+			# Godot multiplies vertex colour into the MultiMesh instance colour: keep it white,
+			# except the stem's green channel, which carries groove depth for shading.
+			st.set_color(Color(1, cavity, 1))
 			var bend: float = STEM_BEND * p.z * p.z if style == "stem" else 0.0
 			st.add_vertex(Vector3(cos(a) * radius + bend, height, sin(a) * radius))
 	for row: int in profile.size() - 1:
@@ -876,7 +988,7 @@ func _rim_point(outset: float) -> Vector2:
 func overlook_pose() -> Dictionary:
 	var rim: Vector2 = _rim_point(5.0)
 	var ground: float = terrain_height(rim.x, rim.y)
-	var focus: Vector3 = hero.get("position", Vector3(378.0, 260.0, -648.0))
+	var focus: Vector3 = hero.get("view_focus", hero.get("position", Vector3(378.0, 260.0, -648.0)))
 	return {"position": Vector3(rim.x, ground + 2.4, rim.y), "target": Vector3(focus.x, focus.y * 0.55, focus.z), "fov": 48.0}
 
 # --- Runtime state ---
@@ -947,4 +1059,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "hero_root_triangles": hero_root_triangles, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}

@@ -17,6 +17,7 @@ uniform vec3 flesh_rim : source_color = vec3(0.88, 0.62, 0.66);
 uniform vec3 gill : source_color = vec3(0.86, 0.70, 0.66);
 uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
 varying float v_tint;
+varying float v_cavity;
 varying vec3 v_col;
 varying vec3 v_world;
 varying vec3 v_normal;
@@ -52,6 +53,7 @@ float spots(vec2 p, float size) {
 }
 void vertex() {
 	v_tint = COLOR.r;
+	v_cavity = COLOR.g;
 	v_col = COLOR.rgb;
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
@@ -92,14 +94,20 @@ void fragment() {
 			rough = 0.85;
 		}
 	} else if (mode == 1) {
-		// Fluted stem: fibrous vertical grain, darker grooves, moss climbing from the root.
-		float a = UV.x * 6.2831853;
-		float flute = 0.5 + 0.5 * cos(a * 14.0 + fbm(vec2(UV.x * 6.0, UV.y * 3.0)) * 2.0);
+		// Stem and roots: tone read at distance from large patches, long streaks and the
+		// fused-strand grooves (vertex G); fine grain only adds near detail.
+		float macro = fbm(vec2(UV.x * 4.0, UV.y * 2.2) + v_tint * 7.0);
+		float streak = fbm(vec2(UV.x * 14.0, UV.y * 0.8));
 		float grain = fbm(vec2(UV.x * 60.0, UV.y * 4.0));
-		albedo = stem_bark * (0.58 + 0.34 * flute + 0.3 * grain);
-		float moss_line = smoothstep(0.22, 0.04, UV.y + (fbm(vec2(UV.x * 20.0, 1.0)) - 0.5) * 0.08);
-		albedo = mix(albedo, moss_mean * 1.2, moss_line * 0.85);
-		emit = amber * smoothstep(0.88, 1.0, UV.y) * 0.22 * glow;
+		vec3 dark = stem_bark * 0.5;
+		vec3 light = vec3(0.70, 0.60, 0.62);
+		albedo = mix(dark, light, clamp(v_cavity * 0.65 + macro * 0.4 + streak * 0.2 - 0.12, 0.0, 1.0));
+		albedo *= (0.72 + 0.32 * smoothstep(0.0, 0.6, UV.y)) * (0.92 + 0.12 * grain);
+		float moss_line = smoothstep(0.24, 0.03, UV.y + (fbm(vec2(UV.x * 20.0, 1.0)) - 0.5) * 0.08);
+		albedo = mix(albedo, moss_mean * 1.25, moss_line * 0.8);
+		float collar = smoothstep(0.86, 1.0, UV.y);
+		emit = amber * collar * 0.24 * glow;
+		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.10 * glow;
 		rough = 0.9;
 	} else if (mode == 2) {
 		vec3 w = pow(abs(n), vec3(4.0));
