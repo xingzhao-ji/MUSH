@@ -98,6 +98,28 @@ def assert_idle():
         raise RuntimeError("Close the running game/editor before native checks: " + repr(found))
 
 
+# Parse/load failures mean the test never runs; any ERROR line already fails a run, so
+# stopping early on these changes no outcome, only the time spent waiting for the deadline.
+STARTUP_FAILURE = re.compile(r"^(SCRIPT ERROR: Parse Error|ERROR: Failed to load script)", re.M)
+
+
+def startup_failure(text):
+    match = STARTUP_FAILURE.search(text)
+    return text[match.start():].splitlines()[0] if match else None
+
+
+def preflight(engine, script, output):
+    """Unpiped --check-only exits 0 even on a parse error, so its output is classified too."""
+    with (output / "preflight.log").open("xb") as log:
+        child = subprocess.run([engine, "--headless", "--path", str(ROOT), "--check-only", "--script", script],
+                               cwd=ROOT, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, timeout=120)
+    found = startup_failure((output / "preflight.log").read_text(errors="replace"))
+    receipt = {"script": script, "exit_code": child.returncode, "startup_failure": found}
+    if child.returncode != 0 or found:
+        raise RuntimeError(f"preflight {script} failed: {found or child.returncode}; see {output / 'preflight.log'}")
+    return receipt
+
+
 def run(command, output, label, timeout):
     reserve()
     began = time.monotonic()
@@ -108,11 +130,18 @@ def run(command, output, label, timeout):
             child = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL,
                                      stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             print(json.dumps({"phase": label, "pid": child.pid, "deadline_s": timeout}), flush=True)
-            while child.poll() is None:
-                reserve()
-                if time.monotonic() - began > timeout:
-                    raise TimeoutError(f"{label} exceeded {timeout}s")
-                time.sleep(0.25)
+            with (output / (label + ".log")).open("rb") as watch:
+                seen = b""
+                while child.poll() is None:
+                    reserve()
+                    if time.monotonic() - began > timeout:
+                        raise TimeoutError(f"{label} exceeded {timeout}s")
+                    seen = (seen + watch.read())[-65536:]
+                    found = startup_failure(seen.decode(errors="replace"))
+                    if found:
+                        time.sleep(2.0)  # let the engine flush the rest of the error to the log
+                        raise RuntimeError(f"{label} fail-fast: {found}")
+                    time.sleep(0.25)
     except BaseException:
         failure = traceback.format_exc()
     finally:
@@ -697,7 +726,13 @@ def main():
     result = {"suite": args.suite, "engine": version, "engine_sha256": sha(Path(engine)),
               "timing_mode": "uncapped_throughput_diagnostic" if args.uncapped else "default_vsync",
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
+    # Prototype capture suites load their fixture at runtime; check it parses before launch.
+    fixture = {"slice": "res://tests/slice_traversal.gd", "junction": "res://tests/slice_traversal.gd",
+               "endpoint": "res://tests/slice_traversal.gd", "route": "res://tests/route_traversal.gd",
+               "scenic": "res://tests/scenic_capture.gd"}.get(args.suite)
     try:
+        if fixture:
+            result["preflight"] = preflight(engine, fixture, output)
         result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 600 if args.suite in ("route", "perf-probe", "lod-check") else 2400 if args.suite == "slice" else 600 if args.suite in ("junction", "endpoint") else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True

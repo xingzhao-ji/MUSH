@@ -1522,3 +1522,23 @@ Retained failed evidence:
   - `065218` and `065446`: unusable approach frames, taken under the cap.
   - `065731`: fixture tick cap.
   - `070057`: the hero's own stem counted as a blocker.
+
+## Runner: pre-launch parse check and fail-fast (2026-10-26)
+
+Two junction runs never executed their test, because of duplicate-variable parse errors in the fixture:
+- **`junction-20261026-074518-1656`:** waited out the full 600 s deadline.
+- **`junction-20261026-075538-3393`:** my outer `timeout 580` killed the runner first and left its engine (PID 3402) orphaned. I reaped that process; no receipt was written.
+
+An unpiped `--check-only` printed the parse error but **exited 0**, so its exit status alone cannot gate a run.
+
+`tools/verify.py` now does two things:
+- **Pre-launch check:** for the prototype capture suites (slice, junction, endpoint, route, scenic) it runs `--check-only` on the fixture and classifies the output into `preflight.log`. A nonzero exit or a startup failure stops the run before launch.
+- **Fail-fast:** during any run it watches the log for the same startup failures, stops its own engine process after a 2 s flush and keeps the log.
+
+Startup failures are `SCRIPT ERROR: Parse Error` and `ERROR: Failed to load script`. Any `ERROR` line already failed a run, so no outcome changes; only the wait is shorter.
+
+Checks:
+- Runner unit tests pass.
+- The classifier flags both failed logs above and neither passing log (slice `070902`, acceptance `062600`).
+- The pre-launch check passes on the slice, route and scenic fixtures.
+

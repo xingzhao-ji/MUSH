@@ -139,6 +139,19 @@ class SliceTraversalReport(unittest.TestCase):
                 verify.inspect("slice", Path("unused"), 120)
 
 
+class StartupFailFast(unittest.TestCase):
+    def test_parse_and_load_failures_are_detected(self):
+        log = ("Godot Engine v4.7.2\nSCRIPT ERROR: Parse Error: There is already a variable named \"side\"\n"
+               "ERROR: Failed to load script \"res://tests/slice_traversal.gd\" with error \"Parse error\".\n")
+        self.assertIn("Parse Error", verify.startup_failure(log))
+        self.assertIn("Failed to load script", verify.startup_failure("ok\nERROR: Failed to load script \"x\"\n"))
+
+    def test_ordinary_output_and_runtime_errors_do_not_fail_fast(self):
+        self.assertIsNone(verify.startup_failure("Godot Engine v4.7.2\nCLEARING_READY {}\n"))
+        # Runtime script errors still fail the run at its end; they are not startup failures.
+        self.assertIsNone(verify.startup_failure("SCRIPT ERROR: Invalid access to property\n"))
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
