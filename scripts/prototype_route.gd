@@ -32,6 +32,8 @@ extends Node3D
 ##   collision_layer    1     int mask, 1..1048575 (player mask 1|4|16; camera adds 32)
 ##   material           Material            optional injection; assigned, never modified
 ##   uv_metres          4.0   m of route per V repeat, 0.5..64
+##   start_direction    none  Vector3, horizontal; sets the first ring's travel direction so it
+##                      coincides with a joining route's end ring (within 10 deg of the curve)
 ##   visible_mesh       true
 ## Returns true when built. Collision ownership: one StaticBody3D "RouteCollision" owned by
 ## this node only; it never touches the baked colliders or the no-collider far scenery.
@@ -106,6 +108,13 @@ func configure(params: Dictionary) -> bool:
 	_below = _num(params, "corridor_below", 1.5, 0.5, 6.0)
 	_above = _num(params, "corridor_above", 6.0, 1.0, 20.0)
 	var uv_metres: float = _num(params, "uv_metres", 4.0, 0.5, 64.0)
+	var start_dir := Vector3.ZERO
+	if params.get("start_direction", null) != null:
+		var given: Variant = params["start_direction"]
+		if not given is Vector3 or not (given as Vector3).is_finite() or Vector2(given.x, given.z).length() < 0.001:
+			errors.append("start_direction must be a finite, non-vertical Vector3")
+			return false
+		start_dir = Vector3(given.x, 0.0, given.z).normalized()
 	_layer = clampi(int(params.get("collision_layer", 1)), 1, 1048575)
 	_tread_half = tread * 0.5
 	_shoulder_tan = tan(deg_to_rad(shoulder_deg))
@@ -214,6 +223,15 @@ func configure(params: Dictionary) -> bool:
 			errors.append("degenerate tangent at sample %d" % i)
 			return false
 		forward.append(f.normalized())
+	# A joining route's end ring is square to its own last segment; matching that direction
+	# here makes the two rings coincide instead of leaving a wedge between them.
+	var start_bend: float = 0.0
+	if start_dir != Vector3.ZERO:
+		start_bend = rad_to_deg(forward[0].angle_to(start_dir))
+		if start_bend > 10.0:
+			errors.append("start_direction differs from the route's own start by %.1f deg (limit 10)" % start_bend)
+			return false
+		forward[0] = start_dir
 	var min_radius: float = INF
 	for i: int in range(1, count - 1):
 		var turn: float = forward[i - 1].angle_to(forward[i + 1]) * 0.5
@@ -453,6 +471,7 @@ func configure(params: Dictionary) -> bool:
 		"min_surface_normal_y": min_normal_y, "max_surface_slope_deg": rad_to_deg(acos(min_normal_y)),
 		"min_turn_radius_m": min_radius if min_radius < INF else -1.0, "winding_flips": flips,
 		"exclusion_rect_count": rects.size(), "exclusion_hits": exclusion_hits, "join_on_seam": join_on_seam,
+		"start_direction_set": start_dir != Vector3.ZERO, "start_direction_bend_deg": start_bend,
 		"join_overlap_m": overlap, "curb_height": curb, "skirt_max_depth_used": skirt_depth_max,
 		"ground_callable_used": ground.is_valid(), "start": pts[0], "end": pts[count - 1],
 	}

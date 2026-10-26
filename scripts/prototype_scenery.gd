@@ -1509,7 +1509,9 @@ func _add_slice_route() -> void:
 	# The slice's first ring coincides with the existing route's last ring: same point, height,
 	# heading and falling-shoulder profile (taper_length 0). join_overlap 0: a flat overlap
 	# on the existing route's 11 degree climb left a 4-6 cm lip that stopped the walker.
-	var built: bool = slice_route.configure({"centerline": points, "tread_width": 3.6, "shoulder_width": 2.2, "max_grade_deg": 14.0, "sample_spacing": 2.5, "taper_length": 0.0, "join_overlap": 0.0,
+	# start_direction squares the first ring to the existing route's end; without it the
+	# curve's first segment bent ~1.8 deg toward the summit loop and left a 12 cm wedge.
+	var built: bool = slice_route.configure({"centerline": points, "tread_width": 3.6, "shoulder_width": 2.2, "max_grade_deg": 14.0, "sample_spacing": 2.5, "taper_length": 0.0, "join_overlap": 0.0, "start_direction": route.get_end_direction(),
 		"exclusion_rects": [Rect2(-24.0, -24.0, 49.0, 53.0)], "ground_height": Callable(self, "terrain_height"), "material": earth})
 	var report: Dictionary = slice_route.get_report()
 	report.merge(slice_report, true)

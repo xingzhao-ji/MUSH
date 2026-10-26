@@ -1428,7 +1428,7 @@ Not rerun or still failing:
 
 ## Connected environment slice: knoll to lake shore and hero root (2026-10-26)
 
-**Status: traversal validated; art not accepted; junction seam open.** Rollback: `git revert` this commit, or `--prototype-scenery=off`.
+**Status: traversal validated; art not accepted. The junction seam is fixed; see the junction seam correction below.** Rollback: `git revert` this commit, or `--prototype-scenery=off`.
 
 Geometry (startup-only, `scripts/prototype_scenery.gd`):
 - **SliceRoute:** one walking ribbon from the existing route end (72, 26.86, 215) to a documented endpoint 2.5 m before the hero-root collider. It runs 1,488.6 m in 921 samples: a summit loop, two 14 m hairpins, terraces down to the valley floor, then the east lake shore.
@@ -1493,7 +1493,7 @@ Costs from the static prototype report (`scenic-20261026-073421-99024`):
 - **Frame time:** not measured.
 
 Open defects and limits (not fixed):
-- **Junction seam:**
+- **Junction seam (fixed in the junction seam correction below):**
   - The slice's first cross-section is rotated about 1.8° from the route's last one. This leaves a wedge gap in both render and collision on one side: 1–2 cm at 0.5 m out, about 3 cm at the 1.2 m walking line, and 12 cm at the 3.75 m shoulder edge (`terrain-probe-20261026-073005-seam`).
   - It shows as a green crack in the knoll overlook.
   - The earlier "no gaps" junction note used 5 cm rays and missed it.
@@ -1542,3 +1542,31 @@ Checks:
 - The classifier flags both failed logs above and neither passing log (slice `070902`, acceptance `062600`).
 - The pre-launch check passes on the slice, route and scenic fixtures.
 
+
+## Junction seam correction (2026-10-26)
+
+**Cause:** each ribbon ring is square to its neighbouring samples. The existing route's last ring is square to its final segment. The slice's first ring followed the slice curve's first segment, which bends 1.795° toward the summit loop, and that left a wedge between the two rings.
+
+**Fix:**
+- `scripts/prototype_route.gd` gains an optional `start_direction` that sets only the first ring's travel direction. It is validated and refused beyond 10° from the curve. The bend is reported.
+- The slice passes `route.get_end_direction()`, so the two rings coincide: same centre, height, sideways axis, widths and shoulder drop.
+- **Unchanged:** path centres, anchors, length (1,488.55 m), collision faces (5,520), minimum turn radius (8.43 m), corridor widths and the existing route (parameter absent).
+
+**New focused regression** (junction suite): rays every 0.1 m across the full width and every 5 mm along ±25 cm of the junction. It requires no gap over 5 mm, no overlap over 1 cm and no height step over 1 cm. The render uses the same triangles as the collision.
+
+| Measure | Unfixed (`junction-20261026-080739-5687`) | Fixed (`junction-20261026-081037-6390`) |
+|---|---|---|
+| Collision/render gap | 12.5 cm at −3.95 m (**FAIL**) | 0 |
+| Overlap | 12.5 cm at +3.85 m | 0 |
+| Largest height step | 2.4 cm | 1.2 mm |
+| Junction suite | — | **13/13** |
+
+- **Independent 1 cm probe** (`terrain-probe-20261026-081400-seam-fixed`): no gap anywhere within ±3.75 m, against up to 12 cm before. The 0.5 m summit map has no holes between the two ribbons.
+- **Affected regressions on the fixed geometry:**
+  - `route` 22/22 (`route-20261026-081428-7507`).
+  - Full out-and-back `slice` 26/26 (`slice-20261026-081725-8264`; same ticks and distance as before).
+  - `acceptance` 295/295 (`acceptance-20261026-083218-10003`).
+  - No source changes and no leak lines.
+- **Pixels:** the green crack in `route-overlook-day.png` (`route-20261026-072355-96790`) is gone at the same pose (`route-20261026-081428-7507/route-overlook-day.png`).
+
+Rollback: `git revert` this commit.

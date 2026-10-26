@@ -293,6 +293,41 @@ func _junction_scenario() -> void:
 	var a: float = route.surface_height_at(junction.x, junction.z)
 	var b: float = slice.surface_height_at(junction.x, junction.z)
 	_check("Junction surfaces within 3 cm and slice starts at the junction", not is_nan(a) and not is_nan(b) and absf(a - b) <= 0.03 and slice.get_start_point().distance_to(junction) <= 0.05, {"existing":a,"slice":b,"start":_v(slice.get_start_point())})
+	# Cross-section consistency: across the whole width, the existing route's last ring and the
+	# slice's first ring leave no collision gap and no overlap (the render uses the same
+	# triangles), and no height step along any line (5 mm steps, +-25 cm about the junction).
+	var seam_heading: Vector3 = route.get_end_direction()
+	var seam_side := Vector3(-seam_heading.z, 0.0, seam_heading.x)
+	var seam_half: float = route._tread_half + route._shoulder
+	var seam_space: PhysicsDirectSpaceState3D = game.get_world_3d().direct_space_state
+	var seam_worst := {"gap_m":0.0, "gap_lateral":null, "overlap_m":0.0, "overlap_lateral":null, "step_m":0.0, "step_lateral":null}
+	var seam_across: float = -seam_half + 0.05
+	while seam_across <= seam_half - 0.05 + 0.0001:
+		var run: int = 0
+		var overlap: int = 0
+		var last_y: float = NAN
+		for k: int in range(-50, 51):
+			var at: Vector3 = junction + seam_heading * (k * 0.005) + seam_side * seam_across
+			var hit: Dictionary = seam_space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 3.0, 1))
+			var on: bool = not hit.is_empty() and (hit.collider == route._body or hit.collider == slice._body)
+			run = 0 if on else run + 1
+			if run * 0.005 > seam_worst.gap_m:
+				seam_worst.gap_m = run * 0.005
+				seam_worst.gap_lateral = seam_across
+			if not on: continue
+			var under: Dictionary = seam_space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 3.0, 1, [hit.rid]))
+			if not under.is_empty() and under.collider != hit.collider and (under.collider == route._body or under.collider == slice._body) and absf((under.position as Vector3).y - (hit.position as Vector3).y) < 0.05:
+				overlap += 1
+			var y: float = (hit.position as Vector3).y
+			if not is_nan(last_y) and absf(y - last_y) > seam_worst.step_m:
+				seam_worst.step_m = absf(y - last_y)
+				seam_worst.step_lateral = seam_across
+			last_y = y
+		if overlap * 0.005 > seam_worst.overlap_m:
+			seam_worst.overlap_m = overlap * 0.005
+			seam_worst.overlap_lateral = seam_across
+		seam_across += 0.1
+	_check("Junction cross-section: no collision/render gap > 5 mm, overlap <= 1 cm, step <= 1 cm across the full width", seam_worst.gap_m <= 0.005 and seam_worst.overlap_m <= 0.01 and seam_worst.step_m <= 0.01, seam_worst)
 	var back_from: int = route._p.size() - 1
 	while back_from > 0 and route._p[back_from].distance_to(junction) < 15.0: back_from -= 1
 	var ahead_to: int = 0
