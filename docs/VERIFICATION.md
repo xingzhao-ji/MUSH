@@ -1997,4 +1997,3 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Off-screen content:** cannot appear in reflections.
 - **Ripples frozen:** this check isolates camera motion. Live ripple animation and live-display motion are not reviewed.
 - **Still open:** the shader's GPU cost (unresolved), the route benchmark failure, the vista gate and the grove night tone.
-
