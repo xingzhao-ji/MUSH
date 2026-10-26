@@ -2215,3 +2215,81 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Coverage:** foliage coverage is 1–2 points lower.
 - **Source foliage:** the source shaders keep the double flip.
 - **Not verified:** wind motion of the folded leaves, live display and device.
+
+## Geology landmark: West Wall, falls and ice source (2026-10-26)
+
+**Status: first landform pass; real added scale; art not accepted.** Rollback: `git revert` this commit. To build without it: `MUSH_SCENERY_DIAG=no_geology` (diagnostic only).
+
+**Plan:** `docs/WORLD_PLAN.md` separates user direction, labelled proposals (regions, climate, invented culture) and what is built. This pass builds only its first item: one dominant landform with its water source.
+
+**Built** (`scripts/prototype_scenery.gd`, far layer, no collision, no shadows):
+- **West Wall:** a continuous granite escarpment.
+  - **Course:** a Catmull-Rom toe line of 2,442 m, from the western hills north past the lake, then east as the valley headwall.
+  - **Masses:** unequal: a low south end, a prow tower, a saddle and a high headwall, with a face up to 676 m.
+  - **Mesh:** 22,032 vertices and 43,310 triangles. The face looks into the valley at 25 of 25 sampled points.
+  - **Macro scale:** 8 seeded buttresses and 6 gullies carving the rim (one is the falls' drainage gully).
+  - **Medium scale:** 4 strata bench levels that undulate and terminate, plus talus flares and cones.
+  - **Fine scale** (`prototype_granite.gdshader`):
+    - weathered granite with sparse fresh spall scars;
+    - mineral speckle resolved only near the viewer;
+    - moss only on near-level benches;
+    - wet streaks only under ledge lips and around the falls;
+    - snow above 520 m on near-level surfaces.
+- **Falls:**
+  - **Source:** meltwater emerges under the ice cliff at the gully head.
+  - **Path:** it slides in contact with the gully floor for the first 18%, then free-falls.
+  - **Shape:** 12 → 86 m wide with breakup, a 344 m drop.
+  - **Spray:** soft spray sheets over the foot.
+  - **Basin:** a receiving plunge pool, 69 m in radius, in a carved terrain depression 14 m deep.
+- **Ice source:**
+  - **Peak:** a snow peak behind the falls (summit 950 m, 3,936 triangles).
+  - **Tongue:** a flat-shaded tongue (1,416 triangles) with serac steps in the icefall, lateral moraines and a blue ice cliff 49 m tall at the lip (`prototype_ice.gdshader`, opaque).
+  - **Col:** the tongue rests on a granite col (560 triangles; its top faces up, which is checked).
+- **Terrain and vegetation** (bounded):
+  - **Massifs:** heights are suppressed only inside and 40–160 m in front of the wall's band (non-legacy path only, so seeded placement decisions keep their stream).
+  - **Basin:** carved at the falls' foot.
+  - **Clumps:** 331 forest clumps inside the rock are filtered after their draws.
+  - **Clearances:** route and slice are at least 517 m from the toe; giant caps at least 220 m.
+
+**Evidence** (`geology` suite):
+- **Runs:** "before" is `geology-20261026-141947-12454` (`MUSH_SCENERY_DIAG=no_geology`, identical fixed poses); "after" is `geology-20261026-143857-24121`.
+- **Views:** rim overlook, knoll (route end), east-shore ground view, side view and world overview by day; overlook, knoll and shore at night.
+- **By eye (after):**
+  - **Shore:** the falls drops clearly from its gully on the sunlit east face. The snow peak and ice col sit above it, and the crag, dark massif, giant mushroom and lake build depth toward the camera.
+  - **Side:** benches, gullies and broken masses in warm granite, with the falls and spray in the gully and a buttressed headwall behind.
+  - **Rim overlook:** the hazy headwall towers above the left framing tree beside the hero. The hero composition is unchanged.
+  - **Overview:** the valley now reads as enclosed.
+- **Cost** (frame counters; GPU timing unavailable):
+  - primitives +9k to +64k per view (overlook +63,882);
+  - draws +1 to +4;
+  - draw nodes 124 → 127; 7 geology nodes are added, and carpet chunks emptied by filtering account for the rest.
+- **Scenic** (`scenic-20261026-144010-24863`): fails only the known vista gate (0.0129).
+  - **Unchanged:** footing drift is 0.0 (7/7); slice and route surface and collision faces are unchanged at 5,520 and 1,590; 3 owned colliders and 0 shadow casters.
+  - **Canopy:** rain coverage moved by 0.001 or less in two views, where the wall occludes a little.
+
+**Rejected and retained iterations:**
+- `140957`: a pale smooth curtain with a level rim and an invisible falls.
+- `141447`: regular pleats, a capsule-like ice tongue, and a falls hidden against the bright notch.
+- `141654`: irregular buttresses, but the falls hidden behind an existing massif.
+- `143416`: the first benched wall, with a floating ice tongue.
+- `143637`: preflight parse error.
+- `143717`: the ice bed was invisible because its winding was inverted.
+
+**Harness health:**
+- **`geology-20261026-142040-12963` timed out** (600.1 s, reaped). Its heartbeat shows the cause: during `capture geo-knoll-night`, `window_can_draw` went false and focus was lost in the same 2 s interval (t = 22.5 s). Frames drawn froze at 796 while process and physics frames passed 429,000. The display was on.
+- **Cause:** the window became non-drawable from outside the process; which outside event caused it is not established.
+- **Earlier stalls:** `cap-shape-pairs-130149` and `lod-check-133140` fit the same pattern, but they had no heartbeat.
+- **Guard:** `harness_heartbeat.gd` now has `await_draw`. Slice captures record an explicit failed check with the window state and skip later captures, and `lod_check` exits with `HARNESS_DRAW_LOST`, both within 20 s instead of reaching the runner timeout. Other draw waits in `slice_traversal.gd`, used by other suites, are unchanged.
+  - **Coverage:** the slice guard ran in the passing geology runs. The `lod_check` guard is syntax-checked only, since no `lod-check` run has exercised it.
+- **Probe:** a 12 s draw probe before the retry drew normally (`reports/draw-probe-20261026-b`).
+
+**Limitations (not accepted art):**
+- **Haze:** the wall still reads pastel and pale in haze from the shore, about 1.05 km away.
+- **Ice:** the col and tongue read blocky; serac and crevasse detail is too small to resolve at that distance.
+- **Peak:** a smooth white pyramid.
+- **Falls:** its lower part and the basin are hidden from the shore by the western hills; there is no outflow stream to the lake yet.
+- **Spray:** static crossed sheets.
+- **Reflection:** the falls' reflection in the lake is not reviewed.
+- **Not verified:** motion of the falls, live display, device and audio.
+- **Cost:** not measured beyond primitives.
+- **Still open:** the route benchmark **failure** (p95 19.834 ms) and the vista gate.

@@ -56,6 +56,29 @@ const LAKE_Y := -82.0
 ## collider seam. The original collision box is x -24..25, z -24..29; the player's
 ## original movement box ends at z 26, so a short explicit approach strip joins them.
 const KNOLL := Vector2(72.0, 215.0)
+## Geology landmark: the West Wall and Falls, one continuous granite escarpment. Toe line
+## (x, relief above WALL_FLOOR in metres, z) from the western hills north past the lake, then
+## east as the valley's headwall; the face looks into the valley (normal = (-dir.z, dir.x)).
+## Non-colliding far layer; out of reach of the route.
+## Unequal masses: a low southern end, the prow tower, a saddle, the falls notch, and the
+## highest, snow-capped headwall to the north.
+const WALL_TOE: Array[Vector3] = [Vector3(-520.0, 0.0, 60.0), Vector3(-600.0, 200.0, -180.0), Vector3(-660.0, 520.0, -420.0), Vector3(-660.0, 650.0, -640.0), Vector3(-600.0, 400.0, -860.0), Vector3(-460.0, 540.0, -1060.0), Vector3(-220.0, 700.0, -1220.0), Vector3(80.0, 620.0, -1330.0), Vector3(360.0, 520.0, -1400.0), Vector3(560.0, 120.0, -1420.0), Vector3(700.0, 0.0, -1380.0)]
+const WALL_FLOOR := -80.0
+const WALL_STEP := 8.0
+const WALL_BATTER := 0.10
+## Metres along the toe: the prow, the falls' hanging-valley notch (depth, half-width) and the dome.
+## The falls sit on the sunlit east face, in clear sight from the east shore and the knoll.
+const WALL_PROW_S := 760.0
+const WALL_FALLS_S := 520.0
+const WALL_NOTCH := Vector2(55.0, 75.0)
+## Alpine ice: snow on up-facing rock above this height; the ice peak behind the notch
+## (offset behind the toe, summit height, base radius) feeds the ice tongue.
+const SNOWLINE := 520.0
+const ICE_PEAK := Vector3(-600.0, 950.0, 480.0)
+const WALL_DOME_S := 1560.0
+const GRANITE_SHADER := preload("res://assets/world/prototype_granite.gdshader")
+const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
+const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
 const ROUTE_SEAM := Vector2(-2.0, 29.0)
 const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0), Vector2(-1.0, 62.0), Vector2(6.0, 80.0), Vector2(24.0, 96.0), Vector2(48.0, 108.0), Vector2(76.0, 118.0), Vector2(100.0, 135.0), Vector2(110.0, 160.0), Vector2(104.0, 185.0), Vector2(88.0, 205.0), Vector2(72.0, 215.0)]
 ## Tread grade limit (route module rejects beyond 14 degrees after its own smoothing).
@@ -198,6 +221,27 @@ const LEAF_ARCH := 0.10
 const LEAF_TURN := 0.3
 const LEAF_TWIST := 0.18
 var _near_crown_previous: Mesh
+## West Wall samples (toe every WALL_STEP m) and a coarse signed-distance mask (cell 25 m) used
+## to keep massifs and forest clumps out of the rock; empty when the landmark is skipped.
+var _wall: Array = []
+var _wall_grid := PackedFloat32Array()
+## Buttresses along the face (seeded): centre s, half-widths left/right, depth (negative = a
+## recessed dihedral), height band q0..q1 and lean (metres of centre shift per metre of height).
+var _buttresses: Array = []
+## Gullies (seeded, plus the falls' drainage gully): centre s, half-width at the rim, depth into
+## the face at the rim, rim notch depth. Bench levels: base height fraction, setback (m), and a
+## seed for where along the wall each ledge exists.
+var _gullies: Array = []
+const WALL_BENCHES: Array[Vector3] = [Vector3(0.22, 16.0, 11.0), Vector3(0.41, 26.0, 23.0), Vector3(0.60, 20.0, 37.0), Vector3(0.78, 30.0, 53.0)]
+## Plunge basin at the falls' foot (centre x, z; carved depth): a bounded terrain depression.
+var _basin := Vector3(INF, INF, 0.0)
+const BASIN_RADIUS := 55.0
+const BASIN_DEPTH := 14.0
+var _wall_grid_s := PackedFloat32Array()
+var _wall_grid_box := Rect2()
+const WALL_GRID_CELL := 25.0
+var _geology_materials: Array[ShaderMaterial] = []
+var escarpment_report: Dictionary = {"built": false}
 ## Every material switched to LEAF_SHADER (near palettes, far tone, far crossfade copy).
 var _prototype_leaf_materials: Array[ShaderMaterial] = []
 var leaf_craft: bool = false
@@ -363,6 +407,10 @@ func _raw_height(x: float, z: float) -> float:
 	height += 16.0 * smoothstep(300.0, 0.0, Vector2(x, z).distance_to(KNOLL)) * smoothstep(10.0, 160.0, d)
 	# Rim hills close the horizon.
 	height += maxf(0.0, r - 1000.0) * 0.1
+	# Plunge basin under the West Falls (only when the landmark is built).
+	if _basin.x != INF:
+		var to_basin: float = Vector2(x, z).distance_to(Vector2(_basin.x, _basin.y))
+		if to_basin < BASIN_RADIUS * 3.0: height -= _basin.z * exp(-pow(to_basin / BASIN_RADIUS, 2.0))
 	return height
 
 ## Eroded layered massifs: broad warped bodies with talus feet, uneven strata ledges
@@ -377,7 +425,8 @@ func _mesa_height(x: float, z: float, r: float, dir: Vector2) -> float:
 	if _legacy_mesa: return legacy * mask
 	var keep: float = _giant_footing(x, z)
 	if keep >= 1.0: return legacy * mask
-	return lerpf(_eroded_mesa_height(x, z), legacy, keep) * mask
+	# Inside and just in front of the West Wall the massifs give way to the granite.
+	return lerpf(_eroded_mesa_height(x, z), legacy, keep) * mask * (1.0 - _wall_suppress(x, z))
 
 func _legacy_mesa_height(x: float, z: float) -> float:
 	var mesa: float = smoothstep(0.25, 0.4, _ridge_noise.get_noise_2d(x, z)) * 220.0
@@ -496,6 +545,8 @@ func configure(world: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20261026
 	_detail_region = _detail_bounds()
+	var geology_skip: bool = "no_geology" in OS.get_environment("MUSH_SCENERY_DIAG").split(",", false)
+	if not geology_skip: _plan_wall()
 	_collect_soil(baked_extent.grow(6.0))
 	_sample_edges()
 	_plan_route()
@@ -516,6 +567,7 @@ func configure(world: Node3D) -> void:
 	if not "no_carpet" in skip: _add_carpet(rng)
 	if not "no_understory" in skip: _add_corridor_understory()
 	if not "no_shore_groves" in skip: _add_shore_groves()
+	if not geology_skip: _add_wall()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
 	diagnostic_skips = skip
@@ -1337,7 +1389,8 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		tone = tone.lerp(Color("35603a"), smoothstep(-40.0, -70.0, placed) * 0.25)
 		# Leave the hero's rooted base open; filtered after every draw, so the random
 		# stream (and every other clump) is unchanged.
-		if on_cliff or on_slice or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
+		if on_cliff or on_slice or _inside_wall(x, z) or (not hero.is_empty() and Vector2(x, z).distance_to(Vector2(hero.base.x, hero.base.z)) < float(hero.radius) * 0.75):
+			if _inside_wall(x, z): escarpment_report["clumps_in_rock"] = int(escarpment_report.get("clumps_in_rock", 0)) + 1
 			xs.pop_back()
 			continue
 		colors.append(tone)
@@ -2076,6 +2129,476 @@ func _add(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], mode
 	add_child(node)
 	_nodes.append(node)
 
+# --- Geology landmark: the West Wall and Falls ---
+
+## Toe samples every WALL_STEP m along a Catmull-Rom curve through WALL_TOE, and the coarse
+## signed-distance mask. Plan geometry only (no terrain heights), so it can run before the
+## terrain is built and every terrain query sees the same landform.
+func _plan_wall() -> void:
+	var dense: Array[Vector3] = []
+	for i: int in WALL_TOE.size() - 1:
+		var p0: Vector3 = WALL_TOE[maxi(i - 1, 0)]
+		var p1: Vector3 = WALL_TOE[i]
+		var p2: Vector3 = WALL_TOE[i + 1]
+		var p3: Vector3 = WALL_TOE[mini(i + 2, WALL_TOE.size() - 1)]
+		for k: int in 24:
+			var t: float = float(k) / 24.0
+			dense.append(0.5 * ((2.0 * p1) + (p2 - p0) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t * t + (3.0 * p1 - p0 - 3.0 * p2 + p3) * t * t * t))
+	dense.append(WALL_TOE[WALL_TOE.size() - 1])
+	var s: float = 0.0
+	var next: float = 0.0
+	for i: int in dense.size() - 1:
+		var a := Vector2(dense[i].x, dense[i].z)
+		var b := Vector2(dense[i + 1].x, dense[i + 1].z)
+		var piece: float = a.distance_to(b)
+		while next <= s + piece:
+			var t: float = (next - s) / maxf(piece, 0.001)
+			_wall.append({"s": next, "toe": a.lerp(b, t), "relief": maxf(0.0, lerpf(dense[i].y, dense[i + 1].y, t))})
+			next += WALL_STEP
+		s += piece
+	for i: int in _wall.size():
+		var d: Vector2 = (_wall[mini(i + 1, _wall.size() - 1)].toe - _wall[maxi(i - 1, 0)].toe).normalized()
+		_wall[i]["normal"] = Vector2(-d.y, d.x)
+		_wall[i]["dir"] = d
+		# The hanging-valley notch the falls leave from.
+		_wall[i]["relief"] = float(_wall[i].relief) - WALL_NOTCH.x * exp(-pow((float(_wall[i].s) - WALL_FALLS_S) / WALL_NOTCH.y, 2.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242
+	var centre: float = rng.randf_range(40.0, 160.0)
+	while centre < s:
+		var w: float = rng.randf_range(60.0, 150.0)
+		_buttresses.append([centre, w * rng.randf_range(0.6, 1.4), w, rng.randf_range(-18.0, 40.0), rng.randf_range(0.0, 0.35), rng.randf_range(0.65, 1.0), rng.randf_range(-0.25, 0.25)])
+		centre += rng.randf_range(220.0, 420.0)
+	# Gullies carve the rim into separate masses; the falls run in their own drainage gully.
+	var g: float = rng.randf_range(120.0, 260.0)
+	while g < s - 80.0:
+		if absf(g - WALL_FALLS_S) > 160.0 and absf(g - WALL_PROW_S) > 140.0:
+			_gullies.append([g, rng.randf_range(45.0, 90.0), rng.randf_range(35.0, 80.0), rng.randf_range(40.0, 120.0)])
+		g += rng.randf_range(260.0, 520.0)
+	_gullies.append([WALL_FALLS_S, 62.0, 70.0, 0.0])
+	for i: int in _wall.size():
+		var rs: float = float(_wall[i].s)
+		for gully: Array in _gullies:
+			var ds: float = absf(rs - float(gully[0]))
+			var rim: float = float(gully[1]) * 1.4
+			if ds < rim: _wall[i]["relief"] = float(_wall[i].relief) - float(gully[3]) * pow(1.0 - ds / rim, 1.4)
+	var at: int = clampi(roundi(WALL_FALLS_S / WALL_STEP), 0, _wall.size() - 1)
+	var foot: Vector2 = _wall[at].toe + _wall[at].normal * 85.0
+	_basin = Vector3(foot.x, foot.y, BASIN_DEPTH)
+	# Coarse mask: signed distance along the toe normal (positive toward the valley) and the
+	# position along the toe; INF beyond the wall's ends.
+	var box := Rect2(_wall[0].toe, Vector2.ZERO)
+	for sample: Dictionary in _wall: box = box.expand(sample.toe)
+	_wall_grid_box = box.grow(800.0).intersection(Rect2(-TERRAIN_HALF, -TERRAIN_HALF, TERRAIN_HALF * 2.0, TERRAIN_HALF * 2.0))
+	var cols: int = ceili(_wall_grid_box.size.x / WALL_GRID_CELL) + 1
+	var rows: int = ceili(_wall_grid_box.size.y / WALL_GRID_CELL) + 1
+	_wall_grid.resize(cols * rows)
+	_wall_grid_s.resize(cols * rows)
+	var coarse: Array = []
+	for i: int in range(0, _wall.size(), 5): coarse.append(_wall[i])
+	for r: int in rows:
+		for c2: int in cols:
+			var here: Vector2 = _wall_grid_box.position + Vector2(c2, r) * WALL_GRID_CELL
+			var best: float = INF
+			var n: float = INF
+			var along: float = 0.0
+			for i: int in coarse.size() - 1:
+				var a: Vector2 = coarse[i].toe
+				var ab: Vector2 = coarse[i + 1].toe - a
+				var raw: float = (here - a).dot(ab) / maxf(ab.length_squared(), 0.0001)
+				var t: float = clampf(raw, 0.0, 1.0)
+				var gap: float = here.distance_to(a + ab * t)
+				if gap < best:
+					best = gap
+					var ends: bool = (i == 0 and raw < 0.0) or (i == coarse.size() - 2 and raw > 1.0)
+					var normal: Vector2 = Vector2(-ab.y, ab.x).normalized()
+					n = INF if ends else (here - (a + ab * t)).dot(normal)
+					along = lerpf(float(coarse[i].s), float(coarse[i + 1].s), t)
+			_wall_grid[r * cols + c2] = n
+			_wall_grid_s[r * cols + c2] = along
+	escarpment_report = {"built": false, "toe_length_m": s, "samples": _wall.size(), "mask_cells": cols * rows}
+
+## Signed distance from the West Wall's toe (positive toward the valley) and position along it,
+## from the coarse mask; x = INF away from the wall.
+func _wall_frame(x: float, z: float) -> Vector2:
+	if _wall_grid.is_empty() or not _wall_grid_box.has_point(Vector2(x, z)): return Vector2(INF, 0.0)
+	var cols: int = ceili(_wall_grid_box.size.x / WALL_GRID_CELL) + 1
+	var f: Vector2 = (Vector2(x, z) - _wall_grid_box.position) / WALL_GRID_CELL
+	var c0: int = mini(floori(f.x), cols - 2)
+	var r0: int = mini(floori(f.y), _wall_grid.size() / cols - 2)
+	var w: Vector2 = f - Vector2(c0, r0)
+	var i: int = r0 * cols + c0
+	var n4 := [_wall_grid[i], _wall_grid[i + 1], _wall_grid[i + cols], _wall_grid[i + cols + 1]]
+	for v: float in n4:
+		if v == INF: return Vector2(INF, 0.0)
+	var n: float = lerpf(lerpf(n4[0], n4[1], w.x), lerpf(n4[2], n4[3], w.x), w.y)
+	var s: float = lerpf(lerpf(_wall_grid_s[i], _wall_grid_s[i + 1], w.x), lerpf(_wall_grid_s[i + cols], _wall_grid_s[i + cols + 1], w.x), w.y)
+	return Vector2(n, s)
+
+## Wall height above the valley-floor reference at a position along the toe.
+func _wall_relief(s: float) -> float:
+	if _wall.is_empty(): return 0.0
+	return float(_wall[clampi(roundi(s / WALL_STEP), 0, _wall.size() - 1)].relief)
+
+## 1 inside and just in front of the wall where it stands, 0 from 160 m in front of the toe.
+func _wall_suppress(x: float, z: float) -> float:
+	var frame: Vector2 = _wall_frame(x, z)
+	if frame.x == INF: return 0.0
+	return (1.0 - smoothstep(40.0, 160.0, frame.x)) * smoothstep(60.0, 200.0, _wall_relief(frame.y))
+
+## True for a point inside or behind the standing rock.
+func _inside_wall(x: float, z: float) -> bool:
+	var frame: Vector2 = _wall_frame(x, z)
+	return frame.x != INF and frame.x < 15.0 and frame.x > -900.0 and _wall_relief(frame.y) > 120.0
+
+## Face offset along the normal (negative = set back) at height q (0 toe .. 1 crest) of a
+## wall of height h: batter, a sheer prow, a recessed falls channel, slow exfoliation bulges,
+## sparse vertical joints and a rounded shoulder.
+func _wall_face_offset(sample: Dictionary, q: float, h: float, y: float) -> float:
+	var s: float = sample.s
+	var prow: float = exp(-pow((s - WALL_PROW_S) / 90.0, 2.0))
+	var falls: float = exp(-pow((s - WALL_FALLS_S) / 34.0, 2.0))
+	var n: float = -WALL_BATTER * 0.6 * (1.0 - 0.8 * prow) * h * q
+	n += 34.0 * prow * (1.0 - 0.4 * q)
+	# Talus flare at the foot (kept low under the falls, where the plunge basin is).
+	n += 55.0 * pow(1.0 - smoothstep(0.0, 0.16, q), 2.0) * (1.0 - 0.7 * falls)
+	# Strata benches: each ledge sets the face back above it, undulating along the wall and
+	# ending where its seed says it is absent, so horizontal breaks cut the vertical faces.
+	for bench: Vector3 in WALL_BENCHES:
+		var level: float = bench.x + _terrace_noise.get_noise_2d(s * 0.6, bench.z * 10.0) * 0.05
+		var present: float = smoothstep(-0.15, 0.15, _hill_noise.get_noise_2d(s * 0.45, bench.z * 13.0))
+		n -= present * bench.y * (0.6 + 0.4 * _hill_noise.get_noise_2d(s * 1.1, bench.z)) * smoothstep(level, level + 0.025, q)
+	# Gullies: V-notches carved into the face, deepest at the rim, narrowing downward, with a
+	# talus cone spilling out at the foot.
+	for gully: Array in _gullies:
+		var ds: float = absf(s - float(gully[0]))
+		var half: float = float(gully[1]) * (0.45 + 0.55 * q)
+		if ds < half: n -= float(gully[2]) * (0.25 + 0.75 * q) * pow(1.0 - ds / half, 1.6)
+		var cone: float = float(gully[1]) * 1.6
+		if ds < cone and float(gully[3]) > 0.0: n += 30.0 * pow(1.0 - ds / cone, 2.0) * (1.0 - smoothstep(0.0, 0.2, q))
+	var calm: float = 1.0 - exp(-pow((s - WALL_FALLS_S) / 80.0, 2.0))
+	n += (_hill_noise.get_noise_2d(s * 1.6, y * 1.4) * 10.0 + _terrace_noise.get_noise_2d(s * 4.0, y * 3.0) * 3.0) * calm * smoothstep(0.0, 0.08, q)
+	n -= pow(1.0 - absf(_ridge_noise.get_noise_2d(s * 2.5, 17.0)), 10.0) * 8.0 * calm
+	# Buttresses: uneven, asymmetric, sharp-crested, each over its own height band and leaning,
+	# so the face breaks into facets, aretes and dihedrals rather than a repeated pleat.
+	for b: Array in _buttresses:
+		var ds: float = s - (float(b[0]) + float(b[6]) * h * q)
+		var half: float = float(b[1]) if ds < 0.0 else float(b[2])
+		if absf(ds) >= half: continue
+		var band: float = smoothstep(float(b[4]), float(b[4]) + 0.1, q) * (1.0 - smoothstep(float(b[5]) - 0.1, float(b[5]), q))
+		n += float(b[3]) * pow(1.0 - absf(ds) / half, 1.3) * band * calm
+	n -= h * 0.06 * pow(maxf(0.0, (q - 0.8) / 0.2), 2.0)
+	return n
+
+func _add_wall() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Crest rows behind the shoulder (set back, rise) and one back row below ground.
+	var crest: Array[Vector2] = [Vector2(-18.0, 4.0), Vector2(-60.0, 9.0), Vector2(-130.0, 10.0), Vector2(-220.0, 2.0), Vector2(-320.0, -24.0)]
+	var face_rows: int = 64
+	var rows: int = 1 + face_rows + 1 + crest.size() + 1
+	var outward_ok: int = 0
+	var outward_checked: int = 0
+	var tallest: float = 0.0
+	var finite := true
+	for sample: Dictionary in _wall:
+		var toe: Vector2 = sample.toe
+		var nrm: Vector2 = sample.normal
+		var base: float = terrain_height(toe.x, toe.y)
+		# Irregular crest: slow domes and saddles along the top.
+		var top: float = maxf(base, WALL_FLOOR + float(sample.relief) + _hill_noise.get_noise_2d(float(sample.s) * 1.2, 900.0) * 28.0 * smoothstep(100.0, 300.0, float(sample.relief)))
+		var h: float = top - base
+		tallest = maxf(tallest, h)
+		sample["base"] = base
+		sample["top"] = top
+		var dome: float = exp(-pow((float(sample.s) - WALL_DOME_S) / 140.0, 2.0))
+		var wet: float = exp(-pow((float(sample.s) - WALL_FALLS_S) / 70.0, 2.0))
+		var points: Array = [[0.0, base - 45.0, 1.0, 0.0, 0.0]]
+		for j: int in face_rows + 1:
+			var q: float = float(j) / face_rows
+			var y: float = base + h * q
+			# Drip: wet streaks hang just below each ledge lip that exists here.
+			var drip: float = 0.0
+			for bench: Vector3 in WALL_BENCHES:
+				var level: float = bench.x + _terrace_noise.get_noise_2d(float(sample.s) * 0.6, bench.z * 10.0) * 0.05
+				var present: float = smoothstep(-0.15, 0.15, _hill_noise.get_noise_2d(float(sample.s) * 0.45, bench.z * 13.0))
+				if q < level: drip = maxf(drip, present * (1.0 - smoothstep(0.0, 0.14, level - q)))
+			points.append([_wall_face_offset(sample, q, h, y), y, 1.0 - smoothstep(0.9, 1.0, q), q, drip])
+		var shoulder: float = points[points.size() - 1][0]
+		for row: Vector2 in crest:
+			points.append([shoulder + row.x * (0.4 + 0.6 * smoothstep(0.0, 200.0, h)), top + (row.y + 38.0 * dome * (1.0 - absf(row.x + 120.0) / 200.0)) * smoothstep(0.0, 120.0, h), 0.0, 1.0, 0.0])
+		points.append([shoulder - 420.0, base - 60.0, 0.0, 1.0, 0.0])
+		for point: Array in points:
+			var at := Vector3(toe.x + nrm.x * float(point[0]), float(point[1]), toe.y + nrm.y * float(point[0]))
+			finite = finite and at.is_finite()
+			st.set_color(Color(float(point[2]), wet, float(point[3]), float(point[4])))
+			st.set_uv(Vector2(float(sample.s), float(point[1]) - base))
+			st.add_vertex(at)
+	for i: int in _wall.size() - 1:
+		for j: int in rows - 1:
+			var a: int = i * rows + j
+			var b: int = a + rows
+			var c: int = a + 1
+			var d: int = b + 1
+			st.add_index(a); st.add_index(c); st.add_index(b)
+			st.add_index(b); st.add_index(c); st.add_index(d)
+	st.generate_normals()
+	var mesh: ArrayMesh = st.commit()
+	# Winding: the face's mid-height normal must look into the valley wherever the wall stands.
+	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	for i: int in range(0, _wall.size(), 10):
+		if float(_wall[i].top) - float(_wall[i].base) < 120.0: continue
+		var nv: Vector3 = normals[i * rows + 1 + face_rows / 2]
+		outward_checked += 1
+		if Vector2(nv.x, nv.z).dot(_wall[i].normal) > 0.0: outward_ok += 1
+	var granite := ShaderMaterial.new()
+	granite.shader = GRANITE_SHADER
+	granite.set_shader_parameter("snowline", SNOWLINE)
+	_geology_materials.append(granite)
+	var node := MeshInstance3D.new()
+	node.name = "WestWall"
+	node.mesh = mesh
+	node.material_override = granite
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	var falls: Dictionary = _add_falls()
+	var ice: Dictionary = _add_ice(granite)
+	# Clearances: route and slice points, and giant caps, all well away from the toe.
+	var route_gap: float = INF
+	for path: Variant in [route, slice_route]:
+		if not is_instance_valid(path) or not path.valid: continue
+		for point: Vector3 in path._p:
+			for i: int in range(0, _wall.size(), 4): route_gap = minf(route_gap, Vector2(point.x, point.z).distance_to(_wall[i].toe))
+	var giant_gap: float = INF
+	for row: Array in GIANTS:
+		for i: int in range(0, _wall.size(), 2): giant_gap = minf(giant_gap, Vector2(row[0], row[1]).distance_to(_wall[i].toe) - float(row[2]))
+	escarpment_report.merge({"built": true, "vertices": _wall.size() * rows, "triangles": (_wall.size() - 1) * (rows - 1) * 2, "rows_per_sample": rows, "finite": finite,
+		"face_outward": [outward_ok, outward_checked], "tallest_face_m": tallest, "falls": falls, "ice": ice, "gullies": _gullies.size(), "benches": WALL_BENCHES.size(), "buttresses": _buttresses.size(), "route_clearance_m": route_gap, "giant_cap_clearance_m": giant_gap,
+		"collision": "none (far layer)", "shadows": "off"}, true)
+	escarpment_report["passed"] = finite and outward_checked > 0 and outward_ok == outward_checked and route_gap > 250.0 and giant_gap > 40.0 and bool(falls.get("built", false)) and bool(ice.get("built", false))
+
+## The falls: a free-falling ribbon leaving the notch lip just clear of the recessed channel,
+## bowing outward as it drops and spreading, plus three crossed soft mist sheets at its foot.
+func _add_falls() -> Dictionary:
+	var at: int = clampi(roundi(WALL_FALLS_S / WALL_STEP), 1, _wall.size() - 2)
+	var sample: Dictionary = _wall[at]
+	var toe: Vector2 = sample.toe
+	var nrm: Vector2 = sample.normal
+	var dir: Vector2 = sample.dir
+	var base: float = sample.base
+	var top: float = sample.top
+	var h: float = top - base
+	if h < 150.0: return {"built": false, "reason": "no wall height at the falls"}
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rows: int = 56
+	var min_clear: float = INF
+	var pool_y: float = terrain_height(_basin.x, _basin.y) + BASIN_DEPTH * 0.62
+	for j: int in rows + 1:
+		var t: float = float(j) / rows
+		var y: float = top - 2.0 - (top - 2.0 - pool_y) * t
+		var q: float = clampf((y - base) / h, 0.0, 1.0)
+		var face: float = _wall_face_offset(sample, q, h, y)
+		# Source: meltwater slides on the gully floor for the first stretch (rock contact),
+		# then leaves the rock and free-falls, bowing out toward the plunge basin.
+		var free: float = smoothstep(0.12, 0.24, t)
+		var out: float = face + lerpf(1.5, 6.0 + 60.0 * pow(maxf(0.0, t - 0.18) / 0.82, 1.4), free)
+		min_clear = minf(min_clear, out - face)
+		var width: float = lerpf(12.0, 22.0, smoothstep(0.0, 0.2, t)) + 52.0 * pow(t, 1.3)
+		for k: int in 3:
+			var across: float = (float(k) / 2.0 - 0.5) * width
+			st.set_uv(Vector2(float(k) / 2.0, t))
+			st.add_vertex(Vector3(toe.x + nrm.x * out + dir.x * across, y, toe.y + nrm.y * out + dir.y * across))
+	for j: int in rows:
+		for k: int in 2:
+			var a: int = j * 3 + k
+			st.add_index(a); st.add_index(a + 3); st.add_index(a + 1)
+			st.add_index(a + 1); st.add_index(a + 3); st.add_index(a + 4)
+	st.generate_normals()
+	var water := ShaderMaterial.new()
+	water.shader = FALLS_SHADER
+	_geology_materials.append(water)
+	var ribbon := MeshInstance3D.new()
+	ribbon.name = "WestFalls"
+	ribbon.mesh = st.commit()
+	ribbon.material_override = water
+	ribbon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ribbon)
+	_static.append(ribbon)
+	# Receiving basin: water in the carved depression at the foot.
+	var pool := MeshInstance3D.new()
+	pool.name = "WestFallsPool"
+	var disc := CylinderMesh.new()
+	disc.top_radius = BASIN_RADIUS * 1.25
+	disc.bottom_radius = BASIN_RADIUS * 1.25
+	disc.height = 0.2
+	disc.radial_segments = 32
+	disc.rings = 1
+	pool.mesh = disc
+	var pool_water := ShaderMaterial.new()
+	pool_water.shader = LAKE_SHADER
+	pool_water.set_shader_parameter("shallow", Color(0.20, 0.50, 0.52))
+	_geology_materials.append(pool_water)
+	pool.material_override = pool_water
+	pool.position = Vector3(_basin.x, pool_y, _basin.y)
+	pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pool)
+	_static.append(pool)
+	# Spray: soft sheets over the basin, taller where the water lands.
+	var mist_st := SurfaceTool.new()
+	mist_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var foot := Vector3(_basin.x - nrm.x * 20.0, pool_y + 40.0, _basin.y - nrm.y * 20.0)
+	for k: int in 3:
+		var side: Vector2 = dir.rotated(float(k) * PI / 3.0)
+		var half := Vector3(side.x, 0.0, side.y) * 95.0
+		var quad: Array[Vector3] = [foot - half - Vector3.UP * 40.0, foot + half - Vector3.UP * 40.0, foot + half + Vector3.UP * 90.0, foot - half + Vector3.UP * 90.0]
+		var uvs: Array[Vector2] = [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+		for m: int in [0, 1, 2, 0, 2, 3]:
+			mist_st.set_uv(uvs[m])
+			mist_st.add_vertex(quad[m])
+	mist_st.generate_normals()
+	var mist := ShaderMaterial.new()
+	mist.shader = FALLS_SHADER
+	mist.set_shader_parameter("mist", true)
+	_geology_materials.append(mist)
+	var veil := MeshInstance3D.new()
+	veil.name = "WestFallsMist"
+	veil.mesh = mist_st.commit()
+	veil.material_override = mist
+	veil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(veil)
+	_static.append(veil)
+	return {"built": true, "width_m": [12.0, 86.0], "contact_fraction": 0.18, "pool": _v3(pool.position), "pool_radius_m": BASIN_RADIUS * 1.25, "lip": _v3(Vector3(toe.x + nrm.x * (_wall_face_offset(sample, 1.0, h, top) + 6.0), top, toe.y + nrm.y * (_wall_face_offset(sample, 1.0, h, top) + 6.0))), "foot": _v3(foot), "drop_m": top - pool_y, "min_face_clearance_m": min_clear, "ribbon_triangles": rows * 4, "mist_triangles": 6}
+
+## Alpine ice behind the falls: a snow peak standing behind the notch and a steep, fractured
+## ice tongue descending from its flank through the widened notch to an ice cliff just above
+## the rock lip, where the falls emerge. Far layer, no collision.
+func _add_ice(granite: ShaderMaterial) -> Dictionary:
+	var at: int = clampi(roundi(WALL_FALLS_S / WALL_STEP), 1, _wall.size() - 2)
+	var sample: Dictionary = _wall[at]
+	var toe: Vector2 = sample.toe
+	var nrm: Vector2 = sample.normal
+	var dir: Vector2 = sample.dir
+	var h: float = float(sample.top) - float(sample.base)
+	if h < 150.0: return {"built": false, "reason": "no wall height at the falls"}
+	# The peak: an alpine pyramid of uneven ridges, rock where steep and snow where it faces up.
+	var centre: Vector2 = toe + nrm * ICE_PEAK.x
+	var ground: float = terrain_height(centre.x, centre.y) - 40.0
+	var profile: Array[Vector3] = []
+	for i: int in 41:
+		var t: float = float(i) / 40.0
+		profile.append(Vector3(pow(1.0 - t, 0.85) * (1.0 + 0.12 * pow(1.0 - t, 4.0)), t, t))
+	profile.append(Vector3(0.0, 1.0, 1.0))
+	var peak_mesh: ArrayMesh = _lathe(profile, 48, "crag", false, PackedFloat32Array([0.7, 2.2, 4.1, 0.06, -0.04]))
+	var rock := granite.duplicate() as ShaderMaterial
+	rock.set_shader_parameter("world_mapped", true)
+	_geology_materials.append(rock)
+	var peak := MeshInstance3D.new()
+	peak.name = "IcePeak"
+	peak.mesh = peak_mesh
+	peak.material_override = rock
+	peak.transform = Transform3D(Basis(Vector3.UP, atan2(dir.x, dir.y)).scaled(Vector3(ICE_PEAK.z, ICE_PEAK.y - ground, ICE_PEAK.z)), Vector3(centre.x, ground, centre.y))
+	peak.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(peak)
+	_static.append(peak)
+	# The tongue: from inside the peak's flank down to the ice cliff above the lip.
+	var lip_n: float = _wall_face_offset(sample, 1.0, h, float(sample.top))
+	var lip_top: float = float(sample.top) + 45.0
+	var start_n: float = ICE_PEAK.x + 160.0
+	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.70
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Flat shading: serac blocks and moraine ridges read as broken facets, not a smooth capsule.
+	st.set_smooth_group(-1)
+	var flow_rows: int = 56
+	var across: int = 13
+	var grid: Array = []
+	for j: int in flow_rows + 1:
+		var u: float = float(j) / flow_rows
+		var n_at: float = lerpf(start_n, lip_n - 2.0, u)
+		var y_at: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6))
+		var half: float = lerpf(100.0, 56.0, u)
+		var row: Array = []
+		for k: int in across:
+			var v: float = float(k) / (across - 1) * 2.0 - 1.0
+			# Flat-topped tongue; lateral moraine ridges at the margins.
+			var lift: float = 4.0 * (1.0 - v * v) + 9.0 * smoothstep(0.7, 0.9, absf(v)) * (1.0 - smoothstep(0.92, 1.0, absf(v))) - 16.0 * smoothstep(0.92, 1.0, absf(v))
+			# Icefall: stepped serac blocks where the tongue steepens, phase broken across the ice.
+			var steep: float = smoothstep(0.3, 0.45, u) * (1.0 - smoothstep(0.88, 0.97, u))
+			var phase: float = u * 14.0 + _terrace_noise.get_noise_2d(v * 400.0, 7.0) * 0.8 + float(k % 2) * 0.35
+			lift += steep * (fposmod(phase, 1.0) - 0.5) * 16.0
+			var p: Vector2 = toe + nrm * n_at + dir * (v * half)
+			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.72, 0.9, absf(v))])
+		grid.append(row)
+	# Ice cliff at the snout: ragged blue front in three rows down to the rock lip.
+	for drop: float in [0.33, 0.66, 1.0]:
+		var row: Array = []
+		for k: int in across:
+			var v: float = float(k) / (across - 1) * 2.0 - 1.0
+			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 6.0
+			var p: Vector2 = toe + nrm * (lip_n - 1.0 + ragged * (0.5 + drop)) + dir * (v * 56.0)
+			row.append([Vector3(p.x, lerpf(lip_top, float(sample.top) - 4.0, drop) + ragged * (1.0 - drop), p.y), Vector2(1.0, v), -1.0])
+		grid.append(row)
+	for j: int in grid.size() - 1:
+		for k: int in across - 1:
+			var quad: Array = [grid[j][k], grid[j][k + 1], grid[j + 1][k], grid[j + 1][k + 1]]
+			for m: int in [0, 1, 2, 1, 3, 2]:
+				var vertex: Array = quad[m]
+				st.set_uv(vertex[1])
+				var cliff: float = 1.0 if float(vertex[2]) < 0.0 else 0.0
+				st.set_color(Color(cliff, maxf(0.0, float(vertex[2])), 0.0))
+				st.add_vertex(vertex[0])
+	st.generate_normals()
+	# Hanging-valley bed: a solid granite col under the ice from the lip back into the peak's
+	# flank, with steep rock sides down below the crest, so the tongue rests on rock.
+	var bed := SurfaceTool.new()
+	bed.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var section: int = 6
+	for j: int in flow_rows + 1:
+		var u: float = float(j) / flow_rows
+		var n_at: float = lerpf(start_n, lip_n - 4.0, u)
+		var y_at: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 10.0
+		var half: float = lerpf(100.0, 56.0, u) * 1.3
+		var deep: float = float(sample.base) - 60.0
+		var mid: Vector2 = toe + nrm * n_at
+		for corner: Vector2 in [Vector2(-1.25, deep), Vector2(-1.0, y_at - 30.0), Vector2(-0.7, y_at - 4.0), Vector2(0.7, y_at - 4.0), Vector2(1.0, y_at - 30.0), Vector2(1.25, deep)]:
+			var edge: Vector2 = mid + dir * (corner.x * half)
+			bed.add_vertex(Vector3(edge.x, corner.y, edge.y))
+	for j: int in flow_rows:
+		for k: int in section - 1:
+			var a: int = j * section + k
+			# Same winding rule as the wall (front = along x across): the top faces up.
+			bed.add_index(a); bed.add_index(a + 1); bed.add_index(a + section)
+			bed.add_index(a + section); bed.add_index(a + 1); bed.add_index(a + section + 1)
+	bed.generate_normals()
+	var bed_mesh: ArrayMesh = bed.commit()
+	var bed_normals: PackedVector3Array = bed_mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 2].y > 0.0
+	var col := MeshInstance3D.new()
+	col.name = "IceBed"
+	col.mesh = bed_mesh
+	col.material_override = rock
+	col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(col)
+	_static.append(col)
+	var ice_material := ShaderMaterial.new()
+	ice_material.shader = ICE_SHADER
+	_geology_materials.append(ice_material)
+	var tongue := MeshInstance3D.new()
+	tongue.name = "IceTongue"
+	tongue.mesh = st.commit()
+	tongue.material_override = ice_material
+	tongue.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(tongue)
+	_static.append(tongue)
+	var summit: Vector3 = peak.transform * Vector3(0.0, 1.0, 0.0)
+	return {"built": bed_up, "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "bed_triangles": flow_rows * (section - 1) * 2, "bed_top_faces_up": bed_up, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
+
+func _v3(value: Vector3) -> Array:
+	return [snappedf(value.x, 0.1), snappedf(value.y, 0.1), snappedf(value.z, 0.1)]
+
 # --- Meshes (profile x = radius, y = height, z = v parameter) ---
 
 # Parasol cap: radius 1, drooping fleshy rim (a rounded bulb, not a knife edge) and a
@@ -2563,7 +3086,7 @@ func overlook_pose() -> Dictionary:
 func _process(delta: float) -> void:
 	if frozen or _reduced_motion or (is_inside_tree() and get_tree().paused): return
 	_time += delta
-	for material: ShaderMaterial in _art + [_lake_material]:
+	for material: ShaderMaterial in _art + [_lake_material] + _geology_materials:
 		material.set_shader_parameter("shimmer_time", _time)
 
 ## Switches the copied-tree near/far LOD between the original instant swap (enabled false:
@@ -2700,7 +3223,7 @@ func set_debug_mask(enabled: bool) -> void:
 
 func set_reduced_motion(value: bool) -> void:
 	_reduced_motion = value
-	for material: ShaderMaterial in _art:
+	for material: ShaderMaterial in _art + _geology_materials:
 		material.set_shader_parameter("shimmer_amount", 0.0 if value else 1.0)
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
@@ -2713,7 +3236,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		(pair[1] as ShaderMaterial).set_shader_parameter("night_amount", (pair[0] as ShaderMaterial).get_shader_parameter("night_amount"))
 	var day: Dictionary = DEPTH_LOOK if look_depth else {"sun": DAY_SUN, "ambient": Color("d2d0ca"), "fog": Color("a2b3d4"), "sky_top": Color("41529f"), "sky_horizon": Color("f4c49a"), "lake_horizon": Color("f2b08e")}
 	_lake_material.set_shader_parameter("horizon", (day.lake_horizon as Color).lerp(Color("3a3466"), night))
-	for material: ShaderMaterial in _art + [_terrain_material, _lake_material]:
+	for material: ShaderMaterial in _art + [_terrain_material, _lake_material] + _geology_materials:
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
@@ -2755,4 +3278,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

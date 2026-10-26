@@ -38,10 +38,18 @@ func _v(value: Vector3) -> Array:
 
 func _settle(frames: int) -> void:
 	for _i: int in frames: await get_tree().process_frame
-	await RenderingServer.frame_post_draw
+	await _drawn()
+
+## Next drawn frame, or an explicit exit with the window state if none is drawn within the
+## heartbeat's limit (instead of waiting until the runner's timeout).
+func _drawn() -> void:
+	if not await beat.await_draw():
+		print("HARNESS_DRAW_LOST ", JSON.stringify(beat.state()))
+		game._quit_clean(1)
+		await get_tree().create_timer(3600.0).timeout
 
 func _grab(label: String) -> Image:
-	await RenderingServer.frame_post_draw
+	await _drawn()
 	var frame: Image = get_viewport().get_texture().get_image()
 	frame.convert(Image.FORMAT_RGBA8)
 	if label != "": frame.save_png(output.path_join(label + ".png"))
@@ -85,11 +93,11 @@ func _coverage(frame: Image, roi: Rect2i) -> Dictionary:
 			if node.get_meta("lod_range", "") == role and (node as Node3D).visible:
 				(node as Node3D).visible = false
 				hidden.append(node)
-		await RenderingServer.frame_post_draw
+		await _drawn()
 		var bare: Image = await _grab("")
 		for node: Node in hidden: (node as Node3D).visible = true
 		out["dense" if role == "near" else "ring"] = float(_diff(frame, bare, roi).changed_fraction)
-	await RenderingServer.frame_post_draw
+	await _drawn()
 	get_tree().paused = false
 	var total: float = out.dense + out.ring
 	out["share"] = out.dense / total if total >= 0.001 else -1.0

@@ -22,6 +22,9 @@ var timings: Array = []
 var motion_steps: Array = []
 
 var beat: Node
+## Set when a capture found no frame drawn within the heartbeat's limit; later captures are
+## skipped so the run reports the failure promptly instead of reaching the runner timeout.
+var draw_lost: Dictionary = {}
 
 func _ready() -> void:
 	game = get_parent()
@@ -60,8 +63,12 @@ func _camera_clearance() -> float:
 
 func _capture(label: String) -> void:
 	beat.phase = "capture " + label
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
+	if not draw_lost.is_empty(): return
+	for _i: int in 2:
+		if not await beat.await_draw():
+			draw_lost = beat.state().merged({"capture": label})
+			_check("Window kept drawing (no frame drawn for 20 s during capture %s; window state recorded)" % label, false, draw_lost)
+			return
 	var frame: Image = get_viewport().get_texture().get_image()
 	frame.convert(Image.FORMAT_RGBA8)
 	var path := output.path_join(label + ".png")
@@ -286,12 +293,13 @@ func _run() -> void:
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		elif "--water-motion" in arguments: await _water_motion_scenario()
+		elif "--geology" in arguments: await _geology_scenario()
 		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("shape" if "--cap-shape" in arguments else ("leaf" if "--leaf-craft" in arguments else "craft"))
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else ("leaf-pairs" if "--leaf-craft" in arguments else "cap-pairs")) if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"geology" if "--geology" in arguments else "junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else (("cap-shape-pairs" if "--cap-shape" in arguments else ("leaf-pairs" if "--leaf-craft" in arguments else "cap-pairs")) if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -1011,6 +1019,45 @@ func _cap_pairs_scenario(mode: String = "craft") -> void:
 	var drawn_ok := true
 	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
 	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
+
+## Geology landmark views (West Wall and Falls): the same fixed poses whether or not the landmark
+## is built (MUSH_SCENERY_DIAG=no_geology builds the previous landform for the "before" run).
+## Aims are fixed coordinates, not read from the wall, so both runs frame identical shots.
+func _geology_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	var wall: Dictionary = scenery.get_report().get("escarpment", {})
+	var skipped: bool = "no_geology" in scenery.diagnostic_skips
+	if skipped: _check("Landmark skipped for the before run (MUSH_SCENERY_DIAG=no_geology)", not wall.get("built", false), wall)
+	else: _check("West Wall: built, finite, face looks into the valley, falls clear of the face, route and giant caps clear of the toe", wall.get("passed", false), wall)
+	var falls_aim := Vector3(-600.0, 140.0, -560.0)
+	var knoll: Vector3 = route.get_end_point() + Vector3.UP * 1.7
+	var shore := Vector3(387.12, -78.01 + 1.7, -300.14)
+	var side := Vector3(-300.0, scenery.terrain_height(-300.0, -200.0) + 30.0, -200.0)
+	var pose: Dictionary = scenery.overlook_pose()
+	var views: Array = [["overlook", pose.position, pose.target, pose.fov], ["knoll", knoll, Vector3(-60.0, 60.0, -700.0), 60.0], ["shore", shore, falls_aim, 60.0],
+		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0]]
+	var review := Camera3D.new()
+	review.far = 2600.0
+	game.add_child(review)
+	for mood: Array in [["day", false], ["night", true]]:
+		game.world.set_appearance(mood[1], false, false)
+		await get_tree().create_timer(4.5).timeout
+		for view: Array in views:
+			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore"]: continue
+			scenery.set_overview(view[0] == "overview")
+			review.fov = view[3]
+			review.position = view[1]
+			review.look_at(view[2])
+			review.make_current()
+			await _frames(30)
+			await _capture("geo-%s-%s" % [view[0], mood[0]])
+			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME), "camera": _v(review.position), "aim": _v(view[2])}
+	scenery.set_overview(false)
+	player._camera.make_current()
+	review.queue_free()
+	game.world.set_appearance(false, false, false)
+	_check("Geology views captured (day 5, night 3)", images.size() == 8, images.size())
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.
