@@ -29,6 +29,9 @@ const DETAIL_CELL := 6.0
 ## Near-tree crowns may use a denser existing canopy mesh up to this many vertices.
 ## Near-tree crowns may use a distinct existing canopy mesh up to this many times the ring mesh's triangles.
 const NEAR_CROWN_MAX_RATIO := 8
+## Dense near crowns are drawn only within this distance; the ring crown is their far LOD.
+const NEAR_CROWN_RANGE := 100.0
+const NEAR_CROWN_MARGIN := 12.0
 const FOREST_HUES: Array[Color] = [Color("2f5a2a"), Color("3f6e2e"), Color("5a7a30"), Color("5d6b2c"), Color("2a4a2c")]
 const VALLEY_DIR := Vector2(0.447, -0.894)
 const LAKE_CENTER := Vector2(190.0, -330.0)
@@ -661,18 +664,27 @@ func _dense_crown(templates: Array) -> Dictionary:
 		return {}
 	var mesh: Mesh = chosen[1]
 	var original: Material = chosen[2]
-	var soft: Material = original.duplicate()
-	if original is ShaderMaterial:
-		var base: Variant = (original as ShaderMaterial).get_shader_parameter("base_color")
-		var accent: Variant = (original as ShaderMaterial).get_shader_parameter("accent_color")
-		if base is Color and accent is Color:
-			# Softer, warmer and lower-contrast than the source palette.
-			(soft as ShaderMaterial).set_shader_parameter("base_color", (base as Color).darkened(0.12).lerp(Color("4a5a2a"), 0.15))
-			(soft as ShaderMaterial).set_shader_parameter("accent_color", (base as Color).lerp(accent, 0.45))
-		_crown_sync.append([original, soft])
+	var softs: Array[Material] = []
+	# Two darker, lower-contrast palettes (alternated per crown) so backlit leaves do not
+	# read as bright yellow sheets.
+	for variant: Array in [[0.22, Color("3f5528"), 0.25], [0.16, Color("55602c"), 0.32]]:
+		var soft: Material = original.duplicate()
+		if original is ShaderMaterial:
+			var base: Variant = (original as ShaderMaterial).get_shader_parameter("base_color")
+			var accent: Variant = (original as ShaderMaterial).get_shader_parameter("accent_color")
+			if base is Color and accent is Color:
+				(soft as ShaderMaterial).set_shader_parameter("base_color", (base as Color).darkened(variant[0]).lerp(variant[1], 0.2))
+				(soft as ShaderMaterial).set_shader_parameter("accent_color", (base as Color).lerp(accent, variant[2]).darkened(0.1))
+			_crown_sync.append([original, soft])
+		softs.append(soft)
 	var ratio: float = small.get_aabb().size.length() / maxf(mesh.get_aabb().size.length(), 0.001)
 	tree_report["crown_selection"] = {"chosen": chosen[3], "ring_triangles": small_tris, "volume_scale": ratio}
-	return {"mesh": mesh, "material": soft, "scale": ratio}
+	return {"mesh": mesh, "materials": softs, "scale": ratio}
+
+func _tree_batch(batches: Dictionary, kind: String, mesh: Mesh, material: Material, cell: Vector2i, range_name: String, pose: Transform3D) -> void:
+	var key: String = "%s|%d|%d|%d|%d|%s" % [kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y, range_name]
+	if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": kind, "range": range_name, "poses": []}
+	batches[key].poses.append(pose)
 
 ## Triangles in a mesh, for indexed or non-indexed surfaces.
 func _triangle_count(mesh: Mesh) -> int:
@@ -742,6 +754,9 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		else: flank += 1
 	_legacy_mesa = false
 	var near_crown: Dictionary = _dense_crown(templates)
+	# Separate generator: crown orientation must not shift any seeded placement.
+	var crown_rng := RandomNumberGenerator.new()
+	crown_rng.seed = 5150
 	var near_trees: int = 0
 	var near_target: int = 0
 	var crowns_replaced: int = 0
@@ -760,34 +775,55 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		var near: bool = not near_crown.is_empty() and groups[index] in [1, 4]
 		if near: near_trees += 1
 		for part: Dictionary in template:
-			var mesh: Mesh = part.mesh
-			var material: Material = part.material
-			var local: Transform3D = part.local
 			if near and part.kind == "LayeredCanopies":
-				mesh = near_crown.mesh
-				material = near_crown.material
-				local = Transform3D(local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)), local.origin)
+				# Far LOD: the original ring crown, drawn only beyond NEAR_CROWN_RANGE.
+				_tree_batch(batches, part.kind, part.mesh, part.material, cell, "far", root * part.local)
+				# Near: the dense cluster, turned and tilted per crown so leaves do not align.
+				var turn := Basis(Vector3.UP, crown_rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, crown_rng.randf_range(-0.35, 0.35)) * Basis(Vector3.FORWARD, crown_rng.randf_range(-0.35, 0.35))
+				var dense := Transform3D(part.local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)) * turn, part.local.origin)
+				_tree_batch(batches, part.kind, near_crown.mesh, near_crown.materials[crowns_replaced % 2], cell, "near", root * dense)
 				crowns_replaced += 1
-			var key: String = "%s|%d|%d|%d|%d" % [part.kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y]
-			if not batches.has(key): batches[key] = {"mesh": mesh, "material": material, "kind": part.kind, "poses": []}
-			batches[key].poses.append(root * local)
+				continue
+			_tree_batch(batches, part.kind, part.mesh, part.material, cell, "all", root * part.local)
+	var eye_now: Vector3 = overlook_pose().position
+	var lod: Dictionary = {"near_batches": 0, "far_batches": 0, "near_instances": 0, "near_triangles": 0, "rim_view_dense_instances": 0, "rim_view_dense_triangles": 0}
 	for key: String in batches:
 		var batch: Dictionary = batches[key]
+		# Node at the batch centre, so visibility ranges measure from the trees themselves.
+		var centre := Vector3.ZERO
+		for member: Transform3D in batch.poses: centre += member.origin
+		centre /= float(batch.poses.size())
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
 		multi.mesh = batch.mesh
 		multi.instance_count = batch.poses.size()
-		for i: int in batch.poses.size(): multi.set_instance_transform(i, batch.poses[i])
+		for i: int in batch.poses.size(): multi.set_instance_transform(i, Transform3D(Basis(), -centre) * batch.poses[i])
 		var node := MultiMeshInstance3D.new()
-		node.name = "CopiedTrees_" + str(batch.kind)
+		node.name = "CopiedTrees_" + str(batch.kind) + ("_" + str(batch.range) if batch.range != "all" else "")
 		node.multimesh = multi
+		node.position = centre
 		node.material_override = batch.material
 		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.extra_cull_margin = 2.0
 		node.visibility_range_end = 700.0
+		var triangles: int = _triangle_count(batch.mesh) * multi.instance_count
+		if batch.range == "near":
+			node.visibility_range_end = NEAR_CROWN_RANGE
+			node.visibility_range_end_margin = NEAR_CROWN_MARGIN
+			lod.near_batches += 1
+			lod.near_instances += multi.instance_count
+			lod.near_triangles += triangles
+			if eye_now.distance_to(centre) < NEAR_CROWN_RANGE:
+				lod.rim_view_dense_instances += multi.instance_count
+				lod.rim_view_dense_triangles += triangles
+		elif batch.range == "far":
+			node.visibility_range_begin = NEAR_CROWN_RANGE
+			node.visibility_range_begin_margin = NEAR_CROWN_MARGIN
+			lod.far_batches += 1
 		add_child(node)
 		_static.append(node)
 		tree_instances += multi.instance_count
+	tree_report["lod"] = lod
 	tree_count = spots.size()
 	var tree_triangles: int = 0
 	for key: String in batches:

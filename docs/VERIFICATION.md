@@ -1337,3 +1337,25 @@ Results on the committed source:
   - all new art off: 16.773 ms.
 - `MUSH_SCENERY_DIAG` (empty by default) is the diagnostic-only switch used for that bisection.
 - Scenic coverage gates still **fail**: ground-path 0.0034 < 0.004, vista 0.0119 < 0.02 (`reports/scenic-20261026-022455-72069`).
+
+## Scenery prototype: art iteration checkpoint (2026-10-26)
+
+Bounded visual passes made since the art pass:
+- **Giant stem:** buttresses grown into the stem surface.
+- **Landform:** eroded massifs and a watertight ~5 m detail patch over the rim view's cliff band.
+- **Erosion and moss:** multi-scale erosion and mottled moss.
+- **Haze and colour:** distance haze tuning, a varied far forest and natural greens.
+- **Near trees:** existing dense leaf clusters on near trees with a 100 m distance LOD.
+
+Current-state results:
+- **Geometry checks** (scenic report): giant footing drift 0.0 m, route terrain drift 0.0 m, finite normals. Near-crown replacement is asserted at 19/19 target trees (98 crowns).
+- **Costs:**
+  - terrain 91,442 + detail patch 51,520 triangles;
+  - trees 960,480 built triangles, including 729,120 for dense crowns drawn only within 100 m (193,440 active from the rim camera);
+  - far forest 504,000;
+  - 88 draw nodes.
+- **Route:** **18/18** (`reports/route-20261026-034627-76262`).
+- **Acceptance:** **295/295**, no exit leak (`reports/acceptance-20261026-034912-76366`).
+- **Benchmark:** **fails**, p95 17.573 ms (> 16.7) / p99 19.984 ms, 9,365 frames, two loops, zero stalls (`reports/benchmark-20261026-034407-76147`). This is a single full-art run with the art enabled. It measures the existing clearing route, not the new views. Earlier same-session evidence attributes most of the gap to outside machine load.
+- **Scenic:** the vista coverage gate still **fails** (0.0129 < 0.02) (`reports/scenic-20261026-034213-76048`).
+- **Not evidence of quality:** none of this is art acceptance or reference parity.
