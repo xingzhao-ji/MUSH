@@ -697,9 +697,19 @@ func _shore_pairs_scenario() -> void:
 	game.add_child(review)
 	var has_groves: bool = scenery.get("shore_groves") != null and is_instance_valid(scenery.shore_groves)
 	var grove: Dictionary = scenery.get_report().get("shore_groves", {})
-	_check("Opposite-shore groves built within budget (<= 400,000 triangles, <= 12 nodes), no colliders or shadows", grove.get("built", false) and int(grove.triangles) <= 400000 and int(grove.nodes) <= 12, grove)
+	_check("Opposite-shore groves built within budget (<= 150,000 triangles, <= 12 nodes), no colliders or shadows", grove.get("built", false) and int(grove.triangles) <= 150000 and int(grove.nodes) <= 12, grove)
 	var offset_at: Vector3 = slice._p[_nearest_sample(Vector3(402.0, -78.0, -418.0))]
-	for view: Array in [["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0)], ["overlook", null, null], ["shore-offset", offset_at, Vector3(200.0, -80.0, -420.0)]]:
+	var views: Array = [["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0), "day"], ["overlook", null, null, "day"], ["shore-offset", offset_at, Vector3(200.0, -80.0, -420.0), "day"]]
+	if has_groves:
+		for mood: String in ["night", "rain"]:
+			views.append(["shore", Vector3(387.12, -78.01, -300.14), Vector3(190.0, -80.0, -330.0), mood])
+			views.append(["overlook", null, null, mood])
+	var current_mood: String = "day"
+	for view: Array in views:
+		if view[3] != current_mood:
+			current_mood = view[3]
+			game.world.set_appearance(current_mood == "night", current_mood == "rain", false)
+			await get_tree().create_timer(4.5).timeout
 		if view[1] == null:
 			review.position = pose.position
 			review.look_at(pose.target)
@@ -713,12 +723,13 @@ func _shore_pairs_scenario() -> void:
 		for state: String in (["before", "after"] if has_groves else ["current"]):
 			if has_groves: scenery.set_shore_groves(state == "after")
 			await _frames(8)
-			await _capture("shore-%s-%s-day" % [view[0], state])
+			await _capture("shore-%s-%s-%s" % [view[0], state, view[3]])
 			images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
 			images[images.size() - 1]["clumps"] = _visible_clumps(view[0] == "overlook")
-			if has_groves: timings.append((await _time_view(30, 180)).merged({"pose": view[0], "state": state}))
+			if has_groves and view[3] == "day": timings.append((await _time_view(30, 180)).merged({"pose": view[0], "state": state}))
 	player._camera.make_current()
 	review.queue_free()
+	game.world.set_appearance(false, false, false)
 	if has_groves:
 		scenery.set_shore_groves(true)
 		var drawn_ok := true

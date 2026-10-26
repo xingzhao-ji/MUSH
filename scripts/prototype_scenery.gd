@@ -144,14 +144,21 @@ var _near_crown: Dictionary = {}
 var corridor_trees: Array[MultiMeshInstance3D] = []
 ## Opposite-shore groves: forest-carpet clumps on the lake's shoreline belt (origin within ~13 m of
 ## lake level, <= 360 m from the lake centre, west of x 300) become layered groves (low shrub masses
-## of the copied trees' ring-crown mesh plus copied trees, within SHORE_GROVE_BUDGET triangles);
-## the clumps are kept as the groves' far LOD beyond SHORE_CLUMP_BEGIN.
+## of the copied trees' ring-crown mesh plus copied trees, selected within SHORE_GROVE_BUDGET at full
+## detail, built from simplified crowns); the clumps are kept (hidden) in ShoreBeltClumps.
 const SHORE_BELT_Y := Vector2(-82.5, -69.0)
 const SHORE_BELT_RADIUS := 360.0
 const SHORE_BELT_MAX_X := 300.0
-const SHORE_GROVE_END := 700.0
-const SHORE_CLUMP_BEGIN := 650.0
+## Groves draw as far as the carpet they replace; the belt clumps stay hidden while groves are on,
+## so there is no far swap. Tree selection uses the full-detail cost against the selection budget
+## (unchanged population); crowns and shrubs are built from simplified crown meshes.
+const SHORE_GROVE_END := 1700.0
 const SHORE_GROVE_BUDGET := 400000
+const SHORE_GROVE_BUILT_BUDGET := 150000
+## Simplified crown for the groves (never closer than ~210 m to a walkable path): every Nth leaf
+## card kept, each scaled about its own centre to keep the crown's coverage and outline.
+const SHORE_LEAF_KEEP := 4
+const SHORE_LEAF_SCALE := 1.7
 var shore_groves: Node3D
 var shore_clumps: MultiMeshInstance3D
 var shore_groves_report: Dictionary = {}
@@ -1616,6 +1623,7 @@ func _add_shore_groves() -> void:
 	shore_clumps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	shore_clumps.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 	shore_clumps.visibility_range_end = 1700.0
+	shore_clumps.visible = false
 	add_child(shore_clumps)
 	_static.append(shore_clumps)
 	# 2. Layered groves within SHORE_GROVE_BUDGET: every clump becomes 1-2 low, wide shrub masses of
@@ -1641,8 +1649,10 @@ func _add_shore_groves() -> void:
 		chosen.append_array(lateral.slice(0, 2))
 		tops.append({"height": maxf(top, 1.0), "crowns": chosen})
 	var batches: Dictionary = {}
+	var simple: Dictionary = {}
 	var shrub_box: AABB = (shrub_part.mesh as Mesh).get_aabb()
 	var shrub_tris: int = _triangle_count(shrub_part.mesh)
+	var shrub_mesh: Mesh = _simplified_crown(shrub_part.mesh, simple)
 	var triangles: int = 0
 	var shrubs: int = 0
 	var order: Array = range(targets.size())
@@ -1662,7 +1672,7 @@ func _add_shore_groves() -> void:
 			var h: float = height * rng.randf_range(0.4, 0.55)
 			var scale := Vector3(w / shrub_box.size.x, h / shrub_box.size.y, w / shrub_box.size.z)
 			var basis: Basis = Basis(Vector3.UP, rng.randf_range(0.0, TAU)) * Basis.from_scale(scale)
-			_tree_batch(batches, "LayeredCanopies", shrub_part.mesh, shrub_part.material, Vector2i.ZERO, "all", Transform3D(basis, Vector3(spot.x, ground - 0.3 - shrub_box.position.y * scale.y, spot.y)))
+			_tree_batch(batches, "LayeredCanopies", shrub_mesh, shrub_part.material, Vector2i.ZERO, "all", Transform3D(basis, Vector3(spot.x, ground - 0.3 - shrub_box.position.y * scale.y, spot.y)))
 			shrubs += 1
 			triangles += shrub_tris
 	var trees: int = 0
@@ -1700,7 +1710,7 @@ func _add_shore_groves() -> void:
 					if not part in tops[pick].crowns: continue
 					crowns_kept += 1
 					var fuller := Transform3D(part.local.basis * Basis.from_scale(Vector3.ONE * 1.6), part.local.origin)
-					_tree_batch(batches, part.kind, part.mesh, part.material, cell, "all", root * fuller)
+					_tree_batch(batches, part.kind, _simplified_crown(part.mesh, simple), part.material, cell, "all", root * fuller)
 					continue
 				_tree_batch(batches, part.kind, part.mesh, part.material, cell, "all", root * part.local)
 	shore_groves = Node3D.new()
@@ -1716,13 +1726,112 @@ func _add_shore_groves() -> void:
 	set_shore_groves(true)
 	shore_groves_report = {"built": true, "belt": {"origin_y": [SHORE_BELT_Y.x, SHORE_BELT_Y.y], "lake_radius_m": SHORE_BELT_RADIUS, "max_x": SHORE_BELT_MAX_X},
 		"clumps_replaced": targets.size(), "clump_triangles_moved_to_far_lod": _triangle_count(clump_mesh) * targets.size(), "shrubs": shrubs, "trees": trees, "trees_skipped_budget_or_ground": skipped, "crowns": crowns_kept,
-		"triangles": built, "triangles_planned": triangles, "nodes": batches.size(), "budget_triangles": SHORE_GROVE_BUDGET, "grove_range_end_m": SHORE_GROVE_END, "clump_far_lod_begin_m": SHORE_CLUMP_BEGIN, "colliders": 0, "shadow_casters": 0}
+		"triangles": built, "selection_triangles_full_detail": triangles, "built_budget_triangles": SHORE_GROVE_BUILT_BUDGET,
+		"simplified_crowns": simple.values().map(func(entry: Array) -> Dictionary: return entry[1]), "nodes": batches.size(), "budget_triangles": SHORE_GROVE_BUDGET, "grove_range_end_m": SHORE_GROVE_END, "belt_clumps_hidden_while_groves_on": true, "colliders": 0, "shadow_casters": 0}
 
-## Groves on (clumps as far LOD beyond SHORE_CLUMP_BEGIN), or the previous look (clumps at every
-## distance, groves hidden). Diagnostic toggle for same-frame evidence.
+## Groves on (belt clumps hidden), or the previous look (belt clumps, groves hidden).
+## Diagnostic toggle for same-frame evidence.
 func set_shore_groves(enabled: bool) -> void:
 	if is_instance_valid(shore_groves): shore_groves.visible = enabled
-	if is_instance_valid(shore_clumps): shore_clumps.visibility_range_begin = SHORE_CLUMP_BEGIN if enabled else 0.0
+	if is_instance_valid(shore_clumps): shore_clumps.visible = not enabled
+
+## Leaf-card decimation of a crown mesh, cached per source mesh in `cache` as [mesh, stats]:
+## triangles grouped into connected leaf cards (shared vertices), every SHORE_LEAF_KEEP-th card
+## kept and scaled by SHORE_LEAF_SCALE about its centre. All vertex channels are carried over;
+## the source mesh is never modified.
+func _simplified_crown(source: Mesh, cache: Dictionary) -> Mesh:
+	var key: int = source.get_instance_id()
+	if cache.has(key): return cache[key][0]
+	var arrays: Array = source.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var indexed: bool = arrays[Mesh.ARRAY_INDEX] != null
+	var indices := PackedInt32Array()
+	if indexed: indices = arrays[Mesh.ARRAY_INDEX]
+	else:
+		indices.resize(vertices.size())
+		for i: int in vertices.size(): indices[i] = i
+	var parent := PackedInt32Array()
+	parent.resize(vertices.size())
+	for i: int in vertices.size(): parent[i] = i
+	var find := func(start: int) -> int:
+		var root: int = start
+		while parent[root] != root: root = parent[root]
+		return root
+	# Non-indexed meshes repeat shared corners: join vertices at the same position (0.1 mm).
+	if not indexed:
+		var seen: Dictionary = {}
+		for v: int in vertices.size():
+			var cell := Vector3i(roundi(vertices[v].x * 10000.0), roundi(vertices[v].y * 10000.0), roundi(vertices[v].z * 10000.0))
+			if seen.has(cell):
+				var a: int = find.call(seen[cell])
+				var b: int = find.call(v)
+				if a != b: parent[b] = a
+			else: seen[cell] = v
+	for t: int in range(0, indices.size(), 3):
+		var a: int = find.call(indices[t])
+		for k: int in [1, 2]:
+			var b: int = find.call(indices[t + k])
+			if a != b: parent[b] = a
+	var cards: Dictionary = {}
+	for t: int in range(0, indices.size(), 3):
+		var root: int = find.call(indices[t])
+		if not cards.has(root): cards[root] = []
+		cards[root].append(t)
+	var keep_vertices: Dictionary = {}
+	var kept_triangles := PackedInt32Array()
+	var ordinal: int = 0
+	for root: int in cards:
+		ordinal += 1
+		if ordinal % SHORE_LEAF_KEEP != 0: continue
+		var centre := Vector3.ZERO
+		var used: Dictionary = {}
+		for t: int in cards[root]:
+			for k: int in 3: used[indices[t + k]] = true
+		for v: int in used: centre += vertices[v]
+		centre /= float(used.size())
+		for v: int in used: keep_vertices[v] = centre
+		for t: int in cards[root]:
+			kept_triangles.append_array([indices[t], indices[t + 1], indices[t + 2]])
+	var remap: Dictionary = {}
+	var out_arrays: Array = []
+	out_arrays.resize(Mesh.ARRAY_MAX)
+	var order: Array = keep_vertices.keys()
+	order.sort()
+	for i: int in order.size(): remap[order[i]] = i
+	for channel: int in Mesh.ARRAY_MAX:
+		if channel == Mesh.ARRAY_INDEX or arrays[channel] == null: continue
+		var src: Variant = arrays[channel]
+		var size: int = src.size() / vertices.size()
+		if channel == Mesh.ARRAY_VERTEX:
+			var out := PackedVector3Array()
+			for v: int in order: out.append(keep_vertices[v] + (vertices[v] - keep_vertices[v]) * SHORE_LEAF_SCALE)
+			out_arrays[channel] = out
+			continue
+		var dst: Variant = src.duplicate()
+		dst.resize(order.size() * size)
+		for i: int in order.size():
+			for s: int in size: dst[i * size + s] = src[order[i] * size + s]
+		out_arrays[channel] = dst
+	var out_indices := PackedInt32Array()
+	for i: int in kept_triangles.size(): out_indices.append(remap[kept_triangles[i]])
+	if indexed: out_arrays[Mesh.ARRAY_INDEX] = out_indices
+	else:
+		# Non-indexed source: emit kept corners in triangle order (no index buffer).
+		for channel: int in Mesh.ARRAY_MAX:
+			if channel == Mesh.ARRAY_INDEX or out_arrays[channel] == null: continue
+			var src: Variant = out_arrays[channel]
+			var size: int = src.size() / order.size()
+			var dst: Variant = src.duplicate()
+			dst.resize(out_indices.size() * size)
+			for i: int in out_indices.size():
+				for s: int in size: dst[i * size + s] = src[out_indices[i] * size + s]
+			out_arrays[channel] = dst
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out_arrays)
+	if source.surface_get_material(0) != null: mesh.surface_set_material(0, source.surface_get_material(0))
+	var stats := {"source_triangles": indices.size() / 3, "indexed": indexed, "cards": cards.size(), "kept_cards": cards.size() / SHORE_LEAF_KEEP, "triangles": _triangle_count(mesh), "keep_every": SHORE_LEAF_KEEP, "card_scale": SHORE_LEAF_SCALE}
+	cache[key] = [mesh, stats]
+	return mesh
 
 ## The clearing's own understory meshes and materials (SpatiallyChunkedFoliage), with each
 ## asset's median authored scale so the corridor plants match the clearing's scale.

@@ -503,6 +503,7 @@ def inspect(suite, output, duration, expected_vsync=1):
         files = [image["file"] for image in report["images"]]
         views = ("shore", "overlook", "shore-offset")
         paired = [f"shore-{view}-{state}-day.png" for view in views for state in ("before", "after")]
+        paired += [f"shore-{view}-{state}-{mood}.png" for mood in ("night", "rain") for view in ("shore", "overlook") for state in ("before", "after")]
         assert files == paired or files == [f"shore-{view}-current-day.png" for view in views], "Expected every view (paired when groves exist)"
         spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
         module = importlib.util.module_from_spec(spec)

@@ -1879,3 +1879,45 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Far view:** the clumps return beyond 650–700 m.
 - **Not checked:** night and rain views of the groves.
 - **Still open:** the route benchmark (p95 19.834 ms) and the vista gate. Full-scene art is not accepted.
+
+## Opposite-shore groves: cost reduction (2026-10-26)
+
+**Status: local improvement; scene art not accepted.** This supersedes the grove cost, and the 650 m clump far LOD, in the opposite-shore groves section above. Rollback: `git revert` this commit.
+
+**Cost source:** the 164 shrubs and 228 tree crowns all used the copied trees' 940-triangle ring-crown leaf mesh, 368k of the 397k triangles. The groves are never closer than about 210 m to a walkable path. At that distance a 0.5 m leaf card covers about 1.4 px, so only the crown outline reads.
+
+**Change** (`scripts/prototype_scenery.gd`, `_simplified_crown`):
+- **Simplified crown:** a decimated copy of the crown mesh for the belt only. The 235 connected leaf cards are found by shared corner positions (the source mesh is non-indexed), every fourth card is kept, and each is scaled 1.7× about its own centre to preserve the crown's coverage and outline: 940 → 232 triangles.
+- **Untouched:** the source mesh and every other tree.
+- **Population unchanged:** the same 164 shrubs and 76 trees from the same random stream and selection, still selected against the full-detail 400k budget. The built triangles must stay within 150,000.
+- **No far swap:** the groves draw to 1,700 m, the carpet's own range, and the belt clumps stay hidden while the groves are on, so there is no transition to pop or leave a gap.
+
+**Measured** (`shore-pairs-20261026-120426-40660`: before and after in the same frame; day at the shore, overlook and offset views; night and rain at the shore and overlook):
+
+| Measure | Full-detail groves (`115514`) | Simplified (`120426`) |
+|---|---|---|
+| Built triangles | 396,848 | 119,312 (−70%) |
+| Shore view primitives | +379,544 | +102,008 |
+| Overlook primitives | +379,544 | +102,008 |
+| Offset view primitives | +379,544 | +102,008 |
+
+- **Draw calls:** +1 in each view; 2 nodes.
+- **Timing:** wall p50 changes of −1.3 to +1.4 ms are within noise under a shared-machine workload. GPU time is unavailable.
+
+**Image tradeoff** (zoomed three-way comparison of blobs, full detail and simplified):
+- **Shore band:** trunks and the ragged forest edge are preserved.
+- **Overlook lower left:** the grove reads slightly sparser, with larger leaf cards and a little more ground showing.
+- **Rain:** matches day.
+- **Night:** the groves render clearly darker than the blobs did. The carpet uses a pale-cyan night tint, the copied-tree leaf material the clearing's darker night palette. The band reads as dark forest, not missing.
+
+**Scenic** (`scenic-20261026-120702-41036`): fails only the known vista gate (0.0128).
+- Canopy and clipped metrics are unchanged.
+- In the world overview the groves appear as a darker textured patch on the west bank, with no hole or abrupt edge.
+- Geometry and collision are unchanged; footing drift 0.0.
+
+**Failed run, retained:** `120236`. A script error occurred because the crown mesh is non-indexed; it was fixed before the measured run.
+
+**Limitations:**
+- **Night:** a darker band beside the pale-cyan blobs.
+- **Overlook:** slightly sparser lower-left grove.
+- **Still open:** the route benchmark (p95 19.834 ms) and the vista gate. Full-scene art is not accepted.
