@@ -3,6 +3,8 @@ const BakedWorld = preload("res://scripts/baked_world.gd")
 const CurrentPlayer = preload("res://scripts/air_capsule_guard.gd")
 const TouchControls = preload("res://scripts/touch_controls.gd")
 const EnvironmentController = preload("res://scripts/environment_controller.gd")
+const PrototypeScenery = preload("res://scripts/prototype_scenery.gd")
+var prototype_scenery: Node3D
 var touch_controls: Control
 var environment_controller: Node
 var living_motion_startup: Dictionary = {"passed":false,"status":"pending"}
@@ -44,6 +46,11 @@ func _ready() -> void:
 	review_camera.fov = 60
 	add_child(review_camera)
 	review_camera.look_at(review_target)
+	if PrototypeScenery.is_enabled():
+		prototype_scenery = PrototypeScenery.new()
+		add_child(prototype_scenery)
+		prototype_scenery.configure(world)
+		review_camera.far = PrototypeScenery.FAR_PLANE
 	var arguments := OS.get_cmdline_user_args()
 	verification = "--mobile-save-review" in arguments or "--verify" in arguments or "--capture" in arguments or "--benchmark" in arguments or "--traversal" in arguments or "--crash-probe" in arguments or "--smoke" in arguments or "--ui-review" in arguments or "--growth-timing" in arguments or "--wake-review" in arguments
 	await _prewarm_camera_fade()
@@ -58,6 +65,7 @@ func _ready() -> void:
 	add_child(environment_controller)
 	environment_controller.set_quality("low" if bool(settings.get("reduced_effects",false)) else "balanced")
 	environment_controller.set_reduced_motion(bool(settings.get("reduced_motion",false)))
+	if is_instance_valid(prototype_scenery): prototype_scenery.set_reduced_motion(bool(settings.get("reduced_motion",false)))
 	mobile_release_requested.connect(_release_mobile_controls)
 	get_tree().auto_accept_quit = false
 	get_tree().quit_on_go_back = false
@@ -176,6 +184,7 @@ func _apply_settings() -> void:
 	if is_instance_valid(environment_controller):
 		environment_controller.set_quality("low" if bool(settings.get("reduced_effects",false)) else "balanced")
 		environment_controller.set_reduced_motion(bool(settings.get("reduced_motion",false)))
+		if is_instance_valid(prototype_scenery): prototype_scenery.set_reduced_motion(bool(settings.get("reduced_motion",false)))
 
 func _release_mobile_controls(reason: String) -> void:
 	if reason in ["suspend","load"] and is_instance_valid(touch_controls):
@@ -193,7 +202,7 @@ func _snapshot() -> Dictionary:
 	return snapshot
 
 func _capture_review() -> void:
-	var runner: Node = load("res://tests/capture_current.gd").new()
+	var runner: Node = load("res://tests/scenic_capture.gd" if "--scenic" in OS.get_cmdline_user_args() else "res://tests/capture_current.gd").new()
 	add_child.call_deferred(runner)
 
 func _build_ui() -> void:

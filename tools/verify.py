@@ -151,6 +151,47 @@ def inspect_render_progress(progress, frames):
     return {"engine_draw_progress_valid": True, "samples": frames}
 
 
+SCENIC_VIEWS = ("scenic-home", "scenic-vista", "overlook", "world-overview", "ground-path", "ground-bridge")
+SCENIC_APPEARANCES = ("day", "night", "rain")
+SCENIC_SIZE = [1280, 720]
+
+
+def clipped_fraction(pixels):
+    """Share of RGBA pixels at pure white or pure black (uncontrolled contrast)."""
+    red, green, blue = pixels[0::4], pixels[1::4], pixels[2::4]
+    clipped = sum(1 for r, g, b in zip(red, green, blue)
+                  if (r >= 254 and g >= 254 and b >= 254) or (r <= 1 and g <= 1 and b <= 1))
+    return clipped / len(red)
+
+
+def changed_fraction(before, after, tolerance=12):
+    """Share of pixels whose largest RGB channel change exceeds the tolerance."""
+    assert len(before) == len(after)
+    changed = sum(1 for index in range(0, len(before), 4)
+                  if max(abs(before[index + c] - after[index + c]) for c in range(3)) > tolerance)
+    return changed / (len(before) // 4)
+
+
+def mask_fraction(pixels):
+    """Share of pixels drawn by the unshaded magenta canopy identification pass."""
+    red, green, blue = pixels[0::4], pixels[1::4], pixels[2::4]
+    return sum(1 for r, g, b in zip(red, green, blue) if r >= 170 and b >= 170 and g * 2 < r) / len(red)
+
+
+def scenic_gate_failures(metrics):
+    """Prototype-only scenery gates; baseline captures record the same metrics ungated."""
+    failures = []
+    # Floor: the far layer must be perceptible. Ceiling: it must leave negative sky space.
+    for view, minimum, maximum in (("ground-path-day", 0.004, 0.12), ("scenic-vista-day", 0.02, 0.15)):
+        value = metrics["canopy"].get(view, 0.0)
+        if not minimum <= value <= maximum:
+            failures.append(f"canopy {view} {value:.4f} outside [{minimum}, {maximum}]")
+    failures += [f"clipped {view} {value:.4f} > 0.02" for view, value in metrics["clipped"].items() if value > 0.02]
+    if metrics["hud"] > 0.06:
+        failures.append(f"hud {metrics['hud']:.4f} > 0.06")
+    return failures
+
+
 def inspect(suite, output, duration, expected_vsync=1):
     if suite == "import":
         return {"import_passed": True}
@@ -425,6 +466,43 @@ def inspect(suite, output, duration, expected_vsync=1):
             decoded.append(item)
         return {"assertions": report["assertions"], "full_png_decodes": decoded,
                 "motion_verified": False, "art_approved": False, "traversal_verified": False}
+    if suite == "scenic":
+        report = read_report(output / "scenic.json")
+        expected = [(view, mood) for mood in SCENIC_APPEARANCES for view in SCENIC_VIEWS]
+        assert [(row["view"], row["appearance"]) for row in report["views"]] == expected, "Expected every scenic view"
+        assert report["schema"] == "mush-scenic-capture/1" and report["passed"] and report["look"] in ("baseline", "prototype")
+        spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        def load(row, key="file"):
+            assert row["passed"] and Path(row[key]).name == row[key]
+            item = module.decode(output / row[key], keep_pixels=True)
+            assert item["dimensions"] == SCENIC_SIZE and item["all_crcs_checked"]
+            assert item["png_sha256"] == row[key.replace("file", "png_sha256")]
+            assert item["rgba_sha256"] == row[key.replace("file", "rgba_sha256")]
+            return item
+
+        metrics = {"look": report["look"], "clipped": {}, "canopy": {}, "hud": None}
+        decoded, base = [], {}
+        for row in report["views"]:
+            item = load(row)
+            label = row["view"] + "-" + row["appearance"]
+            base[label] = item.pop("pixels")
+            metrics["clipped"][label] = clipped_fraction(base[label])
+            if report["look"] == "prototype":
+                mask = load(row, "mask_file")
+                metrics["canopy"][label] = mask_fraction(mask.pop("pixels"))
+                decoded.append(mask)
+            decoded.append(item)
+        hud = load(report["hud"])
+        metrics["hud"] = changed_fraction(base["ground-path-day"], hud.pop("pixels"))
+        decoded.append(hud)
+        failures = scenic_gate_failures(metrics) if report["look"] == "prototype" else []
+        (output / "metrics.json").write_text(json.dumps(dict(metrics, gate_failures=failures), indent=2) + "\n")
+        assert not failures, failures
+        return {"full_png_decodes": decoded, "metrics": metrics, "gated": report["look"] == "prototype",
+                "motion_verified": False, "art_approved": False, "concept_images_loaded": False}
     if suite == "capture":
         report = read_report(output / "camera.json")
         assert report["passed"] and len(report["views"]) == 4
@@ -450,7 +528,8 @@ def inspect(suite, output, duration, expected_vsync=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default=shutil.which("godot"))
-    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement"), required=True)
+    parser.add_argument("--suite", choices=("import", "acceptance", "benchmark", "capture", "ground", "environment", "paving", "paving-front", "traversal", "gap-step", "shape-build", "shape-capture", "flower", "flower-build", "forest", "forest-build", "forest-layers", "outer-tree", "house-foundation", "home-placement", "scenic"), required=True)
+    parser.add_argument("--prototype-scenery", choices=("on", "off"), help="scenic-only: select the presentation look for matched captures")
     parser.add_argument("--candidate", type=Path, help="Isolated shape-capture/traversal resource beneath reports/")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--uncapped", action="store_true", help="Benchmark-only throughput diagnostic; disable VSync, preserve real elapsed time")
@@ -459,6 +538,8 @@ def main():
         parser.error("Pass --engine PATH to Godot 4.7.2")
     if not 120 <= args.duration <= 600:
         parser.error("Benchmark duration must be 120–600 seconds")
+    if args.prototype_scenery and args.suite != "scenic":
+        parser.error("--prototype-scenery applies only to the scenic suite")
     if args.uncapped and args.suite != "benchmark":
         parser.error("--uncapped is a benchmark-only diagnostic")
     if args.candidate:
@@ -524,6 +605,10 @@ def main():
         command += ["--headless", "--script", "res://tests/paving_shape_build.gd", "--", "--report-dir=" + str(output / "native")]
     elif args.suite == "shape-capture":
         command += ["--script", "res://tests/paving_shape_compare.gd", "--", "--report-dir=" + str(output / "native"), "--candidate=" + str(args.candidate)]
+    elif args.suite == "scenic":
+        command += ["--resolution", "1280x720", "--", "--capture", "--scenic", "--report-dir", str(output)]
+        if args.prototype_scenery:
+            command += ["--prototype-scenery=" + args.prototype_scenery]
     elif args.suite == "environment":
         command += ["--script", "res://tests/environment_controller_contract.gd", "--", "--report-dir=" + str(output)]
     else:
@@ -535,7 +620,7 @@ def main():
               "timing_mode": "uncapped_throughput_diagnostic" if args.uncapped else "default_vsync",
               "passed": False, "physical_device_tested": False, "live_audio_verified": False}
     try:
-        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 180)
+        result["process"] = run(command, output, args.suite, 600 if args.suite == "acceptance" else 300 if args.suite == "traversal" else args.duration + 120 if args.suite == "benchmark" else 420 if args.suite == "scenic" else 180)
         result["checks"] = inspect(args.suite, output, args.duration, 0 if args.uncapped else 1)
         result["passed"] = True
     except BaseException:

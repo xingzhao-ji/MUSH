@@ -3,7 +3,7 @@ import argparse, hashlib, json, struct, zlib
 from pathlib import Path
 
 def sha(raw): return hashlib.sha256(raw).hexdigest()
-def decode(path):
+def decode(path, keep_pixels=False):
     raw=path.read_bytes()
     assert len(raw)<20*1024**2 and raw[:8]==b"\x89PNG\r\n\x1a\n"
     offset=8; compressed=[]; width=height=None; types=[]
@@ -41,7 +41,9 @@ def decode(path):
                 value=left if a<=b and a<=c else above if b<=c else diagonal
             row[x]=(row[x]+value)&255
         pixels.extend(row); previous=row
-    return {'bytes':len(raw),'png_sha256':sha(raw),'rgba_sha256':sha(pixels),'all_crcs_checked':True,'dimensions':[width,height]}
+    result={'bytes':len(raw),'png_sha256':sha(raw),'rgba_sha256':sha(pixels),'all_crcs_checked':True,'dimensions':[width,height]}
+    if keep_pixels: result['pixels']=bytes(pixels)
+    return result
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('capture',type=Path);args=parser.parse_args()

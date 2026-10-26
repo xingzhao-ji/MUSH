@@ -456,6 +456,8 @@ func _apply_lighting(rain: float) -> void:
 	if sky!=null:
 		sky.set_shader_parameter("top_color",Color("6c9ec1").lerp(Color("0a1236"),night).lerp(Color("3d5366"),rain*0.35).lerp(Color("667b9e"),_sunset*0.45))
 		sky.set_shader_parameter("horizon_color",Color("b7c6c5").lerp(Color("172844"),night).lerp(Color("8b9b9e"),rain*0.32).lerp(Color("e9b48c"),_sunset*0.65))
+	var prototype: Node = game.get("prototype_scenery") if game!=null else null
+	if is_instance_valid(prototype): prototype.apply_look(environment,light,night,rain,_sunset)
 	var visible_sun: Node3D = world.get("_r36_sun")
 	var sky_root: Node3D = world.get("_r36_root")
 	if is_instance_valid(visible_sun) and is_instance_valid(sky_root):

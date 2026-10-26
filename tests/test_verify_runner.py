@@ -90,6 +90,37 @@ class VerificationReceipts(unittest.TestCase):
                         verify.inspect("home-placement", Path("unused"), 120)
 
 
+class ScenicCaptureCoverage(unittest.TestCase):
+    def test_scenic_requires_every_view_and_appearance(self):
+        views = [{"view": view, "appearance": mood, "passed": True, "file": f"{view}-{mood}.png"}
+                 for mood in verify.SCENIC_APPEARANCES for view in verify.SCENIC_VIEWS]
+        report = {"schema": "mush-scenic-capture/1", "passed": True, "look": "baseline",
+                  "views": views[:-1], "hud": {"file": "ground-path-day-hud.png"}}
+        with patch.object(verify, "read_report", return_value=report):
+            with self.assertRaisesRegex(AssertionError, "Expected every scenic view"):
+                verify.inspect("scenic", Path("unused"), 120)
+
+    def test_pixel_metrics(self):
+        white, black, mid, magenta = b"\xff\xff\xff\xff", b"\x00\x00\x00\xff", b"\x80\x70\x60\xff", b"\xff\x00\xff\xff"
+        self.assertEqual(verify.clipped_fraction(white + black + mid + mid), 0.5)
+        self.assertEqual(verify.changed_fraction(mid * 4, mid * 3 + white), 0.25)
+        self.assertEqual(verify.changed_fraction(mid, b"\x84\x74\x64\xff"), 0.0)
+        self.assertEqual(verify.mask_fraction(magenta + mid + mid + mid), 0.25)
+
+    def test_prototype_gates_reject_hidden_canopy_and_large_hud(self):
+        good = {"canopy": {"ground-path-day": 0.05, "scenic-vista-day": 0.09},
+                "clipped": {"scenic-home-day": 0.01}, "hud": 0.03}
+        self.assertEqual(verify.scenic_gate_failures(good), [])
+        hidden = dict(good, canopy={"ground-path-day": 0.001, "scenic-vista-day": 0.09})
+        self.assertIn("canopy ground-path-day", " ".join(verify.scenic_gate_failures(hidden)))
+        clamped = dict(good, canopy={"ground-path-day": 0.05, "scenic-vista-day": 0.4})
+        self.assertIn("canopy scenic-vista-day", " ".join(verify.scenic_gate_failures(clamped)))
+        loud = dict(good, hud=0.2, clipped={"scenic-home-day": 0.05})
+        failures = " ".join(verify.scenic_gate_failures(loud))
+        self.assertIn("hud", failures)
+        self.assertIn("clipped scenic-home-day", failures)
+
+
 class BenchmarkDrawProgress(unittest.TestCase):
     @staticmethod
     def progress(counts):
