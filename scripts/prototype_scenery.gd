@@ -7,6 +7,8 @@ const SHADER := preload("res://assets/world/far_canopy.gdshader")
 const Route := preload("res://scripts/prototype_route.gd")
 const TERRAIN_SHADER := preload("res://assets/world/far_terrain.gdshader")
 const WATER_SHADER := preload("res://assets/world/far_water.gdshader")
+const LEAF_SHADER := preload("res://assets/world/prototype_leaf.gdshader")
+const SOURCE_LEAF_SHADER := preload("res://lineage/living-scenery37-proposal01/canopy-wind37.gdshader")
 ## Existing detailed project textures (import settings unchanged; moss has no mipmaps).
 const MOSS_TEXTURE := preload("res://assets/world/textures/moss-albedo-proposal-v1.png")
 const ROCK_TEXTURE := preload("res://assets/world/textures/rock_01_diff_1k.jpg")
@@ -74,6 +76,7 @@ var tree_count: int = 0
 var tree_instances: int = 0
 var tree_report: Dictionary = {}
 var carpet_chunks: int = 0
+var leaf_materials_restrained: int = 0
 var diagnostic_skips: PackedStringArray = PackedStringArray()
 var _world: Node3D
 var _ridge_noise: FastNoiseLite
@@ -669,6 +672,7 @@ func _dense_crown(templates: Array) -> Dictionary:
 	# read as bright yellow sheets.
 	for variant: Array in [[0.22, Color("3f5528"), 0.25], [0.16, Color("55602c"), 0.32]]:
 		var soft: Material = original.duplicate()
+		_restrain_leaf(soft)
 		if original is ShaderMaterial:
 			var base: Variant = (original as ShaderMaterial).get_shader_parameter("base_color")
 			var accent: Variant = (original as ShaderMaterial).get_shader_parameter("accent_color")
@@ -689,11 +693,22 @@ func _dense_crown(templates: Array) -> Dictionary:
 	var far_tone: Material = ring_material
 	if ring_material is ShaderMaterial and original is ShaderMaterial:
 		far_tone = ring_material.duplicate()
+		_restrain_leaf(far_tone)
 		for key: String in ["base_color", "accent_color"]:
 			var tone: Variant = (softs[0] as ShaderMaterial).get_shader_parameter(key)
 			if tone is Color: (far_tone as ShaderMaterial).set_shader_parameter(key, tone)
 		_crown_sync.append([ring_material, far_tone])
 	return {"mesh": mesh, "materials": softs, "far_material": far_tone, "scale": ratio}
+
+## Duplicate leaf materials only: switch to the prototype copy of the source leaf shader
+## and damp backlight transmission and specular glare, so backlit leaves stay green.
+func _restrain_leaf(material: Material) -> void:
+	if not material is ShaderMaterial or (material as ShaderMaterial).shader != SOURCE_LEAF_SHADER: return
+	(material as ShaderMaterial).shader = LEAF_SHADER
+	(material as ShaderMaterial).set_shader_parameter("backlight_scale", 0.35)
+	(material as ShaderMaterial).set_shader_parameter("leaf_specular", 0.18)
+	(material as ShaderMaterial).set_shader_parameter("roughness_value", 0.92)
+	leaf_materials_restrained += 1
 
 func _tree_batch(batches: Dictionary, kind: String, mesh: Mesh, material: Material, cell: Vector2i, range_name: String, pose: Transform3D) -> void:
 	var key: String = "%s|%d|%d|%d|%d|%s" % [kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y, range_name]
@@ -1300,7 +1315,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
 	sun.light_color = DAY_SUN.lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
-	sun.light_energy = lerpf(1.45, 0.60, night) * lerpf(1.0, 0.65, rain)
+	sun.light_energy = lerpf(1.55, 0.60, night) * lerpf(1.0, 0.65, rain)
 	sun.rotation_degrees.x = lerpf(-22.0, -27.45, night)
 	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
 	sun.light_angular_distance = 2.2
@@ -1308,7 +1323,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.ambient_light_color = Color("d2d0ca").lerp(Color("8f90c8"), night)
 	environment.ambient_light_energy = 0.32
 	environment.fog_enabled = not _debug_colors
-	environment.fog_light_color = Color("a9b6cf").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
+	environment.fog_light_color = Color("a2b3d4").lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
 	environment.fog_depth_begin = 200.0
@@ -1320,8 +1335,10 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:
-		sky.set_shader_parameter("top_color", Color("4a4aa0").lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
-		sky.set_shader_parameter("horizon_color", Color("ffb88a").lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+		# Less pink: a bluer top and a golden (not peach-pink) horizon, so their blend
+		# reads violet-to-gold rather than one pink wash.
+		sky.set_shader_parameter("top_color", Color("41529f").lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
+		sky.set_shader_parameter("horizon_color", Color("f4c49a").lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
 
 func get_report() -> Dictionary:
 	var colliders: int = find_children("*", "CollisionObject3D", true, false).size() - (route_report.get("colliders", 0) as int)
@@ -1329,4 +1346,4 @@ func get_report() -> Dictionary:
 	for node: GeometryInstance3D in _nodes + _static:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "built_at_startup_only": true, "route": route_report, "traversable": "route corridor only (see route.runtime_tested)", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Only the NaturalRoute ribbon has collision."}
