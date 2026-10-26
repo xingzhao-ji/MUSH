@@ -1997,3 +1997,58 @@ Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at 
 - **Off-screen content:** cannot appear in reflections.
 - **Ripples frozen:** this check isolates camera motion. Live ripple animation and live-display motion are not reviewed.
 - **Still open:** the shader's GPU cost (unresolved), the route benchmark failure, the vista gate and the grove night tone.
+
+## Hero cap craft: organic structure, readable gills, cooler underside (2026-10-26)
+
+**Status: local material improvement; scene art not accepted.** Material only. Rollback: `git revert` this commit.
+
+**Target:** the gaps found against `design-reference/mush-concept-1.png`.
+- **Internal contrast:** the reference caps have a tonal spread (p95−p5) of 111–138; the current cap had 56–86.
+- **Underside hue:** the reference underside is cool lilac (R−B −19); the current one was warm peach (+44 to +66).
+- **Already close:** average brightness and saturation were already within the reference range.
+
+**Change** (`assets/world/far_canopy.gdshader` mode 0): a new `cap_craft` uniform set only on the `HeroCanopy` material. At 0, and for the other six caps, the previous look is exact.
+- **Dome:** structure is applied only on the cap's own colours, so hue identity is kept.
+  - Broad tone zones.
+  - Fine, distance-faded fibrils toward the margin.
+  - A softly shaded edge round each wart.
+  - A faint translucent rim glow.
+- **Gills:** bundles with the angle warped by low-frequency noise, so they are irregular in width and phase. Each bundle has its own brightness, plus finer plates. Gap shadows deepen toward the margin and ease off in the outermost strip.
+- **Underside colour:** cool lilac, with the gill colour and warm glow kept toward the stem. Outer glow is reduced to 45% of its previous level.
+- **Veins:** sparse, broken luminous veins, very faint by day and stronger at night.
+- **Lip:** keeps the cap's own colour. The lip shares t = 0 with the underside edge, so it is separated by its outward-facing normal.
+- **Unchanged:** meshes, the seven footing transforms, stem and root meshes, collision, route, global lighting and other scenery. Triangles and draws are unchanged.
+
+**Evidence** (`cap-pairs` suite, `cap-pairs-20261026-124823-58391`): before and after in the same frame at the rim overlook, the recorded root-approach pose and an under-cap offset (review camera 1.7 m above a slice sample about 160 m from the hero, looking up), by day and night.
+
+| Region (day) | Before | After |
+|---|---|---|
+| Overlook dome, R−B | +39 | +35 (identity kept) |
+| Overlook underside, R−B | +44 | +14 |
+| Root-approach underside, R−B | +63 | +24 |
+| Under-cap gills, R−B | +89 | +29 |
+| Overlook underside, spread | 56 | 59 |
+| Root-approach underside, spread | 96 | 104 |
+| Under-cap gills, spread | 68 | 86 |
+
+- **Night:** the underside reads as luminous lilac (R−B −2 to −16), with veins radiating from the warm stem glow.
+- **By eye (zoomed):** the dome and lip are unchanged; the underside shows soft, irregular gill radiation instead of a flat peach surface.
+
+**Rejected iterations, retained:**
+- `cap-pairs-124250`: the dome colours were re-mixed (hue drift +46 → +22), the even gill fan read as spokes, and the margin showed toothed stripes.
+- `124540`: the lip was recoloured lilac.
+
+**Cost:** primitives and draws are identical at every view.
+- **Timing** (ABBA, 2 × 180 samples after 30 warm-up, 1280×720, full art; GPU timing unavailable): mean wall p50 deltas of −0.44 ms (overlook; the before pair spans 0.37 ms), +2.96 ms (root approach; its before samples were 9.26 and 18.13 ms) and +0.01 ms (under-cap; the before pair spans 0.13 ms).
+- **Unresolved:** the observed variance exceeds any measured shader cost, so the GPU cost is not resolved.
+
+**Scenic** (`scenic-20261026-125034-59700`): fails only the known vista gate (0.0129).
+- Canopy and clipped metrics are unchanged.
+- Footing drift is 0.0 (7/7); 7 canopies and 7 grounded stems.
+
+**Limitations:**
+- **Underside hue:** still warmer than the reference by day (R−B +14 to +29 against −19), because the warm sun lights it.
+- **Night veins:** fairly prominent.
+- **Close views:** the gill fan still reads somewhat regular when seen up close from below.
+- **Dome:** remains a smooth lathe, with no geometric gill depth.
+- **Still open:** the lake shader's GPU cost, the route benchmark **failure** (p95 19.834 ms), the vista gate, the grove night tone and full-scene art acceptance.

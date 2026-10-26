@@ -20,6 +20,11 @@ uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
 // strength every stem renders exactly as before. Matte, soft tonal modulation at several
 // metres, very low-contrast fibre that fades with distance, gentle two-scale normal undulation
 // and a soil/moss blend where the root meets the ground.
+// Hero cap craft (set only on the HeroCanopy material; 0 = exact previous look): organic tone
+// zones, margin fibrils and shaded warts on the dome; readable wandering gill bundles with
+// shadowed gaps, a cool lilac underside with the warm glow kept near the stem, and sparse broken
+// luminous veins (faint by day, stronger at night).
+uniform float cap_craft = 0.0;
 uniform vec4 stem_focus = vec4(0.0);
 uniform float stem_organic = 0.0;
 varying float v_tint;
@@ -85,6 +90,19 @@ void fragment() {
 			albedo = mix(albedo, vec3(0.94, 0.86, 0.90), freckle * 0.45 * smoothstep(0.1, 0.8, s));
 			emit = amber * freckle * 0.10 * glow * (1.0 - s * 0.5) + flesh_rim * smoothstep(0.88, 1.0, s) * 0.10 * glow;
 			rough = 0.6;
+			if (cap_craft > 0.0) {
+				// Structure only, on the cap's own colours (hue identity kept): broad tone zones,
+				// fine distance-faded fibrils toward the margin, and a soft shaded edge round each wart.
+				float zone = fbm(vec2(UV.x * 14.0, s * 5.0) + v_tint * 7.0 + 2.3);
+				float fine = mix(0.5, fbm(vec2(UV.x * 70.0, s * 22.0) + 5.1), aa(UV.x * 70.0));
+				vec3 base = albedo * mix(0.84, 1.14, zone) * mix(0.94, 1.05, fine);
+				float fp = a * 480.0 + fbm(vec2(UV.x * 18.0, s * 4.0)) * 4.0;
+				base *= 1.0 - 0.07 * mix(0.5, 0.5 + 0.5 * sin(fp), aa(fp)) * smoothstep(0.5, 0.95, s);
+				float wart_edge = clamp(spots(skin, 0.44) - spots(skin, 0.32), 0.0, 1.0) * aa(skin.x);
+				base *= 1.0 - 0.15 * wart_edge * smoothstep(0.08, 0.7, s);
+				albedo = mix(albedo, base, cap_craft);
+				emit += flesh_rim * smoothstep(0.9, 1.0, s) * 0.06 * glow * cap_craft;
+			}
 		} else {
 			// Underside: many fine, slightly wandering gills (anti-aliased to an even tone at
 			// distance) with a soft warm glow gathered toward the stem. No radial stripes.
@@ -98,6 +116,32 @@ void fragment() {
 			emit = amber * (0.06 + 0.42 * core * core + 0.05 * lines * core) * glow * pulse;
 			emit += amber * spots(vec2(UV.x * 90.0, t * 14.0), 0.22) * 0.25 * glow * (0.3 + core);
 			rough = 0.85;
+			if (cap_craft > 0.0) {
+				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
+				// Irregular bundles: the angle is warped by low-frequency noise (several bundle widths)
+				// and each bundle gets its own brightness, so the underside never reads as an even fan.
+				float warp = (fbm(vec2(UV.x * 5.0, 0.37)) - 0.5) * 9.0 + (fbm(vec2(UV.x * 16.0, t * 2.0) + 1.7) - 0.5) * 3.0;
+				float bundle_p = a * 48.0 + warp;
+				float bundle = mix(0.5, 0.5 + 0.5 * sin(bundle_p), aa(bundle_p));
+				float bundle_tone = 0.86 + 0.28 * hash21(vec2(floor(bundle_p / 6.2831853), 3.1));
+				float plate_p = a * 180.0 + warp * 3.7;
+				float plate = mix(0.5, 0.5 + 0.5 * sin(plate_p), aa(plate_p));
+				// Gaps deepen toward the margin, easing off in the outermost rim strip.
+				float deep = smoothstep(1.0, 0.15, t) * smoothstep(0.0, 0.08, t);
+				float shade = (1.0 - deep * (0.26 * (1.0 - bundle) + 0.16 * (1.0 - plate))) * mix(1.0, bundle_tone, deep);
+				vec3 flesh_under = mix(vec3(0.62, 0.56, 0.80), gill, smoothstep(0.65, 1.0, t));
+				vec3 under = flesh_under * shade * (0.88 + 0.18 * fbm(vec2(UV.x * 30.0, t * 8.0)));
+				// The rim lip shares t = 0 with the underside's edge; its outward-facing surface keeps
+				// the cap's own colour so the silhouette band is unchanged.
+				float lip = smoothstep(-0.8, -0.4, n.y) * (1.0 - smoothstep(0.0, 0.04, t));
+				albedo = mix(albedo, under, cap_craft * (1.0 - lip));
+				// Warm glow kept toward the stem; sparse, broken luminous veins along a few gills.
+				emit = mix(emit, emit * (0.45 + 0.55 * core), cap_craft);
+				float vein_p = a * 24.0 + fbm(vec2(UV.x * 6.0, t * 3.0) + 9.2) * 4.0;
+				float vein = pow(mix(0.5, 0.5 + 0.5 * sin(vein_p), aa(vein_p)), 8.0) * smoothstep(0.1, 0.7, t);
+				vein *= smoothstep(0.4, 0.62, fbm(vec2(UV.x * 24.0, t * 6.0) + 3.3));
+				emit += mix(amber, vec3(0.85, 0.62, 1.0), 0.5) * vein * (0.05 + 0.25 * night) * glow * cap_craft;
+			}
 		}
 	} else if (mode == 1) {
 		// Stem: broad tonal patches and groove/buttress-valley shading carry the form at

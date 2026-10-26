@@ -281,11 +281,12 @@ func _run() -> void:
 		elif "--shore-pairs" in arguments: await _shore_pairs_scenario()
 		elif "--water-pairs" in arguments: await _water_pairs_scenario()
 		elif "--water-motion" in arguments: await _water_motion_scenario()
+		elif "--cap-pairs" in arguments: await _cap_pairs_scenario()
 		else: await _scenario()
 	_release()
 	var passed := not checks.is_empty()
 	for row: Dictionary in checks: passed = passed and row.passed
-	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else "full"))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
+	var report := {"schema":"mush-slice-traversal/1","mode":"junction-local" if "--junction" in arguments else ("endpoint-local" if "--endpoint" in arguments else ("path-pairs" if "--path-pairs" in arguments else ("understory-pairs" if "--understory-pairs" in arguments else ("rock-pairs" if "--rock-pairs" in arguments else ("stem-pairs" if "--stem-pairs" in arguments else ("look-pairs" if "--look-pairs" in arguments else ("shore-pairs" if "--shore-pairs" in arguments else ("water-pairs" if "--water-pairs" in arguments else ("water-motion" if "--water-motion" in arguments else ("cap-pairs" if "--cap-pairs" in arguments else "full")))))))))),"passed":passed,"checks":checks,"legs":legs,"images":images,"motion_steps":motion_steps,"slice_report":scenery.slice_report if is_instance_valid(scenery) else null,"physics":"fixed 60 Hz steps (--fixed-fps 60), presentation uncapped","input":"Input.action_press move_forward with camera_yaw steering","harness_placements":"boundary probes start from harness-placed tread points; the main and return legs are continuous","manual_feel_verified":false,"motion_quality_verified":false,"performance_measured":false,"saves_reloaded_in_new_process":false}
 	var file := FileAccess.open(output.path_join("slice.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
@@ -899,6 +900,64 @@ func _motion_frame(kind: String, index: int, meta: Dictionary, full: bool) -> Di
 		frame.save_png(output.path_join(full_name))
 		entry["full"] = full_name
 	return entry
+
+## Hero cap craft evidence (diagnostic): previous cap look and the current one in the same frame at
+## the rim-overlook review camera, the recorded root-approach walk pose, and an offset under-cap
+## view (review camera 1.7 m above a slice sample ~160 m from the hero, looking up at the gills),
+## day and night; per-view frame timing in ABBA order by day.
+func _cap_pairs_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	_check("Cap craft is on the hero cap material", scenery.get_report().get("cap_craft", {}).get("enabled", false), scenery.get_report().get("cap_craft"))
+	var hero: Vector3 = scenery.hero.base
+	var pose: Dictionary = scenery.overlook_pose()
+	var review := Camera3D.new()
+	game.add_child(review)
+	var under_i: int = 0
+	for i: int in slice._p.size():
+		if absf(Vector2(slice._p[i].x - hero.x, slice._p[i].z - hero.z).length() - 160.0) < absf(Vector2(slice._p[under_i].x - hero.x, slice._p[under_i].z - hero.z).length() - 160.0): under_i = i
+	var under_at: Vector3 = slice._p[under_i] + Vector3.UP * 1.7
+	var toward: Vector3 = Vector3(hero.x - under_at.x, 0.0, hero.z - under_at.z).normalized()
+	for mood: Array in [["day", false], ["night", true]]:
+		game.world.set_appearance(mood[1], false, false)
+		await get_tree().create_timer(4.5).timeout
+		for view: String in ["overlook", "root-approach", "under-cap"]:
+			if view == "overlook":
+				review.fov = pose.fov
+				review.position = pose.position
+				review.look_at(pose.target)
+				review.make_current()
+			elif view == "under-cap":
+				review.fov = 60.0
+				review.position = under_at
+				review.look_at(under_at + toward * 60.0 + Vector3.UP * 75.0)
+				review.make_current()
+			else:
+				var at := Vector3(386.89, -78.71, -284.54)
+				await _place(at, 0.0)
+				var to_root: float = Vector2(at.x - hero.x, at.z - hero.z).length()
+				var underside: float = rad_to_deg(atan2(float(scenery.hero.position.y) - (at.y + 0.7), to_root))
+				_look(hero, clampf(underside - 28.0, 0.0, 8.0))
+				player.camera_yaw += deg_to_rad(10.0)
+				player._visual.rotation.y = player.camera_yaw
+				player._camera.make_current()
+			await _frames(45)
+			for state: String in ["before", "after"]:
+				scenery.set_cap_craft(state == "after")
+				await _frames(6)
+				await _capture("cap-%s-%s-%s" % [view, state, mood[0]])
+				images[images.size() - 1]["frame"] = {"primitives": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME), "draw_calls": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)}
+			if mood[0] == "day":
+				for state: String in ["before", "after", "after", "before"]:
+					scenery.set_cap_craft(state == "after")
+					timings.append((await _time_view(30, 180)).merged({"pose": view, "state": state}))
+	player._camera.make_current()
+	review.queue_free()
+	scenery.set_cap_craft(true)
+	game.world.set_appearance(false, false, false)
+	var drawn_ok := true
+	for timing: Dictionary in timings: drawn_ok = drawn_ok and int(timing.frames_drawn) == int(timing.samples)
+	_check("Viewpoint timing (uncapped, fixed-step; NOT the route benchmark): engine drew every sampled frame", not timings.is_empty() and drawn_ok, timings)
 
 ## Visible forest-carpet clumps for the current camera: in range, in front, projected box share
 ## >= 0.0003 of the frame, centre not hidden by rendered terrain; sorted by screen share.
