@@ -1380,3 +1380,19 @@ LOD walk:
 - **Events:** 4 dense-crown switch events while walking the route.
 - **Frames:** consecutive frames at the nominal 100 m crossings show no visible pop.
 - **Limit:** Godot applies the switch with a 12 m hysteresis margin, so these stills may miss the switch moment. Popping is unconfirmed either way, and continuous manual motion review remains unverified.
+
+## Near-crown LOD transition check (2026-10-26, diagnostic only)
+
+The `lod-check` suite measures the dense-crown switch for the near batch closest to the route (25 crowns):
+- **Method:** a fixed-orientation camera moves 130 → 70 → 130 m in 2 m steps, with world and environmental motion frozen.
+- **Observed switch distances:**
+  - on approach, between 96 and 94 m, with primitives going 510,880 → 826,020;
+  - on retreat, between 118 and 120 m.
+
+  This is Godot's hysteresis around the 100 m limit with a 12 m margin. Frames on both sides of each switch are kept.
+- **Pop at one identical 95 m pose:**
+  - **Before the fix** (`reports/lod-check-20261026-041514-77639`): 1.30% of pixels in the tree's screen rectangle changed by more than 24/255, against a 0.08% noise floor. Visually, the far crowns were lighter, so the switch read as the trees darkening and filling in.
+- **Fix:** the far version of each near tree now uses a darker duplicate of its own ring material toned like the dense crowns.
+  - **After the fix** (`reports/lod-check-20261026-041612-77706`): 1.24% changed against a 0.07% noise floor. Visually the tone now matches, and the remaining difference is leaf density and pattern.
+- **Route:** **18/18** after the fix (`reports/route-20261026-041648-77760`).
+- **Limits:** these are stills with motion frozen. Continuous manual motion review is still unverified.

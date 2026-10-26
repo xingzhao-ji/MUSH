@@ -679,7 +679,21 @@ func _dense_crown(templates: Array) -> Dictionary:
 		softs.append(soft)
 	var ratio: float = small.get_aabb().size.length() / maxf(mesh.get_aabb().size.length(), 0.001)
 	tree_report["crown_selection"] = {"chosen": chosen[3], "ring_triangles": small_tris, "volume_scale": ratio}
-	return {"mesh": mesh, "materials": softs, "scale": ratio}
+	# Far LOD of near trees: the ring crown with the same darker tone as the dense crowns,
+	# so the 100 m switch changes leaf density, not colour.
+	var ring_material: Material = null
+	for part: Dictionary in templates[0]:
+		if part.kind == "LayeredCanopies":
+			ring_material = part.material
+			break
+	var far_tone: Material = ring_material
+	if ring_material is ShaderMaterial and original is ShaderMaterial:
+		far_tone = ring_material.duplicate()
+		for key: String in ["base_color", "accent_color"]:
+			var tone: Variant = (softs[0] as ShaderMaterial).get_shader_parameter(key)
+			if tone is Color: (far_tone as ShaderMaterial).set_shader_parameter(key, tone)
+		_crown_sync.append([ring_material, far_tone])
+	return {"mesh": mesh, "materials": softs, "far_material": far_tone, "scale": ratio}
 
 func _tree_batch(batches: Dictionary, kind: String, mesh: Mesh, material: Material, cell: Vector2i, range_name: String, pose: Transform3D) -> void:
 	var key: String = "%s|%d|%d|%d|%d|%s" % [kind, mesh.get_instance_id(), material.get_instance_id(), cell.x, cell.y, range_name]
@@ -777,7 +791,7 @@ func _add_trees(rng: RandomNumberGenerator) -> void:
 		for part: Dictionary in template:
 			if near and part.kind == "LayeredCanopies":
 				# Far LOD: the original ring crown, drawn only beyond NEAR_CROWN_RANGE.
-				_tree_batch(batches, part.kind, part.mesh, part.material, cell, "far", root * part.local)
+				_tree_batch(batches, part.kind, part.mesh, near_crown.far_material, cell, "far", root * part.local)
 				# Near: the dense cluster, turned and tilted per crown so leaves do not align.
 				var turn := Basis(Vector3.UP, crown_rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, crown_rng.randf_range(-0.35, 0.35)) * Basis(Vector3.FORWARD, crown_rng.randf_range(-0.35, 0.35))
 				var dense := Transform3D(part.local.basis * Basis.from_scale(Vector3.ONE * float(near_crown.scale)) * turn, part.local.origin)
