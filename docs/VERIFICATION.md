@@ -1713,3 +1713,43 @@ Lower frame (y ≥ 400, avatar excluded):
 - **Shader cost:** a few more noise lookups per terrain fragment inside the region; frame time not measured.
 - **Benchmark not rerun:** the route benchmark still **fails** (p95 18.086 ms).
 - **Still open:** the vista coverage gate and the leaf-density change at 94–96 m and 118–120 m. Manual and device checks are not done, and the overall art is not accepted.
+
+## Hero stem organic finish (2026-10-26)
+
+**Status: modest local improvement; scene art not accepted.** Material only. Rollback: `git revert` this commit.
+
+**Change** (`assets/world/far_canopy.gdshader`, stem branch; values in `scripts/prototype_scenery.gd`): new `stem_focus` and `stem_organic` uniforms on the shared `CanopyStems` material.
+- **Scope:** only within 200 m of the hero base (the nearest other giant is about 395 m away). At strength 0 every stem renders exactly as before.
+- **Tone:** soft modulation at several metres, scaled equally vertically and horizontally so it doesn't band.
+- **Fibre:** very low-contrast, fading with distance.
+- **Finish:** matte (roughness 1.0, specular 0.02).
+- **Surface:** gentle normal undulation at two scales.
+- **Ground contact:** a soil/moss blend at the root.
+- **Unchanged:** mesh, silhouette, footings, collision, route, anchors, global lighting, and the cap and collar glow.
+
+**Evidence** (`stem-pairs` suite, `stem-pairs-20261026-102434-31432`): before (strength 0) and after in the same frame, at the root approach and the rim-overlook camera, day and night.
+
+| Stem region | Brightness (luma), before → after | Vertical-banding ratio |
+|---|---|---|
+| Root approach | 126.1 → 120.4 | 3.85 → 3.02 |
+| Overlook | 143.5 → 139.4 | 4.13 → 3.66 |
+
+- **Control:** the second giant's stem in the same frame is unchanged.
+- **Night:** dimmer, with no glow added.
+
+**Timing** (1280×720, full art, uncapped, fixed step, 30 warm-up + 180 samples, all drawn; GPU time unavailable on this Metal driver; not the route benchmark):
+
+| View | Wall p50 / p95 (ms), before → after |
+|---|---|
+| Root approach | 8.308 / 9.945 → 8.314 / 10.208 |
+| Overlook | 8.063 / 9.570 → 8.287 / 9.705 |
+
+Earlier runs measured p50 differences of +0.015 to +0.077 ms, so the cost is at most about 0.2 ms; this method cannot resolve it further. Primitives and draws are identical.
+
+**Scenic** (`scenic-20261026-102517-31483`): fails only the known vista coverage gate (0.0130). Footing drift 0.0 (7/7), and geometry and collision are unchanged.
+
+**Limitations:**
+- **Subtle at overlook distance:** the flutes and buttress grooves are geometry.
+- **Not the references' look:** no luminous veining.
+- **Not captured:** rain.
+- **Still open:** the route benchmark **fails** (p95 18.086 ms), the vista gate fails, and leaf density visibly changes at 94–96 m and 118–120 m.

@@ -16,6 +16,12 @@ uniform vec3 flesh : source_color = vec3(0.70, 0.52, 0.72);
 uniform vec3 flesh_rim : source_color = vec3(0.88, 0.62, 0.66);
 uniform vec3 gill : source_color = vec3(0.86, 0.70, 0.66);
 uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
+// Hero stem organic finish, only within stem_focus (x, z, radius) of the hero base; at zero
+// strength every stem renders exactly as before. Matte, soft tonal modulation at several
+// metres, very low-contrast fibre that fades with distance, gentle two-scale normal undulation
+// and a soil/moss blend where the root meets the ground.
+uniform vec4 stem_focus = vec4(0.0);
+uniform float stem_organic = 0.0;
 varying float v_tint;
 varying float v_cavity;
 varying vec3 v_col;
@@ -111,6 +117,25 @@ void fragment() {
 		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.08 * glow;
 		rough = 0.96;
 		spec = 0.06;
+		float hero_w = 0.0;
+		if (stem_organic > 0.0 && stem_focus.z > 0.0) hero_w = stem_organic * (1.0 - smoothstep(stem_focus.z * 0.8, stem_focus.z, length(v_world.xz - stem_focus.xy)));
+		if (hero_w > 0.0) {
+			float patchy = fbm(v_world.xz * 0.06 + vec2(v_world.y * 0.03));
+			// Patches roughly as tall as they are wide on the stem (no vertical bands).
+			float drift = fbm(vec2(UV.x * 9.0, v_world.y * 0.045) + 3.1);
+			vec3 tone = mix(vec3(0.86, 0.82, 0.80), vec3(1.08, 1.01, 0.92), patchy) * mix(0.93, 1.04, drift);
+			float fine = mix(0.5, fbm(vec2(UV.x * 140.0, UV.y * 2.0)), aa(UV.x * 140.0));
+			tone *= 0.97 + 0.06 * fine;
+			float soil = 1.0 - smoothstep(0.0, 0.10, UV.y + (fbm(vec2(UV.x * 12.0, 2.0)) - 0.5) * 0.06);
+			vec3 organic = albedo * tone;
+			organic = mix(organic, mix(vec3(0.30, 0.25, 0.19), moss_mean, 0.35), soil * 0.7);
+			albedo = mix(albedo, organic, hero_w);
+			rough = mix(rough, 1.0, hero_w);
+			spec = mix(spec, 0.02, hero_w);
+			vec3 swell = vec3(fbm(v_world.zy * 0.08) - 0.5, 0.0, fbm(v_world.xy * 0.08 + 5.0) - 0.5);
+			vec3 velvet = vec3(fbm(v_world.zy * 0.35 + 2.0) - 0.5, 0.0, fbm(v_world.xy * 0.35 + 9.0) - 0.5);
+			NORMAL = normalize((VIEW_MATRIX * vec4(normalize(n + (swell * 0.14 + velvet * 0.10) * hero_w), 0.0)).xyz);
+		}
 	} else if (mode == 2) {
 		vec3 w = pow(abs(n), vec3(4.0));
 		w /= (w.x + w.y + w.z);
