@@ -268,7 +268,7 @@ class LeafPairsReport(unittest.TestCase):
 
 class GeologyReport(unittest.TestCase):
     def test_missing_night_view_fails(self):
-        files = [f"geo-{view}-day.png" for view in ("overlook", "knoll", "shore", "side", "overview", "basin")]
+        files = [f"geo-{view}-day.png" for view in ("overlook", "knoll", "shore", "side", "overview", "basin", "hero")]
         report = {"schema": "mush-slice-traversal/1", "mode": "geology", "passed": True, "legs": [],
                   "checks": [{"label": "wall", "passed": True}], "images": [{"file": name} for name in files]}
         with patch.object(verify, "read_report", return_value=report):

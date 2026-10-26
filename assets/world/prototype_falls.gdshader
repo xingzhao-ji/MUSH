@@ -28,14 +28,21 @@ float fbm(vec2 p) {
 void fragment() {
 	float t = shimmer_time * shimmer_amount;
 	if (stream) {
+		// Shallow flowing water: ripple normals advected downstream (so sun and sky highlights
+		// depend on view, light and ripples), dark clear body that lets the bed show at steep
+		// view angles and reflects at grazing ones, foam only where the reach steps down.
 		float across = abs(UV.x - 0.5) * 2.0;
-		float flow = fbm(vec2(UV.x * 4.0, UV.y * 6.0 - t * 0.6));
-		float foam = smoothstep(0.55, 0.85, flow) * (0.25 + 0.75 * COLOR.r);
-		ALBEDO = mix(vec3(0.16, 0.38, 0.40), vec3(0.88, 0.93, 0.95), foam);
-		ALPHA = clamp((0.72 + 0.25 * foam) * (1.0 - smoothstep(0.6, 1.0, across)), 0.0, 1.0);
-		ROUGHNESS = 0.15;
+		vec2 q = vec2(UV.x * 3.0, UV.y * 5.0 - t * 0.7);
+		float e = 0.04;
+		float c0 = fbm(q);
+		vec2 grad = vec2(fbm(q + vec2(e, 0.0)) - c0, fbm(q + vec2(0.0, e)) - c0) / e;
+		NORMAL_MAP = normalize(vec3(-grad * mix(0.08, 0.2, COLOR.r), 1.0)) * 0.5 + 0.5;
+		float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
+		float foam = smoothstep(0.6, 0.85, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * COLOR.r;
+		ALBEDO = mix(vec3(0.03, 0.09, 0.10), vec3(0.85, 0.9, 0.92), foam);
+		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across));
+		ROUGHNESS = mix(0.06, 0.5, foam);
 		SPECULAR = 0.5;
-		EMISSION = vec3(0.02, 0.04, 0.05) * night * foam;
 	} else if (mist) {
 		vec2 c = (UV - vec2(0.5, 0.55)) * vec2(2.0, 2.4);
 		float puff = fbm(UV * 3.0 + vec2(t * 0.02, -t * 0.04));
@@ -53,6 +60,5 @@ void fragment() {
 		ALPHA = clamp(mix(0.5, 0.95, streak) * edge * smoothstep(0.0, 0.03, UV.y), 0.0, 1.0);
 		ROUGHNESS = 0.35;
 		SPECULAR = 0.4;
-		EMISSION = vec3(0.03, 0.04, 0.05) * night * streak;
 	}
 }

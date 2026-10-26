@@ -2378,6 +2378,58 @@ func _riparian(x: float, z: float) -> float:
 	if _basin.x != INF: wet = maxf(wet, 1.0 - smoothstep(BASIN_RADIUS * 1.0, BASIN_RADIUS * 1.6, Vector2(x, z).distance_to(Vector2(_basin.x, _basin.y))))
 	return wet
 
+## Water/terrain clearance over the whole ribbon surface, not only its vertices: each ribbon
+## triangle is sampled on a barycentric grid (15 points) and compared with the rendered coarse
+## terrain triangle beneath it. Clearance is the vertical gap times the terrain normal's y, i.e. the
+## separation along the terrain normal (penetration depth when negative, as in Millington 13.2.1).
+## Samples over the lake's own water (terrain below LAKE_Y) are counted separately.
+func _water_clearance(mesh: ArrayMesh) -> Dictionary:
+	var arrays: Array = mesh.surface_get_arrays(0)
+	var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var samples: int = 0
+	var buried: int = 0
+	var worst: float = INF
+	var worst_at := Vector3.ZERO
+	var over_max: float = -INF
+	var over_lake: int = 0
+	var gaps := PackedFloat32Array()
+	for t: int in range(0, idx.size(), 3):
+		var a: Vector3 = v[idx[t]]
+		var b: Vector3 = v[idx[t + 1]]
+		var c: Vector3 = v[idx[t + 2]]
+		for i: int in 5:
+			for j: int in 5 - i:
+				var w1: float = float(i) / 4.0
+				var w2: float = float(j) / 4.0
+				var q: Vector3 = a * (1.0 - w1 - w2) + b * w1 + c * w2
+				var ground: float = _coarse_height(q.x, q.z)
+				if ground < LAKE_Y:
+					over_lake += 1
+					continue
+				var dx: float = _coarse_height(q.x + 0.5, q.z) - ground
+				var dz: float = _coarse_height(q.x, q.z + 0.5) - ground
+				var ny: float = 1.0 / sqrt(1.0 + (dx * dx + dz * dz) / 0.25)
+				var gap: float = (q.y - ground) * ny
+				samples += 1
+				gaps.append(gap)
+				if gap < -0.02: buried += 1
+				if gap < worst:
+					worst = gap
+					worst_at = q
+				over_max = maxf(over_max, q.y - ground)
+	gaps.sort()
+	return {"samples": samples, "samples_over_lake_water": over_lake, "buried_samples": buried, "min_clearance_along_normal_m": worst, "min_at": _v3(worst_at),
+		"p05_clearance_m": gaps[int(gaps.size() * 0.05)] if gaps.size() > 0 else 0.0, "median_clearance_m": gaps[gaps.size() / 2] if gaps.size() > 0 else 0.0, "max_over_bed_m": over_max}
+
+## Labelled hero view (a new camera): from the walkable knoll at the route's end, eye height,
+## looking north-west across the falls corner of the West Wall, so the existing sun (east-north-
+## east, 22 degrees) rakes the wall from the right instead of lighting it head-on.
+func hero_view_pose() -> Dictionary:
+	if not is_instance_valid(route) or not route.valid: return {}
+	var eye: Vector3 = route.get_end_point() + Vector3.UP * 1.7
+	return {"position": eye, "target": Vector3(-560.0, 170.0, -560.0), "fov": 55.0}
+
 ## Labelled basin view (a new camera): on the stream's vegetation-free valley, 40 m over
 ## the rendered floor, looking upstream at the basin and the falls' foot. Empty without a stream.
 func stream_view_pose() -> Dictionary:
@@ -2531,7 +2583,16 @@ func _add_wall() -> void:
 				var present: float = smoothstep(-0.15, 0.15, _hill_noise.get_noise_2d(float(sample.s) * 0.45, bench.z * 13.0))
 				if q < level: drip = maxf(drip, present * (1.0 - smoothstep(0.0, 0.14, level - q)))
 			var facet: Vector3 = _wall_facet(float(sample.s), q, h)
-			points.append([_wall_face_offset(sample, q, h, y), y, 1.0 - smoothstep(0.9, 1.0, q), q, drip, facet.y, facet.z])
+			var here: float = _wall_face_offset(sample, q, h, y)
+			# Occlusion from the actual geometry: how far this point sits behind the mean of its
+			# neighbours along the wall (+-24 m) and up/down the face (+-6% of height), i.e. inside
+			# a gully, recess, dihedral or under a bench overhang. Normalised to 0..1 at 12 m.
+			var i_s: int = _wall.find(sample)
+			var left: Dictionary = _wall[maxi(i_s - 3, 0)]
+			var right: Dictionary = _wall[mini(i_s + 3, _wall.size() - 1)]
+			var around: float = (_wall_face_offset(left, q, h, y) + _wall_face_offset(right, q, h, y) + _wall_face_offset(sample, clampf(q - 0.06, 0.0, 1.0), h, y - 0.06 * h) + _wall_face_offset(sample, clampf(q + 0.06, 0.0, 1.0), h, y + 0.06 * h)) * 0.25
+			var occlusion: float = clampf((around - here) / 12.0, 0.0, 1.0)
+			points.append([here, y, 1.0 - smoothstep(0.9, 1.0, q), q, drip, facet.y, maxf(facet.z, occlusion)])
 		var shoulder: float = points[points.size() - 1][0]
 		# Crest: setbacks and heights vary along the wall, so the rows behind the shoulder form an
 		# irregular rounded upland instead of parallel terraces running the whole length.
@@ -2695,76 +2756,66 @@ func _add_falls() -> Dictionary:
 ## evidence in stream_report.
 func _add_stream_water(pool_y: float) -> void:
 	if _stream.size() < 3: return
+	# Water sheet draped on the rendered bed: rows every 2 m along the channel, 7 columns 2 m
+	# apart across it, each vertex WATER_DEPTH above the rendered coarse terrain (lake level over
+	# the lake's own water). The sheet's planar facets are 2 m across, so the terrain's creases
+	# beneath them deviate far less than the offset; _water_clearance verifies the whole surface.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var along: float = 0.0
+	var depth: float = 0.35
+	var columns: int = 7
+	var half: float = 6.0
+	var spacing: float = 2.0
+	var length: float = STREAM_STEP * float(_stream.size() - 1)
+	var rows: int = int(length / spacing) + 1
+	var steep_max: float = 0.0
 	var floating: float = 0.0
 	var above_banks: float = -INF
 	var worst: Array = []
-	var steep_max: float = 0.0
-	var last_y: float = pool_y
-	# Thalweg: at each point the water follows the lowest rendered ground across the section
-	# (+-12 m), smoothed, since the 10-16 m mesh can put the low line beside the planned path.
-	var shifts: PackedFloat32Array = []
-	for i: int in _stream.size():
-		var c0 := Vector2(_stream[i].x, _stream[i].z)
-		var t0: Vector2 = (Vector2(_stream[mini(i + 1, _stream.size() - 1)].x, _stream[mini(i + 1, _stream.size() - 1)].z) - Vector2(_stream[maxi(i - 1, 0)].x, _stream[maxi(i - 1, 0)].z)).normalized()
-		var s0 := Vector2(-t0.y, t0.x)
-		var best: float = 0.0
-		var low: float = INF
-		for o: float in [-12.0, -6.0, 0.0, 6.0, 12.0]:
-			var g: float = _coarse_height(c0.x + s0.x * o, c0.y + s0.y * o)
-			if g < low - 0.05:
-				low = g
-				best = o
-		shifts.append(0.0 if i == 0 else best)
-	var smoothed: PackedFloat32Array = shifts.duplicate()
-	for i: int in range(1, shifts.size() - 1): smoothed[i] = (shifts[i - 1] + shifts[i] + shifts[i + 1]) / 3.0
-	for i: int in _stream.size():
-		var t: Vector2 = (Vector2(_stream[mini(i + 1, _stream.size() - 1)].x, _stream[mini(i + 1, _stream.size() - 1)].z) - Vector2(_stream[maxi(i - 1, 0)].x, _stream[maxi(i - 1, 0)].z)).normalized()
-		var side := Vector2(-t.y, t.x)
-		var c := Vector2(_stream[i].x, _stream[i].z) + side * smoothed[i]
-		var floor_y: float = _coarse_height(c.x, c.y)
-		var half: float = lerpf(6.0, 10.0, float(i) / float(_stream.size() - 1))
-		# Banks are measured beyond the flat floor (the 10-16 m mesh renders that floor flat).
-		var bank_low: float = minf(_coarse_height(c.x + side.x * (STREAM_BED + 6.0), c.y + side.y * (STREAM_BED + 6.0)), _coarse_height(c.x - side.x * (STREAM_BED + 6.0), c.y - side.y * (STREAM_BED + 6.0)))
-		# Water sits just over the rendered floor and under its lower bank, never above the pool
-		# and never below the lake.
-		# Follows the rendered floor (which undulates slightly along the planned, monotonic bed);
-		# a strict no-rise cap buried whole reaches under that floor.
-		var y: float = clampf(minf(floor_y + 0.45, bank_low - 0.15), LAKE_Y + 0.05, pool_y)
-		if i == 0: y = minf(pool_y - 0.05, bank_low - 0.15)
-		floating = maxf(floating, y - floor_y)
-		# Water must lie below its banks (the rendered ground just beyond the ribbon), except where
-		# the channel has reached the lake's own water.
-		var in_lake: bool = c.distance_to(LAKE_CENTER) < 290.0 and floor_y < LAKE_Y
-		if not in_lake:
-			var bank: float = bank_low
-			if y - bank > above_banks: worst = [snappedf(c.x, 0.1), snappedf(c.y, 0.1), snappedf(y, 0.01), snappedf(bank, 0.01), snappedf(floor_y, 0.01), snappedf(c.distance_to(LAKE_CENTER), 0.1), i]
-			above_banks = maxf(above_banks, y - bank)
-		var steep: float = clampf((last_y - y) / STREAM_STEP * 2.0, 0.0, 1.0)
+	var last_mid: float = pool_y
+	for r: int in rows:
+		var d: float = minf(float(r) * spacing, length)
+		var seg: int = mini(int(d / STREAM_STEP), _stream.size() - 2)
+		var f: float = (d - float(seg) * STREAM_STEP) / STREAM_STEP
+		var a := Vector2(_stream[seg].x, _stream[seg].z)
+		var b := Vector2(_stream[seg + 1].x, _stream[seg + 1].z)
+		var centre: Vector2 = a.lerp(b, f)
+		var tangent: Vector2 = (b - a).normalized()
+		var side := Vector2(-tangent.y, tangent.x)
+		var mid_ground: float = _coarse_height(centre.x, centre.y)
+		var mid: float = maxf(mid_ground + depth, LAKE_Y + 0.05)
+		var steep: float = clampf((last_mid - mid) / spacing * 1.2, 0.0, 1.0)
 		steep_max = maxf(steep_max, steep)
-		last_y = y
-		for k: int in 3:
-			var off: float = (float(k) / 2.0 - 0.5) * 2.0 * half
-			var at: Vector2 = c + side * off
-			st.set_uv(Vector2(float(k) / 2.0, along / 40.0))
+		last_mid = mid
+		var bank_low: float = minf(_coarse_height(centre.x + side.x * (half + 4.0), centre.y + side.y * (half + 4.0)), _coarse_height(centre.x - side.x * (half + 4.0), centre.y - side.y * (half + 4.0)))
+		if mid_ground >= LAKE_Y and mid - bank_low > above_banks:
+			above_banks = mid - bank_low
+			worst = [snappedf(centre.x, 0.1), snappedf(centre.y, 0.1), snappedf(mid, 0.01), snappedf(bank_low, 0.01)]
+		for k: int in columns:
+			var off: float = (float(k) / float(columns - 1) * 2.0 - 1.0) * half
+			var at: Vector2 = centre + side * off
+			var ground: float = _coarse_height(at.x, at.y)
+			var y: float = maxf(ground + depth, LAKE_Y + 0.05)
+			floating = maxf(floating, y - ground if ground >= LAKE_Y else 0.0)
+			st.set_uv(Vector2(float(k) / float(columns - 1), d / 40.0))
 			st.set_color(Color(steep, 0.0, 0.0))
 			st.add_vertex(Vector3(at.x, y, at.y))
-		along += STREAM_STEP
-	for j: int in _stream.size() - 1:
-		for k: int in 2:
-			var a: int = j * 3 + k
-			st.add_index(a); st.add_index(a + 3); st.add_index(a + 1)
-			st.add_index(a + 1); st.add_index(a + 3); st.add_index(a + 4)
+	for r: int in rows - 1:
+		for k: int in columns - 1:
+			var i: int = r * columns + k
+			st.add_index(i); st.add_index(i + columns); st.add_index(i + 1)
+			st.add_index(i + 1); st.add_index(i + columns); st.add_index(i + columns + 1)
 	st.generate_normals()
+	st.generate_tangents()
 	var water := ShaderMaterial.new()
 	water.shader = FALLS_SHADER
 	water.set_shader_parameter("stream", true)
 	_geology_materials.append(water)
+	var ribbon_mesh: ArrayMesh = st.commit()
+	stream_report["clearance"] = _water_clearance(ribbon_mesh)
 	var node := MeshInstance3D.new()
 	node.name = "WestFallsOutlet"
-	node.mesh = st.commit()
+	node.mesh = ribbon_mesh
 	node.material_override = water
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(node)
@@ -2790,8 +2841,9 @@ func _add_stream_water(pool_y: float) -> void:
 		blocked = maxf(blocked, _coarse_height(q.x, q.z) - q.y)
 	var mouth: Vector3 = _stream[_stream.size() - 1]
 	var joins: bool = Vector2(mouth.x, mouth.z).distance_to(LAKE_CENTER) < 290.0 and _coarse_height(mouth.x, mouth.z) < LAKE_Y
-	stream_report.merge({"built": true, "ribbon_triangles": (_stream.size() - 1) * 4, "water_depth_over_rendered_floor_max_m": floating, "water_above_banks_max_m": above_banks, "worst_bank_point_x_z_water_bank_floor_lakedist_index": worst, "joins_lake_water": joins, "steepest_reach": steep_max, "route_slice_min_distance_m": route_gap, "crag_base_carve_m": crag_carve, "shore_sightline_max_terrain_above_m": blocked, "pool_visible_from_shore_eye": blocked < 0.0, "mouth": _v3(mouth), "collision": "none (far layer)"}, true)
-	stream_report["passed"] = route_gap > 60.0 and absf(crag_carve) < 5.0 and above_banks < 0.5 and joins and bool(stream_report.get("reached_lake", false))
+	stream_report.merge({"built": true, "ribbon_triangles": (rows - 1) * (columns - 1) * 2, "sheet": {"rows": rows, "columns": columns, "spacing_m": spacing, "depth_over_rendered_bed_m": depth}, "water_depth_over_rendered_floor_max_m": floating, "water_above_banks_max_m": above_banks, "worst_bank_point_x_z_water_bank_floor_lakedist_index": worst, "joins_lake_water": joins, "steepest_reach": steep_max, "route_slice_min_distance_m": route_gap, "crag_base_carve_m": crag_carve, "shore_sightline_max_terrain_above_m": blocked, "pool_visible_from_shore_eye": blocked < 0.0, "mouth": _v3(mouth), "collision": "none (far layer)"}, true)
+	var clear: Dictionary = stream_report["clearance"]
+	stream_report["passed"] = route_gap > 60.0 and absf(crag_carve) < 5.0 and joins and bool(stream_report.get("reached_lake", false)) and int(clear.buried_samples) == 0 and float(clear.max_over_bed_m) < 1.0
 
 ## Alpine ice behind the falls: a snow peak standing behind the notch and a steep, fractured
 ## ice tongue descending from its flank through the widened notch to an ice cliff just above

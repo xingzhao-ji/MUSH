@@ -1045,11 +1045,13 @@ func _geology_scenario() -> void:
 	# Basin view (new, labelled camera): mid-ravine on the outlet stream looking upstream at the
 	# basin; without the landmark (before run) a fixed fallback from the lake's west shore.
 	var basin_pose: Dictionary = scenery.stream_view_pose()
+	# Hero view (new, labelled camera): walkable knoll, looking north-west across the light.
+	var hero_pose: Dictionary = scenery.hero_view_pose()
 	var basin_xz := Vector2(-577.8, -448.5)
 	var basin_eye: Vector3 = basin_pose.get("position", Vector3(-150.0, scenery.terrain_height(-150.0, -400.0) + 8.0, -400.0))
 	var basin_aim: Vector3 = basin_pose.get("target", Vector3(basin_xz.x, 100.0, basin_xz.y))
 	var views: Array = [["overlook", pose.position, pose.target, pose.fov], ["knoll", knoll, Vector3(-60.0, 60.0, -700.0), 60.0], ["shore", shore, falls_aim, 60.0],
-		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0], ["basin", basin_eye, basin_aim, 60.0]]
+		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0], ["basin", basin_eye, basin_aim, 60.0], ["hero", hero_pose.get("position", knoll), hero_pose.get("target", Vector3(-560.0, 170.0, -560.0)), 55.0]]
 	var review := Camera3D.new()
 	review.far = 2600.0
 	game.add_child(review)
@@ -1057,8 +1059,8 @@ func _geology_scenario() -> void:
 		game.world.set_appearance(mood[1], mood[2], false)
 		await get_tree().create_timer(4.5).timeout
 		for view: Array in views:
-			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore"]: continue
-			if mood[0] == "rain" and not view[0] in ["overlook", "shore"]: continue
+			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore", "hero"]: continue
+			if mood[0] == "rain" and not view[0] in ["overlook", "shore", "hero"]: continue
 			scenery.set_overview(view[0] == "overview")
 			review.fov = view[3]
 			review.position = view[1]
@@ -1071,7 +1073,7 @@ func _geology_scenario() -> void:
 	player._camera.make_current()
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
-	_check("Geology views captured (day 6 incl. the new basin view, night 3, rain 2)", images.size() == 11, images.size())
+	_check("Geology views captured (day 7 incl. the new basin and hero views, night 4, rain 3)", images.size() == 14, images.size())
 
 ## Controlled geology diagnosis at the shore and side poses (day): the same frame in the final
 ## rendering, without depth fog, as unlit albedo, as world normals, as uniform grey lit by the

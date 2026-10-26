@@ -3,7 +3,8 @@ render_mode cull_back;
 // West Wall granite (prototype geology landmark). UV = (metres along the toe, metres above the
 // toe); COLOR.r = 1 on the sheer face, 0 on the crest; COLOR.g = wetness near the falls;
 // COLOR.b = height fraction up the face; COLOR.a = drip (just below a ledge lip);
-// UV2.x = facet panel tone (0 weathered dark .. 1 freshly spalled pale), UV2.y = fracture recess.
+// UV2.x = facet panel tone (0 weathered dark .. 1 freshly spalled pale), UV2.y = occlusion (fracture
+// recess or geometric concavity: gullies, dihedrals, bench undersides).
 // Pale warm-grey slabs, faint exfoliation sheets, dark vertical water streaks hanging from the
 // crest (strongest around the falls), and dark vegetation only on ledges and the crest.
 uniform float night = 0.0;
@@ -65,7 +66,7 @@ void fragment() {
 	float recess = world_mapped ? 0.0 : UV2.y;
 	float slab = fbm(vec2(s * 0.004, h * 0.003));
 	vec3 rock = mix(vec3(0.21, 0.21, 0.22), vec3(0.45, 0.42, 0.38), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
-	rock = mix(rock, vec3(0.11, 0.12, 0.13), recess * 0.85 * face);
+	rock = mix(rock, vec3(0.11, 0.12, 0.13), recess * 0.35 * face);
 	// Mid-scale structure (10-80 m, the band that resolves at 0.3-1.2 km): irregular fracture
 	// plates (domain-warped Worley cells, ~55 x 80 m), each with its own tone and tilt; dark
 	// fracture lines along plate borders that fade in and out (fractures terminate); a few long,
@@ -128,8 +129,13 @@ void fragment() {
 		float scale = inversesqrt(max(max(dot(t_along, t_along), dot(t_up, t_up)), 1e-12));
 		NORMAL = normalize(NORMAL + (t_along * scale * (block - 0.5) * 0.55 + t_up * scale * (block2 - 0.5) * 0.4) * face);
 	}
-	ROUGHNESS = mix(mix(0.84, 0.6, max(rain, wet * face * 0.5)), 0.7, snow);
-	SPECULAR = 0.3;
+	// Wet rock (falls spray and ledge drips, or rain) is darker and glossier than dry rock.
+	float wetness = max(rain * 0.6, max(wet, streak * 0.8) * face) * (1.0 - snow);
+	ROUGHNESS = mix(mix(0.84, 0.28, wetness), 0.7, snow);
+	SPECULAR = mix(0.3, 0.5, wetness);
+	// Form shadows from the geometry's concavities: ambient and, partly, direct light.
+	AO = 1.0 - recess * 0.75 * face;
+	AO_LIGHT_AFFECT = 0.55;
 	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 3) { ALBEDO = vec3(0.5); }

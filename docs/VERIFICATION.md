@@ -2536,3 +2536,45 @@ The visible images are `geology-20261026-150353-39697`. `150607` is the same sta
 - **Stream water:** a simple unlit-flow ribbon, with no edge foam on the banks and no sound.
 - **Scenic:** not rerun. The canopy coverage gate is unaffected (still failing, 0.0129); footings are checked in this suite.
 - **Still open:** the route benchmark **failure** (p95 19.834 ms); the draw-loss trigger is unresolved.
+
+## Dense water clearance, draped stream, form shadows, hero view (2026-10-26)
+
+**Status: bounded checkpoint; the hero composition is not accepted art.** Rollback: `git revert` this commit. The design-reference PDF is not part of this commit.
+
+**Textbook** (user-supplied; Millington, *Game Physics Engine Development*, 2007):
+- **Read:** the title page; PDF pp. 287–292 = printed pp. 264–269 (§13.1–13.2.2, collision geometry against visual geometry, contact point, normal and penetration depth); PDF pp. 400–403 = printed pp. 377–380 (§16.1.1–16.1.4, enforcing assumptions, interpenetration on slopes). PDF p. 291 (Figure 13.4) and p. 400 were checked against the text extracts.
+- **Lesson applied:** penetration is measured along the contact normal at the actual contact points, and a check that only samples convenient points does not establish there is no interpenetration.
+- **Not used:** no optics and no buoyancy (the printed p. 92 sample was not used).
+
+**Water clearance** (`_water_clearance`):
+- **Method:** every water triangle is sampled on a 15-point barycentric grid against the rendered coarse-terrain triangle under it. The gap is taken along the terrain normal; samples over the lake's own water are counted separately.
+- **Result on the committed `c78f0dd` stream:** 555 of 3,136 samples **buried**, worst −7.05 m at (−342, −24, −461), p05 −2.16 m. This was despite passing vertex-only checks. Cause: the water was capped at the lower bank, and where the channel crosses a side slope that bank lies below the bed.
+- **Fix:** the water is now a sheet draped on the rendered bed: rows every 2 m, 7 columns across 12 m, each vertex 0.35 m above the rendered terrain, at lake level over the lake; 3,540 triangles.
+  - **Result** (`geology-20261026-160318-77044`): 0 of 46,563 samples buried; minimum +0.04 m along the normal; p05 +0.26 m; at most 0.66 m above the bed.
+  - **Assertion:** the suite now requires 0 buried samples.
+- **Stream shader:** ripple normals advected downstream, so highlights depend on view, light and ripples; a dark, clear body whose opacity follows the view angle; foam only on stepped reaches; no emission. The falls lost their night emission too: they are not luminous fungi.
+
+**Hero composition: dominant mismatch** (`design-reference/mush-concept-1.png` beside `geo-shore-day`):
+- **Reference:** low, warm side or back light; dark masses against luminous mist; warm edge highlights.
+- **Runtime shore view (looking west):** the sun (east-north-east, 22°) is behind the camera, so the West Wall is lit almost head-on (N·L ≈ 0.8). It has no form shadows, a value close to the sky's, and is flattened further by haze.
+- **Decision:** the sun was **not** moved, because that would break the deliberate backlit hero giant from the rim overlook.
+
+**Changes:**
+- **Form shadows:** occlusion from the wall's actual geometry, i.e. how far each face point sits behind the mean of its neighbours (±24 m along, ±6% up and down). It is written as `AO` with `AO_LIGHT_AFFECT` 0.55, so gullies, dihedrals and bench undersides darken under any light.
+- **Wet rock:** falls spray, ledge drips and rain are darker and glossier (roughness down to 0.28 from 0.84; specular 0.3 → 0.5).
+- **Hero view (`geo-hero`, a new labelled camera):** from the walkable knoll at the route's end, eye height, looking north-west across the falls corner, so the existing sun rakes the wall from the right. Captured in day, night and rain.
+
+**Evidence** (`geology-20261026-160535-78433`; all checks pass, no errors or leaks):
+- **Hero, day:** clear lit and shaded planes across the wall and the peak's shoulder, the falls in their gully, the crag, a giant fungus and the route in the foreground. It reads in depth layers.
+- **Hero, night:** the moon lights the same planes from the right, consistent with the day light.
+- **Side:** darker recesses under benches and in dihedrals, and wet sheen beside the falls.
+- **Original shore frame:** only slightly changed, since frontal light and haze still dominate that view.
+
+**Defect found, not fixed:** in the night hero view, stars render **in front of** the far mountains. The sky's star layer appears to sit closer than the new 1–1.8 km geology. Its owner is outside the prototype scenery; not investigated further.
+
+**Harness:** `geology-20261026-160142-76167` failed explicitly at 74 s through the draw-loss guard. `can_draw` and focus were lost at t = 22.5 s after the first heartbeat, during the first night capture, the same elapsed time as `142040`. The cause is not established. The immediate rerun, `160318`, was clean.
+
+**Limitations:**
+- **Not accepted art:** the background remains pale in the far haze; the foreground meadow is plain; the warm magical light of the reference (lanterns, glow) is out of scope; the stream has no edge foam and no sound.
+- **Scenic:** not rerun, since this pass changed shaders and far-layer meshes. Its canopy gate is still failing.
+- **Still open:** the route benchmark **failure**.
