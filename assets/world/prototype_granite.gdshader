@@ -101,7 +101,7 @@ void fragment() {
 	float pines = smoothstep(0.42, 0.62, fbm(v_world.xz * 0.03));
 	rock = mix(rock, mix(vec3(0.24, 0.29, 0.19), vec3(0.14, 0.19, 0.13), pines), up * 0.85 * (1.0 - smoothstep(snowline - 120.0, snowline, v_world.y)));
 	// Persistent alpine snow: up-facing rock above the snowline, ragged at its lower edge.
-	float snow = smoothstep(snowline - 40.0, snowline + 60.0, v_world.y + (fbm(v_world.xz * 0.01) - 0.5) * 120.0) * smoothstep(world_mapped ? 0.62 : 0.55, world_mapped ? 0.86 : 0.8, normalize(v_up).y);
+	float snow = smoothstep(snowline - 40.0, snowline + 60.0, v_world.y + (fbm(v_world.xz * 0.01) - 0.5) * 120.0) * smoothstep(world_mapped ? 0.78 : 0.55, world_mapped ? 0.93 : 0.8, normalize(v_up).y);
 	rock = mix(rock, vec3(0.88, 0.91, 0.96), snow);
 	// Fine grain near the viewer, faded with distance.
 	float grain = vnoise(v_world.xz * 0.9 + v_world.y * 0.7);

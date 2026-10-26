@@ -2592,68 +2592,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 				st.set_color(Color(cliff, maxf(0.0, float(vertex[2])), 0.0))
 				st.add_vertex(vertex[0])
 	st.generate_normals()
-	# Upper valley: a U-shaped trough carved into the upland behind the notch, from the lip back
-	# into the peak's flank (a cirque). The tongue lies on its floor between lateral moraines;
-	# steep inner walls rise to snow-capped rims that climb toward the peak; outer flanks drop
-	# below the crest. A front cap closes the trough's end above the lip.
-	var bed := SurfaceTool.new()
-	bed.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Across the trough (in tongue half-widths) and height (fraction of the rim height above the
-	# bed): outer drop, broad upland shoulder, rim, steep inner wall, floor; mirrored.
-	# The outer flanks step down in uneven segments (ribbed mountain flanks, not one plane).
-	# One irregular outer slope per side (no parallel steps), jittered quickly along the valley.
-	var corners: Array[Vector2] = [Vector2(-6.6, 0.0), Vector2(-5.1, 0.26), Vector2(-3.9, 0.55), Vector2(-2.15, 1.0), Vector2(-1.55, 0.85), Vector2(-1.12, 0.08), Vector2(-1.0, -0.02), Vector2(1.0, -0.02), Vector2(1.12, 0.08), Vector2(1.55, 0.85), Vector2(2.15, 1.0), Vector2(3.9, 0.55), Vector2(5.1, 0.26), Vector2(6.6, 0.0)]
-	var section: int = corners.size()
-	var deep: float = float(sample.base) - 60.0
-	var cap: Array[Vector3] = []
-	for j: int in flow_rows + 1:
-		var u: float = float(j) / flow_rows
-		var n_at: float = lerpf(start_n, lip_n - 4.0, u)
-		var y_bed: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 10.0
-		var half: float = lerpf(100.0, 56.0, u)
-		# Rims fall to the wall crest at the lip (the front of the hanging valley meets the crest)
-		# and climb toward the cirque; the ridgelines are uneven along the valley.
-		var rim: float = (18.0 + 150.0 * pow(1.0 - u, 1.3)) * (1.0 + 0.22 * _hill_noise.get_noise_2d(u * 900.0, 77.0))
-		var mid: Vector2 = toe + nrm * n_at
-		for k: int in section:
-			var corner: Vector2 = corners[k]
-			var rib: float = 1.0 + (0.25 * _terrace_noise.get_noise_2d(u * 5000.0, corner.x * 60.0) if absf(corner.x) > 3.0 else 0.0)
-			var edge: Vector2 = mid + dir * (corner.x * half * rib)
-			var uneven: float = 1.0 + (0.35 if absf(corner.x) > 3.0 else 0.18) * _terrace_noise.get_noise_2d(u * 4000.0, corner.x * 90.0) if corner.y > 0.1 else 1.0
-			var y: float = deep if (k == 0 or k == section - 1) else y_bed + (corner.y * rim * uneven if corner.y > 0.1 else corner.y * 100.0)
-			bed.add_vertex(Vector3(edge.x, y, edge.y))
-			if j == flow_rows: cap.append(Vector3(edge.x, y, edge.y))
-	for j: int in flow_rows:
-		for k: int in section - 1:
-			var a: int = j * section + k
-			# Same winding rule as the wall (front = along x across): the floor faces up.
-			bed.add_index(a); bed.add_index(a + 1); bed.add_index(a + section)
-			bed.add_index(a + section); bed.add_index(a + 1); bed.add_index(a + section + 1)
-	# Front cap: a fan from below the floor, each triangle wound to face the valley.
-	var hub_at: Vector2 = toe + nrm * (lip_n - 4.0)
-	var hub := Vector3(hub_at.x, deep, hub_at.y)
-	var forward := Vector3(nrm.x, 0.0, nrm.y)
-	var first: int = (flow_rows + 1) * section
-	bed.add_vertex(hub)
-	for k: int in section: bed.add_vertex(cap[k])
-	for k: int in section - 1:
-		var a: Vector3 = cap[k]
-		var b: Vector3 = cap[k + 1]
-		if (b - hub).cross(a - hub).dot(forward) > 0.0:
-			bed.add_index(first); bed.add_index(first + 1 + k); bed.add_index(first + 2 + k)
-		else:
-			bed.add_index(first); bed.add_index(first + 2 + k); bed.add_index(first + 1 + k)
-	bed.generate_normals()
-	var bed_mesh: ArrayMesh = bed.commit()
-	var bed_normals: PackedVector3Array = bed_mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	var bed_up: bool = bed_normals[(flow_rows / 2) * section + 6].y > 0.0 and bed_normals[(flow_rows / 2) * section + 3].y > 0.0
-	var col := MeshInstance3D.new()
-	col.name = "IceUpperValley"
-	col.mesh = bed_mesh
-	col.material_override = rock
-	col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(col)
-	_static.append(col)
+	var upland: Dictionary = _add_upland(sample, start_n, start_y, lip_n, lip_top, rock)
 	var ice_material := ShaderMaterial.new()
 	ice_material.shader = ICE_SHADER
 	_geology_materials.append(ice_material)
@@ -2665,7 +2604,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	add_child(tongue)
 	_static.append(tongue)
 	var summit: Vector3 = peak.transform * Vector3(0.0, 1.0, 0.0)
-	return {"built": bed_up, "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "upper_valley_triangles": flow_rows * (section - 1) * 2 + section - 1, "upper_valley_floor_and_rims_face_up": bed_up, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
+	return {"built": bool(upland.get("built", false)), "peak_summit": _v3(summit), "peak_triangles": _triangle_count(peak_mesh), "tongue_triangles": (grid.size() - 1) * (across - 1) * 2, "serac_steps": "icefall u 0.3-0.97", "upland": upland, "moraines": "lateral, |v| > 0.72", "tongue_drop_m": start_y - lip_top, "ice_cliff_m": lip_top - (float(sample.top) - 4.0)}
 
 ## Capture-only: 1 unlit albedo, 2 world normal, 3 uniform grey lit by the scene, 4 flat mask
 ## (rock magenta, ice cyan); fog_off removes depth fog. (0, false) is the final rendering.
@@ -2673,6 +2612,103 @@ func set_geology_debug(view: int, fog_off: bool) -> void:
 	geology_debug = view
 	_debug_fog_off = fog_off
 	for material: ShaderMaterial in _geology_materials: material.set_shader_parameter("debug_view", view)
+
+## High ground around the upper glacier valley: one connected massif heightfield behind the
+## falls, in a frame anchored on the falls sample (a along the wall, b back from the toe). Two
+## unequal, broken ridges climb from the wall crest toward the snow peak (the valley head); a
+## U-shaped glacier valley between them carries the ice tongue on its floor; outer slopes descend
+## with gullies; the front meets the wall crest and the sides and back sink into the terrain.
+## Far layer: no collision, no shadows; the terrain heightfield is unchanged.
+func _add_upland(sample: Dictionary, start_n: float, start_y: float, lip_n: float, lip_top: float, rock: ShaderMaterial) -> Dictionary:
+	var toe: Vector2 = sample.toe
+	var nrm: Vector2 = sample.normal
+	var dir: Vector2 = sample.dir
+	var step: float = 15.0
+	var a_half: float = 660.0
+	var b0: float = 140.0
+	var b1: float = minf(840.0, (toe.x + TERRAIN_HALF - 10.0) / maxf(nrm.x, 0.1))
+	var cols: int = int(a_half * 2.0 / step) + 1
+	var rows: int = int((b1 - b0) / step) + 2
+	var heights := PackedFloat32Array()
+	heights.resize(cols * rows)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var highest: float = -INF
+	var finite := true
+	for r: int in rows:
+		# Row 0 is a short skirt just in front of the first row, tucked down against the crest.
+		var b: float = b0 - 12.0 if r == 0 else b0 + float(r - 1) * step
+		for k: int in cols:
+			var a: float = -a_half + float(k) * step
+			var at: Vector2 = toe + dir * a - nrm * b
+			# Wall crest height at this position along the wall.
+			var crest_i: int = clampi(roundi((WALL_FALLS_S + a) / WALL_STEP), 0, _wall.size() - 1)
+			var crest: float = float(_wall[crest_i].get("top", WALL_FLOOR))
+			# Glacier bed along the valley (matches the tongue), rising into the cirque behind it.
+			var u: float = clampf((-b - start_n) / ((lip_n - 2.0) - start_n), 0.0, 1.0)
+			var bed: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 12.0
+			if -b < start_n: bed += (start_n + b) * 1.1
+			var hw: float = lerpf(100.0, 56.0, u) * 1.08
+			# Two unequal ridges, widening toward the cirque, crests rising toward the peak and
+			# broken by notches.
+			var side: float = 1.0 if a >= 0.0 else -1.0
+			var reach: float = (125.0 + 0.42 * (b - b0)) * (1.0 if side > 0.0 else 0.82) * (1.0 + 0.18 * _hill_noise.get_noise_2d(b * 2.2, side * 300.0))
+			var ridge: float = minf(820.0, crest + 55.0 + (b - b0) * (0.62 if side > 0.0 else 0.5)) + 45.0 * _ridge_noise.get_noise_2d(b * 3.0, side * 500.0) - 35.0 * pow(maxf(0.0, _terrace_noise.get_noise_2d(b * 5.0, side * 70.0)), 2.0)
+			var d: float = absf(a)
+			var h: float
+			if d <= hw:
+				h = bed
+			elif d <= reach:
+				# Glacial U: flat floor, walls steepening toward the ridge.
+				var t: float = (d - hw) / maxf(reach - hw, 1.0)
+				h = bed + (ridge - bed) * (1.0 - pow(1.0 - t, 1.8))
+			else:
+				# Outer slope with gullies, descending away from the ridge.
+				var out: float = d - reach
+				var gully: float = pow(1.0 - absf(_ridge_noise.get_noise_2d(a * 2.5, b * 0.8)), 4.0) * 55.0
+				h = ridge - out * (0.85 + 0.25 * _hill_noise.get_noise_2d(a * 1.7, b * 1.7)) - gully
+			# Front: meet the wall crest (the valley floor at the lip stays at the glacier bed).
+			var front: float = smoothstep(b0, b0 + 130.0, b)
+			var front_h: float = crest + 4.0 if d > hw else bed
+			h = lerpf(front_h, maxf(h, crest - 20.0), front)
+			# Sides and back sink into the terrain.
+			var ground: float = terrain_height(clampf(at.x, -TERRAIN_HALF, TERRAIN_HALF), clampf(at.y, -TERRAIN_HALF, TERRAIN_HALF))
+			var edge: float = minf(smoothstep(a_half, a_half - 140.0, d), smoothstep(b1, b1 - 120.0, b))
+			h = lerpf(ground - 25.0, h, edge)
+			if r == 0: h -= 40.0
+			heights[r * cols + k] = h
+			highest = maxf(highest, h)
+			finite = finite and is_finite(h)
+			st.set_uv(Vector2(a, h))
+			st.add_vertex(Vector3(at.x, h, at.y))
+	for r: int in rows - 1:
+		for k: int in cols - 1:
+			var i: int = r * cols + k
+			# Same winding rule as the wall: front = along (k) x back (r), which faces up here.
+			st.add_index(i); st.add_index(i + cols); st.add_index(i + 1)
+			st.add_index(i + 1); st.add_index(i + cols); st.add_index(i + cols + 1)
+	st.generate_normals()
+	var mesh: ArrayMesh = st.commit()
+	var normals: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	var up_count: int = 0
+	for n: Vector3 in normals: up_count += 1 if n.y > 0.0 else 0
+	var node := MeshInstance3D.new()
+	node.name = "IceUpland"
+	node.mesh = mesh
+	node.material_override = rock
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
+	var route_gap: float = INF
+	for path: Variant in [route, slice_route]:
+		if not is_instance_valid(path) or not path.valid: continue
+		for point: Vector3 in path._p:
+			var rel := Vector2(point.x, point.z) - toe
+			var a2: float = clampf(rel.dot(dir), -a_half, a_half)
+			var b2: float = clampf(-rel.dot(nrm), b0, b1)
+			route_gap = minf(route_gap, Vector2(point.x, point.z).distance_to(toe + dir * a2 - nrm * b2))
+	var up_share: float = float(up_count) / float(normals.size())
+	return {"built": finite and up_share > 0.98 and route_gap > 300.0, "triangles": (rows - 1) * (cols - 1) * 2, "grid": [cols, rows], "cell_m": step, "extent_along_back_m": [a_half * 2.0, b1 - b0], "highest_m": highest, "finite": finite, "normals_facing_up": up_share, "route_clearance_m": route_gap, "collision": "none (far layer)"}
 
 func _v3(value: Vector3) -> Array:
 	return [snappedf(value.x, 0.1), snappedf(value.y, 0.1), snappedf(value.z, 0.1)]

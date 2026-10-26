@@ -2444,3 +2444,35 @@ The visible images are `geology-20261026-150353-39697`. `150607` is the same sta
 - **Contrast:** haze still costs the wall about 40% of its no-fog contrast at the shore.
 - **Not verified:** rain and night were not reviewed by eye, and nothing was checked on a device.
 - **Still open:** the route benchmark **failure**, the vista gate and overall art acceptance.
+
+## High ground around the upper glacier valley (2026-10-26)
+
+**Status: bounded geometry pass; the extruded slab is replaced; scene art not accepted.** Rollback: `git revert` this commit.
+
+**Geometry and collision impact (stated before implementing):**
+- **Replaced:** the extruded upper-valley mesh and its 600 m side slab.
+- **New:** one connected high-ground heightfield, `IceUpland`, in a frame anchored on the falls sample: 1,320 m along the wall × 693 m back, 15 m cells, 8,272 triangles.
+- **Collision and shadows:** none.
+- **Unchanged:** the terrain heightfield, vegetation filtering, route, slice, giant footings and gameplay.
+
+**Form:**
+- **Ridges:** two unequal, broken ridges, the right one wider and steeper, with notched crests. They widen toward a cirque and climb from the wall crest toward the existing snow peak, which is now the head of the massif.
+- **Valley:** a glacial U between them, with a flat floor 12 m under the ice tongue's bed, matched along the tongue and rising into the cirque behind it. The tongue (moraines, seracs, blue terminus) and the falls are unchanged.
+- **Outer slopes:** descend with gullies up to 55 m deep.
+- **Edges:** the front meets the wall crest (the valley floor stays at the glacier bed at the lip), and the sides and back sink into the terrain.
+- **Material:** the granite in world-mapped mode; snow only on near-level surfaces of world-mapped rock (normal y ≥ 0.78–0.93).
+
+**Checks:**
+- **Upland:** heights finite, 100% of normals facing up, highest point 855 m, nearest route or slice point 742 m away.
+- **Wall:** toe still at least 517 m from the route and 220 m from giant caps.
+- **Geology suite** (`geology-20261026-151642-47935`): passed; route, slice and root collider built; no errors or leaks.
+
+**Matched pair** (same poses and atmosphere; `final` frames): "before" is `geology-diag-151005`; "after" is `geology-diag-20261026-151748-48634`, which includes the snow and gully tweak after `151642`.
+- **Shore:** the extruded slab with its long parallel "ziggurat" edges is gone. A connected flank rises from the wall crest to the peak, a broken secondary ridge shows to its right, and the glacier terminus sits in the notch above the falls with moraine and serac blocks just behind it.
+- **Side:** unchanged; the high ground lies outside this frame.
+
+**Limitations:**
+- **Far haze:** the high ground and peak lie about 1.5–1.8 km from the shore, in the deliberately preserved far-haze layer, so from the lake they read as smooth pale masses. Their rock tone and gullies do not resolve there, and the stricter snow rule made no visible difference in that view.
+- **Not reviewed:** the knoll and overview do not show the valley floor well, and no view yet shows the glacier valley from above it.
+- **Scenic:** not rerun. Only a far-layer mesh was added; the last scenic is `151121`.
+- **Still open:** the route benchmark **failure**, the vista gate and overall art acceptance; the draw-loss trigger is unresolved.
