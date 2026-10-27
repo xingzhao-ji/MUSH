@@ -129,7 +129,11 @@ const DAY_SUN := Color("ffc07e")
 ## 10-30 degree elevations these views see, about half of every sky pixel is the horizon colour;
 ## a peach horizon blended with a violet top reads as lavender. A pale warm cream horizon and a
 ## clear cool blue top give a warm horizon line under a cooler blue sky.
-const DEPTH_LOOK := {"sun": Color("ffbc72"), "ambient": Color("d2d0ca"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
+## Key light (2026-10-26): ffbc72 (blue/red 0.45) dominated every hue: grey granite read as
+## orange clay and the lavender caps (albedo 0.70, 0.52, 0.72) as burgundy fly agarics. A warm
+## but less saturated key plus a stronger cool sky fill keeps the golden light and lets local
+## colours (granite grey, lavender caps, greens) survive; shadows go blue instead of brown.
+const DEPTH_LOOK := {"sun": Color("ffd6a6"), "ambient": Color("c4d0e8"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
 var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
@@ -3694,6 +3698,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	sun.light_angular_distance = 2.2
 	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
 	environment.ambient_light_color = (day.ambient as Color).lerp(Color("8f90c8"), night)
+	# Fill energy stays at 0.32: a stronger fill (0.42 tried, sweep 173032) lifted the shadow
+	# sides and flattened the walls into pale curtains; only the fill colour turns cooler.
 	environment.ambient_light_energy = 0.32
 	environment.fog_enabled = not _debug_colors
 	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("9c97b4"), rain * 0.5)
