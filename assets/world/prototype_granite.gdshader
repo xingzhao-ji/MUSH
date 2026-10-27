@@ -65,7 +65,9 @@ void fragment() {
 	float tone = world_mapped ? 0.25 : UV2.x;
 	float recess = world_mapped ? 0.0 : UV2.y;
 	float slab = fbm(vec2(s * 0.004, h * 0.003));
-	vec3 rock = mix(vec3(0.21, 0.21, 0.22), vec3(0.45, 0.42, 0.38), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
+	// Granite is a pale neutral grey, slightly cool: the low amber sun supplies the warmth. (A warm
+	// tan albedo times the saturated amber key light read as orange clay, not stone.)
+	vec3 rock = mix(vec3(0.28, 0.29, 0.31), vec3(0.55, 0.555, 0.56), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
 	rock = mix(rock, vec3(0.11, 0.12, 0.13), recess * 0.35 * face);
 	// Mid-scale structure (10-80 m, the band that resolves at 0.3-1.2 km): irregular fracture
 	// plates (domain-warped Worley cells, ~55 x 80 m), each with its own tone and tilt; dark
@@ -77,13 +79,14 @@ void fragment() {
 	float block2 = hash21(vec2(cell.z * 91.7, 0.37));
 	float edge = cell.y - cell.x;
 	// Fractures are discontinuous: only a minority of plate borders open, leaving broad quiet planes.
-	float open = smoothstep(0.56, 0.68, fbm(vec2(s * 0.009, h * 0.008) + 5.7));
+	float open = smoothstep(0.62, 0.74, fbm(vec2(s * 0.009, h * 0.008) + 5.7));
 	float fracture_line = (1.0 - smoothstep(0.0, max(0.05, fwidth(edge) * 1.5), edge)) * open;
 	float sy = h / 90.0 + 0.8 * sin(s * 0.005) + fbm(vec2(s * 0.003, h * 0.004)) * 1.2;
 	float sheet_line = (1.0 - smoothstep(0.0, max(0.03, fwidth(sy) * 1.5), min(fract(sy), 1.0 - fract(sy)))) * smoothstep(0.5, 0.65, fbm(vec2(s * 0.006, floor(sy) * 3.3)));
 	float blocks = world_mapped ? 0.0 : face;
 	rock *= mix(1.0, mix(0.9, 1.07, block), blocks);
-	rock = mix(rock, rock * 0.42, max(fracture_line, sheet_line * 0.8) * 0.65 * blocks);
+	// Plate borders stay faint: strong dark cell outlines read as crazed pottery glaze.
+	rock = mix(rock, rock * 0.5, max(fracture_line, sheet_line * 0.8) * 0.3 * blocks);
 	float sheet = fbm(vec2(s * 0.01, h * 0.02 + fbm(vec2(s * 0.003, h * 0.002)) * 4.0));
 	rock *= mix(0.86, 1.06, sheet);
 	// Water streaks: narrow across, long downward, hanging from the crest and fading toward
@@ -92,7 +95,14 @@ void fragment() {
 	// Water: generic streaks stay faint; strong narrow streaks hang only below ledge lips (drip)
 	// and around the falls (wet).
 	float drip = world_mapped ? 0.0 : COLOR.a;
-	float streak = smoothstep(0.62, 0.8, hang) * face * mix(0.2, 0.6, rise);
+	float streak = smoothstep(0.58, 0.78, hang) * face * mix(0.45, 0.85, rise);
+	// Varnish curtains: broad dark-grey to black vertical bands hanging the full height of the
+	// face (iron/manganese and lichen stain where seepage runs), the signature of big granite walls.
+	float curtain_n = fbm(vec2(s * 0.011, h * 0.0009 + fbm(vec2(s * 0.004, h * 0.002)) * 0.5) + 2.3);
+	// Each curtain starts at the crest (or a ledge lip) and fades with irregular length downward.
+	float curtain_len = mix(0.25, 0.95, fbm(vec2(s * 0.02, 11.0)));
+	float curtain = smoothstep(0.5, 0.66, curtain_n) * face * smoothstep(1.0 - curtain_len - 0.15, 1.0 - curtain_len + 0.15, rise);
+	rock = mix(rock, rock * vec3(0.3, 0.3, 0.31), curtain * 0.85);
 	streak = max(streak, drip * face * smoothstep(0.42, 0.68, fbm(vec2(s * 0.12, h * 0.01))));
 	streak = max(streak, wet * face * smoothstep(0.15, 0.5, fbm(vec2(s * 0.08, h * 0.004))));
 	rock = mix(rock, vec3(0.20, 0.19, 0.18), streak * 0.65);
@@ -127,7 +137,14 @@ void fragment() {
 		vec3 t_along = dp2perp * duv1.x + dp1perp * duv2.x;
 		vec3 t_up = dp2perp * duv1.y + dp1perp * duv2.y;
 		float scale = inversesqrt(max(max(dot(t_along, t_along), dot(t_up, t_up)), 1e-12));
-		NORMAL = normalize(NORMAL + (t_along * scale * (block - 0.5) * 0.55 + t_up * scale * (block2 - 0.5) * 0.4) * face);
+		// Vertical flutes (16 m and 50 m across, hundreds of metres long) catch the raking light as
+		// ribs; joint blocks keep only a gentle tilt, so the face is not a quilt of facets.
+		float f_a = fbm(vec2((s - 2.0) * 0.06, h * 0.003)) - fbm(vec2((s + 2.0) * 0.06, h * 0.003));
+		float f_b = fbm(vec2((s - 6.0) * 0.02, h * 0.0015 + 4.0)) - fbm(vec2((s + 6.0) * 0.02, h * 0.0015 + 4.0));
+		// Flutes exist only in patches (where seepage carved them); elsewhere the face stays quiet.
+		float flute_here = smoothstep(0.4, 0.7, fbm(vec2(s * 0.005, h * 0.0016) + 7.3));
+		float flute = (f_a * 0.9 + f_b * 0.7) * flute_here;
+		NORMAL = normalize(NORMAL + (t_along * scale * ((block - 0.5) * 0.25 + flute) + t_up * scale * (block2 - 0.5) * 0.18) * face);
 	}
 	// Wet rock (falls spray and ledge drips, or rain) is darker and glossier than dry rock.
 	float wetness = max(rain * 0.6, max(wet, streak * 0.8) * face) * (1.0 - snow);
