@@ -598,6 +598,7 @@ func _compute_baked_extent() -> Rect2:
 ## star keeps its angular size and its own instance transform; the sky's unshaded materials skip
 ## depth fog so the farther stars are not dimmed. Startup only; prototype mode only.
 const SKY_DOME_SCALE := 19.0
+const MOON_DISTANCE := 2200.0
 var sky_dome_report: Dictionary = {"pushed": false}
 func _push_sky_dome() -> void:
 	var root: Variant = _world.get("_r36_root")
@@ -627,7 +628,27 @@ func _push_sky_dome() -> void:
 			if material is BaseMaterial3D and not (material as BaseMaterial3D).disable_fog:
 				(material as BaseMaterial3D).disable_fog = true
 				materials += 1
-	sky_dome_report = {"pushed": scaled.size() == 2, "scaled": scaled, "scale": SKY_DOME_SCALE, "dome_radius_m": 120.0 * SKY_DOME_SCALE, "fog_exempt_materials": materials, "far_plane": FAR_PLANE}
+	# The world's moon is a 2.85 m sphere that motion-world keeps at a fixed offset (~56 m) from the
+	# camera-following sky root, sized for the clearing's sky; in the prototype's valley it drew in
+	# front of the giants (overlook night). Its anchor offset and scale are pushed out together to
+	# MOON_DISTANCE (same apparent size, just inside the star dome), and its material is a fog-exempt
+	# copy (the original shader with fog_disabled added at runtime; the asset is untouched).
+	var moon_pushed: float = 0.0
+	var moon: Variant = _world.get("_moon")
+	var anchor: Variant = _world.get("_m37_anchor_moon_position")
+	if moon is MeshInstance3D and is_instance_valid(moon) and anchor is Vector3 and (anchor as Vector3).length() > 1.0:
+		var k: float = MOON_DISTANCE / (anchor as Vector3).length()
+		_world.set("_m37_anchor_moon_position", (anchor as Vector3) * k)
+		(moon as Node3D).scale *= k
+		var source: ShaderMaterial = (moon as MeshInstance3D).material_override as ShaderMaterial
+		if source != null and source.shader != null and source.shader.code.contains("render_mode unshaded;"):
+			var shader := Shader.new()
+			shader.code = source.shader.code.replace("render_mode unshaded;", "render_mode unshaded, fog_disabled;")
+			var copy: ShaderMaterial = source.duplicate()
+			copy.shader = shader
+			(moon as MeshInstance3D).material_override = copy
+		moon_pushed = MOON_DISTANCE
+	sky_dome_report = {"pushed": scaled.size() == 2, "scaled": scaled, "scale": SKY_DOME_SCALE, "dome_radius_m": 120.0 * SKY_DOME_SCALE, "fog_exempt_materials": materials, "far_plane": FAR_PLANE, "moon_distance_m": moon_pushed}
 	print("SKY_DOME ", JSON.stringify(sky_dome_report))
 
 func configure(world: Node3D) -> void:
