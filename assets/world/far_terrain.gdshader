@@ -151,7 +151,9 @@ void fragment() {
 	// The same two-texture product also collapses rock albedo outside the focus region (measured
 	// sRGB ~(44, 27, 16) on the vista's sunlit-side bank at ~300 m: coal, read as red mud); lift
 	// it toward the focus region's level, more with distance where the far pair takes over.
-	rock *= mix(1.0, mix(1.6, 2.2, far_t), 1.0 - focus);
+	// 1.6 -> 2.3 near (review 04: the vista's near plateau cliff and the midground mound, both rock
+	// outside the focus region at 150-400 m, read L*28-31 against 40-55 wanted).
+	rock *= mix(1.0, mix(2.3, 2.5, far_t), 1.0 - focus);
 	float steep = 1.0 - clamp(n.y, 0.0, 1.0);
 	// Moss coverage: mottled, warped world-space patches (~22 m and ~6 m), thinning on
 	// steep and high, exposed ground. Applied only on rugged or upland terrain, so the
