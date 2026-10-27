@@ -489,13 +489,27 @@ func _understory_pairs_scenario() -> void:
 	await _frames(60)
 	game.world.set_appearance(false, false, false)
 	var report: Dictionary = scenery.understory_report
-	_check("Corridor understory built: clearing assets, budget <= 4,000 instances / 300,000 triangles, no colliders or shadows", report.get("built", false) and int(report.instances) <= 4000 and int(report.triangles) <= 300000 and scenery.replaced_carpet != null and not scenery.replaced_carpet.visible, report)
+	# The budget covers every corridor stretch together (the original plus any extra_* stretch).
+	var total_instances: int = int(report.get("instances", 0))
+	var total_triangles: int = int(report.get("triangles", 0))
+	for key: String in report:
+		if key.begins_with("extra_"):
+			total_instances += int(report[key].get("instances", 0))
+			total_triangles += int(report[key].get("triangles", 0))
+	_check("Corridor understory built: clearing assets, budget <= 4,000 instances / 300,000 triangles across all stretches, no colliders or shadows", report.get("built", false) and total_instances <= 4000 and total_triangles <= 300000 and scenery.replaced_carpet != null and not scenery.replaced_carpet.visible, {"total_instances": total_instances, "total_triangles": total_triangles, "main": report})
 	var clear := true
 	for asset: String in report.get("min_lateral_m", {}):
 		clear = clear and float(report.min_lateral_m[asset]) >= float(report.min_lateral_required_m[asset]) - 0.001
 	_check("No plant inside its clearance from the path centre (tread edge 1.8 m)", clear, report.get("min_lateral_m"))
 	var attach: Dictionary = report.get("attachment", {})
 	_check("Attachment: every plant's mesh floor at or below the rendered surface under it (reported corner lift is the independent measure)", float(attach.get("max_base_above_surface_m", 1.0)) <= 0.0, attach)
+	for key: String in report:
+		if not key.begins_with("extra_"): continue
+		var extra: Dictionary = report[key]
+		var extra_clear := true
+		for asset: String in extra.get("min_lateral_m", {}):
+			extra_clear = extra_clear and float(extra.min_lateral_m[asset]) >= float(extra.min_lateral_required_m[asset]) - 0.001
+		_check("%s stretch: built, no plant inside its clearance, every mesh floor at or below the rendered surface" % key, extra.get("built", false) and extra_clear and float(extra.get("attachment", {}).get("max_base_above_surface_m", 1.0)) <= 0.0, {"min_lateral_m": extra.get("min_lateral_m"), "attachment": extra.get("attachment"), "instances": extra.get("instances"), "triangles": extra.get("triangles")})
 	var hero: Vector3 = scenery.hero.base
 	var shore_i: int = _nearest_sample(Vector3(387.12, -78.01, -300.14))
 	var root_i: int = _nearest_sample(Vector3(386.89, -78.71, -284.54))

@@ -170,6 +170,12 @@ const UNDERSTORY_RANGE := 110.0
 const UNDERSTORY_CHUNK := 80.0
 var understory: Node3D
 var replaced_carpet: MultiMeshInstance3D
+## Second corridor stretch (2026-10-26): the slice segment through the vista camera's near
+## field, z 40..140 (one contiguous run from about (215, 140) to (238, 40)), where the far-LOD
+## forest clumps (6-26 m faceted blobs) otherwise stand at arm's length from the walker.
+const UNDERSTORY_VISTA_Z := Vector2(140.0, 40.0)
+var extra_understories: Array[Node3D] = []
+var extra_replaced_carpets: Array[MultiMeshInstance3D] = []
 var understory_report: Dictionary = {}
 var _understory_sync: Array = []
 ## Hero stem organic finish (far_canopy mode 1), masked to this radius around the hero base;
@@ -649,7 +655,11 @@ func configure(world: Node3D) -> void:
 	_add_boulders(rng)
 	if not "no_trees" in skip: _add_trees(rng)
 	if not "no_carpet" in skip: _add_carpet(rng)
-	if not "no_understory" in skip: _add_corridor_understory()
+	if not "no_understory" in skip:
+		_add_corridor_understory()
+		# Sparser groups (x2.0 spacing) and a 70 m tree reach keep both stretches inside the shared
+		# 4,000-instance / 300,000-triangle understory budget (x1.0 / 125 m measured 379,778).
+		if not "no_vista_understory" in skip: _add_corridor_understory(UNDERSTORY_VISTA_Z, "vista", 2.0, 70.0)
 	if not "no_shore_groves" in skip: _add_shore_groves()
 	if not geology_skip: _add_wall()
 	_push_sky_dome()
@@ -1526,18 +1536,24 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 ## rendered surface under its footprint (ribbon shoulder, or the higher of the rendered terrain
 ## and the embankment skirt); nothing is placed on the tread. Creature/human-scale target
 ## heights. No colliders, no shadows, own random stream; startup only.
-func _add_corridor_understory() -> void:
-	understory_report = {"built": false}
+## z_range/tag: the original stretch is the default call (names and report unchanged); further
+## contiguous route stretches use a tag, tagged node names and understory_report["extra_<tag>"].
+## spacing scales the distance between groups and tree_reach the clump-to-tree conversion reach,
+## so an extra stretch can fit the shared budget; the defaults reproduce the original exactly
+## (same random draws, results only scaled).
+func _add_corridor_understory(z_range: Vector2 = UNDERSTORY_Z, tag: String = "", spacing: float = 1.0, tree_reach: float = CORRIDOR_TREE_REACH) -> void:
+	var main: bool = tag.is_empty()
+	if main: understory_report = {"built": false}
 	if not is_instance_valid(slice_route) or not slice_route.valid: return
 	var sources: Dictionary = _understory_sources()
-	understory_report["sources"] = sources.keys()
+	if main: understory_report["sources"] = sources.keys()
 	if sources.size() < 8:
-		understory_report["error"] = "clearing understory meshes not found"
+		if main: understory_report["error"] = "clearing understory meshes not found"
 		return
 	var hero_xz := Vector2(hero.base.x, hero.base.z) if not hero.is_empty() else Vector2(INF, INF)
 	var section := PackedVector3Array()
 	for p: Vector3 in slice_route._p:
-		if p.z < UNDERSTORY_Z.x and p.z > UNDERSTORY_Z.y: section.append(p)
+		if p.z < z_range.x and p.z > z_range.y: section.append(p)
 	if section.size() < 10: return
 	var arc := PackedFloat32Array([0.0])
 	for i: int in range(1, section.size()): arc.append(arc[i - 1] + Vector2(section[i].x - section[i - 1].x, section[i].z - section[i - 1].z).length())
@@ -1589,7 +1605,7 @@ func _add_corridor_understory() -> void:
 		for i: int in multi.instance_count:
 			var pose: Transform3D = multi.get_instance_transform(i)
 			var at := Vector2(pose.origin.x, pose.origin.z)
-			if bounds.grow(CORRIDOR_TREE_REACH).has_point(at) and _section_distance(section, at) <= CORRIDOR_TREE_REACH:
+			if bounds.grow(tree_reach).has_point(at) and _section_distance(section, at) <= tree_reach:
 				replaced.append(pose)
 				replaced_colors.append(multi.get_instance_color(i))
 				var rendered: AABB = pose * multi.mesh.get_aabb()
@@ -1614,13 +1630,15 @@ func _add_corridor_understory() -> void:
 		for i: int in replaced.size():
 			hidden.set_instance_transform(i, replaced[i])
 			hidden.set_instance_color(i, replaced_colors[i])
-		replaced_carpet = MultiMeshInstance3D.new()
-		replaced_carpet.name = "CorridorReplacedCarpet"
-		replaced_carpet.multimesh = hidden
-		replaced_carpet.material_override = clump_material
-		replaced_carpet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		replaced_carpet.visible = false
-		add_child(replaced_carpet)
+		var set_aside := MultiMeshInstance3D.new()
+		set_aside.name = "CorridorReplacedCarpet" + ("" if main else "_" + tag)
+		set_aside.multimesh = hidden
+		set_aside.material_override = clump_material
+		set_aside.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		set_aside.visible = false
+		add_child(set_aside)
+		if main: replaced_carpet = set_aside
+		else: extra_replaced_carpets.append(set_aside)
 	# 2. Composed groups along both verges of the limited stretch (open ground between them):
 	# fern-and-fungus groups (2-3 fern crowns, a fairy-mushroom cluster at their foot, moss),
 	# mushroom-and-moss groups, and flower drifts. Where the shore strip is narrow a group
@@ -1634,7 +1652,7 @@ func _add_corridor_understory() -> void:
 	while s < arc[arc.size() - 1]:
 		if rng.randf() < 0.12:
 			banks.open_gaps += 1
-			s += rng.randf_range(4.0, 7.0)
+			s += rng.randf_range(4.0, 7.0) * spacing
 			continue
 		var frame: Array = _section_frame(section, arc, s)
 		var out: Vector2 = frame[2] * side
@@ -1692,7 +1710,7 @@ func _add_corridor_understory() -> void:
 			for m: int in rng.randi_range(2, 3): plants.append(["moss", centre + scatter.call(1.0), {}])
 			var tuft: Vector2 = centre + out * 0.9
 			for g: int in rng.randi_range(6, 9): plants.append(["grass", tuft + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * (0.07 if g > 0 else 0.0), {"height": [0.25, 0.4]}])
-		s += rng.randf_range(3.0, 5.5)
+		s += rng.randf_range(3.0, 5.5) * spacing
 		if rng.randf() < 0.6: side = -side
 	# 3. Clearance, attachment and scale; then chunked multimeshes.
 	var min_lateral: Dictionary = {"moss": 2.7, "cushion": 2.7, "grass": 3.0, "broadleaf": 3.0, "flower_white": 3.0, "flower_pink": 3.0, "flower_blue": 3.0, "fern_a": 3.6, "fern_b": 3.6, "fern_c": 3.6, "fairy": 3.6}
@@ -1776,9 +1794,11 @@ func _add_corridor_understory() -> void:
 				attach.max_bottom_corner_lift_m = maxf(attach.max_bottom_corner_lift_m, corner_world.y - below)
 				if corner_world.y - below > 0.10: attach.corners_over_10cm += 1
 		batches[key].poses.append(pose)
-	understory = Node3D.new()
-	understory.name = "CorridorUnderstory"
-	add_child(understory)
+	var group := Node3D.new()
+	group.name = "CorridorUnderstory" + ("" if main else "_" + tag)
+	add_child(group)
+	if main: understory = group
+	else: extra_understories.append(group)
 	var per_asset: Dictionary = {}
 	var triangles: int = 0
 	for key: String in batches:
@@ -1801,15 +1821,15 @@ func _add_corridor_understory() -> void:
 		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.visibility_range_end = UNDERSTORY_RANGE
 		node.visibility_range_end_margin = 10.0
-		understory.add_child(node)
+		group.add_child(node)
 		_static.append(node)
 		per_asset[batch.asset] = int(per_asset.get(batch.asset, 0)) + batch.poses.size()
 		triangles += int(source.triangles) * batch.poses.size()
 	var instances: int = 0
 	for asset: String in per_asset: instances += per_asset[asset]
-	understory_report = {"built": true, "section_samples": section.size(), "section_length_m": arc[arc.size() - 1],
+	var report: Dictionary = {"built": true, "section_samples": section.size(), "section_length_m": arc[arc.size() - 1],
 		"carpet_clumps_replaced": replaced.size(), "carpet_triangles_hidden": _triangle_count(clump_mesh) * replaced.size() if clump_mesh else 0,
-		"stretch_z": [UNDERSTORY_Z.x, UNDERSTORY_Z.y], "banks": banks, "attachment": attach,
+		"stretch_z": [z_range.x, z_range.y], "banks": banks, "attachment": attach,
 		"tree_targets": tree_targets, "corridor_trees": tree_report_corridor,
 		"source_aabb": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].mesh.get_aabb().position.y, 0.001), snappedf(sources[asset].mesh.get_aabb().size.y, 0.001)]), "fern_materials": leaf_variants.map(func(v: Array) -> String: return v[0]), "instances": instances, "per_asset": per_asset, "triangles": triangles, "nodes": batches.size(),
 		"dropped": dropped, "min_lateral_m": closest, "min_lateral_required_m": min_lateral, "draw_range_m": UNDERSTORY_RANGE,
@@ -1817,6 +1837,8 @@ func _add_corridor_understory() -> void:
 		"source_scale": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].scale.x, 0.01), snappedf(sources[asset].scale.y, 0.01)]),
 		"near_kept_clumps": near_kept, "target_height_m": heights,
 		"source_height_m": sources.keys().map(func(asset: String) -> Array: return [asset, snappedf(sources[asset].mesh.get_aabb().size.y * sources[asset].scale.y, 0.01)])}
+	if main: understory_report = report
+	else: understory_report["extra_" + tag] = report
 
 ## Layered copied-tree groups in place of the targeted clumps (rendered size): one tree for a
 ## narrow clump, two for a medium one, three lower ones for a wide flat one; the main tree is
