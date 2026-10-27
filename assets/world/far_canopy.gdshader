@@ -24,6 +24,9 @@ uniform float rock_gain = 1.6;
 uniform float moss_cover = 0.0;
 // Moss on up-facing ledges (mode 2). The needle crags' ledge rings read as olive stripes.
 uniform float ledge_moss = 0.6;
+// Sky/ground bounce on faces turned from the sun and on down-facing notch undersides (mode 2; 0 =
+// off): the needle crags' notches read as hard black bands (review 04: p5 L*25).
+uniform float sky_fill = 0.0;
 // Hero stem organic finish, only within stem_focus (x, z, radius) of the hero base; at zero
 // strength every stem renders exactly as before. Matte, soft tonal modulation at several
 // metres, very low-contrast fibre that fades with distance, gentle two-scale normal undulation
@@ -126,7 +129,7 @@ void fragment() {
 			emit += amber * spots(vec2(UV.x * 90.0, t * 14.0), 0.22) * 0.25 * glow * (0.3 + core);
 			// Daylight: the underside sat ~20 L* below the sky; a soft luminous lift, lavender toward
 			// the margin and amber toward the stem (night keeps the amber glow above).
-			emit += mix(vec3(0.62, 0.56, 0.80) * 0.30, amber * 0.48, core) * (1.0 - night);
+			emit += mix(vec3(0.62, 0.56, 0.80) * 0.30, amber * 0.75, core * core) * (1.0 - night);
 			rough = 0.85;
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
@@ -217,6 +220,7 @@ void fragment() {
 			albedo = mix(albedo, moss_mean * mix(0.8, 1.1, fbm(v_world.xz * 1.3)), smoothstep(0.15, 0.6, n.y) * patch * moss_cover);
 			albedo *= mix(1.0, 0.6, (1.0 - smoothstep(-0.4, 0.2, n.y)) * moss_cover);
 		}
+		if (sky_fill > 0.0) emit += albedo * vec3(0.66, 0.64, 0.70) * sky_fill * max(1.0 - sun_side, smoothstep(0.0, -0.6, n.y)) * (1.0 - night);
 		rough = 0.92;
 		spec = 0.1;
 	} else {
