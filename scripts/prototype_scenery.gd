@@ -4362,17 +4362,22 @@ func set_reduced_motion(value: bool) -> void:
 ## Capture-only look exploration (camera sweep): day endpoint colours by DEPTH_LOOK key plus
 ## sun_energy, sun_elev, ambient_energy. Empty in play.
 var look_override: Dictionary = {}
-const GOLDEN_GLOW := 0.5
+const GOLDEN_GLOW := 0.35
 const GOLDEN_FILL_ENERGY := 0.5
 const GOLDEN_FILL_COLOR := "9499ff"
 const GOLDEN_FILL_AZ := 337.0
 const GOLDEN_FILL_ELEV := -45.0
 ## Sky glow direction (degrees; same azimuth convention as the sun's rotation_degrees.y).
 const GOLDEN_GLOW_AZ := 208.0
-const GOLDEN_GLOW_ELEV := 6.0
+const GOLDEN_GLOW_ELEV := 10.0
 const GOLDEN_HALO_POWER := 28.0
 const GOLDEN_HALO_GAIN := 0.7
 const GOLDEN_CAP_GLOW := 1.0
+const GOLDEN_CLOUD_GLOW := 1.0
+const GOLDEN_CLOUD_GLOW_POWER := 4.0
+const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
+const GOLDEN_HORIZON_GLOW := 0.9
+const GOLDEN_HORIZON_GLOW_POWER := 16.0
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
 const SOFT_WRAP := 0.5
@@ -4468,6 +4473,16 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		# reads violet-to-gold rather than one pink wash.
 		sky.set_shader_parameter("top_color", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 		sky.set_shader_parameter("horizon_color", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+		# Gold cloud light toward the glow (review 06: the concepts' amber is mostly in the sky). Day,
+		# golden hour only.
+		var c_az: float = deg_to_rad(float(look_override.get("glow_az", GOLDEN_GLOW_AZ)))
+		var c_el: float = deg_to_rad(float(look_override.get("glow_elev", GOLDEN_GLOW_ELEV)))
+		sky.set_shader_parameter("cloud_glow_dir", Vector3(sin(c_az) * cos(c_el), sin(c_el), cos(c_az) * cos(c_el)))
+		sky.set_shader_parameter("cloud_glow_color", Color(str(look_override.get("cloud_glow_color", GOLDEN_CLOUD_GLOW_COLOR))))
+		sky.set_shader_parameter("cloud_glow", float(look_override.get("cloud_glow", GOLDEN_CLOUD_GLOW)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0)
+		sky.set_shader_parameter("cloud_glow_power", float(look_override.get("cloud_glow_power", GOLDEN_CLOUD_GLOW_POWER)))
+		sky.set_shader_parameter("horizon_glow", float(look_override.get("horizon_glow", GOLDEN_HORIZON_GLOW)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0)
+		sky.set_shader_parameter("horizon_glow_power", float(look_override.get("horizon_glow_power", GOLDEN_HORIZON_GLOW_POWER)))
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 	_lake_material.set_shader_parameter("sky_horizon", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
