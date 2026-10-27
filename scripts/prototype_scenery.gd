@@ -98,6 +98,9 @@ const MIST_SHADER := preload("res://assets/world/prototype_mist.gdshader")
 const SKYGLOW_SHADER := preload("res://assets/world/prototype_skyglow.gdshader")
 ## Golden-hour sky glow dome (camera-following, additive, inside the far plane).
 const SKYGLOW_RADIUS := 2350.0
+## Valley mist banks: lowland below this height (m), shader strength.
+const VALLEY_MIST_TOP := -45.0
+const VALLEY_MIST_STRENGTH := 0.42
 var _skyglow: MeshInstance3D
 var _skyglow_material: ShaderMaterial
 const Erratics := preload("res://scripts/prototype_erratics.gd")
@@ -758,6 +761,7 @@ func configure(world: Node3D) -> void:
 	if not geology_skip:
 		_add_wall()
 		if not "no_wall_mist" in skip: _add_wall_mist()
+		if not "no_valley_mist" in skip: _add_valley_mist()
 	_push_sky_dome()
 	_add_skyglow()
 	if "no_giants" in skip:
@@ -3107,6 +3111,54 @@ func _add_wall_mist() -> void:
 	add_child(node)
 	_static.append(node)
 	wall_mist_report = {"built": true, "sheets": sheets, "triangles": sheets * 2, "draw_calls": 1, "colliders": 0, "shadows": "off"}
+
+## Valley mist banks (concepts: layered mist lying in the valley between the landmarks). Soft
+## vertical sheets on the valley-mist shader, low over the lowland around the lake and the outlet
+## ravine, each turned toward the valley's main viewpoints (vista/knoll side) so it reads as a bank,
+## not a card; depth-softened against terrain and faded near the camera. One draw, no shadows.
+func _add_valley_mist() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var sheets: int = 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261027
+	var look_from := Vector2(300.0, 40.0)
+	var z: float = -980.0
+	while z < -120.0:
+		var x: float = -560.0 + rng.randf_range(0.0, 50.0)
+		while x < 380.0:
+			var at := Vector2(x + rng.randf_range(-25.0, 25.0), z + rng.randf_range(-25.0, 25.0))
+			x += rng.randf_range(80.0, 120.0)
+			var ground: float = terrain_height(at.x, at.y)
+			if ground > VALLEY_MIST_TOP or _inside_wall(at.x, at.y) or at.distance_to(look_from) < 260.0: continue
+			if not hero.is_empty() and at.distance_to(Vector2(hero.base.x, hero.base.z)) < 70.0: continue
+			var face: Vector2 = (look_from - at).normalized()
+			var along := Vector2(-face.y, face.x).rotated(rng.randf_range(-0.35, 0.35))
+			var half_w: float = rng.randf_range(80.0, 140.0)
+			var height: float = rng.randf_range(28.0, 55.0)
+			var y0: float = maxf(ground, LAKE_Y) - 6.0
+			var a: Vector2 = at - along * half_w
+			var b: Vector2 = at + along * half_w
+			var corners: Array = [[Vector3(a.x, y0, a.y), Vector2(0, 0)], [Vector3(b.x, y0, b.y), Vector2(1, 0)], [Vector3(b.x, y0 + height, b.y), Vector2(1, 1)], [Vector3(a.x, y0 + height, a.y), Vector2(0, 1)]]
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(corners[k][1])
+				st.add_vertex(corners[k][0])
+			sheets += 1
+		z += rng.randf_range(70.0, 100.0)
+	if sheets == 0: return
+	var material := ShaderMaterial.new()
+	material.shader = MIST_SHADER
+	material.set_shader_parameter("strength", VALLEY_MIST_STRENGTH)
+	_geology_materials.append(material)
+	var node := MeshInstance3D.new()
+	node.name = "ValleyMist"
+	node.mesh = st.commit()
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	wall_mist_report["valley_sheets"] = sheets
 
 ## The falls: a free-falling ribbon leaving the notch lip just clear of the recessed channel,
 ## bowing outward as it drops and spreading, plus three crossed soft mist sheets at its foot.
