@@ -1028,6 +1028,9 @@ func _add_pillars(rng: RandomNumberGenerator) -> void:
 	rock_count += xs.size()
 	rock_triangles = _triangle_count(crag) * xs.size()
 	_add(crag, xs, tints, 2, "RockPillars")
+	# Grey granite needles: no moss on the ledge rings (they read as banded olive 'termite mounds').
+	var pillar_material: ShaderMaterial = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
+	pillar_material.set_shader_parameter("ledge_moss", 0.08)
 
 ## Four fused needles of different height, girth and lean; each has an angular cross-section
 ## that twists with height, sharp columnar flutes, irregular ledge notches and a jagged tip.
