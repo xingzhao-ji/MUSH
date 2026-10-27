@@ -9,6 +9,9 @@ render_mode cull_back;
 // crest (strongest around the falls), and dark vegetation only on ledges and the crest.
 uniform float night = 0.0;
 uniform float rain = 0.0;
+// Toward the sun (set by apply_look). Faces turned away from it lose part of the ambient fill, so
+// the walls get a shadow side from N.L instead of reading as evenly lit curtains (review 03).
+uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
 // Snow on up-facing rock above this height (world metres).
 uniform float snowline = 520.0;
 // For meshes without wall data (the ice peak): map along/height from world position.
@@ -154,6 +157,8 @@ void fragment() {
 	SPECULAR = mix(0.3, 0.5, wetness);
 	// Form shadows from the geometry's concavities: ambient and, partly, direct light.
 	AO = 1.0 - recess * 0.75 * face;
+	float away = smoothstep(0.15, -0.45, dot(normalize(v_up), normalize(sun_dir)));
+	AO *= mix(1.0, 0.55, away * (1.0 - night));
 	AO_LIGHT_AFFECT = 0.55;
 	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }

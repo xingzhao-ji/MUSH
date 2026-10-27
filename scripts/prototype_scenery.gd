@@ -28,16 +28,19 @@ const STEM_BUTTRESSES: Array[Vector2] = [Vector2(0.3, 1.45), Vector2(1.55, 0.95)
 ## Far plane and fog end are chosen together: every hero element is inside 0.55 x far
 ## and fog reaches full strength (FOG_END) well inside the far plane.
 const FAR_PLANE := 2600.0
-const FOG_END := 1600.0
+const FOG_END := 1900.0
 ## Prototype atmosphere (depth fog, prototype mode only). The previous profile (begin 200, end
 ## 1400, curve 1.8, density 0.5 / 0.8 in rain) was measured to lift and flatten the West Wall at
 ## 0.3-1.2 km (docs/VERIFICATION.md). This profile keeps near and mid distance clearer and
 ## reaches about the same far haze (~0.46-0.55 beyond 1.4 km); fog colour, aerial perspective,
+## 2026-10-26 (review 03): end 1900 (was 1600), curve 3.2 (2.6), density 0.45 (0.55), so the walls at
+## 1-2 km keep their shadow sides and streaks (vista far block p5-p95 60-70 -> 47-65 L*) while the
+## haze still rises toward the far plane; the valley mist carries the depth layering. Rain unchanged.
 ## night and the overview are unchanged. Rain blends every parameter back to the previous
 ## profile (full rain = previous rain fog), since the clearer profile removed rain's mid haze.
 const FOG_BEGIN := 320.0
-const FOG_CURVE := 2.6
-const FOG_DENSITY := 0.55
+const FOG_CURVE := 3.2
+const FOG_DENSITY := 0.45
 ## Capture-only: render the previous fog profile for same-frame evidence.
 var atmosphere_previous: bool = false
 const TERRAIN_HALF := 1500.0
