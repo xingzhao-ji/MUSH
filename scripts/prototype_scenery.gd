@@ -214,7 +214,9 @@ var hero_cap_mesh_check: Dictionary = {}
 var stem_material: ShaderMaterial
 ## Cliff readability, applied by the shared terrain shader only inside the cliff detail patch's
 ## region (the near massif whose shaded faces read near-black from the root approach).
-const ROCK_READABILITY := {"rock_breakup": 1.0, "rock_relief": 0.5, "rock_fill": 1.0, "rock_albedo_lift": 2.2}
+## Lift 2.2 -> 4.5 and fill 1.0 -> 3.0 after the clearer fog (ce4cd93) left the overlook cliffs near-black
+## (overlook central cliff L*11.5 before the fog change, 4.8 after, 21.9 with these values).
+const ROCK_READABILITY := {"rock_breakup": 1.0, "rock_relief": 0.5, "rock_fill": 3.0, "rock_albedo_lift": 4.5}
 var rock_material: ShaderMaterial
 var _tree_templates: Array = []
 var _near_crown: Dictionary = {}
