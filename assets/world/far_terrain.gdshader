@@ -71,6 +71,12 @@ void fragment() {
 		moss = mix(detail, far_moss, smoothstep(20.0, 80.0, dist));
 	}
 	moss *= mix(vec3(0.92, 1.02, 0.95), vec3(1.08, 1.0, 0.86), macro);
+	// Meadow structure (the open slopes read as one flat saturated lawn): large soft patches of
+	// darker clover hollows and warm dry grass, and a little less saturation. (Shader-painted
+	// flower dots were tried and read as scattered litter, sweep 180054; meadow flowers need geometry.)
+	float meadow_patch = fbm(v_world.xz * 0.018 + vec2(fbm(v_world.xz * 0.005) * 3.0));
+	moss *= mix(vec3(0.76, 0.85, 0.80), vec3(1.10, 1.04, 0.82), smoothstep(0.3, 0.75, meadow_patch));
+	moss = mix(moss, vec3(dot(moss, vec3(0.299, 0.587, 0.114))), 0.15);
 	// Damp valley floor, then a narrow sandy shore band at the lake level.
 	moss = mix(moss, moss * vec3(0.62, 0.86, 0.84), smoothstep(-25.0, -60.0, h));
 	vec3 sand = vec3(0.40, 0.36, 0.30) * (0.85 + 0.3 * fbm(v_world.xz * 0.4));
