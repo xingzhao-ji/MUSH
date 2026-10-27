@@ -3273,6 +3273,11 @@ func _add_stream_water(pool_y: float) -> void:
 ## Alpine ice behind the falls: a snow peak standing behind the notch and a steep, fractured
 ## ice tongue descending from its flank through the widened notch to an ice cliff just above
 ## the rock lip, where the falls emerge. Far layer, no collision.
+## Glacier surface profile along the flow (0 at the cirque, 1 at the lip): mostly even, easing slightly
+## at both ends. Shared by the tongue and the upland bed so they stay matched.
+func _glacier_profile(u: float) -> float:
+	return lerpf(u, 1.0 - pow(1.0 - u, 1.6), 0.25)
+
 func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	var at: int = clampi(roundi(WALL_FALLS_S / WALL_STEP), 1, _wall.size() - 2)
 	var sample: Dictionary = _wall[at]
@@ -3305,7 +3310,8 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	_static.append(peak)
 	# The tongue: from inside the peak's flank down to the ice cliff above the lip.
 	var lip_n: float = _wall_face_offset(sample, 1.0, h, float(sample.top))
-	var lip_top: float = float(sample.top) + 70.0
+	# Ice cliff 30 m (was 70 m: a tall white panel from the vista, review 04).
+	var lip_top: float = float(sample.top) + 30.0
 	var start_n: float = ICE_PEAK.x + 160.0
 	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.58
 	var st := SurfaceTool.new()
@@ -3320,7 +3326,8 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	for j: int in flow_rows + 1:
 		var u: float = float(j) / flow_rows
 		var n_at: float = lerpf(start_n, lip_n - 2.0, u)
-		var y_at: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6))
+		# Even descent (was steep-then-flat): the lower tongue keeps a slope the vista can see from below.
+		var y_at: float = lerpf(start_y, lip_top, _glacier_profile(u))
 		var half: float = lerpf(100.0, 56.0, u)
 		var row: Array = []
 		for k: int in across:
@@ -3337,7 +3344,8 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 			var core: float = 1.0 - smoothstep(0.45, 0.8, absf(v))
 			lift += steep * core * ((fposmod(phase, 1.0) - 0.5) * lerpf(6.0, 15.0, 0.5 + 0.5 * _terrace_noise.get_noise_2d(v * 700.0, u * 300.0 + 31.0)) + _terrace_noise.get_noise_2d(v * 900.0, u * 1300.0) * 6.0)
 			var p: Vector2 = toe + nrm * n_at + dir * (v * half)
-			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.72, 0.9, absf(v))])
+			# Narrower lateral moraine (0.72-0.9 read as a dark slab edge from the vista, review 04).
+			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.82, 0.96, absf(v))])
 		grid.append(row)
 	# Ice cliff at the snout: ragged blue front in three rows down to the rock lip.
 	for drop: float in [0.2, 0.4, 0.6, 0.8, 1.0]:
@@ -3413,7 +3421,9 @@ func _add_upland(sample: Dictionary, start_n: float, start_y: float, lip_n: floa
 			var crest: float = float(_wall[crest_i].get("top", WALL_FLOOR))
 			# Glacier bed along the valley (matches the tongue), rising into the cirque behind it.
 			var u: float = clampf((-b - start_n) / ((lip_n - 2.0) - start_n), 0.0, 1.0)
-			var bed: float = lerpf(start_y, lip_top, 1.0 - pow(1.0 - u, 1.6)) - 12.0
+			# Bed just under the ice surface (was 12 m below): the tongue sits flush in its valley, so its
+			# margins are buried and the vista does not see a slab with a dark side face (review 04).
+			var bed: float = lerpf(start_y, lip_top, _glacier_profile(u)) - 3.0
 			if -b < start_n: bed += (start_n + b) * 1.1
 			var hw: float = lerpf(100.0, 56.0, u) * 1.08
 			# Two unequal ridges, widening toward the cirque, crests rising toward the peak and

@@ -42,7 +42,7 @@ void fragment() {
 	vec3 cliff = vec3(0.28, 0.45, 0.60) * (0.85 + 0.3 * fbm(vec2(UV.y * 8.0, 3.0)));
 	cliff = mix(cliff, vec3(0.08, 0.18, 0.30), fracture * 0.75);
 	glacier = mix(glacier, cliff, COLOR.r);
-	glacier = mix(glacier, vec3(0.30, 0.28, 0.26) * (0.8 + 0.4 * fbm(vec2(u * 30.0, UV.y * 9.0))), COLOR.g * 0.9);
+	glacier = mix(glacier, vec3(0.40, 0.38, 0.36) * (0.8 + 0.4 * fbm(vec2(u * 30.0, UV.y * 9.0))), COLOR.g * 0.75);
 	// Night: the blue moonlight on blue ice doubled the saturation and the serac cliff read as a
 	// glowing cyan panel; ice goes toward neutral grey-blue and loses most of its gloss.
 	float ice_lum = dot(glacier, vec3(0.299, 0.587, 0.114));
