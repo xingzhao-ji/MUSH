@@ -67,7 +67,9 @@ void fragment() {
 	float slab = fbm(vec2(s * 0.004, h * 0.003));
 	// Granite is a pale neutral grey, slightly cool: the low amber sun supplies the warmth. (A warm
 	// tan albedo times the saturated amber key light read as orange clay, not stone.)
-	vec3 rock = mix(vec3(0.28, 0.29, 0.31), vec3(0.55, 0.555, 0.56), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
+	// Reflectance of real granite is ~0.3-0.4; at 0.55 the sunlit faces (x sun energy 1.55) rendered
+	// near white and merged with the sky.
+	vec3 rock = mix(vec3(0.20, 0.205, 0.215), vec3(0.42, 0.42, 0.425), smoothstep(0.15, 0.9, tone)) * mix(0.9, 1.06, slab);
 	rock = mix(rock, vec3(0.11, 0.12, 0.13), recess * 0.35 * face);
 	// Mid-scale structure (10-80 m, the band that resolves at 0.3-1.2 km): irregular fracture
 	// plates (domain-warped Worley cells, ~55 x 80 m), each with its own tone and tilt; dark
