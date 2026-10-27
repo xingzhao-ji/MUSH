@@ -199,7 +199,11 @@ void fragment() {
 		spec = 0.1;
 	} else {
 		// Distant forest clump: foliage palette in instance COLOR, darker toward the base.
-		albedo = v_col * 0.95 * (0.5 + 0.55 * UV.y) * (0.85 + 0.3 * sun_side) * (0.85 + 0.3 * fbm(v_world.xz * 0.15));
+		// Deeper, varied forest: the uniform pale-lime crowns read as cotton balls. Darker bases (crown
+		// self-shadow), lower overall value, and a slow regional drift between warm yellow-green and
+		// cool blue-green stands so the carpet is not one hue.
+		vec3 drift = mix(vec3(1.06, 1.0, 0.82), vec3(0.82, 0.95, 1.06), smoothstep(0.3, 0.7, fbm(v_world.xz * 0.006 + 4.1)));
+		albedo = v_col * 0.78 * drift * (0.3 + 0.75 * UV.y * UV.y) * (0.85 + 0.3 * sun_side) * (0.8 + 0.4 * fbm(v_world.xz * 0.15));
 		rough = 0.9;
 		spec = 0.05;
 	}
