@@ -91,8 +91,9 @@ void fragment() {
 			float mottle = fbm(skin * 0.6 + v_tint * 13.0);
 			albedo = mix(flesh, flesh_rim, smoothstep(0.55, 1.0, s) * 0.8 + 0.2 * mottle) * (0.82 + 0.3 * mottle);
 			float freckle = spots(skin, 0.32) * aa(skin.x);
-			albedo = mix(albedo, vec3(0.94, 0.86, 0.90), freckle * 0.45 * smoothstep(0.1, 0.8, s));
-			emit = amber * freckle * 0.10 * glow * (1.0 - s * 0.5) + flesh_rim * smoothstep(0.88, 1.0, s) * 0.10 * glow;
+			// Subtler freckles (the white fly-agaric dots competed with the whole frame by day).
+			albedo = mix(albedo, vec3(0.94, 0.86, 0.90), freckle * 0.25 * smoothstep(0.1, 0.8, s));
+			emit = amber * freckle * mix(0.03, 0.10, night) * glow * (1.0 - s * 0.5) + flesh_rim * smoothstep(0.88, 1.0, s) * 0.10 * glow;
 			rough = 0.6;
 			if (cap_craft > 0.0) {
 				// Structure only, on the cap's own colours (hue identity kept): broad tone zones,
@@ -119,6 +120,9 @@ void fragment() {
 			float core = smoothstep(0.45, 1.0, t);
 			emit = amber * (0.06 + 0.42 * core * core + 0.05 * lines * core) * glow * pulse;
 			emit += amber * spots(vec2(UV.x * 90.0, t * 14.0), 0.22) * 0.25 * glow * (0.3 + core);
+			// Daylight: the underside sat ~20 L* below the sky; a soft luminous lift, lavender toward
+			// the margin and amber toward the stem (night keeps the amber glow above).
+			emit += mix(vec3(0.62, 0.56, 0.80), amber, core) * 0.10 * (1.0 - night);
 			rough = 0.85;
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
