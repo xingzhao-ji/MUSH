@@ -12,6 +12,10 @@ uniform vec3 glow_color : source_color = vec3(1.0, 0.72, 0.45);
 uniform float strength = 0.35;
 uniform float night = 0.0;
 uniform float rain = 0.0;
+// Halo falloff: 5 spread the halo over the whole upper frame (vista zenith strip L*79, consult 01
+// wants 60-70 with the glow at 78-82); a tighter halo keeps the glow on the horizon.
+uniform float halo_power = 5.0;
+uniform float halo_gain = 0.55;
 varying vec3 v_dir;
 
 void vertex() {
@@ -22,7 +26,7 @@ void fragment() {
 	vec3 s = normalize(glow_dir);
 	float facing = max(dot(d, s), 0.0);
 	float sun_facing = max(dot(d, normalize(sun_dir)), 0.0);
-	float halo = pow(facing, 5.0) * 0.55 + pow(facing, 40.0) * 0.6;
+	float halo = pow(facing, halo_power) * halo_gain + pow(facing, 40.0) * 0.6;
 	vec2 dh = normalize(d.xz + vec2(1e-5));
 	vec2 sh = normalize(s.xz + vec2(1e-5));
 	float side = pow(dot(dh, sh) * 0.5 + 0.5, 2.0);

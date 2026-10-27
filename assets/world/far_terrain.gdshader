@@ -33,6 +33,16 @@ uniform float rock_fill = 0.0;
 // ~0.03-0.05 (darker than coal); albedo_lift restores a natural rock range inside the region.
 uniform float rock_albedo_lift = 1.0;
 uniform vec3 rock_fill_tint : source_color = vec3(0.62, 0.60, 0.72);
+// Golden-hour soft daylight (all zero = previous look): wrap lighting on the key (key_light = sun
+// colour x energy, linear) added as emission so the stock light path and specular stay as they
+// are, plus a lavender-sky / warm-bounce hemisphere term; faded out by soft_range so the far walls
+// keep their tone under the haze. With shadows off, the low back-side key alone left the near
+// zone black (vista bottom-left quarter 64% below L*28, consult 01 step 4).
+uniform vec3 key_light = vec3(0.0);
+uniform float wrap_light = 0.0;
+uniform vec3 hemi_sky = vec3(0.0);
+uniform vec3 hemi_ground = vec3(0.0);
+uniform float soft_range = 900.0;
 varying vec3 v_world;
 varying vec3 v_normal;
 
@@ -48,6 +58,12 @@ float vnoise(vec2 p) {
 }
 float fbm(vec2 p) {
 	return vnoise(p) * 0.5 + vnoise(p * 2.03 + 3.7) * 0.28 + vnoise(p * 4.1 + 9.1) * 0.14 + vnoise(p * 8.3 + 1.3) * 0.08;
+}
+vec3 soft_daylight(vec3 n, vec3 albedo, float dist) {
+	float ndl = dot(n, normalize(sun_dir));
+	float wrap_extra = max(0.0, (ndl + wrap_light) / (1.0 + wrap_light)) - max(0.0, ndl);
+	vec3 hemi = mix(hemi_ground, hemi_sky, clamp(n.y * 0.5 + 0.5, 0.0, 1.0));
+	return albedo * (key_light * wrap_extra + hemi) * (1.0 - smoothstep(soft_range * 0.6, soft_range, dist));
 }
 void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -205,7 +221,7 @@ void fragment() {
 		ALBEDO = vec3(0.0);
 	} else {
 		ALBEDO = albedo;
-		EMISSION = fill;
+		EMISSION = fill + soft_daylight(n, albedo, dist);
 	}
 	ROUGHNESS = mix(mix(0.95, 0.82, rockiness), 0.55, wet_margin * (1.0 - rockiness));
 	SPECULAR = mix(0.12, 0.25, wet_margin * (1.0 - rockiness));

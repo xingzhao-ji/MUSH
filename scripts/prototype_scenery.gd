@@ -188,7 +188,7 @@ const DAY_SUN := Color("ffc07e")
 ## lavender fog below the sky, a darker zenith, and the warm glow dome decoupled from the key (near
 ## the view axis), as the concepts do. Vista (L*): massif range 39 -> 53, far block 80 (above the
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
-const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("8a84a8"), "sky_top": Color("4a4f9e"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("d6bccf")}
+const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("8a84a8"), "sky_top": Color("3a3c86"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("d6bccf")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
@@ -215,6 +215,9 @@ var _reduced_motion: bool = false
 var _overview: bool = false
 var _debug_colors: bool = false
 var _art: Array[ShaderMaterial] = []
+# Terrain, forest carpet and meadow erratics: the golden-hour soft daylight terms (wrap on the key,
+# sky/bounce hemisphere) go to these materials only.
+var _soft_materials: Array[ShaderMaterial] = []
 var _mask: StandardMaterial3D
 var _nodes: Array[MultiMeshInstance3D] = []
 var _static: Array[GeometryInstance3D] = []
@@ -864,6 +867,7 @@ func _add_terrain() -> void:
 	_terrain_material.set_shader_parameter("clearing_gain", Vector3(CLEARING_GAIN.r, CLEARING_GAIN.g, CLEARING_GAIN.b))
 	_terrain_material.set_shader_parameter("rock_focus_rect", Vector4(_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y))
 	for key: String in ROCK_READABILITY: _terrain_material.set_shader_parameter(key, ROCK_READABILITY[key])
+	_soft_materials.append(_terrain_material)
 	rock_material = _terrain_material
 	var terrain := MeshInstance3D.new()
 	terrain.name = "WorldTerrain"
@@ -1642,6 +1646,7 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 	material.shader = SHADER
 	material.set_shader_parameter("mode", 5)
 	_art.append(material)
+	_soft_materials.append(material)
 	var chunks: Dictionary = {}
 	for index: int in xs.size():
 		var cell := Vector3i(floori(xs[index].origin.x / 400.0), floori(xs[index].origin.z / 400.0), kinds[index])
@@ -2280,6 +2285,7 @@ func _add_meadow_erratics() -> void:
 		var erratic_material: ShaderMaterial = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
 		erratic_material.set_shader_parameter("rock_gain", 1.05)
 		erratic_material.set_shader_parameter("moss_cover", 1.0)
+		_soft_materials.append(erratic_material)
 		blocks += xs.size()
 		triangles += _triangle_count(meshes[v]) * xs.size()
 	rock_count += blocks
@@ -4364,6 +4370,14 @@ const GOLDEN_FILL_ELEV := -45.0
 ## Sky glow direction (degrees; same azimuth convention as the sun's rotation_degrees.y).
 const GOLDEN_GLOW_AZ := 208.0
 const GOLDEN_GLOW_ELEV := 6.0
+const GOLDEN_HALO_POWER := 28.0
+const GOLDEN_HALO_GAIN := 0.7
+# Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
+# lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
+const SOFT_WRAP := 0.5
+const SOFT_HEMI := 0.3
+const SOFT_HEMI_COLOR := "9e94e0"
+const SOFT_BOUNCE := 0.18
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
@@ -4390,6 +4404,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		_skyglow_material.set_shader_parameter("rain", rain)
 		_skyglow_material.set_shader_parameter("strength", float(look_override.get("glow", GOLDEN_GLOW)))
 		_skyglow_material.set_shader_parameter("glow_color", Color(str(look_override.get("glow_color", "ffb873"))))
+		_skyglow_material.set_shader_parameter("halo_power", float(look_override.get("halo_power", GOLDEN_HALO_POWER)))
+		_skyglow_material.set_shader_parameter("halo_gain", float(look_override.get("halo_gain", GOLDEN_HALO_GAIN)))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material] + _geology_materials:
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
@@ -4399,6 +4415,17 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	sun.rotation_degrees.x = lerpf(float(look_override.get("sun_elev", GOLDEN_SUN_ELEV if look_depth else -22.0)), -27.45, night)
 	sun.rotation_degrees.y = lerpf(float(look_override.get("sun_az", GOLDEN_SUN_AZ if look_depth else 130.0)), 153.79, night)
 	sun.light_angular_distance = 2.2
+	# Soft daylight: by day, golden hour only; night and rain keep their previous lighting exactly.
+	var soft_k: float = (1.0 - night) * (1.0 - rain) if look_depth else 0.0
+	var key_lin: Color = sun.light_color.srgb_to_linear() * sun.light_energy * soft_k
+	var sky_lin: Color = Color(str(look_override.get("hemi_color", SOFT_HEMI_COLOR))).srgb_to_linear() * float(look_override.get("hemi", SOFT_HEMI)) * soft_k
+	var bounce_lin: Color = key_lin * float(look_override.get("bounce", SOFT_BOUNCE))
+	for material: ShaderMaterial in _soft_materials:
+		material.set_shader_parameter("key_light", Vector3(key_lin.r, key_lin.g, key_lin.b))
+		material.set_shader_parameter("wrap_light", float(look_override.get("wrap", SOFT_WRAP)) * soft_k)
+		material.set_shader_parameter("hemi_sky", Vector3(sky_lin.r, sky_lin.g, sky_lin.b))
+		material.set_shader_parameter("hemi_ground", Vector3(bounce_lin.r, bounce_lin.g, bounce_lin.b))
+		material.set_shader_parameter("soft_range", float(look_override.get("soft_range", 900.0)))
 	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
 	environment.ambient_light_color = (day.ambient as Color).lerp(Color("8f90c8"), night)
 	# Fill energy stays at 0.32: a stronger fill (0.42 tried, sweep 173032) lifted the shadow

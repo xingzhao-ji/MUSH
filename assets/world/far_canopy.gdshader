@@ -38,6 +38,13 @@ uniform float sky_fill = 0.0;
 uniform float cap_craft = 0.0;
 uniform vec4 stem_focus = vec4(0.0);
 uniform float stem_organic = 0.0;
+// Golden-hour soft daylight, as in far_terrain (all zero = previous look; set only on the forest
+// carpet and meadow erratic materials): wrap on the key plus a sky/bounce hemisphere term.
+uniform vec3 key_light = vec3(0.0);
+uniform float wrap_light = 0.0;
+uniform vec3 hemi_sky = vec3(0.0);
+uniform vec3 hemi_ground = vec3(0.0);
+uniform float soft_range = 900.0;
 varying float v_tint;
 varying float v_cavity;
 varying vec3 v_col;
@@ -232,6 +239,12 @@ void fragment() {
 		albedo = v_col * 0.78 * drift * (0.3 + 0.75 * UV.y * UV.y) * (0.85 + 0.3 * sun_side) * (0.8 + 0.4 * fbm(v_world.xz * 0.15));
 		rough = 0.9;
 		spec = 0.05;
+	}
+	if (wrap_light > 0.0 || hemi_sky != vec3(0.0)) {
+		float ndl = dot(n, normalize(sun_dir));
+		float wrap_extra = max(0.0, (ndl + wrap_light) / (1.0 + wrap_light)) - max(0.0, ndl);
+		vec3 hemi = mix(hemi_ground, hemi_sky, clamp(n.y * 0.5 + 0.5, 0.0, 1.0));
+		emit += albedo * (key_light * wrap_extra + hemi) * (1.0 - smoothstep(soft_range * 0.6, soft_range, length(VERTEX)));
 	}
 	ALBEDO = albedo;
 	EMISSION = emit;
