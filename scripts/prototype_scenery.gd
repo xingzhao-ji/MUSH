@@ -90,6 +90,8 @@ const WALL_DOME_S := 1560.0
 const GRANITE_SHADER := preload("res://assets/world/prototype_granite.gdshader")
 const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
 const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
+const Horn := preload("res://scripts/prototype_horn.gd")
+const PEAK_HORN := true
 const ROUTE_SEAM := Vector2(-2.0, 29.0)
 const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0), Vector2(-1.0, 62.0), Vector2(6.0, 80.0), Vector2(24.0, 96.0), Vector2(48.0, 108.0), Vector2(76.0, 118.0), Vector2(100.0, 135.0), Vector2(110.0, 160.0), Vector2(104.0, 185.0), Vector2(88.0, 205.0), Vector2(72.0, 215.0)]
 ## Tread grade limit (route module rejects beyond 14 degrees after its own smoothing).
@@ -2930,7 +2932,9 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 		var t: float = float(i) / 40.0
 		profile.append(Vector3(pow(1.0 - t, 0.85) * (1.0 + 0.12 * pow(1.0 - t, 4.0)), t, t))
 	profile.append(Vector3(0.0, 1.0, 1.0))
-	var peak_mesh: ArrayMesh = _lathe(profile, 48, "crag", false, PackedFloat32Array([0.7, 2.2, 4.1, 0.06, -0.04]))
+	# PEAK_HORN: a ridged glacial horn (aretes, cirque faces, couloirs) in the same unit space and
+	# transform; false restores the original lathe cone.
+	var peak_mesh: ArrayMesh = Horn.ridged_horn_mesh() if PEAK_HORN else _lathe(profile, 48, "crag", false, PackedFloat32Array([0.7, 2.2, 4.1, 0.06, -0.04]))
 	var rock := granite.duplicate() as ShaderMaterial
 	rock.set_shader_parameter("world_mapped", true)
 	_geology_materials.append(rock)
