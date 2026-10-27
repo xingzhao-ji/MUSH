@@ -91,6 +91,7 @@ const GRANITE_SHADER := preload("res://assets/world/prototype_granite.gdshader")
 const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
 const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
 const Horn := preload("res://scripts/prototype_horn.gd")
+const MIST_SHADER := preload("res://assets/world/prototype_mist.gdshader")
 const PEAK_HORN := true
 const ROUTE_SEAM := Vector2(-2.0, 29.0)
 const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0), Vector2(-1.0, 62.0), Vector2(6.0, 80.0), Vector2(24.0, 96.0), Vector2(48.0, 108.0), Vector2(76.0, 118.0), Vector2(100.0, 135.0), Vector2(110.0, 160.0), Vector2(104.0, 185.0), Vector2(88.0, 205.0), Vector2(72.0, 215.0)]
@@ -665,7 +666,9 @@ func configure(world: Node3D) -> void:
 		# 4,000-instance / 300,000-triangle understory budget (x1.0 / 125 m measured 379,778).
 		if not "no_vista_understory" in skip: _add_corridor_understory(UNDERSTORY_VISTA_Z, "vista", 2.0, 70.0)
 	if not "no_shore_groves" in skip: _add_shore_groves()
-	if not geology_skip: _add_wall()
+	if not geology_skip:
+		_add_wall()
+		if not "no_wall_mist" in skip: _add_wall_mist()
 	_push_sky_dome()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
@@ -2723,6 +2726,51 @@ func _add_wall() -> void:
 		"face_outward": [outward_ok, outward_checked], "tallest_face_m": tallest, "falls": falls, "ice": ice, "gullies": _gullies.size(), "benches": WALL_BENCHES.size(), "facet_edges": [_facets[0].size(), _facets[1].size()], "route_clearance_m": route_gap, "giant_cap_clearance_m": giant_gap,
 		"collision": "none (far layer)", "shadows": "off"}, true)
 	escarpment_report["passed"] = finite and outward_checked > 0 and outward_ok == outward_checked and route_gap > 250.0 and giant_gap > 40.0 and bool(falls.get("built", false)) and bool(ice.get("built", false))
+
+## Valley mist pooled at the feet of the West Wall (review: the middle distance had no layers and
+## no height mist). Two staggered rows of soft vertical sheets stand in front of the face (40-90 m
+## and 150-200 m out), dense at their base and feathered everywhere else; the shader softens them
+## against the scene through the depth buffer and fades them near the camera. One mesh, one
+## draw call, no collider, no shadow; built once at startup.
+const MIST_STEP := 10
+var wall_mist_report: Dictionary = {"built": false}
+func _add_wall_mist() -> void:
+	if _wall.size() < 20: return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var sheets: int = 0
+	for row: Array in [[0, 40.0, 50.0, 150.0, 150.0, -15.0], [MIST_STEP / 2, 150.0, 50.0, 230.0, 95.0, -10.0]]:
+		for i: int in range(int(row[0]), _wall.size(), MIST_STEP):
+			var sample: Dictionary = _wall[i]
+			if not sample.has("top") or float(sample.top) - float(sample.base) < 120.0: continue
+			var nrm: Vector2 = sample.normal
+			var along := Vector2(-nrm.y, nrm.x)
+			var jitter: float = _hill_noise.get_noise_2d(float(sample.s) * 2.3, float(row[1]))
+			var centre: Vector2 = sample.toe + nrm * (float(row[1]) + float(row[2]) * (0.5 + 0.5 * jitter))
+			var ground: float = terrain_height(centre.x, centre.y)
+			var half_w: float = float(row[3]) * (0.5 + 0.1 * jitter)
+			var height: float = float(row[4]) * (0.85 + 0.3 * absf(jitter))
+			var y0: float = ground + float(row[5])
+			var a: Vector2 = centre - along * half_w
+			var b: Vector2 = centre + along * half_w
+			var corners: Array = [[Vector3(a.x, y0, a.y), Vector2(0, 0)], [Vector3(b.x, y0, b.y), Vector2(1, 0)], [Vector3(b.x, y0 + height, b.y), Vector2(1, 1)], [Vector3(a.x, y0 + height, a.y), Vector2(0, 1)]]
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(corners[k][1])
+				st.add_vertex(corners[k][0])
+			sheets += 1
+	if sheets == 0: return
+	var material := ShaderMaterial.new()
+	material.shader = MIST_SHADER
+	_geology_materials.append(material)
+	var node := MeshInstance3D.new()
+	node.name = "WallMist"
+	node.mesh = st.commit()
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	wall_mist_report = {"built": true, "sheets": sheets, "triangles": sheets * 2, "draw_calls": 1, "colliders": 0, "shadows": "off"}
 
 ## The falls: a free-falling ribbon leaving the notch lip just clear of the recessed channel,
 ## bowing outward as it drops and spreading, plus three crossed soft mist sheets at its foot.
