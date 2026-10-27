@@ -16,6 +16,10 @@ uniform vec3 flesh : source_color = vec3(0.70, 0.52, 0.72);
 uniform vec3 flesh_rim : source_color = vec3(0.88, 0.62, 0.66);
 uniform vec3 gill : source_color = vec3(0.86, 0.70, 0.66);
 uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
+// Mode 2 rock brightness (1.6 = the spires and rim boulders); the meadow erratics use less, and
+// moss_cover > 0 adds lichen-moss on their upper faces and a damp, darker foot.
+uniform float rock_gain = 1.6;
+uniform float moss_cover = 0.0;
 // Hero stem organic finish, only within stem_focus (x, z, radius) of the hero base; at zero
 // strength every stem renders exactly as before. Matte, soft tonal modulation at several
 // metres, very low-contrast fibre that fades with distance, gentle two-scale normal undulation
@@ -193,8 +197,13 @@ void fragment() {
 		// warm streak x strata product on the dark brown texture read as striped termite mounds.
 		vec3 base = rock * mix(vec3(0.95, 0.92, 0.9), vec3(1.15, 1.08, 1.0), streak) * mix(0.92, 1.05, strata) * (0.9 + 0.2 * v_tint);
 		float g = dot(base, vec3(0.299, 0.587, 0.114));
-		albedo = mix(base, vec3(g) * vec3(1.0, 1.0, 1.03), 0.65) * 1.6;
+		albedo = mix(base, vec3(g) * vec3(1.0, 1.0, 1.03), 0.65) * rock_gain;
 		albedo = mix(albedo, moss_mean, smoothstep(0.7, 0.95, n.y) * 0.6);
+		if (moss_cover > 0.0) {
+			float patch = smoothstep(0.42, 0.62, fbm(v_world.xz * 0.35 + v_world.y * 0.2));
+			albedo = mix(albedo, moss_mean * mix(0.8, 1.1, fbm(v_world.xz * 1.3)), smoothstep(0.15, 0.6, n.y) * patch * moss_cover);
+			albedo *= mix(1.0, 0.6, (1.0 - smoothstep(-0.4, 0.2, n.y)) * moss_cover);
+		}
 		rough = 0.92;
 		spec = 0.1;
 	} else {

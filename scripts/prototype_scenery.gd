@@ -92,6 +92,20 @@ const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
 const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
 const Horn := preload("res://scripts/prototype_horn.gd")
 const MIST_SHADER := preload("res://assets/world/prototype_mist.gdshader")
+const Erratics := preload("res://scripts/prototype_erratics.gd")
+## Glacial erratics: clustered angular granite blocks on the open slopes of the lake basin and the
+## vista's near field (the open meadows read as plain lawn). Visual only (no collision, no
+## shadows), kept off the walking ribbons, the stream, the lake, the clearing and the giants.
+const ERRATIC_REGION := Rect2(-420.0, -720.0, 860.0, 900.0)
+const ERRATIC_CELL := 26.0
+## Vista review camera (geology "vista" view; off the walking ribbons, ~120 m east of the slice).
+const VISTA_EYE := Vector2(350.0, 100.0)
+const VISTA_AIM := Vector2(-300.0, -760.0)
+## Hand-placed blocks where the vista frame's lower-left sees the ground (the camera stands at
+## the top of a steep drop): [screen x, screen y in -1..1 (y up), size m]; vertical FOV 60, 16:9,
+## eye 1.7 m above the rendered ground, as in the geology vista view.
+const ERRATIC_ANCHORS: Array = [[-0.62, -0.74, 8.0], [-0.84, -0.6, 4.5], [-0.45, -0.88, 3.2], [-0.74, -0.9, 2.4], [-0.3, -0.82, 2.0]]
+var erratic_report: Dictionary = {}
 const PEAK_HORN := true
 const ROUTE_SEAM := Vector2(-2.0, 29.0)
 const ROUTE_WAYPOINTS: Array[Vector2] = [Vector2(-2.0, 29.0), Vector2(-3.0, 45.0), Vector2(-1.0, 62.0), Vector2(6.0, 80.0), Vector2(24.0, 96.0), Vector2(48.0, 108.0), Vector2(76.0, 118.0), Vector2(100.0, 135.0), Vector2(110.0, 160.0), Vector2(104.0, 185.0), Vector2(88.0, 205.0), Vector2(72.0, 215.0)]
@@ -666,6 +680,7 @@ func configure(world: Node3D) -> void:
 		# 4,000-instance / 300,000-triangle understory budget (x1.0 / 125 m measured 379,778).
 		if not "no_vista_understory" in skip: _add_corridor_understory(UNDERSTORY_VISTA_Z, "vista", 2.0, 70.0)
 	if not "no_shore_groves" in skip: _add_shore_groves()
+	if not "no_erratics" in skip: _add_meadow_erratics()
 	if not geology_skip:
 		_add_wall()
 		if not "no_wall_mist" in skip: _add_wall_mist()
@@ -1891,6 +1906,129 @@ func _add_corridor_trees(targets: Array) -> Dictionary:
 		corridor_trees.append(node)
 		built[batches[key].range] += _triangle_count(batches[key].mesh) * node.multimesh.instance_count
 	return {"trees": trees, "targets": targets.size(), "ring_crowns": crowns, "nodes": batches.size(), "triangles": built.all + built.far + built.near}
+
+func _add_meadow_erratics() -> void:
+	erratic_report = {"built": false}
+	# Walking-ribbon samples every <= 4 m in a 16 m hash, for fast clearance queries.
+	var gaps: Dictionary = {}
+	for path: Variant in [route, slice_route]:
+		if not is_instance_valid(path) or not path.valid: continue
+		var pts: PackedVector3Array = path._p
+		for i: int in range(1, pts.size()):
+			var a := Vector2(pts[i - 1].x, pts[i - 1].z)
+			var b := Vector2(pts[i].x, pts[i].z)
+			var steps: int = maxi(1, ceili(a.distance_to(b) / 4.0))
+			for k: int in steps + 1:
+				var q: Vector2 = a.lerp(b, float(k) / float(steps))
+				var key := Vector2i(floori(q.x / 16.0), floori(q.y / 16.0))
+				if not gaps.has(key): gaps[key] = []
+				(gaps[key] as Array).append(q)
+	var meshes: Array[ArrayMesh] = [Erratics.erratic_mesh(4101), Erratics.erratic_mesh(4102), Erratics.erratic_mesh(4103)]
+	var poses: Array = [[], [], []]
+	var tints: Array = [[], [], []]
+	var rejected: Dictionary = {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261026
+	var field := FastNoiseLite.new()
+	field.seed = 77
+	field.frequency = 0.006
+	var leads: Array = []
+	var eye_ground: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
+	var eye := Vector3(VISTA_EYE.x, maxf(eye_ground if not is_nan(eye_ground) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
+	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	var anchor_hits: Array = []
+	for anchor: Array in ERRATIC_ANCHORS:
+		var ray: Vector3 = (look + right * float(anchor[0]) * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * float(anchor[1]) * tan(deg_to_rad(30.0))).normalized()
+		for step: int in range(2, 400):
+			var q: Vector3 = eye + ray * float(step)
+			var g: float = rendered_terrain_height(q.x, q.z)
+			if q.y < (g if not is_nan(g) else terrain_height(q.x, q.z)):
+				leads.append([Vector2(q.x, q.z), float(anchor[2]), false])
+				anchor_hits.append([snappedf(q.x, 0.1), snappedf(q.z, 0.1), step])
+				break
+	var cols: int = ceili(ERRATIC_REGION.size.x / ERRATIC_CELL)
+	var rows: int = ceili(ERRATIC_REGION.size.y / ERRATIC_CELL)
+	for j: int in rows:
+		for i: int in cols:
+			var centre: Vector2 = ERRATIC_REGION.position + Vector2(float(i) + rng.randf(), float(j) + rng.randf()) * ERRATIC_CELL
+			var density: float = field.get_noise_2dv(centre) * 0.5 + 0.5
+			if rng.randf() > smoothstep(0.45, 0.8, density) * 0.55: continue
+			leads.append([centre, rng.randf_range(3.0, 8.0), true])
+	var clusters: int = 0
+	var anchors: int = 0
+	var min_gap: float = INF
+	for lead: Array in leads:
+		var spots: Array = [[lead[0], lead[1]]]
+		if lead[2] or float(lead[1]) > 4.0:
+			for m: int in rng.randi_range(1, 4) if lead[2] else 4:
+				spots.append([lead[0] + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(float(lead[1]) * 1.1, float(lead[1]) * 2.4), float(lead[1]) * rng.randf_range(0.25, 0.6)])
+		var placed_lead: bool = false
+		for spot: Array in spots:
+			var at: Vector2 = spot[0]
+			var size: float = spot[1]
+			var fit: Vector2 = _erratic_fit(at, size, gaps, 0.5 if lead[2] else 1.2)
+			if is_nan(fit.x):
+				var why: String = ["clearing", "root", "giant", "ribbon", "stream", "steep", "water"][int(fit.y)]
+				rejected[why] = int(rejected.get(why, 0)) + 1
+				if spot == spots[0] and lead[2]: break
+				continue
+			min_gap = minf(min_gap, fit.y)
+			var variant: int = rng.randi_range(0, 2)
+			var sy: float = size * rng.randf_range(0.7, 1.0)
+			var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)) * Basis.from_scale(Vector3(size * rng.randf_range(1.0, 1.5), sy, size * rng.randf_range(0.8, 1.15)))
+			# Unit base plane at y = -0.4; bury the block a quarter of its height below the lowest ground.
+			(poses[variant] as Array).append(Transform3D(basis, Vector3(at.x, fit.x + sy * (0.4 - 0.32), at.y)))
+			(tints[variant] as Array).append(Color(rng.randf(), 0.0, 0.0))
+			if spot == spots[0]: placed_lead = true
+		if placed_lead:
+			if lead[2]: clusters += 1
+			else: anchors += 1
+	var blocks: int = 0
+	var triangles: int = 0
+	for v: int in 3:
+		if (poses[v] as Array).is_empty(): continue
+		var xs: Array[Transform3D] = []
+		xs.assign(poses[v])
+		var cs: Array[Color] = []
+		cs.assign(tints[v])
+		_add(meshes[v], xs, cs, 2, "MeadowErratics_%d" % v)
+		var erratic_material: ShaderMaterial = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
+		erratic_material.set_shader_parameter("rock_gain", 1.05)
+		erratic_material.set_shader_parameter("moss_cover", 1.0)
+		blocks += xs.size()
+		triangles += _triangle_count(meshes[v]) * xs.size()
+	rock_count += blocks
+	erratic_report = {"built": blocks > 0, "clusters": clusters, "vista_anchor_blocks": anchors, "vista_anchor_hits_x_z_m": anchor_hits, "blocks": blocks, "triangles": triangles,
+		"mesh_triangles": meshes.map(func(m: ArrayMesh) -> int: return _triangle_count(m)), "rejected": rejected,
+		"min_ribbon_gap_m": snappedf(min_gap, 0.1), "region_xz": [ERRATIC_REGION.position.x, ERRATIC_REGION.position.y, ERRATIC_REGION.end.x, ERRATIC_REGION.end.y],
+		"colliders": 0, "shadow_casters": 0}
+	print("ERRATICS ", JSON.stringify(erratic_report))
+
+## Lowest rendered ground under an erratic's footprint (x) and its ribbon clearance (y), or NAN
+## with the rejection index in y.
+func _erratic_fit(at: Vector2, size: float, gaps: Dictionary, max_slope: float = 0.5) -> Vector2:
+	if baked_extent.grow(30.0).has_point(at): return Vector2(NAN, 0)
+	if at.distance_to(HERO) < 60.0: return Vector2(NAN, 1)
+	for g: Array in GIANTS:
+		if at.distance_to(Vector2(float(g[0]), float(g[1]))) < 10.0 + float(g[2]) * 0.2 + size: return Vector2(NAN, 2)
+	var gap: float = INF
+	var cell := Vector2i(floori(at.x / 16.0), floori(at.y / 16.0))
+	for dx: int in range(-1, 2):
+		for dz: int in range(-1, 2):
+			var list: Variant = gaps.get(cell + Vector2i(dx, dz))
+			if list == null: continue
+			for q: Vector2 in list: gap = minf(gap, at.distance_to(q))
+	if gap < 6.0 + size * 1.6: return Vector2(NAN, 3)
+	if _stream_distance(at.x, at.y).x < 16.0 + size: return Vector2(NAN, 4)
+	if terrain_slope(at.x, at.y) > max_slope: return Vector2(NAN, 5)
+	var lowest: float = INF
+	for corner: Vector2 in [Vector2.ZERO, Vector2(size, 0.0), Vector2(-size, 0.0), Vector2(0.0, size), Vector2(0.0, -size)]:
+		var r: float = rendered_terrain_height(at.x + corner.x, at.y + corner.y)
+		lowest = minf(lowest, r if not is_nan(r) else terrain_height(at.x + corner.x, at.y + corner.y))
+	if lowest < LAKE_Y + 1.0: return Vector2(NAN, 6)
+	return Vector2(lowest, gap)
 
 func _add_shore_groves() -> void:
 	shore_groves_report = {"built": false}
@@ -3863,4 +4001,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.8], "rain": "blends to the previous profile (full rain = previous)", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; night/rain endpoints, fog density and distances unchanged"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.8], "rain": "blends to the previous profile (full rain = previous)", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
