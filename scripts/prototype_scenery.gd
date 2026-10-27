@@ -4360,7 +4360,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
 	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(FOG_DENSITY, 0.7, rain)))
 	environment.fog_aerial_perspective = 0.15
-	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night)
+	# Overcast rain has no sun to scatter: the golden-hour scatter lit the rain haze pink (vista rain).
+	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night) * (1.0 - rain)
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:

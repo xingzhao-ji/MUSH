@@ -25,7 +25,7 @@ void fragment() {
 	float side = pow(dot(dh, sh) * 0.5 + 0.5, 2.0);
 	float band = exp(-max(d.y, 0.0) * 7.0) * mix(0.25, 1.0, side);
 	float above = smoothstep(-0.02, 0.03, d.y);
-	float k = (halo + band * 0.6) * above * strength * (1.0 - night) * (1.0 - 0.85 * rain);
+	float k = (halo + band * 0.6) * above * strength * (1.0 - night) * (1.0 - rain);
 	// Sun disc (~1.3 degrees) on the dome, so scenery in front of it occludes it (the world's own
 	// 120 m sun sphere drew over the far walls once the sun moved into view).
 	float disc = smoothstep(0.99970, 0.99982, facing) * above * (1.0 - night) * (1.0 - rain);
