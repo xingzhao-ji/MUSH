@@ -11,7 +11,7 @@ render_mode blend_mix, cull_back, depth_draw_always;
 // - The shore contact fades over the first ~0.45 m of depth (opacity and reflection).
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
-uniform vec3 shore_tint : source_color = vec3(0.40, 0.38, 0.27);
+uniform vec3 shore_tint : source_color = vec3(0.20, 0.19, 0.13);
 uniform vec3 shallow : source_color = vec3(0.22, 0.42, 0.40);
 uniform vec3 deep : source_color = vec3(0.03, 0.11, 0.16);
 uniform vec3 sky_top : source_color = vec3(0.24, 0.45, 0.78);

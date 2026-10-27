@@ -32,19 +32,23 @@ void fragment() {
 	float band = abs(fract(u * 16.0 + warp) - 0.5) * 2.0;
 	float crevasse = smoothstep(0.82, 0.97, band) * smoothstep(0.25, 0.6, u) * (1.0 - 0.6 * (1.0 - abs(UV.y)));
 	float snow = 1.0 - smoothstep(0.2, 0.55, u);
-	vec3 glacier = mix(vec3(0.72, 0.83, 0.90), vec3(0.93, 0.95, 0.98), snow);
-	glacier = mix(glacier, vec3(0.20, 0.42, 0.62), crevasse * 0.8);
+	vec3 glacier = mix(vec3(0.58, 0.70, 0.78), vec3(0.93, 0.95, 0.98), snow);
+	glacier = mix(glacier, vec3(0.10, 0.22, 0.34), crevasse * 0.8);
 	float steep = 1.0 - smoothstep(0.35, 0.75, abs(normalize(v_up).y));
-	glacier = mix(glacier, vec3(0.38, 0.60, 0.76), steep * 0.8 * (1.0 - snow * 0.7));
-	// Terminus cliff: blue ice split by vertical fracture lines between serac columns.
+	glacier = mix(glacier, vec3(0.30, 0.47, 0.60), steep * 0.8 * (1.0 - snow * 0.7));
+	// Blue ice is far darker than snow (albedo ~0.3-0.5, not 0.6-0.8): the brighter values read as a
+	// glowing cyan cliff at night. Terminus cliff: blue ice split by vertical fracture lines between serac columns.
 	float fracture = smoothstep(0.86, 0.97, abs(fract(UV.y * 9.0 + fbm(vec2(UV.y * 3.0, 1.7)) * 0.8) - 0.5) * 2.0);
-	vec3 cliff = vec3(0.40, 0.62, 0.80) * (0.85 + 0.3 * fbm(vec2(UV.y * 8.0, 3.0)));
-	cliff = mix(cliff, vec3(0.12, 0.30, 0.48), fracture * 0.75);
+	vec3 cliff = vec3(0.28, 0.45, 0.60) * (0.85 + 0.3 * fbm(vec2(UV.y * 8.0, 3.0)));
+	cliff = mix(cliff, vec3(0.08, 0.18, 0.30), fracture * 0.75);
 	glacier = mix(glacier, cliff, COLOR.r);
 	glacier = mix(glacier, vec3(0.30, 0.28, 0.26) * (0.8 + 0.4 * fbm(vec2(u * 30.0, UV.y * 9.0))), COLOR.g * 0.9);
-	ALBEDO = mix(glacier, glacier * vec3(0.6, 0.65, 0.9), night * 0.5);
-	ROUGHNESS = mix(0.35, 0.75, snow);
-	SPECULAR = 0.45;
+	// Night: the blue moonlight on blue ice doubled the saturation and the serac cliff read as a
+	// glowing cyan panel; ice goes toward neutral grey-blue and loses most of its gloss.
+	float ice_lum = dot(glacier, vec3(0.299, 0.587, 0.114));
+	ALBEDO = mix(glacier, vec3(ice_lum) * vec3(0.66, 0.68, 0.78), night * 0.75);
+	ROUGHNESS = mix(mix(0.35, 0.75, snow), 0.7, night);
+	SPECULAR = mix(0.45, 0.2, night);
 	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 3) { ALBEDO = vec3(0.5); }

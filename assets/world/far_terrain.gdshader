@@ -77,10 +77,23 @@ void fragment() {
 	float meadow_patch = fbm(v_world.xz * 0.018 + vec2(fbm(v_world.xz * 0.005) * 3.0));
 	moss *= mix(vec3(0.76, 0.85, 0.80), vec3(1.10, 1.04, 0.82), smoothstep(0.3, 0.75, meadow_patch));
 	moss = mix(moss, vec3(dot(moss, vec3(0.299, 0.587, 0.114))), 0.15);
-	// Damp valley floor, then a narrow sandy shore band at the lake level.
+	// Damp valley floor.
 	moss = mix(moss, moss * vec3(0.62, 0.86, 0.84), smoothstep(-25.0, -60.0, h));
-	vec3 sand = vec3(0.40, 0.36, 0.30) * (0.85 + 0.3 * fbm(v_world.xz * 0.4));
-	moss = mix(moss, sand, smoothstep(-79.6, -81.4, h) * smoothstep(-83.2, -81.6, h) * 0.85);
+	// Lake shore (lake level -82 m). A uniform pale sand ring read as a kiddie-pool rim and as a
+	// glowing outline at night; instead: a broken grey gravel strip up to ~1.4 m above the water,
+	// a dark wet margin at the waterline (sharper, glossier) and a dark sediment bed below it, so
+	// the shallows read as clear water over a dark bed.
+	float shore_n = fbm(v_world.xz * 0.09 + vec2(fbm(v_world.xz * 0.02) * 2.0));
+	float lake_h = h + 82.0 + (shore_n - 0.5) * 0.5;
+	float pebble = fbm(v_world.xz * 0.7 + 3.3);
+	float gravel_m = smoothstep(1.4, 0.7, lake_h) * smoothstep(-0.1, 0.25, lake_h) * smoothstep(0.38, 0.55, shore_n);
+	vec3 gravel_c = mix(vec3(0.14, 0.14, 0.13), vec3(0.23, 0.22, 0.21), smoothstep(0.35, 0.7, pebble));
+	moss = mix(moss, gravel_c, gravel_m * 0.9);
+	float wet = smoothstep(0.5, 0.0, lake_h);
+	moss *= mix(1.0, 0.5, wet);
+	vec3 bed = mix(vec3(0.15, 0.14, 0.10), vec3(0.08, 0.09, 0.07), smoothstep(-0.2, -1.6, lake_h));
+	moss = mix(moss, bed, smoothstep(0.0, -0.4, lake_h));
+	float wet_margin = smoothstep(0.3, 0.0, lake_h) * smoothstep(-0.6, -0.1, lake_h);
 	// Rock: triplanar Rock01 with erosion streaks that run down the slope, not bands.
 	vec3 w = pow(abs(n), vec3(4.0));
 	w /= (w.x + w.y + w.z);
@@ -175,6 +188,6 @@ void fragment() {
 		ALBEDO = albedo;
 		EMISSION = fill;
 	}
-	ROUGHNESS = mix(0.95, 0.82, rockiness);
-	SPECULAR = 0.12;
+	ROUGHNESS = mix(mix(0.95, 0.82, rockiness), 0.55, wet_margin * (1.0 - rockiness));
+	SPECULAR = mix(0.12, 0.25, wet_margin * (1.0 - rockiness));
 }
