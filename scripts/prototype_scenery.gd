@@ -130,6 +130,7 @@ const HORIZON_GIANTS: Array = [[-260.0, -1820.0, 330.0, 700.0], [330.0, -1960.0,
 var horizon_giants_report: Dictionary = {}
 const VISTA_GROVE: Array = [[-0.36, -0.24, 22.0], [-0.27, -0.29, 14.0], [-0.20, -0.21, 18.0], [-0.31, -0.18, 11.0], [-0.46, -0.27, 9.0]]
 var vista_grove_report: Dictionary = {}
+var far_falls_report: Dictionary = {}
 var _ribbon_hash: Dictionary = {}
 const PEAK_HORN := true
 const ROUTE_SEAM := Vector2(-2.0, 29.0)
@@ -783,6 +784,7 @@ func configure(world: Node3D) -> void:
 	if not "no_horizon_giants" in skip: _add_horizon_giants()
 	if not geology_skip:
 		_add_wall()
+		if not "no_far_falls" in skip: _add_far_ribbon_falls()
 		if not "no_wall_mist" in skip: _add_wall_mist()
 		if not "no_valley_mist" in skip: _add_valley_mist()
 	_push_sky_dome()
@@ -2146,6 +2148,99 @@ func _add_vista_grove() -> void:
 	vista_grove_report = {"built": true, "mushrooms": caps.size(), "rejected": rejected, "placed_x_z_capradius": placed, "min_ribbon_gap_m": snappedf(min_gap, 0.1),
 		"triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0}
 	print("VISTA_GROVE ", JSON.stringify(vista_grove_report))
+
+## Ribbon falls on the far granite walls seen from the vista (review 06/07 and the Gemini paintover:
+## two or three thin falls on the central walls). Each is placed on the West Wall station whose crest
+## projects nearest a vista screen x (1280 px frame) and hangs down that station's own face profile
+## (_wall_face_offset, as the West Falls do), 4 m proud of the rock. [px, width m]. Visual only, on the
+## West Falls shader; no collision, no shadows.
+const FAR_FALLS: Array = [[742.0, 9.0], [818.0, 12.0], [905.0, 8.0]]
+func _add_far_ribbon_falls() -> void:
+	far_falls_report = {"built": false}
+	if _wall.size() < 3: return
+	var eye_ground: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
+	var eye := Vector3(VISTA_EYE.x, maxf(eye_ground if not is_nan(eye_ground) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
+	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	var k_tan: float = tan(deg_to_rad(30.0))
+	var project := func(p: Vector3) -> Vector2:
+		var v: Vector3 = p - eye
+		var z: float = maxf(v.dot(look), 1.0)
+		return Vector2(640.0 + v.dot(right) / (z * k_tan * 16.0 / 9.0) * 640.0, 360.0 - v.dot(up) / (z * k_tan) * 360.0)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var built: Array = []
+	var used: Array[int] = []
+	for spec: Array in FAR_FALLS:
+		var target: float = spec[0]
+		var width: float = spec[1]
+		var best: int = -1
+		var best_dx: float = INF
+		for i: int in range(1, _wall.size() - 1):
+			var w: Dictionary = _wall[i]
+			var h: float = float(w.top) - float(w.base)
+			if h < 150.0 or absf(float(w.s) - WALL_FALLS_S) < 120.0: continue
+			var toe: Vector2 = w.toe
+			var nrm: Vector2 = w.normal
+			if Vector2(eye.x - toe.x, eye.z - toe.y).dot(nrm) <= 0.0: continue
+			var crest_off: float = _wall_face_offset(w, 1.0, h, float(w.top))
+			var crest := Vector3(toe.x + nrm.x * crest_off, float(w.top), toe.y + nrm.y * crest_off)
+			var sp: Vector2 = project.call(crest)
+			if sp.y < 0.0 or sp.y > 400.0: continue
+			var clash: bool = false
+			for u: int in used: if absi(u - i) < 4: clash = true
+			if clash: continue
+			if absf(sp.x - target) < best_dx:
+				best_dx = absf(sp.x - target)
+				best = i
+		if best < 0 or best_dx > 40.0:
+			built.append({"px": target, "kept": false, "nearest_dx": best_dx})
+			continue
+		used.append(best)
+		var sample: Dictionary = _wall[best]
+		var toe2: Vector2 = sample.toe
+		var nrm2: Vector2 = sample.normal
+		var dir2: Vector2 = sample.dir
+		var base: float = float(sample.base)
+		var top: float = float(sample.top)
+		var hh: float = top - base
+		var rows: int = 40
+		for j: int in rows:
+			var quad: Array[Vector3] = []
+			var quv: Array[Vector2] = []
+			for t: float in [float(j) / rows, float(j + 1) / rows]:
+				var y: float = top - 3.0 - (hh - 3.0) * t
+				var q: float = clampf((y - base) / hh, 0.0, 1.0)
+				var off: float = _wall_face_offset(sample, q, hh, y) + 4.0
+				# Narrow at the lip, wandering a little across the face and fanning into spray at the foot
+				# (dead-straight even lines read as rods, sweep 140558).
+				var seed_f: float = float(used.size())
+				var wdt: float = width * lerpf(0.55, 1.5, t) * (0.85 + 0.3 * sin(t * 17.0 + seed_f * 2.1)) * (1.0 + 1.6 * smoothstep(0.82, 1.0, t))
+				var drift: float = sin(t * 5.3 + seed_f * 1.7) * 3.0 + sin(t * 12.7 + seed_f) * 1.2
+				for k: int in 2:
+					var across: float = (float(k) - 0.5) * wdt + drift
+					quad.append(Vector3(toe2.x + nrm2.x * off + dir2.x * across, y, toe2.y + nrm2.y * off + dir2.y * across))
+					quv.append(Vector2(float(k), t))
+			for m: int in [0, 2, 1, 1, 2, 3]:
+				st.set_uv(quv[m])
+				st.add_vertex(quad[m])
+		built.append({"px": target, "kept": true, "station_s": snappedf(float(sample.s), 1.0), "screen_dx": snappedf(best_dx, 0.1), "drop_m": snappedf(hh, 1.0), "distance_m": snappedf(eye.distance_to(Vector3(toe2.x, top, toe2.y)), 1.0)})
+	var kept: int = built.filter(func(b: Dictionary) -> bool: return b.kept).size()
+	far_falls_report = {"built": kept > 0, "falls": built, "colliders": 0, "shadow_casters": 0}
+	print("FAR_FALLS ", JSON.stringify(far_falls_report))
+	if kept == 0: return
+	st.generate_normals()
+	var water := ShaderMaterial.new()
+	water.shader = FALLS_SHADER
+	_geology_materials.append(water)
+	var node := MeshInstance3D.new()
+	node.name = "FarRibbonFalls"
+	node.mesh = st.commit()
+	node.material_override = water
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
 
 func _add_horizon_giants() -> void:
 	var rng := RandomNumberGenerator.new()
