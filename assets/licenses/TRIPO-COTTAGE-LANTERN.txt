@@ -1,15 +1,22 @@
-Mushroom cottage and lantern post: image-to-3D models (Tripo Studio)
+Mushroom cottage, lantern post and luminous lilies: 3D models generated in Tripo Studio
 Generated 2026-10-27 in Tripo Studio (studio.tripo3d.ai), owner's account (Pro plan), privacy Private.
 Mode: HD Model, H3.1, Ultra Mesh Quality, texture 2K, Remove Lighting, PBR, triangles.
   mush_cottage.glb      job ca00b20e-e1c8-43c7-b7ed-c86c3de373fd  polycount target 40000 (37,996 tris)  45 credits
   lantern_post.glb      job 42b66648-7039-4402-b425-76fd84330eda  polycount target 12000 (11,208 tris)  45 credits
-Studio balance 1300 before, 1210 after.
+  glow_flowers.glb      job 380a2d39-2959-45cd-8ab4-8f522f731f54  polycount target 12000 (11,427 tris)  45 credits
+                        text-to-3D (Gemini image generation was erroring); prompt: a clump of five to seven
+                        lily-like blossoms, pale lavender to white petals with glowing blue-white cores, teal leaves.
+Studio balance 1300 before, 1165 after (135 credits).
 Inputs: two isolated reference images generated in Google Gemini (owner's account) from the
 Gemini goal frame of the vista; kept outside the repository (the Gemini conversation and the Tripo job inputs), not used as game assets.
 Exported as GLB with 2K textures; the GLB textures were extracted by the Godot importer (files below).
 Use is subject to the Tripo Studio terms for the owner's plan.
 
 Retained files under assets/world/models/tripo:
+  glow_flowers.glb  2538308 bytes  sha256 d342e239f18e6b52f2a1bc9e9e638ba580bff1368ce98abaf54c7bbba2c5d380
+  glow_flowers_glow_flowers_basecolor.jpg  621892 bytes  sha256 9a90b35e38a1e404b06612df831d96049ea2ce5a83f55cfdc28d5e1dafa6d2a4
+  glow_flowers_glow_flowers_normal.png  754704 bytes  sha256 e53b5dae9aeccd376142ef0a02f265d07ce5c532bcb844076daeb1844aeb05bc
+  glow_flowers_glow_flowers_rm.jpg  734307 bytes  sha256 33ae042f71ecf5d1888d7eba6c23396fe1540e53bbe74b6d8ce625e491ce4d31
   lantern_post.glb  2454576 bytes  sha256 32734ba1eb7d2bcb8ce91878029561f84ad955a87f9c67492b0b5cd3cee1b94d
   lantern_post_mush_lantern_post_basecolor.jpg  504235 bytes  sha256 20d463a0ed52e3e24e3605e7339d27f242c9ee6a2f3b5f06f5e073f1852cbd5c
   lantern_post_mush_lantern_post_normal.png  1157539 bytes  sha256 f4b811318c64e6839d6cfa5d38290fec0cf292fe630a24d5fcbcd0deda3a1720
@@ -19,5 +26,5 @@ Retained files under assets/world/models/tripo:
   mush_cottage_mush_cottage_normal.png  1332590 bytes  sha256 30d26e3f1a01eae4e94c9b04048bbc33ce8a838c61211ebf5e997dddcaf82049
   mush_cottage_mush_cottage_rm.jpg  547070 bytes  sha256 ea6604a2d0224d7f73f3001dceb92bdda6ea142126be4c04d3670e5618e2a4a3
 
-Visual only in MUSH: placed by scripts/prototype_scenery.gd (_add_refuge_cottage, _add_refuge_lanterns) on
+Visual only in MUSH: placed by scripts/prototype_scenery.gd (_add_refuge_cottage, _add_refuge_lanterns, _add_vista_refuge) on
 assets/world/tripo_prop.gdshader, shadows off, no collision.

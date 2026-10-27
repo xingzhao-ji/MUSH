@@ -10,6 +10,8 @@ uniform bool has_normal = false;
 uniform vec3 tint = vec3(1.0);
 uniform float glow = 1.0;
 uniform float glow_floor = 0.6;
+// Cool glow (luminous petals and cores): bright texels with blue over red emit; 0 = off.
+uniform float cool_glow = 0.0;
 
 void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb;
@@ -22,4 +24,6 @@ void fragment() {
 	float sat = (mx - mn) / max(mx, 0.001);
 	float warm = smoothstep(glow_floor, glow_floor + 0.25, c.r) * smoothstep(0.35, 0.6, sat) * smoothstep(-0.02, 0.06, c.g - c.b) * smoothstep(0.28, 0.5, c.g);
 	EMISSION = c * warm * glow;
+	float cool = smoothstep(0.62, 0.92, mx) * smoothstep(-0.02, 0.08, c.b - c.r);
+	EMISSION += c * cool * cool_glow;
 }

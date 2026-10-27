@@ -151,6 +151,7 @@ var refuge_lanterns: Array[Vector3] = []
 ## Image-to-3D cottage and lantern (Tripo Studio, from Gemini references); procedural stand-ins until present.
 const COTTAGE_MODEL := "res://assets/world/models/tripo/mush_cottage.glb"
 const LANTERN_MODEL := "res://assets/world/models/tripo/lantern_post.glb"
+const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const COTTAGE_HEIGHT := 11.0
 const LANTERN_HEIGHT := 2.6
 var far_falls_report: Dictionary = {}
@@ -2232,6 +2233,9 @@ func _refuge_material(source: Material) -> Material:
 	var m: StandardMaterial3D = base.duplicate()
 	var label: String = base.resource_name.to_lower()
 	var tint := Color(1, 1, 1)
+	# The kit's twisted-tree leaf card is a red tint mask (meant for engine-side colouring): use the
+	# green broadleaf card instead.
+	if "twistedtree" in label and "leaves" in label: m.albedo_texture = load(QN + "Leaves_NormalTree_C.png")
 	if "bark" in label: tint = Color(0.6, 0.48, 0.44)
 	elif "flower" in label: tint = Color(0.8, 0.68, 1.0)
 	elif "grass" in label: tint = Color(0.6, 0.64, 0.48)
@@ -2367,7 +2371,7 @@ func _refuge_light(at: Vector3, range_m: float, label: String) -> void:
 	_refuge_lights.append(light)
 
 ## Places an imported model (all its mesh parts) scaled to `height` m on its base, yaw about Y.
-func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String) -> bool:
+func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String, luminous: bool = false) -> bool:
 	var parts: Array = _model_parts(path)
 	if parts.is_empty(): return false
 	var box := AABB()
@@ -2389,6 +2393,7 @@ func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: 
 			if source.normal_texture != null:
 				prop.set_shader_parameter("normal_tex", source.normal_texture)
 				prop.set_shader_parameter("has_normal", true)
+			prop.set_meta("luminous", luminous)
 			_refuge_props.append(prop)
 			material = prop
 		_refuge_mesh(mesh, material, root * (parts[i][1] as Transform3D), "%s_%d" % [label, i])
@@ -2554,6 +2559,15 @@ func _add_vista_refuge() -> void:
 		_refuge_put(batches, stones[i % stones.size()], p - Vector3(0, 0.02, 0), rng.randf_range(1.3, 1.7), rng.randf() * TAU)
 		path_n += 1
 	counts["path_stones"] = path_n
+	# Luminous lily clumps (image-to-3D) along the path, alternating sides.
+	var lily_n: int = 0
+	if ResourceLoader.exists(FLOWER_MODEL):
+		for i: int in 7:
+			var t: float = lerpf(0.12, 0.92, float(i) / 6.0)
+			var p: Vector3 = path_from.lerp(bow, t).lerp(bow.lerp(path_end, t), t) + side * (1.7 if i % 2 == 0 else -1.7) * rng.randf_range(0.9, 1.3)
+			p.y = _mesh_ground(p.x, p.z)
+			if _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.05, 0), rng.randf() * TAU, rng.randf_range(1.2, 1.8), "RefugeLilies%d" % i, true): lily_n += 1
+	counts["path_lilies"] = lily_n
 	refuge_lanterns = [path_from + side * 2.6, path_end - side * 2.0]
 	for i: int in refuge_lanterns.size(): refuge_lanterns[i].y = _mesh_ground(refuge_lanterns[i].x, refuge_lanterns[i].z)
 	var fence_n: int = 0
@@ -2580,19 +2594,22 @@ func _add_vista_refuge() -> void:
 	var giant_n: int = 0
 	var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
 	for i: int in 60:
-		if giant_n >= 4: break
-		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(rng.randf_range(40.0, 56.0)))
+		if giant_n >= 6: break
+		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(rng.randf_range(30.0, 56.0)))
 		var p: Vector3 = eye + dir * rng.randf_range(6.0, 12.0)
 		p.y = _mesh_ground(p.x, p.z)
 		var h: float = 0.0
-		var head: float = rng.randf_range(-0.94, -0.86)
+		var head: float = rng.randf_range(-0.9, -0.74)
 		while h < 9.0:
 			h += 0.25
 			if _vista_screen(eye, p + Vector3(0, h, 0)).y > head: break
 		var size: float = h / 2.3
 		if size > 3.2 or size < 1.2: continue
 		var s: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
-		if s.x < -1.1 or s.x > -0.6: continue
+		if s.x < -1.1 or s.x > -0.42: continue
+		if ResourceLoader.exists(FLOWER_MODEL) and _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.1, 0), rng.randf() * TAU, h * rng.randf_range(1.0, 1.12), "RefugeGlowFlowers%d" % giant_n, true):
+			giant_n += 1
+			continue
 		_refuge_put(batches, flowers[rng.randi() % flowers.size()], p - Vector3(0, 0.1, 0), size * rng.randf_range(1.0, 1.15), rng.randf() * TAU, Vector2(rng.randf_range(-0.12, 0.12), rng.randf_range(-0.12, 0.12)))
 		giant_n += 1
 	counts["giant_flowers"] = giant_n
@@ -5138,6 +5155,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for prop: ShaderMaterial in _refuge_props:
 		prop.set_shader_parameter("tint", Vector3(refuge_tint.r, refuge_tint.g, refuge_tint.b))
 		prop.set_shader_parameter("glow", lerpf(1.2, 3.0, maxf(night, rain * 0.5)))
+		if prop.get_meta("luminous", false): prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.7, night))
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 
 func get_report() -> Dictionary:
