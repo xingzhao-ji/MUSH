@@ -135,7 +135,9 @@ const DAY_SUN := Color("ffc07e")
 ## orange clay and the lavender caps (albedo 0.70, 0.52, 0.72) as burgundy fly agarics. A warm
 ## but less saturated key plus a stronger cool sky fill keeps the golden light and lets local
 ## colours (granite grey, lavender caps, greens) survive; shadows go blue instead of brown.
-const DEPTH_LOOK := {"sun": Color("ffd6a6"), "ambient": Color("c4d0e8"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
+## Review round 2: ffd6a6/c4d0e8 overshot (side-view wall R-B fell 86 -> 43 while L* rose: no
+## day frame read warm, shadow sides went lighter and bluer). Middle ground: ffcc90 / c8ccdc.
+const DEPTH_LOOK := {"sun": Color("ffcc90"), "ambient": Color("c8ccdc"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
 var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
