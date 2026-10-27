@@ -11,6 +11,9 @@ uniform float rain = 0.0;
 uniform float shimmer_time = 0.0;
 uniform float shimmer_amount = 1.0;
 uniform float strength = 0.55;
+// Spray plume look (0 = valley mist): darker overall tone so it never clips above the sky, and
+// billow shading from the drifting noise so it is not a flat white card.
+uniform float billow = 0.0;
 // Capture-only diagnosis (0 = final); 4 = flat mask.
 uniform int debug_view = 0;
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear_mipmap;
@@ -52,5 +55,6 @@ void fragment() {
 	vec3 day = vec3(0.90, 0.88, 0.93);
 	vec3 dusk = vec3(0.24, 0.24, 0.40);
 	ALBEDO = mix(mix(day, vec3(0.72, 0.72, 0.76), rain), dusk, night);
+	ALBEDO *= mix(1.0, 0.8 * mix(0.78, 1.0, smoothstep(0.3, 0.75, body * 0.6 + wisps * 0.5)), billow);
 	if (debug_view == 4) { ALBEDO = vec3(1.0, 1.0, 0.0); ALPHA = a > 0.02 ? 1.0 : 0.0; }
 }

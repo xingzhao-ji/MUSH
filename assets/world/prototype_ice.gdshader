@@ -47,8 +47,9 @@ void fragment() {
 	// glowing cyan panel; ice goes toward neutral grey-blue and loses most of its gloss.
 	float ice_lum = dot(glacier, vec3(0.299, 0.587, 0.114));
 	ALBEDO = mix(glacier, vec3(ice_lum) * vec3(0.66, 0.68, 0.78), night * 0.75);
-	ROUGHNESS = mix(mix(0.35, 0.75, snow), 0.7, night);
-	SPECULAR = mix(0.45, 0.2, night);
+	// The serac cliff faces the low sun: at roughness 0.35 / specular 0.45 it clipped to white (review 04).
+	ROUGHNESS = mix(mix(mix(0.35, 0.75, snow), 0.6, COLOR.r), 0.7, night);
+	SPECULAR = mix(mix(0.45, 0.22, COLOR.r), 0.2, night);
 	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 3) { ALBEDO = vec3(0.5); }

@@ -158,7 +158,8 @@ void fragment() {
 	// Form shadows from the geometry's concavities: ambient and, partly, direct light.
 	AO = 1.0 - recess * 0.75 * face;
 	float away = smoothstep(0.15, -0.45, dot(normalize(v_up), normalize(sun_dir)));
-	AO *= mix(1.0, 0.55, away * (1.0 - night));
+	// Weaker with distance so far walls keep their aerial lift (side view walls fell to 43 below the sky).
+	AO *= mix(1.0, mix(0.55, 0.85, smoothstep(500.0, 1600.0, length(VERTEX))), away * (1.0 - night));
 	AO_LIGHT_AFFECT = 0.55;
 	if (debug_view == 1) { EMISSION = ALBEDO; ALBEDO = vec3(0.0); SPECULAR = 0.0; }
 	else if (debug_view == 2) { EMISSION = normalize(v_up) * 0.5 + 0.5; ALBEDO = vec3(0.0); SPECULAR = 0.0; }

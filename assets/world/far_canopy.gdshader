@@ -126,7 +126,7 @@ void fragment() {
 			emit += amber * spots(vec2(UV.x * 90.0, t * 14.0), 0.22) * 0.25 * glow * (0.3 + core);
 			// Daylight: the underside sat ~20 L* below the sky; a soft luminous lift, lavender toward
 			// the margin and amber toward the stem (night keeps the amber glow above).
-			emit += mix(vec3(0.62, 0.56, 0.80) * 0.10, amber * 0.24, core) * (1.0 - night);
+			emit += mix(vec3(0.62, 0.56, 0.80) * 0.30, amber * 0.48, core) * (1.0 - night);
 			rough = 0.85;
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.

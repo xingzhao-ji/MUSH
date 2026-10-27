@@ -78,8 +78,8 @@ void fragment() {
 	// Warmer, lighter, less saturated than the raw moss (review 03: near grass L*22-30, hue 69,
 	// saturation 0.87; target hue 50-60, saturation <= 0.6, L*32-40).
 	// Faded out over the clearing feather, where the far moss is matched to the baked clearing.
-	vec3 meadow = moss * mix(vec3(0.94, 0.96, 0.84), vec3(1.18, 1.07, 0.80), smoothstep(0.3, 0.75, meadow_patch));
-	meadow = mix(meadow, vec3(dot(meadow, vec3(0.299, 0.587, 0.114))), 0.28) * 1.16;
+	vec3 meadow = moss * mix(vec3(0.96, 0.96, 0.82), vec3(1.20, 1.07, 0.78), smoothstep(0.3, 0.75, meadow_patch));
+	meadow = mix(meadow, vec3(dot(meadow, vec3(0.299, 0.587, 0.114))), 0.45) * 1.42;
 	moss = mix(meadow, moss, feather);
 	// Damp valley floor.
 	moss = mix(moss, moss * vec3(0.62, 0.86, 0.84), smoothstep(-25.0, -60.0, h));
@@ -179,6 +179,12 @@ void fragment() {
 		float away = 1.0 - clamp(dot(lit_n, normalize(sun_dir)) * 0.5 + 0.5, 0.0, 1.0);
 		// Daylight sky bounce only: it fades out at night so the cliff never self-lights.
 		fill = albedo * rock_fill_tint * rock_fill * targeted * away * mix(1.0, 0.05, night);
+	}
+	// Outside the focus region, a weaker daylight sky bounce on rock faces turned from the sun: the
+	// clearer fog left midground mounds and cliffs as value holes (vista mound L*22.7, review 04).
+	if (focus < 1.0 && rockiness > 0.0) {
+		float away_o = 1.0 - clamp(dot(n, normalize(sun_dir)) * 0.5 + 0.5, 0.0, 1.0);
+		fill += albedo * rock_fill_tint * 2.6 * rockiness * (1.0 - focus) * (0.35 + 0.65 * away_o) * (1.0 - night);
 	}
 	// Riparian band (vertex colour r, prototype stream and plunge pool only): wet gravel and
 	// boulders on the eroded banks, darker toward the water; 0 elsewhere (no change).

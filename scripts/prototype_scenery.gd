@@ -3149,6 +3149,7 @@ func _add_falls() -> Dictionary:
 	var plume_material := ShaderMaterial.new()
 	plume_material.shader = MIST_SHADER
 	plume_material.set_shader_parameter("strength", 0.95)
+	plume_material.set_shader_parameter("billow", 1.0)
 	_geology_materials.append(plume_material)
 	var plume := MeshInstance3D.new()
 	plume.name = "WestFallsPlume"
