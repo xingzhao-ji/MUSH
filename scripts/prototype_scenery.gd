@@ -3331,7 +3331,10 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 			# Broken serac field, not a staircase: step phase varies strongly across the ice, step
 			# heights vary, and each block gets its own heave.
 			var phase: float = u * 11.0 + _terrace_noise.get_noise_2d(v * 400.0, 7.0) * 1.4 + _terrace_noise.get_noise_2d(v * 1500.0, u * 900.0) * 0.9
-			lift += steep * ((fposmod(phase, 1.0) - 0.5) * lerpf(6.0, 15.0, 0.5 + 0.5 * _terrace_noise.get_noise_2d(v * 700.0, u * 300.0 + 31.0)) + _terrace_noise.get_noise_2d(v * 900.0, u * 1300.0) * 6.0)
+			# Seracs only in the middle of the ice: the margins stay smooth against the moraines, so the
+			# tongue's silhouette is not a staircase (review 03).
+			var core: float = 1.0 - smoothstep(0.45, 0.8, absf(v))
+			lift += steep * core * ((fposmod(phase, 1.0) - 0.5) * lerpf(6.0, 15.0, 0.5 + 0.5 * _terrace_noise.get_noise_2d(v * 700.0, u * 300.0 + 31.0)) + _terrace_noise.get_noise_2d(v * 900.0, u * 1300.0) * 6.0)
 			var p: Vector2 = toe + nrm * n_at + dir * (v * half)
 			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.72, 0.9, absf(v))])
 		grid.append(row)
