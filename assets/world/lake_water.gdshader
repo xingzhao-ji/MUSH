@@ -172,6 +172,9 @@ void fragment() {
 	} else {
 		ALBEDO = mix(body * (1.0 - f), vec3(0.82, 0.86, 0.86), plume_foam);
 		EMISSION = (reflection * f + vec3(1.0, 0.86, 0.66) * glint * 0.6 * soft) / max(alpha, 0.05);
+		// Night: a faint moonlit-sky sheen on the open water (seen from above, the deep lake read as a
+		// black hole, L*2 against a sky of 12; review 03). Shallows and the shore contact stay as they were.
+		EMISSION += vec3(0.012, 0.018, 0.042) * night * smoothstep(1.0, 4.0, depth_v) * (1.0 - f);
 	}
 	ALPHA = alpha;
 	ROUGHNESS = 0.3;
