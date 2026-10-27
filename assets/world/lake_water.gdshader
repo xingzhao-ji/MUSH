@@ -26,6 +26,11 @@ uniform bool screen_reflection = true;
 // Diagnostic only: tint pixels whose accepted reflection sample needed the sideways clamp.
 uniform bool debug_side_clamp = false;
 uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
+// Stream inflow (0 strength = off): where the outlet stream meets the lake, a paler, silty fan
+// with foam streaks spreads along the inflow direction. inflow = (x, z, dir x, dir z) at the
+// waterline; inflow_size = (reach m, strength).
+uniform vec4 inflow = vec4(0.0);
+uniform vec2 inflow_size = vec2(0.0);
 varying vec3 v_world;
 
 float hash21(vec2 p) {
@@ -77,6 +82,22 @@ void fragment() {
 	// Body colour by vertical depth.
 	vec3 body = mix(shore_tint, shallow, smoothstep(0.0, 2.5, depth_v));
 	body = mix(body, deep, smoothstep(2.5, 14.0, depth_v));
+	float plume = 0.0;
+	float plume_foam = 0.0;
+	if (inflow_size.y > 0.0) {
+		vec2 fwd = normalize(inflow.zw);
+		vec2 d = v_world.xz - inflow.xy;
+		float along = dot(d, fwd);
+		float side = dot(d, vec2(-fwd.y, fwd.x));
+		float spread = 5.0 + max(along, 0.0) * 0.5;
+		float wob = vnoise(v_world.xz * 0.07 + vec2(shimmer_time * shimmer_amount * 0.02)) - 0.5;
+		plume = exp(-pow(side / spread + wob * 0.9, 2.0)) * smoothstep(-8.0, 2.0, along) * (1.0 - smoothstep(inflow_size.x * 0.35, inflow_size.x, along)) * inflow_size.y;
+		float streak = vnoise(vec2(side * 0.4, along * 0.07 - shimmer_time * shimmer_amount * 0.15));
+		plume_foam = smoothstep(0.42, 0.68, streak) * plume * (1.0 - smoothstep(0.0, inflow_size.x * 0.5, along));
+		// White water meeting still water: a broken foam patch right at the entry.
+		plume_foam = max(plume_foam, smoothstep(22.0, 0.0, abs(along)) * smoothstep(0.28, 0.52, vnoise(v_world.xz * 0.5 + vec2(shimmer_time * shimmer_amount * 0.1))) * plume);
+		body = mix(body, vec3(0.30, 0.40, 0.36), plume * 0.6);
+	}
 	body = mix(body, body * vec3(0.55, 0.62, 0.85), night);
 	// Reflection: geometric march (3 m, x1.6 per step) with bisection on the first crossing.
 	vec3 n_refl = normalize(mix(vec3(0.0, 1.0, 0.0), n_world, 0.45 + 0.35 * rain));
@@ -139,9 +160,9 @@ void fragment() {
 	float glint = pow(max(dot(n_glint, normalize(normalize(sun_dir) - view_dir)), 0.0), 220.0) * (1.0 - night) * (1.0 - 0.7 * rain);
 	// Composite: transmitted body (lit albedo) plus reflection (emission), softened at the shore.
 	float soft = smoothstep(0.0, 0.45, depth_v);
-	float body_alpha = (1.0 - exp(-thickness * 0.3)) * soft;
+	float body_alpha = max(1.0 - exp(-thickness * 0.3), plume * 0.55) * soft;
 	float f = fresnel * soft;
-	float alpha = clamp(body_alpha + f * (1.0 - body_alpha), 0.0, 1.0);
+	float alpha = clamp(max(body_alpha + f * (1.0 - body_alpha), plume_foam * 0.9 * max(soft, 0.6)), 0.0, 1.0);
 	if (debug_side_clamp && hit > 0.0 && side_clamped) {
 		ALBEDO = vec3(0.0);
 		EMISSION = vec3(1.0, 0.0, 1.0);
@@ -149,7 +170,7 @@ void fragment() {
 		EMISSION = body;
 		ALBEDO = vec3(0.0);
 	} else {
-		ALBEDO = body * (1.0 - f);
+		ALBEDO = mix(body * (1.0 - f), vec3(0.82, 0.86, 0.86), plume_foam);
 		EMISSION = (reflection * f + vec3(1.0, 0.86, 0.66) * glint * 0.6 * soft) / max(alpha, 0.05);
 	}
 	ALPHA = alpha;

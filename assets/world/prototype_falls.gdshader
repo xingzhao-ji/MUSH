@@ -9,7 +9,7 @@ uniform float night = 0.0;
 uniform float rain = 0.0;
 uniform bool mist = false;
 // Outlet stream: UV.x across (0..1), UV.y along the channel (downstream); COLOR.r = steepness
-// of the reach (more foam where it steps down).
+// of the reach (more foam where it steps down); COLOR.g = 1 over the lake (fades out).
 uniform bool stream = false;
 
 float hash21(vec2 p) {
@@ -38,9 +38,11 @@ void fragment() {
 		vec2 grad = vec2(fbm(q + vec2(e, 0.0)) - c0, fbm(q + vec2(0.0, e)) - c0) / e;
 		NORMAL_MAP = normalize(vec3(-grad * mix(0.08, 0.2, COLOR.r), 1.0)) * 0.5 + 0.5;
 		float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
-		float foam = smoothstep(0.6, 0.85, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * COLOR.r;
+		// White water: broad foam where the reach steps down, plus thin foam lines along the banks.
+		float foam = smoothstep(0.48, 0.75, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * COLOR.r;
+		foam = max(foam, smoothstep(0.55, 0.8, across) * smoothstep(0.4, 0.7, fbm(vec2(UV.x * 11.0, UV.y * 4.0 - t * 0.5))) * 0.8);
 		ALBEDO = mix(vec3(0.03, 0.09, 0.10), vec3(0.85, 0.9, 0.92), foam);
-		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across));
+		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across)) * (1.0 - smoothstep(0.1, 0.9, COLOR.g));
 		ROUGHNESS = mix(0.06, 0.5, foam);
 		SPECULAR = 0.5;
 	} else if (mist) {

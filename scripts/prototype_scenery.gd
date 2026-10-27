@@ -2916,7 +2916,8 @@ func _add_stream_water(pool_y: float) -> void:
 			var y: float = maxf(ground + depth, LAKE_Y + 0.05)
 			floating = maxf(floating, y - ground if ground >= LAKE_Y else 0.0)
 			st.set_uv(Vector2(float(k) / float(columns - 1), d / 40.0))
-			st.set_color(Color(steep, 0.0, 0.0))
+			# COLOR.g: 1 where the sheet lies on the lake itself (it fades out there; the lake's inflow fan takes over).
+			st.set_color(Color(steep, 1.0 if ground < LAKE_Y else 0.0, 0.0))
 			st.add_vertex(Vector3(at.x, y, at.y))
 	for r: int in rows - 1:
 		for k: int in columns - 1:
@@ -2938,6 +2939,21 @@ func _add_stream_water(pool_y: float) -> void:
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(node)
 	_static.append(node)
+	# Inflow fan on the lake (lake shader only, visual): where the channel floor first drops below
+	# the lake level, a silty plume with foam streaks spreads out into the lake.
+	for i: int in range(1, _stream.size()):
+		var h0: float = _coarse_height(_stream[i - 1].x, _stream[i - 1].z)
+		var h1: float = _coarse_height(_stream[i].x, _stream[i].z)
+		if h1 >= LAKE_Y or h0 < LAKE_Y: continue
+		var p0 := Vector2(_stream[i - 1].x, _stream[i - 1].z)
+		var p1 := Vector2(_stream[i].x, _stream[i].z)
+		var entry: Vector2 = p0.lerp(p1, clampf((h0 - LAKE_Y) / maxf(h0 - h1, 0.01), 0.0, 1.0))
+		var flow: Vector2 = (p1 - p0).normalized().lerp((LAKE_CENTER - entry).normalized(), 0.3).normalized()
+		if _lake_material != null:
+			_lake_material.set_shader_parameter("inflow", Vector4(entry.x, entry.y, flow.x, flow.y))
+			_lake_material.set_shader_parameter("inflow_size", Vector2(70.0, 1.0))
+		stream_report["inflow"] = {"entry": [snappedf(entry.x, 0.1), snappedf(entry.y, 0.1)], "dir": [snappedf(flow.x, 0.01), snappedf(flow.y, 0.01)], "reach_m": 70.0}
+		break
 	# Clearances: route and slice points to the carved valley's reach; carve depth at the needle
 	# crag's base; the shore camera's sightline to the pool over the rendered terrain.
 	var route_gap: float = INF

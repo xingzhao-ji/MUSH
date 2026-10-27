@@ -176,7 +176,9 @@ void fragment() {
 	float riparian = COLOR.r;
 	if (riparian > 0.0) {
 		float stones = fbm(v_world.xz * 0.35);
-		vec3 gravel = mix(vec3(0.13, 0.14, 0.14), vec3(0.30, 0.30, 0.29), smoothstep(0.35, 0.7, stones));
+		// Darker, cooler wet cobbles with dark boulders: the paler gravel read as a dry road from the vista.
+		vec3 gravel = mix(vec3(0.09, 0.10, 0.10), vec3(0.21, 0.21, 0.20), smoothstep(0.35, 0.7, stones));
+		gravel = mix(gravel, vec3(0.06, 0.065, 0.065), smoothstep(0.6, 0.72, fbm(v_world.xz * 0.11 + 5.1)) * 0.75);
 		gravel *= mix(0.7, 1.0, smoothstep(0.85, 0.3, riparian));
 		albedo = mix(albedo, gravel, smoothstep(0.0, 0.6, riparian) * 0.9);
 		rockiness = max(rockiness, riparian * 0.6);
