@@ -296,6 +296,7 @@ const STREAM_BED := 16.0
 const STREAM_BANK := 0.55
 const STREAM_VALLEY := 220.0
 const STREAM_BUCKET := 40.0
+const STREAM_MEANDER := Vector2(26.0, 240.0)
 var _stream: Array[Vector3] = []
 var _stream_buckets: Dictionary = {}
 var _stream_box := Rect2()
@@ -2632,6 +2633,18 @@ func _plan_stream() -> void:
 			acc += path[j]
 			n += 1
 		smooth.append(path[i] if i == 0 or i == path.size() - 1 else acc / n)
+	# Meanders: the descent-following path ran nearly straight down the ravine and read as a ruled line
+	# from the vista (review 03/04). A lateral sine offset (amplitude STREAM_MEANDER.x m, wavelength
+	# STREAM_MEANDER.y m), tapered to zero at the pool outlet and at the lake entry.
+	var base_path: Array[Vector2] = smooth.duplicate()
+	for i: int in range(1, base_path.size() - 1):
+		var t: float = float(i) / float(base_path.size() - 1)
+		var taper: float = smoothstep(0.0, 0.18, t) * (1.0 - smoothstep(0.82, 1.0, t))
+		var tangent: Vector2 = (base_path[i + 1] - base_path[i - 1]).normalized()
+		# Single wave: bend radius A*(2pi/L)^2 -> ~56 m, well above the 11 m sheet half-width (an added
+		# 2.3x harmonic made ~12 m bends and the sheet folded into the banks, geology 235108).
+		var wave: float = sin(float(i) * STREAM_STEP / STREAM_MEANDER.y * TAU + 0.6)
+		smooth[i] = base_path[i] + Vector2(-tangent.y, tangent.x) * STREAM_MEANDER.x * wave * taper
 	var basin_ground: float = terrain_height(basin.x, basin.y)
 	var pool_y: float = basin_ground + BASIN_DEPTH * 0.62
 	var bed: float = pool_y - 1.5
@@ -3172,7 +3185,9 @@ func _add_stream_water(pool_y: float) -> void:
 	# beneath them deviate far less than the offset; _water_clearance verifies the whole surface.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var depth: float = 0.35
+	# 0.42 m (was 0.35): with meanders the sheet crosses one terrain crease near (-353, -478) where
+	# 0.35 left 2-4 samples 5 cm under the bed (geology 235213, 235346).
+	var depth: float = 0.42
 	# 22 m wide (was 12 m) inside the 32 m flat bed: from the vista the stream was a 2-4 px thread
 	# (review 03/04); 12 columns keep the draped facets 2 m across, as before (9 columns at 2.75 m
 	# buried 4 of 62,710 clearance samples by 2 cm, geology 210127).
@@ -3193,7 +3208,12 @@ func _add_stream_water(pool_y: float) -> void:
 		var a := Vector2(_stream[seg].x, _stream[seg].z)
 		var b := Vector2(_stream[seg + 1].x, _stream[seg + 1].z)
 		var centre: Vector2 = a.lerp(b, f)
-		var tangent: Vector2 = (b - a).normalized()
+		# Tangent blended across segment joints (the meandering centreline turns at every joint; a
+		# per-segment perpendicular made the sheet's outer columns jump there).
+		var t_here: Vector2 = (b - a).normalized()
+		var t_prev: Vector2 = t_here if seg == 0 else (a - Vector2(_stream[seg - 1].x, _stream[seg - 1].z)).normalized()
+		var t_next: Vector2 = t_here if seg + 2 >= _stream.size() else (Vector2(_stream[seg + 2].x, _stream[seg + 2].z) - b).normalized()
+		var tangent: Vector2 = (t_prev.lerp(t_here, 0.5 + 0.5 * f) if f < 0.5 else t_here.lerp(t_next, f - 0.5)).normalized()
 		var side := Vector2(-tangent.y, tangent.x)
 		var mid_ground: float = _coarse_height(centre.x, centre.y)
 		var mid: float = maxf(mid_ground + depth, LAKE_Y + 0.05)
@@ -3208,7 +3228,7 @@ func _add_stream_water(pool_y: float) -> void:
 			var off: float = (float(k) / float(columns - 1) * 2.0 - 1.0) * half
 			var at: Vector2 = centre + side * off
 			var ground: float = _coarse_height(at.x, at.y)
-			# Outer columns sit a little higher (0.35 m at the centre, 0.47 m at the edges): the widened
+			# Outer columns sit a little higher (0.42 m at the centre, 0.54 m at the edges): the widened
 			# sheet's edges cross local creases where a flat 0.35 m offset dipped 2 cm under the bed.
 			var y: float = maxf(ground + depth + 0.12 * absf(off) / half, LAKE_Y + 0.05)
 			floating = maxf(floating, y - ground if ground >= LAKE_Y else 0.0)
