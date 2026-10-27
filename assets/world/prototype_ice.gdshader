@@ -54,7 +54,8 @@ void fragment() {
 		vec3 drape = mix(vec3(0.74, 0.84, 0.94), vec3(0.52, 0.68, 0.84), smoothstep(0.4, 1.0, dd));
 		drape *= 0.9 + 0.18 * fbm(vec2(UV.y * 11.0, dd * 14.0));
 		drape = mix(drape, vec3(0.16, 0.30, 0.48), crack * 0.85);
-		glacier = mix(glacier, drape, COLOR.b);
+		// At night the pale drape out-read the snow on the peak (31.5 vs 19.6, review 09): darker by night.
+		glacier = mix(glacier, drape * mix(1.0, 0.6, night), COLOR.b);
 		// Glacier ice glows blue-white even in shade (light scattered through it): the drape sits on
 		// the gully's sun-averted wall and read as a lavender slab (sweep 142241).
 		EMISSION = drape * vec3(0.55, 0.68, 0.85) * 0.55 * (1.0 - crack * 0.7) * COLOR.b * (1.0 - night) * (1.0 - 0.5 * rain);

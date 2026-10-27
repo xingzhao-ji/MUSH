@@ -4641,14 +4641,14 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_sky_affect = 0.0
 	# Horizon giants: the depth fog is capped on them so they stay opaque against the sky (review 08).
 	# Their shader copy always writes FOG (a material that writes FOG never gets the engine fog), so
-	# night and rain get their own amounts: 0.55 at night keeps the warm night glow seen before; rain
-	# hazes them fully (0.88-0.95 of the plain fog colour left dark mauve silhouettes, geology 143308).
+	# night and rain get their own amounts: 0.55 at night keeps the warm night glow seen before
+	# (0.88-0.95 of the plain fog colour in rain left dark mauve silhouettes, geology 143308).
 	# The engine's aerial perspective pulls far haze toward the sky colour; the cap follows it.
 	var horizon_now: Color = (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4)
-	# Rain: the rendered overcast haze on the far walls measures ~c9c0d8, much paler than the plain fog
-	# colour (the engine adds sky light), so rain blends to that measured colour.
-	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("c9c0d8"), rain).srgb_to_linear()
-	var cap_amount: float = lerpf(lerpf(float(look_override.get("far_fog", GOLDEN_FAR_FOG)) if look_depth else 0.9, 0.55, night), 1.0, rain)
+	# Rain: c9c0d8 at full strength made the left giant a flat cutout 13 above the overcast behind it
+	# (review 09); the sky there measures ~L*60, so rain blends toward 968eaa at 0.93 (0.85 left the underside 16 below the sky, geology 144833).
+	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("968eaa"), rain).srgb_to_linear()
+	var cap_amount: float = lerpf(lerpf(float(look_override.get("far_fog", GOLDEN_FAR_FOG)) if look_depth else 0.9, 0.55, night), 0.93, rain)
 	for material: ShaderMaterial in [_horizon_cap_material, _horizon_stem_material]:
 		if material != null: material.set_shader_parameter("fog_cap", Color(cap_fog.r, cap_fog.g, cap_fog.b, cap_amount))
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
