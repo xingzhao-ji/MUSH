@@ -3318,7 +3318,9 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	# Ice cliff 30 m (was 70 m: a tall white panel from the vista, review 04).
 	var lip_top: float = float(sample.top) + 30.0
 	var start_n: float = ICE_PEAK.x + 160.0
-	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.58
+	# Head at the horn's cirque floor (0.42 of its height; 0.58 was set for the old cone, whose flank
+	# was higher there, so on the horn the tongue head stood out of the cirque face, review 04).
+	var start_y: float = ground + (ICE_PEAK.y - ground) * 0.42
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	# Flat shading: serac blocks and moraine ridges read as broken facets, not a smooth capsule.
@@ -3338,7 +3340,9 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 		for k: int in across:
 			var v: float = float(k) / (across - 1) * 2.0 - 1.0
 			# Flat-topped tongue; lateral moraine ridges at the margins.
-			var lift: float = 4.0 * (1.0 - v * v) + 9.0 * smoothstep(0.7, 0.9, absf(v)) * (1.0 - smoothstep(0.92, 1.0, absf(v))) - 16.0 * smoothstep(0.92, 1.0, absf(v))
+			# Low crown (1.5 m, was 4 m): with flat shading and a low sun the far half of a high crown
+			# faced away and read as a dark band from the vista. Moraine ridges 4 m (was 9 m).
+			var lift: float = 1.5 * (1.0 - v * v) + 4.0 * smoothstep(0.7, 0.9, absf(v)) * (1.0 - smoothstep(0.92, 1.0, absf(v))) - 16.0 * smoothstep(0.92, 1.0, absf(v))
 			# Icefall: stepped serac blocks where the tongue steepens, phase broken across the ice.
 			var steep: float = smoothstep(0.3, 0.45, u) * (1.0 - smoothstep(0.88, 0.97, u))
 			# Broken serac field, not a staircase: step phase varies strongly across the ice, step
