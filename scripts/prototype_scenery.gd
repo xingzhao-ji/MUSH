@@ -131,6 +131,26 @@ const HORIZON_GIANTS: Array = [[-260.0, -1820.0, 330.0, 700.0], [330.0, -1960.0,
 var horizon_giants_report: Dictionary = {}
 const VISTA_GROVE: Array = [[-0.36, -0.24, 22.0], [-0.27, -0.29, 14.0], [-0.20, -0.21, 18.0], [-0.31, -0.18, 11.0], [-0.46, -0.27, 9.0]]
 var vista_grove_report: Dictionary = {}
+## Vista refuge (the Gemini goal frame of 2026-10-27): a lived-in foreground in the vista's lower left
+## from CC0 Quaternius models (assets/licenses/QUATERNIUS-*.txt). Visual only: shadows off, no collision.
+const VISTA_REFUGE := true
+const QN := "res://assets/world/models/quaternius_nature/"
+const QV := "res://assets/world/models/quaternius_village/"
+var vista_refuge_report: Dictionary = {}
+var _model_cache: Dictionary = {}
+var _refuge_glow: Array[StandardMaterial3D] = []
+var _refuge_mats: Array[StandardMaterial3D] = []
+var _refuge_mat_cache: Dictionary = {}
+var _refuge_lights: Array[OmniLight3D] = []
+var _refuge_lamp_material: StandardMaterial3D
+var refuge_home: Vector3 = Vector3.INF
+var refuge_facing: float = 0.0
+var refuge_lanterns: Array[Vector3] = []
+## Image-to-3D cottage and lantern (Tripo Studio, from Gemini references); procedural stand-ins until present.
+const COTTAGE_MODEL := "res://assets/world/models/tripo/mush_cottage.glb"
+const LANTERN_MODEL := "res://assets/world/models/tripo/lantern_post.glb"
+const COTTAGE_HEIGHT := 11.0
+const LANTERN_HEIGHT := 2.6
 var far_falls_report: Dictionary = {}
 var _ribbon_hash: Dictionary = {}
 const PEAK_HORN := true
@@ -784,6 +804,7 @@ func configure(world: Node3D) -> void:
 	if not "no_shore_groves" in skip: _add_shore_groves()
 	if not "no_erratics" in skip: _add_meadow_erratics()
 	if not "no_vista_grove" in skip: _add_vista_grove()
+	if VISTA_REFUGE and not "no_vista_refuge" in skip: _add_vista_refuge()
 	if not "no_horizon_giants" in skip: _add_horizon_giants()
 	if not geology_skip:
 		_add_wall()
@@ -2151,6 +2172,421 @@ func _add_vista_grove() -> void:
 	vista_grove_report = {"built": true, "mushrooms": caps.size(), "rejected": rejected, "placed_x_z_capradius": placed, "min_ribbon_gap_m": snappedf(min_gap, 0.1),
 		"triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0}
 	print("VISTA_GROVE ", JSON.stringify(vista_grove_report))
+
+## Coarse WorldTerrain grid coordinate of column/row i (graded grid, see _add_terrain).
+func _grid_coord(i: int) -> float:
+	var s: float = lerpf(-1.0, 1.0, float(i) / TERRAIN_CELLS)
+	return TERRAIN_HALF * signf(s) * pow(absf(s), 1.7)
+
+## Ground under (x, z) as drawn: the detail patches where they exist, else the coarse WorldTerrain
+## triangle (vertex heights from terrain_height, diagonal i1-i2), so props sit on the rendered surface.
+func _mesh_ground(x: float, z: float) -> float:
+	var r: float = rendered_terrain_height(x, z)
+	if not is_nan(r): return r
+	var c: int = clampi(floori((signf(x) * pow(absf(x) / TERRAIN_HALF, 1.0 / 1.7) + 1.0) * 0.5 * TERRAIN_CELLS), 0, TERRAIN_CELLS - 1)
+	var w: int = clampi(floori((signf(z) * pow(absf(z) / TERRAIN_HALF, 1.0 / 1.7) + 1.0) * 0.5 * TERRAIN_CELLS), 0, TERRAIN_CELLS - 1)
+	var x0: float = _grid_coord(c)
+	var x1: float = _grid_coord(c + 1)
+	var z0: float = _grid_coord(w)
+	var z1: float = _grid_coord(w + 1)
+	var u: float = clampf((x - x0) / (x1 - x0), 0.0, 1.0)
+	var v: float = clampf((z - z0) / (z1 - z0), 0.0, 1.0)
+	var h0: float = terrain_height(x0, z0)
+	var h1: float = terrain_height(x1, z0)
+	var h2: float = terrain_height(x0, z1)
+	var h3: float = terrain_height(x1, z1)
+	if u + v <= 1.0: return h0 + u * (h1 - h0) + v * (h2 - h0)
+	return h3 + (1.0 - u) * (h2 - h3) + (1.0 - v) * (h1 - h3)
+
+## [[mesh, transform in the model's root], ...] for an imported glTF scene (cached).
+func _model_parts(path: String) -> Array:
+	if _model_cache.has(path): return _model_cache[path]
+	var parts: Array = []
+	var scene: PackedScene = load(path) as PackedScene
+	if scene != null:
+		var root: Node = scene.instantiate()
+		for node: Node in root.find_children("*", "MeshInstance3D", true, false):
+			var xf := Transform3D.IDENTITY
+			var n: Node = node
+			while n != null and n != root:
+				if n is Node3D: xf = (n as Node3D).transform * xf
+				n = n.get_parent()
+			parts.append([(node as MeshInstance3D).mesh, xf])
+		root.free()
+	_model_cache[path] = parts
+	return parts
+
+func _refuge_put(batches: Dictionary, path: String, at: Vector3, size: float, yaw: float, lean: Vector2 = Vector2.ZERO) -> void:
+	if not batches.has(path): batches[path] = []
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3(1, 0, 0), lean.x) * Basis(Vector3(0, 0, 1), lean.y) * Basis.from_scale(Vector3.ONE * size)
+	(batches[path] as Array).append(Transform3D(basis, at))
+
+## Scene copy of a kit material: a day tint toward the valley palette (darker bark, softer greens,
+## lavender petals) that apply_look carries into night and rain; flower petals also glow lavender
+## from their own albedo.
+func _refuge_material(source: Material) -> Material:
+	var base := source as StandardMaterial3D
+	if base == null: return source
+	var m: StandardMaterial3D = base.duplicate()
+	var label: String = base.resource_name.to_lower()
+	var tint := Color(1, 1, 1)
+	if "bark" in label: tint = Color(0.6, 0.48, 0.44)
+	elif "flower" in label: tint = Color(0.8, 0.68, 1.0)
+	elif "grass" in label: tint = Color(0.6, 0.64, 0.48)
+	elif "leaves" in label: tint = Color(0.84, 0.88, 0.76)
+	m.set_meta("day_tint", base.albedo_color * tint)
+	if "flower" in label:
+		m.emission_enabled = true
+		m.emission = Color(0.8, 0.55, 1.0)
+		m.emission_texture = base.albedo_texture
+		m.emission_energy_multiplier = 0.2
+		_refuge_glow.append(m)
+	_refuge_mats.append(m)
+	return m
+
+func _refuge_flush(batches: Dictionary) -> Dictionary:
+	var stats: Dictionary = {"instances": 0, "triangles": 0, "nodes": 0, "models": {}}
+	for path: String in batches:
+		var list: Array = batches[path]
+		var parts: Array = _model_parts(path)
+		if parts.is_empty():
+			stats["models"][path.get_file()] = "missing"
+			continue
+		stats["models"][path.get_file()] = list.size()
+		for part: Array in parts:
+			var mesh: Mesh = (part[0] as Mesh).duplicate()
+			var local: Transform3D = part[1]
+			for si: int in mesh.get_surface_count():
+				var mat: Material = mesh.surface_get_material(si)
+				if mat == null: continue
+				if not _refuge_mat_cache.has(mat): _refuge_mat_cache[mat] = _refuge_material(mat)
+				(mesh as ArrayMesh).surface_set_material(si, _refuge_mat_cache[mat])
+			var multi := MultiMesh.new()
+			multi.transform_format = MultiMesh.TRANSFORM_3D
+			multi.mesh = mesh
+			multi.instance_count = list.size()
+			for i: int in list.size(): multi.set_instance_transform(i, (list[i] as Transform3D) * local)
+			var node := MultiMeshInstance3D.new()
+			node.name = "Refuge_" + path.get_file().get_basename()
+			node.multimesh = multi
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+			add_child(node)
+			_nodes.append(node)
+			stats["instances"] += list.size()
+			stats["triangles"] += _triangle_count(mesh) * list.size()
+			stats["nodes"] += 1
+	return stats
+
+## Screen position (x right, y up, -1..1 at the frame edges) of a world point in the vista view.
+func _vista_screen(eye: Vector3, p: Vector3) -> Vector2:
+	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	var v: Vector3 = p - eye
+	var depth: float = v.dot(look)
+	if depth <= 0.01: return Vector2(INF, INF)
+	return Vector2(v.dot(right) / depth / (tan(deg_to_rad(30.0)) * 16.0 / 9.0), v.dot(up) / depth / tan(deg_to_rad(30.0)))
+
+func _vista_eye() -> Vector3:
+	var g: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
+	return Vector3(VISTA_EYE.x, maxf(g if not is_nan(g) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
+
+## Scatter `count` copies of the models in `paths` within `radius` m of the ground hit under screen
+## point (sx, sy), on rendered ground no steeper than max_slope, off the ribbons and above the lake
+## (or, when `shore` is set, only within 1.5 m above the lake level).
+func _refuge_scatter(batches: Dictionary, rng: RandomNumberGenerator, paths: Array, sx: float, sy: float, radius: float, count: int, size: Vector2, max_slope: float = 0.6, shore: bool = false) -> int:
+	var hit: Vector3 = _vista_ray_ground(sx, sy, 900.0)
+	if hit == Vector3.INF: return 0
+	var placed: int = 0
+	for attempt: int in count * 4:
+		if placed >= count: break
+		var a: float = rng.randf() * TAU
+		var d: float = radius * sqrt(rng.randf())
+		var x: float = hit.x + cos(a) * d
+		var z: float = hit.z + sin(a) * d
+		var y: float = _mesh_ground(x, z)
+		if is_nan(y): continue
+		var slope: float = maxf(absf(_mesh_ground(x + 0.7, z) - _mesh_ground(x - 0.7, z)), absf(_mesh_ground(x, z + 0.7) - _mesh_ground(x, z - 0.7))) / 1.4
+		if slope > max_slope: continue
+		if shore:
+			if y < LAKE_Y - 0.4 or y > LAKE_Y + 1.5: continue
+		elif y < LAKE_Y + 0.5: continue
+		if _ribbon_gap(Vector2(x, z)) < 2.0: continue
+		var s: float = rng.randf_range(size.x, size.y)
+		_refuge_put(batches, paths[rng.randi() % paths.size()], Vector3(x, y - 0.05 * s, z), s, rng.randf() * TAU, Vector2(rng.randf_range(-0.06, 0.06), rng.randf_range(-0.06, 0.06)))
+		placed += 1
+	return placed
+
+## Scatter on the refuge terrace in the home frame: t m toward the eye, s m to the camera's left.
+## Skips the cottage footprint, the path strip, the drop (> 8 m below home) and anything outside the
+## frame's left 65%.
+func _refuge_cluster(batches: Dictionary, rng: RandomNumberGenerator, paths: Array, home: Vector3, toward: Vector3, side: Vector3, t_range: Vector2, s_range: Vector2, count: int, size: Vector2, eye: Vector3) -> int:
+	var placed: int = 0
+	for attempt: int in count * 5:
+		if placed >= count: break
+		var t: float = rng.randf_range(t_range.x, t_range.y)
+		var s: float = rng.randf_range(s_range.x, s_range.y)
+		if t < 6.5 and absf(s) < 6.0: continue
+		if absf(s - sin(t * 0.12) * 3.0) < 1.4 and t > 6.0: continue
+		var p: Vector3 = home + toward * t + side * s
+		p.y = _mesh_ground(p.x, p.z)
+		if is_nan(p.y) or p.y < home.y - 8.0: continue
+		var slope: float = maxf(absf(_mesh_ground(p.x + 0.7, p.z) - _mesh_ground(p.x - 0.7, p.z)), absf(_mesh_ground(p.x, p.z + 0.7) - _mesh_ground(p.x, p.z - 0.7))) / 1.4
+		if slope > 0.9: continue
+		if _vista_screen(eye, p).x > -0.3: continue
+		var k: float = rng.randf_range(size.x, size.y)
+		_refuge_put(batches, paths[rng.randi() % paths.size()], p - Vector3(0, 0.05 * k, 0), k, rng.randf() * TAU, Vector2(rng.randf_range(-0.07, 0.07), rng.randf_range(-0.07, 0.07)))
+		placed += 1
+	return placed
+
+func _refuge_mesh(mesh: Mesh, material: Material, xf: Transform3D, label: String) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	node.name = label
+	node.mesh = mesh
+	if material != null: node.material_override = material
+	node.transform = xf
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	return node
+
+func _refuge_light(at: Vector3, range_m: float, label: String) -> void:
+	var light := OmniLight3D.new()
+	light.name = label
+	light.position = at
+	light.light_color = Color("ffb35c")
+	light.omni_range = range_m
+	light.omni_attenuation = 1.2
+	light.light_energy = 1.2
+	light.shadow_enabled = false
+	add_child(light)
+	_refuge_lights.append(light)
+
+## Places an imported model (all its mesh parts) scaled to `height` m on its base, yaw about Y.
+func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String) -> bool:
+	var parts: Array = _model_parts(path)
+	if parts.is_empty(): return false
+	var box := AABB()
+	for i: int in parts.size():
+		var b: AABB = (parts[i][1] as Transform3D) * (parts[i][0] as Mesh).get_aabb()
+		box = b if i == 0 else box.merge(b)
+	var k: float = height / maxf(box.size.y, 0.001)
+	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
+	var root := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre)
+	for i: int in parts.size():
+		_refuge_mesh(parts[i][0], null, root * (parts[i][1] as Transform3D), "%s_%d" % [label, i])
+	return true
+
+## The mushroom cottage: the image-to-3D model when present, else a stand-in on the giants' own cap
+## mesh and shader (lavender, freckled, gold underside) over cream walls with two lit windows.
+func _add_refuge_cottage() -> Dictionary:
+	var at: Vector3 = refuge_home
+	var yaw: float = refuge_facing
+	var door: Vector3 = at + Vector3(sin(yaw), 0.0, cos(yaw)) * 3.6 + Vector3(0, 1.6, 0)
+	_refuge_light(door + Vector3(sin(yaw), 0.0, cos(yaw)) * 1.2, 10.0, "RefugeDoorLight")
+	if ResourceLoader.exists(COTTAGE_MODEL) and _refuge_model(COTTAGE_MODEL, at - Vector3(0, 0.3, 0), yaw, COTTAGE_HEIGHT, "RefugeCottage"):
+		return {"cottage": COTTAGE_MODEL.get_file(), "height_m": COTTAGE_HEIGHT}
+	var walls := CylinderMesh.new()
+	walls.top_radius = 2.9
+	walls.bottom_radius = 3.5
+	walls.height = 5.0
+	walls.radial_segments = 24
+	var plaster := StandardMaterial3D.new()
+	plaster.albedo_color = Color("cdb898")
+	plaster.roughness = 0.95
+	plaster.set_meta("day_tint", plaster.albedo_color)
+	_refuge_mats.append(plaster)
+	_refuge_mesh(walls, plaster, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, 2.2, 0)), "RefugeCottageWalls")
+	# Unit cap: rim at y -0.075, crown 0.46, underside 0 at the wall radius; origin 4.6 m up.
+	var cap: ArrayMesh = _cap_mesh(PackedFloat32Array([1.3, 3.1, 0.7, 2.4, 4.4, 2.0]))
+	var cap_xf: Array[Transform3D] = [Transform3D(Basis(Vector3.UP, yaw + 0.4) * Basis.from_scale(Vector3(5.6, 5.0, 5.6)), at + Vector3(0, 4.6, 0))]
+	var cap_tint: Array[Color] = [Color(0.35, 0, 0)]
+	_add(cap, cap_xf, cap_tint, 0, "RefugeCottageCap")
+	_refuge_lamp_material = StandardMaterial3D.new()
+	_refuge_lamp_material.albedo_color = Color("ffcf8a")
+	_refuge_lamp_material.emission_enabled = true
+	_refuge_lamp_material.emission = Color("ffa040")
+	_refuge_lamp_material.emission_energy_multiplier = 2.0
+	var pane := SphereMesh.new()
+	pane.radius = 0.45
+	pane.height = 0.9
+	for offset: float in [-0.75, 0.75]:
+		var dir := Vector3(sin(yaw + offset), 0.0, cos(yaw + offset))
+		_refuge_mesh(pane, _refuge_lamp_material, Transform3D(Basis.from_scale(Vector3(1, 1, 0.35)).rotated(Vector3.UP, yaw + offset), at + dir * 3.15 + Vector3(0, 2.6, 0)), "RefugeWindow")
+	var door_mesh := BoxMesh.new()
+	door_mesh.size = Vector3(1.3, 2.3, 0.3)
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color("6b4426")
+	wood.roughness = 0.9
+	wood.set_meta("day_tint", wood.albedo_color)
+	_refuge_mats.append(wood)
+	_refuge_mesh(door_mesh, wood, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(sin(yaw), 0.0, cos(yaw)) * 3.3 + Vector3(0, 1.15, 0)), "RefugeDoor")
+	return {"cottage": "stand-in (walls + giant cap mesh)", "height_m": 9.8}
+
+func _add_refuge_lanterns() -> int:
+	var placed: int = 0
+	if _refuge_lamp_material == null:
+		_refuge_lamp_material = StandardMaterial3D.new()
+		_refuge_lamp_material.albedo_color = Color("ffcf8a")
+		_refuge_lamp_material.emission_enabled = true
+		_refuge_lamp_material.emission = Color("ffa040")
+		_refuge_lamp_material.emission_energy_multiplier = 2.0
+	var post := BoxMesh.new()
+	post.size = Vector3(0.2, LANTERN_HEIGHT, 0.2)
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color("5a3a22")
+	wood.roughness = 0.9
+	wood.set_meta("day_tint", wood.albedo_color)
+	_refuge_mats.append(wood)
+	var lamp := BoxMesh.new()
+	lamp.size = Vector3(0.4, 0.5, 0.4)
+	for at: Vector3 in refuge_lanterns:
+		var yaw: float = refuge_facing + 0.5 * float(placed)
+		if not (ResourceLoader.exists(LANTERN_MODEL) and _refuge_model(LANTERN_MODEL, at, yaw, LANTERN_HEIGHT, "RefugeLantern%d" % placed)):
+			_refuge_mesh(post, wood, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT * 0.5, 0)), "RefugeLanternPost%d" % placed)
+			_refuge_mesh(lamp, _refuge_lamp_material, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT - 0.2, 0)), "RefugeLanternLamp%d" % placed)
+		_refuge_light(at + Vector3(0, LANTERN_HEIGHT - 0.3, 0), 8.0, "RefugeLanternLight%d" % placed)
+		placed += 1
+	return placed
+
+func _add_vista_refuge() -> void:
+	vista_refuge_report = {"built": false}
+	var eye: Vector3 = _vista_eye()
+	if OS.get_environment("MUSH_REFUGE_PROBE") != "":
+		var rows: Array = []
+		for sy: float in [-0.95, -0.85, -0.7, -0.55, -0.4, -0.3, -0.2, -0.12, -0.05]:
+			for sx: float in [-1.0, -0.85, -0.7, -0.55, -0.4, -0.25, -0.1, 0.1, 0.3, 0.5, 0.7, 0.85, 1.0]:
+				var h: Vector3 = _vista_ray_ground(sx, sy, 900.0)
+				if h == Vector3.INF: rows.append([sx, sy, "sky"]); continue
+				rows.append([sx, sy, snappedf(h.x, 0.1), snappedf(h.y, 0.1), snappedf(h.z, 0.1), snappedf(h.distance_to(eye), 1.0)])
+		print("REFUGE_PROBE eye=", eye, " ", JSON.stringify(rows))
+		# Near ground around the eye: [bearing deg from the view axis, horizontal m, ground y, screen x, y of a point 0.6 m up].
+		var near: Array = []
+		var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
+		for bearing: float in [-55.0, -45.0, -35.0, -25.0, -15.0, -5.0, 5.0, 15.0, 25.0, 35.0, 45.0, 55.0]:
+			for dist: float in [2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 13.0, 16.0, 20.0, 25.0, 32.0, 40.0]:
+				var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(-bearing))
+				var p: Vector3 = eye + dir * dist
+				p.y = _mesh_ground(p.x, p.z)
+				var s: Vector2 = _vista_screen(eye, p + Vector3(0, 0.6, 0))
+				near.append([bearing, dist, snappedf(p.y, 0.1), snappedf(s.x, 0.01), snappedf(s.y, 0.01)])
+		print("REFUGE_NEAR ", JSON.stringify(near))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261027
+	var batches: Dictionary = {}
+	var counts: Dictionary = {}
+	var trees: Array = [QN + "CommonTree_1.gltf", QN + "CommonTree_2.gltf", QN + "CommonTree_3.gltf", QN + "CommonTree_5.gltf"]
+	var flowers: Array = [QN + "Flower_3_Group.gltf", QN + "Flower_4_Group.gltf"]
+	var bushes: Array = [QN + "Bush_Common.gltf", QN + "Bush_Common_Flowers.gltf"]
+	var low: Array = [QN + "Fern_1.gltf", QN + "Plant_1_Big.gltf", QN + "Plant_7_Big.gltf", QN + "Clover_1.gltf"]
+	# The vista eye stands on a ~55 degree drop: the nearest ground in frame is the terrace 45-80 m out
+	# (y 19-25 m) below the lower-left; the lake shore on the right is 290 m+ away. So the refuge sits on
+	# that terrace: cottage at its back, a stepping-stone path down toward the eye, flower beds, a
+	# fence on the cliff edge, broadleaf trees behind; giant glowing flowers on the drop below the
+	# eye frame the corner (goal: luminous flowers at the frame's lower left).
+	var home: Vector3 = _vista_ray_ground(-0.80, -0.62, 300.0)
+	if home == Vector3.INF:
+		vista_refuge_report["reason"] = "no terrace hit"
+		return
+	var toward: Vector3 = Vector3(eye.x - home.x, 0.0, eye.z - home.z).normalized()
+	var side: Vector3 = toward.cross(Vector3.UP).normalized()
+	refuge_home = home
+	refuge_facing = atan2(toward.x, toward.z)
+	# Broadleaf trees behind and left of the cottage (goal: a lush tree wall up the frame's left edge).
+	var tree_n: int = 0
+	for i: int in 16:
+		var off: Vector3 = -toward * rng.randf_range(6.0, 30.0) + side * rng.randf_range(-6.0, 26.0)
+		var p: Vector3 = home + off
+		p.y = _mesh_ground(p.x, p.z)
+		if p.y < home.y - 6.0: continue
+		var s: Vector2 = _vista_screen(eye, p)
+		if s.x > -0.6: continue
+		_refuge_put(batches, trees[rng.randi() % trees.size()], p - Vector3(0, 0.3, 0), rng.randf_range(2.0, 3.2), rng.randf() * TAU, Vector2(rng.randf_range(-0.04, 0.04), rng.randf_range(-0.04, 0.04)))
+		tree_n += 1
+	counts["trees"] = tree_n
+	# Timber fence along the terrace's cliff edge (right of the cottage): the edge is traced in screen
+	# space as the last terrace hit (< 110 m) before the rays drop past the cliff, then pulled 1.2 m in.
+	var edge: Array[Vector3] = []
+	for k: int in 9:
+		var sy: float = lerpf(-0.6, -0.92, float(k) / 8.0)
+		var last: Vector3 = Vector3.INF
+		var sx: float = -0.75
+		while sx < -0.2:
+			var hit: Vector3 = _vista_ray_ground(sx, sy, 160.0)
+			if hit == Vector3.INF or hit.distance_to(eye) > 110.0: break
+			last = hit
+			sx += 0.01
+		if last != Vector3.INF: edge.append(last)
+	# Stepping-stone path from the door down the terrace to its nearest visible corner (the cliff edge's
+	# lowest traced point, 5 m in), lanterns at the door and the path's foot.
+	var path_n: int = 0
+	var stones: Array = [QN + "RockPath_Round_Small_1.gltf", QN + "RockPath_Round_Small_2.gltf", QN + "RockPath_Round_Small_3.gltf"]
+	var path_from: Vector3 = home + toward * 5.5
+	var path_end: Vector3 = home + toward * 30.0
+	if not edge.is_empty():
+		var last_edge: Vector3 = edge[edge.size() - 1]
+		path_end = last_edge + Vector3(home.x - last_edge.x, 0.0, home.z - last_edge.z).normalized() * 5.0
+	var bow: Vector3 = (path_from + path_end) * 0.5 + side * 4.0
+	var path_len: float = path_from.distance_to(path_end)
+	var steps: int = clampi(roundi(path_len / 1.2), 6, 40)
+	for i: int in steps:
+		var t: float = float(i) / float(steps - 1)
+		var p: Vector3 = path_from.lerp(bow, t).lerp(bow.lerp(path_end, t), t)
+		p += side * rng.randf_range(-0.35, 0.35)
+		p.y = _mesh_ground(p.x, p.z)
+		_refuge_put(batches, stones[i % stones.size()], p - Vector3(0, 0.02, 0), rng.randf_range(1.3, 1.7), rng.randf() * TAU)
+		path_n += 1
+	counts["path_stones"] = path_n
+	refuge_lanterns = [path_from + side * 2.6, path_end - side * 2.0]
+	for i: int in refuge_lanterns.size(): refuge_lanterns[i].y = _mesh_ground(refuge_lanterns[i].x, refuge_lanterns[i].z)
+	var fence_n: int = 0
+	for k: int in edge.size() - 1:
+		var a: Vector3 = edge[k]
+		var b: Vector3 = edge[k + 1]
+		var inward: Vector3 = Vector3(home.x - a.x, 0.0, home.z - a.z).normalized() * 1.2
+		var run: Vector3 = Vector3(b.x - a.x, 0.0, b.z - a.z)
+		var pieces: int = maxi(1, roundi(run.length() / 2.6))
+		for j: int in pieces:
+			# The kit's fence runs along its local x (2 m long, 0.81 m tall); scaled 1.3 with the cottage.
+			var p: Vector3 = a.lerp(b, (float(j) + 0.5) / pieces) + inward
+			p.y = _mesh_ground(p.x, p.z)
+			var along: Vector3 = run.normalized()
+			_refuge_put(batches, QV + ("Prop_WoodenFence_Single.gltf" if fence_n == 0 else "Prop_WoodenFence_Extension1.gltf"), p, 1.3 * minf(1.0, run.length() / (2.0 * 1.3 * pieces) + 0.15), atan2(-along.z, along.x))
+			fence_n += 1
+	counts["fence"] = fence_n
+	counts["edge_points"] = edge.size()
+	# Garden: flowering bushes against the cottage, glowing flower beds and low plants on the terrace.
+	counts["bushes"] = _refuge_cluster(batches, rng, bushes, home, toward, side, Vector2(2.0, 9.0), Vector2(-9.0, 9.0), 14, Vector2(1.0, 1.6), eye)
+	counts["flower_beds"] = _refuge_cluster(batches, rng, flowers, home, toward, side, Vector2(6.0, 34.0), Vector2(-10.0, 12.0), 70, Vector2(0.6, 1.1), eye)
+	counts["low_plants"] = _refuge_cluster(batches, rng, low, home, toward, side, Vector2(4.0, 34.0), Vector2(-12.0, 14.0), 50, Vector2(1.0, 1.8), eye)
+	# Giant luminous flowers on the drop just below the eye, sized so their heads enter the frame's lower-left corner.
+	var giant_n: int = 0
+	var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
+	for i: int in 60:
+		if giant_n >= 4: break
+		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(rng.randf_range(40.0, 56.0)))
+		var p: Vector3 = eye + dir * rng.randf_range(6.0, 12.0)
+		p.y = _mesh_ground(p.x, p.z)
+		var h: float = 0.0
+		var head: float = rng.randf_range(-0.94, -0.86)
+		while h < 9.0:
+			h += 0.25
+			if _vista_screen(eye, p + Vector3(0, h, 0)).y > head: break
+		var size: float = h / 2.3
+		if size > 3.2 or size < 1.2: continue
+		var s: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
+		if s.x < -1.1 or s.x > -0.6: continue
+		_refuge_put(batches, flowers[rng.randi() % flowers.size()], p - Vector3(0, 0.1, 0), size * rng.randf_range(1.0, 1.15), rng.randf() * TAU, Vector2(rng.randf_range(-0.12, 0.12), rng.randf_range(-0.12, 0.12)))
+		giant_n += 1
+	counts["giant_flowers"] = giant_n
+	var stats: Dictionary = _refuge_flush(batches)
+	var cottage: Dictionary = _add_refuge_cottage()
+	counts["lanterns"] = _add_refuge_lanterns()
+	vista_refuge_report = {"built": true, "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
+	vista_refuge_report.merge(stats)
+	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 
 ## Ribbon falls on the far granite walls seen from the vista (review 06/07 and the Gemini paintover:
 ## two or three thin falls on the central walls). Each is placed on the West Wall station whose crest
@@ -4520,6 +4956,9 @@ const GOLDEN_GLOW_ELEV := 10.0
 const GOLDEN_HALO_POWER := 28.0
 const GOLDEN_HALO_GAIN := 0.7
 const GOLDEN_CAP_GLOW := 1.0
+## Bold gill plates on the lit cap undersides (Gemini goal frame: gold radial gills with dark gaps
+## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
+const GOLDEN_GILL_BOLD := 1.0
 const GOLDEN_CLOUD_GLOW := 1.0
 const GOLDEN_CLOUD_GLOW_POWER := 4.0
 const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
@@ -4583,9 +5022,14 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("day_sheen", Vector3(sheen_lin.r, sheen_lin.g, sheen_lin.b))
 	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
 	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - 0.5 * rain) if look_depth else 0.0
+	var gill_bold: float = float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) if look_depth else 0.0
 	for material: ShaderMaterial in _art:
 		material.set_shader_parameter("day_glow", cap_day_glow)
-	if cap_material != null and not cap_material in _art: cap_material.set_shader_parameter("day_glow", cap_day_glow)
+		material.set_shader_parameter("gill_bold", gill_bold)
+	if cap_material != null and not cap_material in _art:
+		cap_material.set_shader_parameter("day_glow", cap_day_glow)
+		cap_material.set_shader_parameter("gill_bold", gill_bold)
+	if _horizon_cap_material != null: _horizon_cap_material.set_shader_parameter("gill_bold", gill_bold)
 	if _horizon_cap_material != null:
 		_horizon_cap_material.set_shader_parameter("dome_value", float(look_override.get("far_dome", GOLDEN_FAR_DOME)) if look_depth else 1.0)
 		_horizon_cap_material.set_shader_parameter("under_gain", float(look_override.get("far_under", GOLDEN_FAR_UNDER)) if look_depth else 1.0)
@@ -4671,6 +5115,12 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 	_lake_material.set_shader_parameter("sky_horizon", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+	# Vista refuge: flower petals and lanterns glow softly by day and carry the night.
+	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
+	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
+	for glow: StandardMaterial3D in _refuge_glow: glow.emission_energy_multiplier = lerpf(0.12, 0.28, night) * (1.0 - 0.3 * rain)
+	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
+	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 
 func get_report() -> Dictionary:
 	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.
@@ -4681,4 +5131,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "horizon_giants": horizon_giants_report, "cap_tendrils": tendril_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "vista_refuge": vista_refuge_report, "horizon_giants": horizon_giants_report, "cap_tendrils": tendril_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}

@@ -1,0 +1,47 @@
+Medieval Village MegaKit [Standard] by Quaternius
+Source: https://quaternius.itch.io/medieval-village-megakit
+Download: Medieval Village MegaKit[Standard].zip (161003471 bytes), itch.io free download, 2026-10-27
+License: CC0 1.0 Universal (License_Standard.txt in the pack, reproduced below)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Retained files under assets/world/models/quaternius_village:
+  Prop_WoodenFence_Single.gltf  2230 bytes  sha256 c9f787c03c62dd94268da84bf3e4dacf554b2a5a9beee38314e37ff5d929c407  unmodified
+  Prop_WoodenFence_Single.bin  2800 bytes  sha256 aac37141af8f33e762b330486fd1cbd1c12a96b2978f491be4a58e24f1fe9ec1  unmodified
+  Prop_WoodenFence_Extension1.gltf  2236 bytes  sha256 8eccb1f1e52e58e99b649f34fcdf66871a0395d1d8a5d9c0a24e9eca68581178  unmodified
+  Prop_WoodenFence_Extension1.bin  2240 bytes  sha256 a083e95cfcd4e657c6aec87c124845e7c7b957be22920953567fca1ab78721e8  unmodified
+  Prop_WoodenFence_Extension2.gltf  2236 bytes  sha256 29e1ebbb38f3027e9aff48078b34bee07983d5d1e6657426a61b44165975c004  unmodified
+  Prop_WoodenFence_Extension2.bin  1960 bytes  sha256 60d92d8e63a530f6cf04c07ab9a6a2a17c38e31d5401c453e074e55fde6565dd  unmodified
+  Prop_Vine1.gltf  1979 bytes  sha256 5326ab98fef8a68b3b4d980c066d882b21e1d0489ccbc1228fd4b156d5f21ac1  unmodified
+  Prop_Vine1.bin  5580 bytes  sha256 43970bd08ae75708cfa440706e1b4b6ec2164280ec804da6d92bf9e8ac854ece  unmodified
+  Prop_Vine4.gltf  1974 bytes  sha256 6d5f7dee9b28dbbc7c7fc549ba5b5c45a66185e3f76840d6dd7240e81afdafb9  unmodified
+  Prop_Vine4.bin  2140 bytes  sha256 0c0c57c791231ca8d2bf012a1c28556d70a44c94ad994bb44ba4d083e123652a  unmodified
+  T_VineLeaf_png.png  162432 bytes  sha256 8c80a9835d29cf7b1360ca46c2a96cedc0bfffee59f09db892f64db6825e3188  unmodified
+  T_WoodTrim_BaseColor.png  875490 bytes  sha256 929c05d7c7bbb2229b7acb94bb8a0b523cb4d7added6f09bebc253b27bbf2b48  downsized 2048 to 1024 px (sips)
+  T_WoodTrim_Normal.png  1141304 bytes  sha256 d5df2805804fde0aa2356fbdca84a102393604f34869a8d9c2ac4e02e4f266ad  downsized 2048 to 1024 px (sips)
+  T_WoodTrim_Roughness.png  582081 bytes  sha256 992de8c8c7352ba5eb062ffce27adf4715a54b03f04a87a335b4fcf6033df34b  downsized 2048 to 1024 px (sips)
+
+Visual only in MUSH: placed by scripts/prototype_scenery.gd with shadows off and no collision.
+
+--- License_Standard.txt ---
+This is the standard FREE version of the Medieval Village MegaKit, which only contains 
+a portion of the models . You can buy the PRO version which has all the models,
+or the SOURCE version which has all the models and also includes Unity(URP), Unreal Engine and Godot projects
+with custom shaders already set up.
+
+You can get the other versions from the website https://quaternius.com
+
+-------------------------------------------------------
+License:
+CC0 1.0 Universal (CC0 1.0) 
+Public Domain Dedication
+https://creativecommons.org/publicdomain/zero/1.0/
+
+------------------------------------------------------
+Models by @Quaternius
+Consider supporting me on Patreon!
+
+https://www.patreon.com/quaternius
+
+-------------------------------------------------------
+Join the Discord Server:
+https://discord.gg/vJqnRUYRfT

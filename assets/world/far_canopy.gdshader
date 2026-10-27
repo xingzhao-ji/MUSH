@@ -53,6 +53,9 @@ uniform float day_glow = 0.0;
 // whose lit lavender domes sat 2 L* below the sky and read as glass discs (review 07).
 uniform float dome_value = 1.0;
 uniform float under_gain = 1.0;
+// Bold gill plates (mode 0 underside, day glow only; 0 = previous look): ~72 wandering radial plates
+// with dark gaps in the gold, so the gills read at vista distance (the 180 fine gills average out).
+uniform float gill_bold = 0.0;
 // Fog cap (a < 0 = engine fog as before): the horizon giants stand ~2 km out, past the fog end, so
 // the depth fog replaced them with the fog colour and they read as glass discs (review 08). When
 // a >= 0 the fog is this colour at most this amount, so they stay hazy but opaque.
@@ -190,6 +193,20 @@ void fragment() {
 				float dg = day_glow * (1.0 - night) * mix(smoothstep(0.0, 0.06, t), 1.0, clamp(under_gain - 1.0, 0.0, 1.0));
 				float warm = pow(clamp(t, 0.0, 1.0), 0.8 / max(under_gain, 1.0));
 				vec3 gold_grad = mix(vec3(0.28, 0.22, 0.50), vec3(1.0, 0.42, 0.06), warm) * (0.8 + 0.35 * lines);
+				if (gill_bold > 0.0) {
+					// From the vista the hero underside is a grazing band (~6 m of cap per pixel row), so
+					// 72 plates alias away (fwidth > 2 rad/px); 24 wandering bundles carry the read there
+					// and the 72 plates add themselves wherever the cap is seen more openly.
+					float wob = (fbm(vec2(UV.x * 6.0, t * 1.5) + v_tint * 3.0) - 0.5);
+					float b_p = a * 24.0 + wob * 2.2;
+					float bundle = mix(0.5, 0.5 + 0.5 * sin(b_p), 1.0 - smoothstep(0.5, 1.6, fwidth(b_p)));
+					float p_p = a * 72.0 + wob * 5.0;
+					float plate = mix(0.5, 0.5 + 0.5 * sin(p_p), aa(p_p));
+					float gb = clamp(0.62 * bundle + 0.38 * plate, 0.0, 1.0);
+					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.6 * smoothstep(0.8, 1.0, t));
+					gold_grad *= mix(1.0, 0.15 + 1.35 * pow(gb, 0.8), gk);
+					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
+				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);
 				emit = mix(emit, (gold_grad * 0.75 + amber * core * core * 0.4) * under_gain, dg);
 				// Grazing sky reflection veiled the gold in pale lavender (mid-gill 253, 225, 211).

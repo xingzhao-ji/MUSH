@@ -1,0 +1,95 @@
+Stylized Nature MegaKit [Standard] by Quaternius
+Source: https://quaternius.itch.io/stylized-nature-megakit
+Download: Stylized Nature MegaKit[Standard].zip (104088529 bytes), itch.io free download, 2026-10-27
+License: CC0 1.0 Universal (License_Standard.txt in the pack, reproduced below)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Retained files under assets/world/models/quaternius_nature:
+  CommonTree_1.gltf  3869 bytes  sha256 b51cdea6545edb51d102dd6c27caafe62aa75e3c328ac8f9039f4e7bfd690bfa  unmodified
+  CommonTree_1.bin  491576 bytes  sha256 9dd689e84e1aa2f5b08db8def591254d582783c73737af54ba0d89b3e549c3ae  unmodified
+  CommonTree_2.gltf  3866 bytes  sha256 67160975f0ac991b4a2ffb2add4ab4037b5e9c1bef9f66dac5235fcf0ba9bd52  unmodified
+  CommonTree_2.bin  423024 bytes  sha256 a273d69de31a675a9d7e3eb3c43f804aef2d1b031692111b9e76eb3b0b686d0c  unmodified
+  CommonTree_3.gltf  3864 bytes  sha256 17c6537aa8042bb7255fbb501bf7aeb2b6db87c16766f794f9c37be3ce70c976  unmodified
+  CommonTree_3.bin  296984 bytes  sha256 24541f46fd9553e2389aba15575f2697009226e82118ed76868284114fd12b49  unmodified
+  CommonTree_5.gltf  3860 bytes  sha256 fb7061f2bf9fe850870b056431f8f66cd8fdeb443c90695c5efbcf1fe6876d53  unmodified
+  CommonTree_5.bin  252996 bytes  sha256 0e617612d50e6bb2ca3c64338383f8938ce9e04d55b548ff11cec7a7b7d8f072  unmodified
+  Bush_Common.gltf  2101 bytes  sha256 77811fca92610cb254713d3d49d5029ab6cf13050c3afb61aa942786a7b2ca90  unmodified
+  Bush_Common.bin  91800 bytes  sha256 a5e1a773c8ba78fd9c05a8b342131eba4879302a8fddd2c5186cab9ee1ef4966  unmodified
+  Bush_Common_Flowers.gltf  3654 bytes  sha256 08768c680e3abeafd25858c9d3f369bcb7eed014661d3b6825a397f2a6a3deea  unmodified
+  Bush_Common_Flowers.bin  128928 bytes  sha256 15f56a013afe0eecaded0eb97fd8f323305af11e1f0f7bb9b68472ec4cdc20d5  unmodified
+  Flower_3_Group.gltf  3629 bytes  sha256 4df1612371982c543f930d6b213967372e0d459622d7eff7fc2ed1ddbfaa3b6c  unmodified
+  Flower_3_Group.bin  27772 bytes  sha256 5ab387dd3d6fe181df3af4eeac4df85533e4c27e77545ae39a61e0c2aaaab248  unmodified
+  Flower_4_Group.gltf  3645 bytes  sha256 69ead56b36b50f06a0cf18380797fce7434302e9b2da7bf68a85014b993c6134  unmodified
+  Flower_4_Group.bin  62220 bytes  sha256 3ac30b4c9eaa5078a17c061aa29e2e9618cc9eb58cb6d5d2ab0c07fa0b851ae1  unmodified
+  Flower_3_Single.gltf  3632 bytes  sha256 26c33edf26f0913947977109fefa2367095a854541a731dfecfd64263b7db2bc  unmodified
+  Flower_3_Single.bin  10792 bytes  sha256 88416b839c0d208040a1bd5b52984f7e927232356dfe9e8faec48838defac654  unmodified
+  Flower_4_Single.gltf  3631 bytes  sha256 271189ec424eea2821d758c5c605d9e7737c259d64f4eec4555de7cd9de5a517  unmodified
+  Flower_4_Single.bin  23812 bytes  sha256 d23048fb7cd3b9554036e7bb5e33f29212db70d5de34f87bc4551dec9495ba27  unmodified
+  Grass_Wispy_Tall.gltf  2023 bytes  sha256 a05e3ac05e43abbdb89c5b61134e367c7d33e285ff8d2a6e0a40180cb335af0b  unmodified
+  Grass_Wispy_Tall.bin  29492 bytes  sha256 a46e091f39958242a96722ea331efa8d7fb055c6e24d21aea6b0ac091a7b1b66  unmodified
+  Grass_Wispy_Short.gltf  2025 bytes  sha256 3c1d3bdd332420e070abde72d73611d1f13acfbe027e26b2fb943f9bcbd6b1c5  unmodified
+  Grass_Wispy_Short.bin  25324 bytes  sha256 c38f46e5a66ed3917fd45104effb914228d43d3724f4659416e1533dcd71776d  unmodified
+  Grass_Common_Tall.gltf  2025 bytes  sha256 783466c838163bf7da44e10675ace3851b8c9fb83322387125df7a080b05cd70  unmodified
+  Grass_Common_Tall.bin  14076 bytes  sha256 d7422b9360dd644f4095ac77a00dfa5d1f1078af71ebf18865a28ef031651379  unmodified
+  Plant_1_Big.gltf  2075 bytes  sha256 8c22e28d1ad79f3967c0022265b1d09319a3d82cbf14238de0cc77b5fe7e370a  unmodified
+  Plant_1_Big.bin  16560 bytes  sha256 aed5d27bb5a06e0e174d927e6c9850d8567f1b72820d2150323ca9374c3336bc  unmodified
+  Plant_7_Big.gltf  1857 bytes  sha256 279b54d91b66f303fdef76437c3a0b0ec5ba90d4fc9244e87f8b11ee7f304eb3  unmodified
+  Plant_7_Big.bin  4704 bytes  sha256 745e7dd5c8adde53b2305db4e7698a942a4f8e36f97a83ebd6eb05dde6633808  unmodified
+  Fern_1.gltf  2058 bytes  sha256 d41915cffe9dbbde1ae88be381eb9c60f7caa2274511436cc78fe4de627468ab  unmodified
+  Fern_1.bin  11448 bytes  sha256 5e92b87a27f81a69fe15347a533df3c77d567b48298dceeef43168ccb7c22853  unmodified
+  Clover_1.gltf  2074 bytes  sha256 05fe48cdf1f3db879371a6ba0d843fcd407667b7680def5716c9f286efe0306b  unmodified
+  Clover_1.bin  12956 bytes  sha256 788fabaffc3f8f2825ad88399bd4725d8bc397225d93d00926c3223fdee9516b  unmodified
+  RockPath_Round_Wide.gltf  1868 bytes  sha256 47d4f9d79f2500a595822f9eb0e1a46c28c82ea17d8b2167733f15627210dedd  unmodified
+  RockPath_Round_Wide.bin  247688 bytes  sha256 d88fa064e1c11fadf5c6a1cf15bc3e81a54174e12cc79285de9ec5bbe1f2cb88  unmodified
+  RockPath_Round_Small_1.gltf  1871 bytes  sha256 9e2fc37aabceed94a2ece3dbffeae4477b87b46a220c3f3ff97503923902d4b9  unmodified
+  RockPath_Round_Small_1.bin  71140 bytes  sha256 8a77235966e7df8eae421de3d14940ca7903951c3e85dcca6c136fbec31fa661  unmodified
+  RockPath_Round_Small_2.gltf  1873 bytes  sha256 154268202ef95a6d03126b2ad3fbc51b72c8929586e16a4edab1c811b8a6cff2  unmodified
+  RockPath_Round_Small_2.bin  79204 bytes  sha256 481e1f00245eaaa02f164faaac484a6075c4ae6a3a550a2485c65320e4e6a2db  unmodified
+  RockPath_Round_Small_3.gltf  1872 bytes  sha256 d1715df53df496fd4dc26ba5ddeeaab796f7d9847571970a446e0aef319eae69  unmodified
+  RockPath_Round_Small_3.bin  70844 bytes  sha256 92385dd3b3f06ef96c018b130f32b9bff7c94929ef5648e3b1b18b903d297cc7  unmodified
+  RockPath_Round_Thin.gltf  1868 bytes  sha256 afa02d5495b8ead8bf738f7142f299c336fbef80d98e2e591a2b775d65ab140e  unmodified
+  RockPath_Round_Thin.bin  159316 bytes  sha256 3bacc605d7bd1a525252ada6fa2362236493b6468fba3fbad4ba8f8e9360de8f  unmodified
+  Rock_Medium_1.gltf  1831 bytes  sha256 5d1ab1fa03218f4a908728ed0eabe6486344a7e4f510b0d3d6f837fd1d011bd8  unmodified
+  Rock_Medium_1.bin  13284 bytes  sha256 ea79527d4c2b3bdb7a28bf589bf0c1fd96d192a4d0738636753911dd58681e99  unmodified
+  Rock_Medium_2.gltf  1825 bytes  sha256 fac2d05a05f2d0d2098de59c09b58f42cc875c9caca4fd4c4bd57f3d36e7b12e  unmodified
+  Rock_Medium_2.bin  9432 bytes  sha256 76b60bf8349f71abdb0ed462b3223d93c2dcabdfb5754bc132e18b021cc6c805  unmodified
+  Rock_Medium_3.gltf  1832 bytes  sha256 9a575b911372cf91693aa3a56aea8137ec2251c2b99fb34a31272ee64503047f  unmodified
+  Rock_Medium_3.bin  20124 bytes  sha256 63f94bce2d3fb3fe25b2d6c843a828b1bec76855dbaac93fcf5d43582309caad  unmodified
+  Mushroom_Common.gltf  1822 bytes  sha256 2088b39d92f2f6331f45e59a048d02814dcd8b22767b024f4d220143bc8339f4  unmodified
+  Mushroom_Common.bin  23040 bytes  sha256 e4cee9f2570505a172990a2754d52ed5775a4d75857a832fffa1b573e38a4051  unmodified
+  Bark_NormalTree.png  1228434 bytes  sha256 f40d425d875500b4fb4a9543cc361c5330f5058468e4d0f905631de516dda8c0  downsized 2048 to 1024 px (sips)
+  Bark_NormalTree_Normal.png  1365524 bytes  sha256 17a53781868cada06020a478a88efe449322637f3e2924ea489b087c92aeab3b  downsized 2048 to 1024 px (sips)
+  Flowers.png  444609 bytes  sha256 5c531f2329c241c625aafd6cb769de29f33b480ef2a16491c2489f3c68e62a6a  unmodified
+  Grass.png  33605 bytes  sha256 5d69048193b246a73c996b892607fb36c75d0c60afcb2dab8aa12de3c0b2d9bd  unmodified
+  Leaves.png  842416 bytes  sha256 d0d107d7fcc963f1b8996940a11d17fa465df85057c401e488ff58e54a3726b2  downsized 2048 to 1024 px (sips)
+  Leaves_NormalTree_C.png  158796 bytes  sha256 998612bdf0b76a22f5f54d65cd7a457815d2842d89653fa4348a4ebb42933ad3  unmodified
+  Leaves_TwistedTree_C.png  70353 bytes  sha256 0e459b56b14c0e81b1b7cf3d1e8c6f0bb71790eb6c46bb02a76a922d8df646ea  unmodified
+  Mushrooms.png  1208660 bytes  sha256 e29eed2db831e44a29634fe25c62e9e31edf201e978a52912b9e5221ffd4a1f3  unmodified
+  PathRocks_Diffuse.png  811732 bytes  sha256 85a04abb2c136fee53b376daf3b7d7f96fdf3966de0258dff6fe2b24da792b23  unmodified
+  Rocks_Diffuse.png  1142110 bytes  sha256 2dd54656f9a35aad155c9c13b9d1e0c3026509a1ab4926cbe6203a7f4b0834d5  downsized 2048 to 1024 px (sips)
+
+Visual only in MUSH: placed by scripts/prototype_scenery.gd with shadows off and no collision.
+
+--- License_Standard.txt ---
+This is the standard FREE version of the Stylized Nature MegaKit, which only contains 
+a portion of the models (68/116). You can buy the PRO version which has all the models,
+or the SOURCE version which has all the models and also includes Unity(URP), Unreal Engine and Godot projects
+with the stylized shader already set up.
+
+You can get the other versions from the website https://quaternius.com
+
+-------------------------------------------------------
+License:
+CC0 1.0 Universal (CC0 1.0) 
+Public Domain Dedication
+https://creativecommons.org/publicdomain/zero/1.0/
+
+------------------------------------------------------
+Models by @Quaternius
+Consider supporting me on Patreon!
+
+https://www.patreon.com/quaternius
+
+-------------------------------------------------------
+Join the Discord Server:
+https://discord.gg/vJqnRUYRfT
