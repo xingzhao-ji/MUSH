@@ -3160,7 +3160,9 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 	# Flat shading: serac blocks and moraine ridges read as broken facets, not a smooth capsule.
 	st.set_smooth_group(-1)
 	var flow_rows: int = 56
-	var across: int = 13
+	# 21 columns (was 13) with irregular serac offsets: the alternating odd/even columns read as a
+	# regular comb of white teeth from the vista (review 01/02).
+	var across: int = 21
 	var grid: Array = []
 	for j: int in flow_rows + 1:
 		var u: float = float(j) / flow_rows
@@ -3174,8 +3176,10 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 			var lift: float = 4.0 * (1.0 - v * v) + 9.0 * smoothstep(0.7, 0.9, absf(v)) * (1.0 - smoothstep(0.92, 1.0, absf(v))) - 16.0 * smoothstep(0.92, 1.0, absf(v))
 			# Icefall: stepped serac blocks where the tongue steepens, phase broken across the ice.
 			var steep: float = smoothstep(0.3, 0.45, u) * (1.0 - smoothstep(0.88, 0.97, u))
-			var phase: float = u * 14.0 + _terrace_noise.get_noise_2d(v * 400.0, 7.0) * 0.8 + float(k % 2) * 0.35
-			lift += steep * (fposmod(phase, 1.0) - 0.5) * 16.0
+			# Broken serac field, not a staircase: step phase varies strongly across the ice, step
+			# heights vary, and each block gets its own heave.
+			var phase: float = u * 11.0 + _terrace_noise.get_noise_2d(v * 400.0, 7.0) * 1.4 + _terrace_noise.get_noise_2d(v * 1500.0, u * 900.0) * 0.9
+			lift += steep * ((fposmod(phase, 1.0) - 0.5) * lerpf(6.0, 15.0, 0.5 + 0.5 * _terrace_noise.get_noise_2d(v * 700.0, u * 300.0 + 31.0)) + _terrace_noise.get_noise_2d(v * 900.0, u * 1300.0) * 6.0)
 			var p: Vector2 = toe + nrm * n_at + dir * (v * half)
 			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.72, 0.9, absf(v))])
 		grid.append(row)
@@ -3185,7 +3189,7 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 		for k: int in across:
 			var v: float = float(k) / (across - 1) * 2.0 - 1.0
 			# Serac columns: alternate columns stand proud of the cliff, ragged down its height.
-			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 9.0 + (5.0 if k % 2 == 0 else -3.0)
+			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 9.0 + _terrace_noise.get_noise_2d(v * 1900.0, 53.0) * 6.0
 			var p: Vector2 = toe + nrm * (lip_n - 1.0 + ragged * (0.5 + drop)) + dir * (v * 56.0)
 			row.append([Vector3(p.x, lerpf(lip_top, float(sample.top) - 4.0, drop) + ragged * (1.0 - drop), p.y), Vector2(1.0, v), -1.0])
 		grid.append(row)
