@@ -4372,6 +4372,7 @@ const GOLDEN_GLOW_AZ := 208.0
 const GOLDEN_GLOW_ELEV := 6.0
 const GOLDEN_HALO_POWER := 28.0
 const GOLDEN_HALO_GAIN := 0.7
+const GOLDEN_CAP_GLOW := 1.0
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
 const SOFT_WRAP := 0.5
@@ -4410,6 +4411,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
+	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
+	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - 0.5 * rain) if look_depth else 0.0
+	for material: ShaderMaterial in _art:
+		material.set_shader_parameter("day_glow", cap_day_glow)
+	if cap_material != null and not cap_material in _art: cap_material.set_shader_parameter("day_glow", cap_day_glow)
 	sun.light_color = (day.sun as Color).lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
 	sun.light_energy = lerpf(float(look_override.get("sun_energy", GOLDEN_SUN_ENERGY if look_depth else 1.55)), 0.60, night) * lerpf(1.0, 0.65, rain)
 	sun.rotation_degrees.x = lerpf(float(look_override.get("sun_elev", GOLDEN_SUN_ELEV if look_depth else -22.0)), -27.45, night)

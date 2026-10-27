@@ -45,6 +45,10 @@ uniform float wrap_light = 0.0;
 uniform vec3 hemi_sky = vec3(0.0);
 uniform vec3 hemi_ground = vec3(0.0);
 uniform float soft_range = 900.0;
+// Daytime cap luminosity (mode 0; 0 = previous look): the concepts' giant caps glow from within by
+// day too, warm gold gathered under the cap from the stem outward, tinted luminous freckles and a
+// lit rim on the dome. Night keeps its own glow terms.
+uniform float day_glow = 0.0;
 varying float v_tint;
 varying float v_cavity;
 varying vec3 v_col;
@@ -122,6 +126,8 @@ void fragment() {
 				albedo = mix(albedo, base, cap_craft);
 				emit += flesh_rim * smoothstep(0.9, 1.0, s) * 0.06 * glow * cap_craft;
 			}
+			// A lit rim only: daytime freckle glow read as white fly-agaric dots (sweep 130225).
+			if (day_glow > 0.0) emit += flesh_rim * smoothstep(0.86, 1.0, s) * 0.25 * day_glow * (1.0 - night);
 		} else {
 			// Underside: many fine, slightly wandering gills (anti-aliased to an even tone at
 			// distance) with a soft warm glow gathered toward the stem. No radial stripes.
@@ -163,6 +169,19 @@ void fragment() {
 				float vein = pow(mix(0.5, 0.5 + 0.5 * sin(vein_p), aa(vein_p)), 8.0) * smoothstep(0.1, 0.7, t);
 				vein *= smoothstep(0.4, 0.62, fbm(vec2(UV.x * 24.0, t * 6.0) + 3.3));
 				emit += mix(amber, vec3(0.85, 0.62, 1.0), 0.5) * vein * (0.05 + 0.25 * night) * glow * cap_craft;
+			}
+			if (day_glow > 0.0) {
+				// Lit from within: the underside was already near white by day (pink-white L*85 mid-gill,
+				// sweep 130225), so adding light only bleached it. Instead shift it: a darker, warmer albedo
+				// and gold emission spreading from the stem, gill-modulated, dim lavender at the margin.
+				// The outermost strip (the silhouette lip) is kept.
+				float dg = day_glow * (1.0 - night) * smoothstep(0.0, 0.06, t);
+				float warm = pow(clamp(t, 0.0, 1.0), 0.8);
+				vec3 gold_grad = mix(vec3(0.28, 0.22, 0.50), vec3(1.0, 0.42, 0.06), warm) * (0.8 + 0.35 * lines);
+				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);
+				emit = mix(emit, gold_grad * 0.75 + amber * core * core * 0.4, dg);
+				// Grazing sky reflection veiled the gold in pale lavender (mid-gill 253, 225, 211).
+				spec = mix(spec, 0.02, dg);
 			}
 		}
 	} else if (mode == 1) {
