@@ -43,6 +43,22 @@ void fragment() {
 	cliff = mix(cliff, vec3(0.08, 0.18, 0.30), fracture * 0.75);
 	glacier = mix(glacier, cliff, COLOR.r);
 	glacier = mix(glacier, vec3(0.40, 0.38, 0.36) * (0.8 + 0.4 * fbm(vec2(u * 30.0, UV.y * 9.0))), COLOR.g * 0.75);
+	// Hanging glacier draped over the lip (COLOR.b; UV.x 1..2 down the drape): pale blue-white ice
+	// broken by bowed transverse crevasse bands, deep blue in the cracks, bluer and thinner toward
+	// the ragged lower edge.
+	if (COLOR.b > 0.0) {
+		float dd = clamp(u - 1.0, 0.0, 1.0);
+		float bow = UV.y * UV.y * 0.9 + fbm(vec2(UV.y * 3.0, dd * 2.0 + 4.0)) * 0.8;
+		float cb = abs(fract(dd * 6.5 + bow) - 0.5) * 2.0;
+		float crack = smoothstep(0.78, 0.95, cb) * smoothstep(0.35, 0.65, fbm(vec2(UV.y * 5.0, dd * 9.0 + 2.0)));
+		vec3 drape = mix(vec3(0.74, 0.84, 0.94), vec3(0.52, 0.68, 0.84), smoothstep(0.4, 1.0, dd));
+		drape *= 0.9 + 0.18 * fbm(vec2(UV.y * 11.0, dd * 14.0));
+		drape = mix(drape, vec3(0.16, 0.30, 0.48), crack * 0.85);
+		glacier = mix(glacier, drape, COLOR.b);
+		// Glacier ice glows blue-white even in shade (light scattered through it): the drape sits on
+		// the gully's sun-averted wall and read as a lavender slab (sweep 142241).
+		EMISSION = drape * vec3(0.55, 0.68, 0.85) * 0.55 * (1.0 - crack * 0.7) * COLOR.b * (1.0 - night) * (1.0 - 0.5 * rain);
+	}
 	// Night: the blue moonlight on blue ice doubled the saturation and the serac cliff read as a
 	// glowing cyan panel; ice goes toward neutral grey-blue and loses most of its gloss.
 	float ice_lum = dot(glacier, vec3(0.299, 0.587, 0.114));

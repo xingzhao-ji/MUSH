@@ -11,6 +11,10 @@ uniform bool mist = false;
 // Outlet stream: UV.x across (0..1), UV.y along the channel (downstream); COLOR.r = steepness
 // of the reach (more foam where it steps down); COLOR.g = 1 over the lake (fades out).
 uniform bool stream = false;
+// Painterly sky sheen on the stream by day (0 = previous look): seen from above, the flat reaches
+// were dark clear water and the outflow broke before the lake (review 08); the concepts' streams
+// read as bright ribbons mirroring the glowing sky.
+uniform vec3 day_sheen = vec3(0.0);
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
@@ -43,7 +47,10 @@ void fragment() {
 		float foam = smoothstep(0.42, 0.72, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * mix(0.4, 1.0, COLOR.r);
 		foam = max(foam, smoothstep(0.55, 0.8, across) * smoothstep(0.4, 0.7, fbm(vec2(UV.x * 11.0, UV.y * 4.0 - t * 0.5))) * 0.8);
 		ALBEDO = mix(vec3(0.03, 0.09, 0.10), vec3(0.85, 0.9, 0.92), foam);
-		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across)) * (1.0 - smoothstep(0.1, 0.9, COLOR.g));
+		float sheen_k = (0.75 + 0.25 * c0) * (1.0 - foam * 0.6);
+		EMISSION = day_sheen * sheen_k;
+		float sheen_alpha = clamp(dot(day_sheen, vec3(0.333)) * 1.5, 0.0, 0.45);
+		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5 + sheen_alpha, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across)) * (1.0 - smoothstep(0.1, 0.9, COLOR.g));
 		ROUGHNESS = mix(0.06, 0.5, foam);
 		SPECULAR = 0.5;
 	} else if (mist) {

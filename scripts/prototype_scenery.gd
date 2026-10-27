@@ -89,6 +89,7 @@ const WALL_NOTCH := Vector2(55.0, 75.0)
 ## (offset behind the toe, summit height, base radius) feeds the ice tongue.
 const SNOWLINE := 520.0
 const ICE_PEAK := Vector3(-600.0, 950.0, 480.0)
+const HANGING_GLACIER := true
 const WALL_DOME_S := 1560.0
 const GRANITE_SHADER := preload("res://assets/world/prototype_granite.gdshader")
 const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
@@ -273,6 +274,7 @@ var corridor_trees: Array[MultiMeshInstance3D] = []
 ## of the copied trees' ring-crown mesh plus copied trees, selected within SHORE_GROVE_BUDGET at full
 ## detail, built from simplified crowns); the clumps are kept (hidden) in ShoreBeltClumps.
 const SHORE_BELT_Y := Vector2(-82.5, -69.0)
+const SHORE_STREAM_CLEAR := 28.0
 const SHORE_BELT_RADIUS := 360.0
 const SHORE_BELT_MAX_X := 300.0
 ## Groves draw as far as the carpet they replace; the belt clumps stay hidden while groves are on,
@@ -2439,6 +2441,10 @@ func _add_shore_groves() -> void:
 		for i: int in multi.instance_count:
 			var pose: Transform3D = multi.get_instance_transform(i)
 			var o: Vector3 = pose.origin
+			# The outlet stream's lower reach stays open water: belt clumps standing on it hid the
+			# outflow from the vista (review 08). Those clumps are dropped.
+			if o.y >= SHORE_BELT_Y.x and o.y <= SHORE_BELT_Y.y and _stream_distance(o.x, o.z).x < SHORE_STREAM_CLEAR:
+				continue
 			if o.y >= SHORE_BELT_Y.x and o.y <= SHORE_BELT_Y.y and Vector2(o.x, o.z).distance_to(LAKE_CENTER) <= SHORE_BELT_RADIUS and o.x < SHORE_BELT_MAX_X:
 				targets.append(pose)
 				target_colors.append(multi.get_instance_color(i))
@@ -3686,28 +3692,65 @@ func _add_ice(granite: ShaderMaterial) -> Dictionary:
 			# tongue's silhouette is not a staircase (review 03).
 			var core: float = 1.0 - smoothstep(0.45, 0.8, absf(v))
 			lift += steep * core * ((fposmod(phase, 1.0) - 0.5) * lerpf(6.0, 15.0, 0.5 + 0.5 * _terrace_noise.get_noise_2d(v * 700.0, u * 300.0 + 31.0)) + _terrace_noise.get_noise_2d(v * 900.0, u * 1300.0) * 6.0)
+			# Rounded, uneven shoulders where the tongue spills over the lip (the snout's straight top edge
+			# read as a box from the vista, review 08).
+			if HANGING_GLACIER: lift -= (22.0 * v * v + 7.0 * (_terrace_noise.get_noise_2d(v * 520.0, 91.0) + 0.5)) * smoothstep(0.8, 1.0, u)
 			var p: Vector2 = toe + nrm * n_at + dir * (v * half)
 			# Narrower lateral moraine (0.72-0.9 read as a dark slab edge from the vista, review 04).
 			row.append([Vector3(p.x, y_at + lift, p.y), Vector2(u, v), smoothstep(0.82, 0.96, absf(v))])
 		grid.append(row)
 	# Ice cliff at the snout: ragged blue front in three rows down to the rock lip.
-	for drop: float in [0.2, 0.4, 0.6, 0.8, 1.0]:
+	var cliff_drops: Array = [0.33, 0.66, 1.0] if HANGING_GLACIER else [0.2, 0.4, 0.6, 0.8, 1.0]
+	for drop: float in cliff_drops:
 		var row: Array = []
 		for k: int in across:
 			var v: float = float(k) / (across - 1) * 2.0 - 1.0
 			# Serac columns: alternate columns stand proud of the cliff, ragged down its height.
 			var ragged: float = _terrace_noise.get_noise_2d(v * 300.0, 11.0 + drop * 50.0) * 9.0 + _terrace_noise.get_noise_2d(v * 1900.0, 53.0) * 6.0
 			var p: Vector2 = toe + nrm * (lip_n - 1.0 + ragged * (0.5 + drop)) + dir * (v * 56.0)
-			row.append([Vector3(p.x, lerpf(lip_top, float(sample.top) - 4.0, drop) + ragged * (1.0 - drop), p.y), Vector2(1.0, v), -1.0])
+			# With the hanging glacier the snout cliff takes the drape's pale ice (one continuous ice
+			# body; the dark blue cliff band above it drew a straight edge across the notch).
+			var shoulder: float = (22.0 * v * v + 7.0 * (_terrace_noise.get_noise_2d(v * 520.0, 91.0) + 0.5)) if HANGING_GLACIER else 0.0
+			var cliff_top: float = maxf(lip_top - shoulder, float(sample.top) - 2.0)
+			row.append([Vector3(p.x, lerpf(cliff_top, float(sample.top) - 4.0, drop) + ragged * (1.0 - drop), p.y), Vector2(1.0 - 0.06 * (1.0 - drop) if HANGING_GLACIER else 1.0, v), -2.0 if HANGING_GLACIER else -1.0])
 		grid.append(row)
+	# Hanging glacier (review 08: from the vista the source read as a rectangular white slot, the
+	# tongue itself being hidden behind the crest): the ice spills over the lip and drapes down the
+	# gully to a ragged lower edge, longest in the middle (~115 m) and short at the margins, each
+	# column following its own wall station's face 3-7 m proud of the rock. The falls start under it
+	# and emerge below its edge. COLOR.b = 1 marks the drape (transverse crevasse bands in the shader).
+	if HANGING_GLACIER:
+		var drape_rows: int = 14
+		var reach: Array[float] = []
+		for k: int in across:
+			var v: float = float(k) / (across - 1) * 2.0 - 1.0
+			reach.append(lerpf(118.0, 14.0, smoothstep(0.15, 1.0, absf(v))) + _terrace_noise.get_noise_2d(v * 260.0, 77.0) * 26.0 * (1.0 - 0.6 * absf(v)))
+		for j: int in range(1, drape_rows + 1):
+			var d: float = float(j) / drape_rows
+			var row: Array = []
+			for k: int in across:
+				var v: float = float(k) / (across - 1) * 2.0 - 1.0
+				var col: int = clampi(at + roundi(v * 56.0 / WALL_STEP), 0, _wall.size() - 1)
+				var w: Dictionary = _wall[col]
+				var wh: float = float(w.top) - float(w.base)
+				var y: float = float(sample.top) - 4.0 - maxf(reach[k], 6.0) * d
+				var q: float = clampf((y - float(w.base)) / wh, 0.0, 1.0)
+				var heave: float = _terrace_noise.get_noise_2d(v * 700.0, d * 400.0 + 19.0) * 2.5
+				var off: float = _wall_face_offset(w, q, wh, y) + lerpf(7.0, 3.0, d) + heave
+				var wt: Vector2 = w.toe
+				var wn: Vector2 = w.normal
+				var p: Vector2 = wt + wn * off
+				row.append([Vector3(p.x, y, p.y), Vector2(1.0 + d, v), -2.0])
+			grid.append(row)
 	for j: int in grid.size() - 1:
 		for k: int in across - 1:
 			var quad: Array = [grid[j][k], grid[j][k + 1], grid[j + 1][k], grid[j + 1][k + 1]]
 			for m: int in [0, 1, 2, 1, 3, 2]:
 				var vertex: Array = quad[m]
 				st.set_uv(vertex[1])
-				var cliff: float = 1.0 if float(vertex[2]) < 0.0 else 0.0
-				st.set_color(Color(cliff, maxf(0.0, float(vertex[2])), 0.0))
+				var cliff: float = 1.0 if float(vertex[2]) == -1.0 else 0.0
+				var drape: float = 1.0 if float(vertex[2]) == -2.0 else 0.0
+				st.set_color(Color(cliff, maxf(0.0, float(vertex[2])), drape))
 				st.add_vertex(vertex[0])
 	st.generate_normals()
 	var upland: Dictionary = _add_upland(sample, start_n, start_y, lip_n, lip_top, rock)
@@ -4489,6 +4532,7 @@ const GOLDEN_FAR_UNDER := 1.5
 const GOLDEN_MIST_WARM := "f4c09c"
 const GOLDEN_FAR_FOG := 0.45
 const GOLDEN_FOG_BEGIN := 550.0
+const GOLDEN_STREAM_SHEEN := 0.7
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
 const SOFT_WRAP := 0.7
@@ -4532,9 +4576,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# Mist warms toward the glow by day (golden hour only; other shaders ignore these).
 	var m_az: float = deg_to_rad(float(look_override.get("glow_az", GOLDEN_GLOW_AZ)))
 	var mist_warm: Color = Color(str(look_override.get("mist_warm", GOLDEN_MIST_WARM))) if look_depth else Color(0.80, 0.78, 0.93)
+	var sheen_lin: Color = (day.lake_horizon as Color).srgb_to_linear() * float(look_override.get("stream_sheen", GOLDEN_STREAM_SHEEN)) * (1.0 - night) * (1.0 - 0.6 * rain) if look_depth else Color(0, 0, 0)
 	for material: ShaderMaterial in _geology_materials:
 		material.set_shader_parameter("glow_tint", mist_warm)
 		material.set_shader_parameter("glow_dir", Vector3(sin(m_az), 0.0, cos(m_az)))
+		material.set_shader_parameter("day_sheen", Vector3(sheen_lin.r, sheen_lin.g, sheen_lin.b))
 	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
 	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - 0.5 * rain) if look_depth else 0.0
 	for material: ShaderMaterial in _art:
@@ -4593,11 +4639,16 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# Overcast rain has no sun to scatter: the golden-hour scatter lit the rain haze pink (vista rain).
 	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night) * (1.0 - rain)
 	environment.fog_sky_affect = 0.0
-	# Horizon giants: the depth fog is capped on them by day so they stay opaque against the sky
-	# (review 08); toward night or rain the cap eases to near-full haze, then the engine fog takes over.
-	var giant_day: float = (1.0 - night) * (1.0 - rain) if look_depth else 0.0
-	var cap_fog: Color = environment.fog_light_color.srgb_to_linear()
-	var cap_amount: float = lerpf(0.95, float(look_override.get("far_fog", GOLDEN_FAR_FOG)), giant_day) if giant_day > 0.02 else -1.0
+	# Horizon giants: the depth fog is capped on them so they stay opaque against the sky (review 08).
+	# Their shader copy always writes FOG (a material that writes FOG never gets the engine fog), so
+	# night and rain get their own amounts: 0.55 at night keeps the warm night glow seen before; rain
+	# hazes them fully (0.88-0.95 of the plain fog colour left dark mauve silhouettes, geology 143308).
+	# The engine's aerial perspective pulls far haze toward the sky colour; the cap follows it.
+	var horizon_now: Color = (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4)
+	# Rain: the rendered overcast haze on the far walls measures ~c9c0d8, much paler than the plain fog
+	# colour (the engine adds sky light), so rain blends to that measured colour.
+	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("c9c0d8"), rain).srgb_to_linear()
+	var cap_amount: float = lerpf(lerpf(float(look_override.get("far_fog", GOLDEN_FAR_FOG)) if look_depth else 0.9, 0.55, night), 1.0, rain)
 	for material: ShaderMaterial in [_horizon_cap_material, _horizon_stem_material]:
 		if material != null: material.set_shader_parameter("fog_cap", Color(cap_fog.r, cap_fog.g, cap_fog.b, cap_amount))
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
