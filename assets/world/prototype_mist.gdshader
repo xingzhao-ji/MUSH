@@ -16,6 +16,11 @@ uniform float strength = 0.55;
 uniform float billow = 0.0;
 // Gap strength (0 = solid bank).
 uniform float holes = 0.0;
+// Day colour, and the colour it takes looking toward the glow (equal = previous look): the
+// paintover target (Gemini, vista) has warm mist (hue ~24, L*58) toward the light.
+uniform vec3 day_tint : source_color = vec3(0.80, 0.78, 0.93);
+uniform vec3 glow_tint : source_color = vec3(0.80, 0.78, 0.93);
+uniform vec3 glow_dir = vec3(0.0, 0.0, -1.0);
 // Capture-only diagnosis (0 = final); 4 = flat mask.
 uniform int debug_view = 0;
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear_mipmap;
@@ -57,7 +62,9 @@ void fragment() {
 	a *= smoothstep(140.0, 320.0, frag_z);
 	ALPHA = clamp(a * strength * mix(1.0, 1.3, rain) * mix(1.0, 0.8, night), 0.0, 1.0);
 	// Lavender in shade (concepts: mist hue ~237-270, saturation ~0.2); it was near-grey (sat 0.03-0.08).
-	vec3 day = vec3(0.80, 0.78, 0.93);
+	vec3 to_frag = normalize(v_world - CAMERA_POSITION_WORLD);
+	float toward = smoothstep(-0.2, 0.9, dot(normalize(to_frag.xz + vec2(1e-5)), normalize(glow_dir.xz + vec2(1e-5))));
+	vec3 day = mix(day_tint, glow_tint, toward);
 	vec3 dusk = vec3(0.24, 0.24, 0.40);
 	ALBEDO = mix(mix(day, vec3(0.72, 0.72, 0.76), rain), dusk, night);
 	ALBEDO *= mix(1.0, 0.8 * mix(0.78, 1.0, smoothstep(0.3, 0.75, body * 0.6 + wisps * 0.5)), billow);

@@ -188,15 +188,15 @@ const DAY_SUN := Color("ffc07e")
 ## lavender fog below the sky, a darker zenith, and the warm glow dome decoupled from the key (near
 ## the view axis), as the concepts do. Vista (L*): massif range 39 -> 53, far block 80 (above the
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
-const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("8a84a8"), "sky_top": Color("3a3c86"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("d6bccf")}
+const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("b8958c"), "sky_top": Color("3a3c86"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("f0b890")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
 const GOLDEN_AMBIENT_ENERGY := 0.28
-const GOLDEN_FOG_DENSITY := 0.32
-const GOLDEN_AERIAL := 0.4
+const GOLDEN_FOG_DENSITY := 0.45
+const GOLDEN_AERIAL := 0.55
 ## Scatter 0.5 washed the walls toward the sun to cream (hero/knoll, geology 115105): 0.32.
-const GOLDEN_SCATTER := 0.15
+const GOLDEN_SCATTER := 0.35
 var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
@@ -218,6 +218,7 @@ var _art: Array[ShaderMaterial] = []
 # Terrain, forest carpet and meadow erratics: the golden-hour soft daylight terms (wrap on the key,
 # sky/bounce hemisphere) go to these materials only.
 var _soft_materials: Array[ShaderMaterial] = []
+var _horizon_cap_material: ShaderMaterial
 var _mask: StandardMaterial3D
 var _nodes: Array[MultiMeshInstance3D] = []
 var _static: Array[GeometryInstance3D] = []
@@ -2167,6 +2168,7 @@ func _add_horizon_giants() -> void:
 		cap_tints.append(Color(rng.randf(), 0, 0))
 		stem_tints.append(Color(rng.randf(), 1, 1))
 	_add(cap, caps, cap_tints, 0, "HorizonCanopies")
+	_horizon_cap_material = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
 	_add(stem, stems, stem_tints, 1, "HorizonStems")
 	_add_cap_tendrils(caps, "HorizonTendrils", 47)
 	horizon_giants_report = {"built": true, "giants": caps.size(), "triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0, "note": "outside the walkable world; not part of GIANTS"}
@@ -4379,12 +4381,16 @@ const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
 const GOLDEN_HORIZON_GLOW := 0.9
 const GOLDEN_HORIZON_GLOW_POWER := 16.0
 const GOLDEN_REFLECT_FLOOR := 0.5
+const GOLDEN_GLOW_BAND := 0.0
+const GOLDEN_FAR_DOME := 0.5
+const GOLDEN_FAR_UNDER := 1.5
+const GOLDEN_MIST_WARM := "f4c09c"
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
-const SOFT_WRAP := 0.5
+const SOFT_WRAP := 0.7
 const SOFT_HEMI := 0.3
 const SOFT_HEMI_COLOR := "9e94e0"
-const SOFT_BOUNCE := 0.18
+const SOFT_BOUNCE := 0.3
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
@@ -4419,11 +4425,20 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
+	# Mist warms toward the glow by day (golden hour only; other shaders ignore these).
+	var m_az: float = deg_to_rad(float(look_override.get("glow_az", GOLDEN_GLOW_AZ)))
+	var mist_warm: Color = Color(str(look_override.get("mist_warm", GOLDEN_MIST_WARM))) if look_depth else Color(0.80, 0.78, 0.93)
+	for material: ShaderMaterial in _geology_materials:
+		material.set_shader_parameter("glow_tint", mist_warm)
+		material.set_shader_parameter("glow_dir", Vector3(sin(m_az), 0.0, cos(m_az)))
 	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
 	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - 0.5 * rain) if look_depth else 0.0
 	for material: ShaderMaterial in _art:
 		material.set_shader_parameter("day_glow", cap_day_glow)
 	if cap_material != null and not cap_material in _art: cap_material.set_shader_parameter("day_glow", cap_day_glow)
+	if _horizon_cap_material != null:
+		_horizon_cap_material.set_shader_parameter("dome_value", float(look_override.get("far_dome", GOLDEN_FAR_DOME)) if look_depth else 1.0)
+		_horizon_cap_material.set_shader_parameter("under_gain", float(look_override.get("far_under", GOLDEN_FAR_UNDER)) if look_depth else 1.0)
 	sun.light_color = (day.sun as Color).lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
 	sun.light_energy = lerpf(float(look_override.get("sun_energy", GOLDEN_SUN_ENERGY if look_depth else 1.55)), 0.60, night) * lerpf(1.0, 0.65, rain)
 	sun.rotation_degrees.x = lerpf(float(look_override.get("sun_elev", GOLDEN_SUN_ELEV if look_depth else -22.0)), -27.45, night)
@@ -4459,7 +4474,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_enabled = not _debug_colors
 	# Rain haze is a darker slate (9c97b4 at 0.5 lifted the walls above the overcast sky: vista rain
 	# massif 75.9 vs sky 74.6, review 03); the rain fog density is 0.7 instead of the previous 0.8.
-	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("77738c"), rain * 0.6)
+	# The golden-hour haze is warm (Gemini paintover target); rain still reads slate (0.85 of the way).
+	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("77738c"), rain * (0.85 if look_depth else 0.6))
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
 	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(FOG_BEGIN, 200.0, rain)
@@ -4486,6 +4502,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		sky.set_shader_parameter("cloud_glow_power", float(look_override.get("cloud_glow_power", GOLDEN_CLOUD_GLOW_POWER)))
 		sky.set_shader_parameter("horizon_glow", float(look_override.get("horizon_glow", GOLDEN_HORIZON_GLOW)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0)
 		sky.set_shader_parameter("horizon_glow_power", float(look_override.get("horizon_glow_power", GOLDEN_HORIZON_GLOW_POWER)))
+		sky.set_shader_parameter("glow_band", float(look_override.get("glow_band", GOLDEN_GLOW_BAND)) if look_depth else 0.0)
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
 	_lake_material.set_shader_parameter("sky_horizon", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))

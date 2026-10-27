@@ -14,6 +14,9 @@ uniform float cloud_glow = 0.0;
 uniform float cloud_glow_power = 3.0;
 uniform float horizon_glow = 0.0;
 uniform float horizon_glow_power = 6.0;
+// Keeps the glow to a band above the horizon (0 = angular falloff only): the glow lit the whole
+// upper frame (vista zenith 69 -> 77, review 07).
+uniform float glow_band = 0.0;
 float hash3(vec3 p) {
  p=fract(p*.1031); p+=dot(p,p.yzx+33.33); return fract((p.x+p.y)*p.z);
 }
@@ -27,7 +30,8 @@ void sky() {
  float height=max(EYEDIR.y,0.0);
  vec3 base=mix(horizon_color.rgb,top_color.rgb,pow(height,.45));
  float glow_facing=max(dot(EYEDIR,normalize(cloud_glow_dir)),0.0);
- if(horizon_glow>0.0) base=mix(base,cloud_glow_color.rgb,clamp(pow(glow_facing,horizon_glow_power)*horizon_glow,0.0,1.0));
+ float band=exp(-max(EYEDIR.y-max(cloud_glow_dir.y,0.0),0.0)*glow_band);
+ if(horizon_glow>0.0) base=mix(base,cloud_glow_color.rgb,clamp(pow(glow_facing,horizon_glow_power)*band*horizon_glow,0.0,1.0));
  if(EYEDIR.y<0.0) {
   COLOR=mix(horizon_color.rgb,ground_color.rgb,clamp(-EYEDIR.y*2.0,0.0,1.0));
  } else {
@@ -39,7 +43,7 @@ void sky() {
   cloud_color=mix(cloud_color,vec3(.013,.025,.075),night_amount);
   float glow_k=0.0;
   if(cloud_glow>0.0) {
-   glow_k=pow(glow_facing,cloud_glow_power)*cloud_glow;
+   glow_k=pow(glow_facing,cloud_glow_power)*band*cloud_glow;
    cloud_color=mix(cloud_color,cloud_glow_color.rgb,clamp(glow_k*0.7,0.0,1.0));
   }
   // Clouds near the glow are denser (glow_k = 0 keeps the previous blend).
