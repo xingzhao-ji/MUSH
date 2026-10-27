@@ -189,7 +189,11 @@ void fragment() {
 		rock = rock * mix(vec3(1.0), broad * 2.0, 0.5);
 		float streak = fbm(vec2((v_world.x + v_world.z) * 0.05, v_world.y * 0.01));
 		float strata = fbm(vec2(v_world.y * 0.05 + fbm(v_world.xz * 0.01) * 1.4, 0.61));
-		albedo = rock * mix(vec3(0.95, 0.88, 0.86), vec3(1.25, 1.08, 0.92), streak) * mix(0.82, 1.1, strata) * (0.9 + 0.2 * v_tint);
+		// Granite family (the West Wall's grey stone): neutral, lighter, faint strata only. The
+		// warm streak x strata product on the dark brown texture read as striped termite mounds.
+		vec3 base = rock * mix(vec3(0.95, 0.92, 0.9), vec3(1.15, 1.08, 1.0), streak) * mix(0.92, 1.05, strata) * (0.9 + 0.2 * v_tint);
+		float g = dot(base, vec3(0.299, 0.587, 0.114));
+		albedo = mix(base, vec3(g) * vec3(1.0, 1.0, 1.03), 0.65) * 1.6;
 		albedo = mix(albedo, moss_mean, smoothstep(0.7, 0.95, n.y) * 0.6);
 		rough = 0.92;
 		spec = 0.1;

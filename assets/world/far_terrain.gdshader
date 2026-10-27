@@ -120,6 +120,10 @@ void fragment() {
 		rock = mix(rock, stone * mottle * strata_tone, rock_breakup * focus);
 	}
 	if (focus > 0.0) rock *= mix(1.0, rock_albedo_lift, focus);
+	// Outside the focus region, steep terrain rock joins the granite family: the warm far-texture
+	// product (Rock01 x warm_rock) read as maroon value holes beside the grey walls.
+	float g_lum = dot(rock, vec3(0.299, 0.587, 0.114));
+	rock = mix(rock, vec3(g_lum) * vec3(1.02, 1.0, 1.0) * 1.25, 0.55 * (1.0 - focus));
 	float steep = 1.0 - clamp(n.y, 0.0, 1.0);
 	// Moss coverage: mottled, warped world-space patches (~22 m and ~6 m), thinning on
 	// steep and high, exposed ground. Applied only on rugged or upland terrain, so the
