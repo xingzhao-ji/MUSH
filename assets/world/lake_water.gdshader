@@ -31,6 +31,10 @@ uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
 // waterline; inflow_size = (reach m, strength).
 uniform vec4 inflow = vec4(0.0);
 uniform vec2 inflow_size = vec2(0.0);
+// Painterly reflectance floor (0 = physical Schlick only): seen from the high vista (~70 deg from
+// grazing) Schlick gives ~0.12 and the lake read as a dark hole (L*11 vs the concept's 38,
+// review 06); the floor lets it mirror the glowing sky and walls as the concepts do.
+uniform float reflect_floor = 0.0;
 varying vec3 v_world;
 
 float hash21(vec2 p) {
@@ -79,6 +83,7 @@ void fragment() {
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 	vec3 view_dir = normalize(v_world - cam);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - clamp(dot(-view_dir, n_world), 0.0, 1.0), 5.0);
+	fresnel = max(fresnel, reflect_floor);
 	// Body colour by vertical depth.
 	vec3 body = mix(shore_tint, shallow, smoothstep(0.0, 2.5, depth_v));
 	body = mix(body, deep, smoothstep(2.5, 14.0, depth_v));

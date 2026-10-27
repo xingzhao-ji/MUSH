@@ -4378,6 +4378,7 @@ const GOLDEN_CLOUD_GLOW_POWER := 4.0
 const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
 const GOLDEN_HORIZON_GLOW := 0.9
 const GOLDEN_HORIZON_GLOW_POWER := 16.0
+const GOLDEN_REFLECT_FLOOR := 0.5
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
 const SOFT_WRAP := 0.5
@@ -4399,6 +4400,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		for key: String in look_override:
 			if key in day: day[key] = Color(str(look_override[key]))
 	_lake_material.set_shader_parameter("horizon", (day.lake_horizon as Color).lerp(Color("3a3466"), night))
+	# Painterly reflectance floor by day (review 06 item 4: the vista lake read as a hole).
+	_lake_material.set_shader_parameter("reflect_floor", float(look_override.get("reflect_floor", GOLDEN_REFLECT_FLOOR)) * (1.0 - night) * (1.0 - 0.5 * rain) if look_depth else 0.0)
 	if _skyglow_material != null:
 		_skyglow_material.set_shader_parameter("sun_dir", toward_sun)
 		# The glow is decoupled from the key (consult 01): it sits near the hero view axis while the
