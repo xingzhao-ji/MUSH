@@ -3031,7 +3031,32 @@ func _add_falls() -> Dictionary:
 	veil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(veil)
 	_static.append(veil)
-	return {"built": true, "width_m": [12.0, 86.0], "contact_fraction": 0.18, "pool": _v3(pool.position), "pool_radius_m": BASIN_RADIUS * 1.25, "lip": _v3(Vector3(toe.x + nrm.x * (_wall_face_offset(sample, 1.0, h, top) + 6.0), top, toe.y + nrm.y * (_wall_face_offset(sample, 1.0, h, top) + 6.0))), "foot": _v3(foot), "drop_m": top - pool_y, "min_face_clearance_m": min_clear, "ribbon_triangles": rows * 4, "mist_triangles": 6}
+	# Rising spray plume over the plunge (review 03: the foot is hidden from the vista behind the bush
+	# hill, and the spray read as a flat lens): four crossed sheets on the valley-mist shader, dense at
+	# the base and feathered upward, standing ~220 m so it shows above the hill. One draw, no shadows.
+	var plume_st := SurfaceTool.new()
+	plume_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var plume_base := Vector3(_basin.x - nrm.x * 10.0, pool_y - 8.0, _basin.y - nrm.y * 10.0)
+	for k: int in 4:
+		var side: Vector2 = dir.rotated(float(k) * PI / 4.0)
+		var half := Vector3(side.x, 0.0, side.y) * 55.0
+		var quad: Array[Vector3] = [plume_base - half, plume_base + half, plume_base + half + Vector3.UP * 220.0, plume_base - half + Vector3.UP * 220.0]
+		var uvs: Array[Vector2] = [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+		for m: int in [0, 1, 2, 0, 2, 3]:
+			plume_st.set_uv(uvs[m])
+			plume_st.add_vertex(quad[m])
+	var plume_material := ShaderMaterial.new()
+	plume_material.shader = MIST_SHADER
+	plume_material.set_shader_parameter("strength", 0.95)
+	_geology_materials.append(plume_material)
+	var plume := MeshInstance3D.new()
+	plume.name = "WestFallsPlume"
+	plume.mesh = plume_st.commit()
+	plume.material_override = plume_material
+	plume.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(plume)
+	_static.append(plume)
+	return {"built": true, "width_m": [12.0, 86.0], "contact_fraction": 0.18, "pool": _v3(pool.position), "pool_radius_m": BASIN_RADIUS * 1.25, "lip": _v3(Vector3(toe.x + nrm.x * (_wall_face_offset(sample, 1.0, h, top) + 6.0), top, toe.y + nrm.y * (_wall_face_offset(sample, 1.0, h, top) + 6.0))), "foot": _v3(foot), "drop_m": top - pool_y, "min_face_clearance_m": min_clear, "ribbon_triangles": rows * 4, "mist_triangles": 6, "plume": {"sheets": 4, "height_m": 220.0, "width_m": 110.0, "shader": "prototype_mist"}}
 
 ## Stream water: a ribbon laid on the rendered (coarse) valley floor along the carved channel,
 ## from the pool's outlet to the lake surface, flowing downstream; plus clearance and sightline
