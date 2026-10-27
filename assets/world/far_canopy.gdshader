@@ -53,6 +53,10 @@ uniform float day_glow = 0.0;
 // whose lit lavender domes sat 2 L* below the sky and read as glass discs (review 07).
 uniform float dome_value = 1.0;
 uniform float under_gain = 1.0;
+// Fog cap (a < 0 = engine fog as before): the horizon giants stand ~2 km out, past the fog end, so
+// the depth fog replaced them with the fog colour and they read as glass discs (review 08). When
+// a >= 0 the fog is this colour at most this amount, so they stay hazy but opaque.
+uniform vec4 fog_cap = vec4(0.0, 0.0, 0.0, -1.0);
 varying float v_tint;
 varying float v_cavity;
 varying vec3 v_col;
@@ -277,4 +281,6 @@ void fragment() {
 	EMISSION = emit;
 	ROUGHNESS = rough;
 	SPECULAR = spec;
+	// FOG_CAP_HOOK (the horizon giants' shader copy writes FOG here; writing FOG at all, even behind a
+	// branch, switches every material on this shader to custom fog, which rendered them black).
 }

@@ -220,6 +220,7 @@ var _art: Array[ShaderMaterial] = []
 # sky/bounce hemisphere) go to these materials only.
 var _soft_materials: Array[ShaderMaterial] = []
 var _horizon_cap_material: ShaderMaterial
+var _horizon_stem_material: ShaderMaterial
 var _mask: StandardMaterial3D
 var _nodes: Array[MultiMeshInstance3D] = []
 var _static: Array[GeometryInstance3D] = []
@@ -2262,9 +2263,15 @@ func _add_horizon_giants() -> void:
 		stems.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, h + r * 0.5 * 0.22 - base, stem_r)), Vector3(x, base, z)))
 		cap_tints.append(Color(rng.randf(), 0, 0))
 		stem_tints.append(Color(rng.randf(), 1, 1))
+	# A shader copy that writes FOG (capped haze), for these two materials only.
+	var capped := Shader.new()
+	capped.code = SHADER.code.replace("// FOG_CAP_HOOK", "if (fog_cap.a >= 0.0) FOG = vec4(fog_cap.rgb, fog_cap.a);\n\t//")
 	_add(cap, caps, cap_tints, 0, "HorizonCanopies")
 	_horizon_cap_material = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
+	_horizon_cap_material.shader = capped
 	_add(stem, stems, stem_tints, 1, "HorizonStems")
+	_horizon_stem_material = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
+	_horizon_stem_material.shader = capped
 	_add_cap_tendrils(caps, "HorizonTendrils", 47)
 	horizon_giants_report = {"built": true, "giants": caps.size(), "triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0, "note": "outside the walkable world; not part of GIANTS"}
 
@@ -4480,6 +4487,8 @@ const GOLDEN_GLOW_BAND := 0.0
 const GOLDEN_FAR_DOME := 0.5
 const GOLDEN_FAR_UNDER := 1.5
 const GOLDEN_MIST_WARM := "f4c09c"
+const GOLDEN_FAR_FOG := 0.45
+const GOLDEN_FOG_BEGIN := 550.0
 # Soft daylight on terrain, forest carpet and erratics (consult 01 step 4): wrap on the key, a
 # lavender sky hemisphere (energy) and a warm ground bounce (fraction of the key), day only.
 const SOFT_WRAP := 0.7
@@ -4573,7 +4582,10 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_light_color = (day.fog as Color).lerp(Color("2f2b5a"), night).lerp(Color("77738c"), rain * (0.85 if look_depth else 0.6))
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
 	# Middle distance keeps contrast; fog rises steeply toward the far horizon.
-	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(FOG_BEGIN, 200.0, rain)
+	# Golden hour starts the haze further out so the warm haze does not lift mid-distance shadow
+	# (review 08: vista massif p5 21 -> 28 after the warm haze).
+	var fog_begin_day: float = lerpf(float(look_override.get("fog_begin", GOLDEN_FOG_BEGIN if look_depth else FOG_BEGIN)), FOG_BEGIN, night)
+	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(fog_begin_day, 200.0, rain)
 	environment.fog_depth_end = 1400.0 if atmosphere_previous else lerpf(FOG_END, 1400.0, rain)
 	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
 	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(lerpf(float(look_override.get("fog_density", GOLDEN_FOG_DENSITY if look_depth else FOG_DENSITY)), FOG_DENSITY, night), 0.7, rain)))
@@ -4581,6 +4593,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# Overcast rain has no sun to scatter: the golden-hour scatter lit the rain haze pink (vista rain).
 	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night) * (1.0 - rain)
 	environment.fog_sky_affect = 0.0
+	# Horizon giants: the depth fog is capped on them by day so they stay opaque against the sky
+	# (review 08); toward night or rain the cap eases to near-full haze, then the engine fog takes over.
+	var giant_day: float = (1.0 - night) * (1.0 - rain) if look_depth else 0.0
+	var cap_fog: Color = environment.fog_light_color.srgb_to_linear()
+	var cap_amount: float = lerpf(0.95, float(look_override.get("far_fog", GOLDEN_FAR_FOG)), giant_day) if giant_day > 0.02 else -1.0
+	for material: ShaderMaterial in [_horizon_cap_material, _horizon_stem_material]:
+		if material != null: material.set_shader_parameter("fog_cap", Color(cap_fog.r, cap_fog.g, cap_fog.b, cap_amount))
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:
 		# Less pink: a bluer top and a golden (not peach-pink) horizon, so their blend
