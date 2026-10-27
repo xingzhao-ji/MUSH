@@ -12,8 +12,10 @@ uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
 uniform sampler2D rock_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform vec3 moss_mean : source_color = vec3(0.30, 0.36, 0.18);
 uniform vec3 amber : source_color = vec3(1.0, 0.62, 0.30);
-uniform vec3 flesh : source_color = vec3(0.70, 0.52, 0.72);
-uniform vec3 flesh_rim : source_color = vec3(0.88, 0.62, 0.66);
+// Lavender caps: albedo hue ~272 (measured ~252 at 0.58, 0.50, 0.80, sweep 192058) (0.70, 0.52, 0.72 drifted
+// to ~311, back toward fly agaric, review 03).
+uniform vec3 flesh : source_color = vec3(0.66, 0.50, 0.80);
+uniform vec3 flesh_rim : source_color = vec3(0.82, 0.68, 0.88);
 uniform vec3 gill : source_color = vec3(0.86, 0.70, 0.66);
 uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
 // Mode 2 rock brightness (1.6 = the spires and rim boulders); the meadow erratics use less, and
@@ -92,7 +94,7 @@ void fragment() {
 			albedo = mix(flesh, flesh_rim, smoothstep(0.55, 1.0, s) * 0.8 + 0.2 * mottle) * (0.82 + 0.3 * mottle);
 			float freckle = spots(skin, 0.32) * aa(skin.x);
 			// Subtler freckles (the white fly-agaric dots competed with the whole frame by day).
-			albedo = mix(albedo, vec3(0.94, 0.86, 0.90), freckle * 0.25 * smoothstep(0.1, 0.8, s));
+			albedo = mix(albedo, vec3(0.86, 0.82, 0.96), freckle * 0.12 * smoothstep(0.1, 0.8, s));
 			emit = amber * freckle * mix(0.03, 0.10, night) * glow * (1.0 - s * 0.5) + flesh_rim * smoothstep(0.88, 1.0, s) * 0.10 * glow;
 			rough = 0.6;
 			if (cap_craft > 0.0) {
@@ -122,7 +124,7 @@ void fragment() {
 			emit += amber * spots(vec2(UV.x * 90.0, t * 14.0), 0.22) * 0.25 * glow * (0.3 + core);
 			// Daylight: the underside sat ~20 L* below the sky; a soft luminous lift, lavender toward
 			// the margin and amber toward the stem (night keeps the amber glow above).
-			emit += mix(vec3(0.62, 0.56, 0.80), amber, core) * 0.10 * (1.0 - night);
+			emit += mix(vec3(0.62, 0.56, 0.80) * 0.10, amber * 0.24, core) * (1.0 - night);
 			rough = 0.85;
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
