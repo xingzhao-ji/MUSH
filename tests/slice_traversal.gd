@@ -1095,7 +1095,8 @@ func _geology_scenario() -> void:
 	_check("Geology views captured (day 8 incl. the basin, hero and vista views, night 5, rain 4)", images.size() == 17, images.size())
 
 ## Composition exploration only (not an acceptance check): renders candidate review cameras
-## listed in MUSH_SWEEP as JSON [[label, [x, z], eye_height_m, [tx, ty, tz], fov, mood], ...],
+## listed in MUSH_SWEEP as JSON [[label, [x, z], eye_height_m, [tx, ty, tz], fov, mood], ...]
+## (a label starting with "overlook" uses the scenery's overlook pose; the pose fields are ignored),
 ## eye placed eye_height_m above the rendered terrain (or the lake surface, if higher);
 ## mood is "day", "night" or "rain". Captures are named sweep-<label>-<mood>.png.
 func _camera_sweep_scenario() -> void:
@@ -1113,10 +1114,17 @@ func _camera_sweep_scenario() -> void:
 			game.world.set_appearance(mood == "night", mood == "rain", false)
 			await get_tree().create_timer(4.5).timeout
 			mood_now = mood
-		var ground: float = maxf(scenery.rendered_terrain_height(float(spec[1][0]), float(spec[1][1])), -82.0)
-		review.fov = float(spec[4])
-		review.position = Vector3(float(spec[1][0]), ground + float(spec[2]), float(spec[1][1]))
-		review.look_at(Vector3(float(spec[3][0]), float(spec[3][1]), float(spec[3][2])))
+		if str(spec[0]).begins_with("overlook"):
+			# The scenery's own overlook pose (eye on the rim, aimed at the hero giant).
+			var pose: Dictionary = scenery.overlook_pose()
+			review.fov = float(pose.fov)
+			review.position = pose.position
+			review.look_at(pose.target)
+		else:
+			var ground: float = maxf(scenery.rendered_terrain_height(float(spec[1][0]), float(spec[1][1])), -82.0)
+			review.fov = float(spec[4])
+			review.position = Vector3(float(spec[1][0]), ground + float(spec[2]), float(spec[1][1]))
+			review.look_at(Vector3(float(spec[3][0]), float(spec[3][1]), float(spec[3][2])))
 		review.make_current()
 		await _frames(30)
 		await _capture("sweep-%s-%s" % [str(spec[0]), mood])
