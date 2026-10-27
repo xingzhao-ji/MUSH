@@ -3172,8 +3172,11 @@ func _add_stream_water(pool_y: float) -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var depth: float = 0.35
-	var columns: int = 7
-	var half: float = 6.0
+	# 22 m wide (was 12 m) inside the 32 m flat bed: from the vista the stream was a 2-4 px thread
+	# (review 03/04); 12 columns keep the draped facets 2 m across, as before (9 columns at 2.75 m
+	# buried 4 of 62,710 clearance samples by 2 cm, geology 210127).
+	var columns: int = 12
+	var half: float = 11.0
 	var spacing: float = 2.0
 	var length: float = STREAM_STEP * float(_stream.size() - 1)
 	var rows: int = int(length / spacing) + 1
@@ -3204,7 +3207,9 @@ func _add_stream_water(pool_y: float) -> void:
 			var off: float = (float(k) / float(columns - 1) * 2.0 - 1.0) * half
 			var at: Vector2 = centre + side * off
 			var ground: float = _coarse_height(at.x, at.y)
-			var y: float = maxf(ground + depth, LAKE_Y + 0.05)
+			# Outer columns sit a little higher (0.35 m at the centre, 0.47 m at the edges): the widened
+			# sheet's edges cross local creases where a flat 0.35 m offset dipped 2 cm under the bed.
+			var y: float = maxf(ground + depth + 0.12 * absf(off) / half, LAKE_Y + 0.05)
 			floating = maxf(floating, y - ground if ground >= LAKE_Y else 0.0)
 			st.set_uv(Vector2(float(k) / float(columns - 1), d / 40.0))
 			# COLOR.g: 1 where the sheet lies on the lake itself (it fades out there; the lake's inflow fan takes over).

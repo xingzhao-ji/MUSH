@@ -39,7 +39,8 @@ void fragment() {
 		NORMAL_MAP = normalize(vec3(-grad * mix(0.08, 0.2, COLOR.r), 1.0)) * 0.5 + 0.5;
 		float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
 		// White water: broad foam where the reach steps down, plus thin foam lines along the banks.
-		float foam = smoothstep(0.48, 0.75, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * COLOR.r;
+		// Riffles everywhere (a mountain stream is broken water), white water where the reach steps down.
+		float foam = smoothstep(0.42, 0.72, fbm(vec2(UV.x * 6.0, UV.y * 9.0 - t * 1.1))) * mix(0.4, 1.0, COLOR.r);
 		foam = max(foam, smoothstep(0.55, 0.8, across) * smoothstep(0.4, 0.7, fbm(vec2(UV.x * 11.0, UV.y * 4.0 - t * 0.5))) * 0.8);
 		ALBEDO = mix(vec3(0.03, 0.09, 0.10), vec3(0.85, 0.9, 0.92), foam);
 		ALPHA = clamp(mix(0.45, 0.92, fres) + foam * 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.7, 1.0, across)) * (1.0 - smoothstep(0.1, 0.9, COLOR.g));
