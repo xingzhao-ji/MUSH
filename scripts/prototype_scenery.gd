@@ -95,6 +95,11 @@ const FALLS_SHADER := preload("res://assets/world/prototype_falls.gdshader")
 const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
 const Horn := preload("res://scripts/prototype_horn.gd")
 const MIST_SHADER := preload("res://assets/world/prototype_mist.gdshader")
+const SKYGLOW_SHADER := preload("res://assets/world/prototype_skyglow.gdshader")
+## Golden-hour sky glow dome (camera-following, additive, inside the far plane).
+const SKYGLOW_RADIUS := 2350.0
+var _skyglow: MeshInstance3D
+var _skyglow_material: ShaderMaterial
 const Erratics := preload("res://scripts/prototype_erratics.gd")
 ## Glacial erratics: clustered angular granite blocks on the open slopes of the lake basin and the
 ## vista's near field (the open meadows read as plain lawn). Visual only (no collision, no
@@ -159,7 +164,15 @@ const DAY_SUN := Color("ffc07e")
 ## colours (granite grey, lavender caps, greens) survive; shadows go blue instead of brown.
 ## Review round 2: ffd6a6/c4d0e8 overshot (side-view wall R-B fell 86 -> 43 while L* rose: no
 ## day frame read warm, shadow sides went lighter and bluer). Middle ground: ffcc90 / c8ccdc.
-const DEPTH_LOOK := {"sun": Color("ffcc90"), "ambient": Color("c8ccdc"), "fog": Color("8ea4d4"), "sky_top": Color("3d74c8"), "sky_horizon": Color("f0dcbc"), "lake_horizon": Color("c2b4d6")}
+## Golden hour (2026-10-27, toward the concepts): a low (11 degrees), warm sun BEHIND the valley as
+## seen from the hero views (azimuth 200: north-north-west), lavender fill, peach horizon, warm sun
+## scatter in the fog and a sky glow dome. The walls go to lavender shade with warm rims, the haze
+## between them glows, caps and lake catch the backlight (sweep 114931 az200 vs midday 114603).
+const DEPTH_LOOK := {"sun": Color("ffb877"), "ambient": Color("b8b2dc"), "fog": Color("bcb0d8"), "sky_top": Color("5568c2"), "sky_horizon": Color("f6c7a0"), "lake_horizon": Color("d6bccf")}
+const GOLDEN_SUN_AZ := 200.0
+const GOLDEN_SUN_ELEV := -11.0
+## Scatter 0.5 washed the walls toward the sun to cream (hero/knoll, geology 115105): 0.32.
+const GOLDEN_SCATTER := 0.32
 var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
@@ -605,6 +618,32 @@ func _compute_baked_extent() -> Rect2:
 const SKY_DOME_SCALE := 19.0
 const MOON_DISTANCE := 2200.0
 var sky_dome_report: Dictionary = {"pushed": false}
+func _add_skyglow() -> void:
+	var sphere := SphereMesh.new()
+	sphere.radius = SKYGLOW_RADIUS
+	sphere.height = SKYGLOW_RADIUS * 2.0
+	sphere.radial_segments = 48
+	sphere.rings = 24
+	_skyglow_material = ShaderMaterial.new()
+	_skyglow_material.shader = SKYGLOW_SHADER
+	_skyglow = MeshInstance3D.new()
+	_skyglow.name = "GoldenHourSkyGlow"
+	_skyglow.mesh = sphere
+	_skyglow.material_override = _skyglow_material
+	_skyglow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_skyglow.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	_skyglow.extra_cull_margin = 16384.0
+	add_child(_skyglow)
+	_static.append(_skyglow)
+	# The world's visible sun is a sphere 120 m from the camera; with the golden-hour sun in front of
+	# the hero views it drew over the far walls. Full geometry transparency hides it without touching
+	# its visibility, mesh or pose (owned by the world); the dome draws the disc instead. (Render
+	# layer 0 was tried and made the engine log "indexing did not unpair geometries from light".)
+	var visible_sun: Variant = _world.get("_r36_sun")
+	if look_depth and visible_sun is GeometryInstance3D and is_instance_valid(visible_sun):
+		(visible_sun as GeometryInstance3D).transparency = 1.0
+		sky_dome_report["visible_sun_transparency"] = 1.0
+
 func _push_sky_dome() -> void:
 	var root: Variant = _world.get("_r36_root")
 	if not (root is Node3D) or not is_instance_valid(root): 
@@ -717,6 +756,7 @@ func configure(world: Node3D) -> void:
 		_add_wall()
 		if not "no_wall_mist" in skip: _add_wall_mist()
 	_push_sky_dome()
+	_add_skyglow()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
 	diagnostic_skips = skip
@@ -4005,6 +4045,9 @@ func overlook_pose() -> Dictionary:
 # --- Runtime state ---
 
 func _process(delta: float) -> void:
+	if is_instance_valid(_skyglow) and is_inside_tree():
+		var camera: Camera3D = get_viewport().get_camera_3d()
+		if camera != null: _skyglow.global_position = camera.global_position
 	if frozen or _reduced_motion or (is_inside_tree() and get_tree().paused): return
 	_time += delta
 	for material: ShaderMaterial in _art + [_lake_material] + _geology_materials:
@@ -4147,6 +4190,11 @@ func set_reduced_motion(value: bool) -> void:
 	for material: ShaderMaterial in _art + _geology_materials:
 		material.set_shader_parameter("shimmer_amount", 0.0 if value else 1.0)
 
+## Capture-only look exploration (camera sweep): day endpoint colours by DEPTH_LOOK key plus
+## sun_energy, sun_elev, ambient_energy. Empty in play.
+var look_override: Dictionary = {}
+const GOLDEN_GLOW := 0.5
+
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
 	var toward_sun: Vector3 = sun.global_basis.z.normalized()
@@ -4156,21 +4204,31 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for pair: Array in _understory_sync:
 		(pair[1] as ShaderMaterial).set_shader_parameter("night_amount", (pair[0] as ShaderMaterial).get_shader_parameter("night_amount"))
 	var day: Dictionary = DEPTH_LOOK if look_depth else {"sun": DAY_SUN, "ambient": Color("d2d0ca"), "fog": Color("a2b3d4"), "sky_top": Color("41529f"), "sky_horizon": Color("f4c49a"), "lake_horizon": Color("f2b08e")}
+	if not look_override.is_empty():
+		day = day.duplicate()
+		for key: String in look_override:
+			if key in day: day[key] = Color(str(look_override[key]))
 	_lake_material.set_shader_parameter("horizon", (day.lake_horizon as Color).lerp(Color("3a3466"), night))
+	if _skyglow_material != null:
+		_skyglow_material.set_shader_parameter("sun_dir", toward_sun)
+		_skyglow_material.set_shader_parameter("night", night)
+		_skyglow_material.set_shader_parameter("rain", rain)
+		_skyglow_material.set_shader_parameter("strength", float(look_override.get("glow", GOLDEN_GLOW)))
+		_skyglow_material.set_shader_parameter("glow_color", Color(str(look_override.get("glow_color", "ffb873"))))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material] + _geology_materials:
 		material.set_shader_parameter("night", night)
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
 	sun.light_color = (day.sun as Color).lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
-	sun.light_energy = lerpf(1.55, 0.60, night) * lerpf(1.0, 0.65, rain)
-	sun.rotation_degrees.x = lerpf(-22.0, -27.45, night)
-	sun.rotation_degrees.y = lerpf(130.0, 153.79, night)
+	sun.light_energy = lerpf(float(look_override.get("sun_energy", 1.55)), 0.60, night) * lerpf(1.0, 0.65, rain)
+	sun.rotation_degrees.x = lerpf(float(look_override.get("sun_elev", GOLDEN_SUN_ELEV if look_depth else -22.0)), -27.45, night)
+	sun.rotation_degrees.y = lerpf(float(look_override.get("sun_az", GOLDEN_SUN_AZ if look_depth else 130.0)), 153.79, night)
 	sun.light_angular_distance = 2.2
 	# Tonal hierarchy: neutral-cool ambient and haze; the warm sun keeps the foreground warm.
 	environment.ambient_light_color = (day.ambient as Color).lerp(Color("8f90c8"), night)
 	# Fill energy stays at 0.32: a stronger fill (0.42 tried, sweep 173032) lifted the shadow
 	# sides and flattened the walls into pale curtains; only the fill colour turns cooler.
-	environment.ambient_light_energy = 0.32
+	environment.ambient_light_energy = float(look_override.get("ambient_energy", 0.32))
 	environment.fog_enabled = not _debug_colors
 	# Rain haze is a darker slate (9c97b4 at 0.5 lifted the walls above the overcast sky: vista rain
 	# massif 75.9 vs sky 74.6, review 03); the rain fog density is 0.7 instead of the previous 0.8.
@@ -4182,7 +4240,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
 	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(FOG_DENSITY, 0.7, rain)))
 	environment.fog_aerial_perspective = 0.15
-	environment.fog_sun_scatter = 0.1
+	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night)
 	environment.fog_sky_affect = 0.0
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
 	if sky != null:

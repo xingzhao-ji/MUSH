@@ -1096,7 +1096,8 @@ func _geology_scenario() -> void:
 
 ## Composition exploration only (not an acceptance check): renders candidate review cameras
 ## listed in MUSH_SWEEP as JSON [[label, [x, z], eye_height_m, [tx, ty, tz], fov, mood], ...]
-## (a label starting with "overlook" uses the scenery's overlook pose; the pose fields are ignored),
+## (a label starting with "overlook" uses the scenery's overlook pose; the pose fields are ignored;
+## an optional 7th field is a scenery.look_override dictionary, applied before the capture),
 ## eye placed eye_height_m above the rendered terrain (or the lake surface, if higher);
 ## mood is "day", "night" or "rain". Captures are named sweep-<label>-<mood>.png.
 func _camera_sweep_scenario() -> void:
@@ -1110,6 +1111,8 @@ func _camera_sweep_scenario() -> void:
 	var mood_now: String = ""
 	for spec: Array in specs:
 		var mood: String = str(spec[5]) if spec.size() > 5 else "day"
+		# Optional 7th field: a look override dictionary (capture-only exploration).
+		scenery.look_override = spec[6] if spec.size() > 6 and spec[6] is Dictionary else {}
 		if mood != mood_now:
 			game.world.set_appearance(mood == "night", mood == "rain", false)
 			await get_tree().create_timer(4.5).timeout
