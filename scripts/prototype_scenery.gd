@@ -96,6 +96,8 @@ const ICE_SHADER := preload("res://assets/world/prototype_ice.gdshader")
 const Horn := preload("res://scripts/prototype_horn.gd")
 const MIST_SHADER := preload("res://assets/world/prototype_mist.gdshader")
 const SKYGLOW_SHADER := preload("res://assets/world/prototype_skyglow.gdshader")
+const TENDRIL_SHADER := preload("res://assets/world/prototype_tendril.gdshader")
+var tendril_report: Dictionary = {}
 ## Golden-hour sky glow dome (camera-following, additive, inside the far plane).
 const SKYGLOW_RADIUS := 2350.0
 ## Valley mist banks: lowland below this height (m), shader strength.
@@ -1054,6 +1056,10 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 	cap_material = _art[_art.size() - 1]
 	set_cap_craft(true)
 	_add(cap, caps, tints, 0, "LuminousCanopies")
+	var all_caps: Array[Transform3D] = []
+	all_caps.append_array(hero_caps)
+	all_caps.append_array(caps)
+	_add_cap_tendrils(all_caps, "CapTendrils", 41)
 	_add(stem, stems, stem_tints, 1, "CanopyStems")
 	# Hero stem only (masked around its base; the other six stems keep their exact look).
 	stem_material = _art[_art.size() - 1]
@@ -2004,6 +2010,50 @@ func _add_corridor_trees(targets: Array) -> Dictionary:
 		built[batches[key].range] += _triangle_count(batches[key].mesh) * node.multimesh.instance_count
 	return {"trees": trees, "targets": targets.size(), "ring_crowns": crowns, "nodes": batches.size(), "triangles": built.all + built.far + built.near}
 
+## Luminous drips under the cap rims: crossed ribbons hanging from just inside the rim (cap local
+## radius 0.9, rim underside y -0.12), count and length scaled by the cap radius. One MultiMesh draw
+## per call, additive, no shadows, no collision.
+func _add_cap_tendrils(cap_poses: Array[Transform3D], label: String, seed: int) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for q: int in 2:
+		var d := Vector3(1, 0, 0) if q == 0 else Vector3(0, 0, 1)
+		var c: Array = [[-d * 0.5, Vector2(0, 0)], [d * 0.5, Vector2(1, 0)], [d * 0.5 + Vector3.DOWN, Vector2(1, 1)], [-d * 0.5 + Vector3.DOWN, Vector2(0, 1)]]
+		for k: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(c[k][1])
+			st.add_vertex(c[k][0])
+	var ribbon: ArrayMesh = st.commit()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var xs: Array[Transform3D] = []
+	for pose: Transform3D in cap_poses:
+		var r: float = pose.basis.x.length()
+		var count: int = clampi(int(r * 0.75), 10, 170)
+		for i: int in count:
+			var a: float = TAU * (float(i) + rng.randf_range(-0.4, 0.4)) / float(count)
+			var hang: Vector3 = pose * Vector3(cos(a) * rng.randf_range(0.82, 0.92), -0.11, sin(a) * rng.randf_range(0.82, 0.92))
+			var length: float = r * rng.randf_range(0.03, 0.16) * (1.6 if rng.randf() < 0.12 else 1.0)
+			var width: float = maxf(0.25, r * 0.0055) * rng.randf_range(0.7, 1.3)
+			xs.append(Transform3D(Basis(Vector3.UP, rng.randf_range(0.0, TAU)) * Basis.from_scale(Vector3(width, length, width)), hang))
+	if xs.is_empty(): return
+	var material := ShaderMaterial.new()
+	material.shader = TENDRIL_SHADER
+	_geology_materials.append(material)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = ribbon
+	multi.instance_count = xs.size()
+	for i: int in xs.size(): multi.set_instance_transform(i, xs[i])
+	var node := MultiMeshInstance3D.new()
+	node.name = label
+	node.multimesh = multi
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	tendril_report[label] = {"tendrils": xs.size(), "triangles": xs.size() * 4}
+
 ## Where a ray through the vista frame (screen x, y in -1..1, y up; vertical FOV 60, 16:9, eye 1.7 m
 ## above the rendered ground, as in the geology vista view) first meets the rendered ground, or
 ## Vector3.INF within max_m (2 m steps beyond 200 m).
@@ -2067,6 +2117,7 @@ func _add_vista_grove() -> void:
 		vista_grove_report["reason"] = "no clear ground"
 		return
 	_add(cap, caps, cap_tints, 0, "VistaGroveCaps")
+	_add_cap_tendrils(caps, "VistaGroveTendrils", 43)
 	_add(stem, stems, stem_tints, 1, "VistaGroveStems")
 	canopy_count += caps.size()
 	vista_grove_report = {"built": true, "mushrooms": caps.size(), "rejected": rejected, "placed_x_z_capradius": placed, "min_ribbon_gap_m": snappedf(min_gap, 0.1),
@@ -4330,4 +4381,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "cap_tendrils": tendril_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
