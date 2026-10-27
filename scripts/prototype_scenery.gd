@@ -143,6 +143,8 @@ var _refuge_mats: Array[StandardMaterial3D] = []
 var _refuge_mat_cache: Dictionary = {}
 var _refuge_lights: Array[OmniLight3D] = []
 var _refuge_lamp_material: StandardMaterial3D
+var _refuge_props: Array[ShaderMaterial] = []
+const TRIPO_SHADER := preload("res://assets/world/tripo_prop.gdshader")
 var refuge_home: Vector3 = Vector3.INF
 var refuge_facing: float = 0.0
 var refuge_lanterns: Array[Vector3] = []
@@ -2376,7 +2378,20 @@ func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: 
 	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
 	var root := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre)
 	for i: int in parts.size():
-		_refuge_mesh(parts[i][0], null, root * (parts[i][1] as Transform3D), "%s_%d" % [label, i])
+		var mesh: Mesh = parts[i][0]
+		var source := mesh.surface_get_material(0) as StandardMaterial3D if mesh.get_surface_count() > 0 else null
+		var material: Material = null
+		if source != null and source.albedo_texture != null:
+			var prop := ShaderMaterial.new()
+			prop.shader = TRIPO_SHADER
+			prop.set_shader_parameter("albedo_tex", source.albedo_texture)
+			if source.roughness_texture != null: prop.set_shader_parameter("rough_tex", source.roughness_texture)
+			if source.normal_texture != null:
+				prop.set_shader_parameter("normal_tex", source.normal_texture)
+				prop.set_shader_parameter("has_normal", true)
+			_refuge_props.append(prop)
+			material = prop
+		_refuge_mesh(mesh, material, root * (parts[i][1] as Transform3D), "%s_%d" % [label, i])
 	return true
 
 ## The mushroom cottage: the image-to-3D model when present, else a stand-in on the giants' own cap
@@ -2479,7 +2494,7 @@ func _add_vista_refuge() -> void:
 	var counts: Dictionary = {}
 	var trees: Array = [QN + "CommonTree_1.gltf", QN + "CommonTree_2.gltf", QN + "CommonTree_3.gltf", QN + "CommonTree_5.gltf"]
 	var flowers: Array = [QN + "Flower_3_Group.gltf", QN + "Flower_4_Group.gltf"]
-	var bushes: Array = [QN + "Bush_Common.gltf", QN + "Bush_Common_Flowers.gltf"]
+	var bushes: Array = [QN + "Bush_Common.gltf"]
 	var low: Array = [QN + "Fern_1.gltf", QN + "Plant_1_Big.gltf", QN + "Plant_7_Big.gltf", QN + "Clover_1.gltf"]
 	# The vista eye stands on a ~55 degree drop: the nearest ground in frame is the terrace 45-80 m out
 	# (y 19-25 m) below the lower-left; the lake shore on the right is 290 m+ away. So the refuge sits on
@@ -5120,6 +5135,9 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for glow: StandardMaterial3D in _refuge_glow: glow.emission_energy_multiplier = lerpf(0.12, 0.28, night) * (1.0 - 0.3 * rain)
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
+	for prop: ShaderMaterial in _refuge_props:
+		prop.set_shader_parameter("tint", Vector3(refuge_tint.r, refuge_tint.g, refuge_tint.b))
+		prop.set_shader_parameter("glow", lerpf(1.2, 3.0, maxf(night, rain * 0.5)))
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 
 func get_report() -> Dictionary:
