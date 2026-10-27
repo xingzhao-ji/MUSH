@@ -181,11 +181,22 @@ const DAY_SUN := Color("ffc07e")
 ## seen from the hero views (azimuth 200: north-north-west), lavender fill, peach horizon, warm sun
 ## scatter in the fog and a sky glow dome. The walls go to lavender shade with warm rims, the haze
 ## between them glows, caps and lake catch the backlight (sweep 114931 az200 vs midday 114603).
-const DEPTH_LOOK := {"sun": Color("ffb877"), "ambient": Color("b8b2dc"), "fog": Color("bcb0d8"), "sky_top": Color("5568c2"), "sky_horizon": Color("f6c7a0"), "lake_horizon": Color("d6bccf")}
-const GOLDEN_SUN_AZ := 200.0
-const GOLDEN_SUN_ELEV := -11.0
+## Consult 01 + review 05 (2026-10-27): the dead-astern sun gave N.L <= 0 on every camera-facing face
+## (no shadow maps on scenery), so rock lost its form and the golden hour was carried by fog scatter
+## (peach curtain, salmon lake). Now a 3/4 back-side key (60 degrees right of the vista axis, 13
+## degrees up), a lavender shadowless fill from behind-left at 45 degrees, lower ambient, a darker
+## lavender fog below the sky, a darker zenith, and the warm glow dome decoupled from the key (near
+## the view axis), as the concepts do. Vista (L*): massif range 39 -> 53, far block 80 (above the
+## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
+const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("8a84a8"), "sky_top": Color("4a4f9e"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("d6bccf")}
+const GOLDEN_SUN_AZ := 157.0
+const GOLDEN_SUN_ELEV := -13.0
+const GOLDEN_SUN_ENERGY := 1.6
+const GOLDEN_AMBIENT_ENERGY := 0.28
+const GOLDEN_FOG_DENSITY := 0.32
+const GOLDEN_AERIAL := 0.4
 ## Scatter 0.5 washed the walls toward the sun to cream (hero/knoll, geology 115105): 0.32.
-const GOLDEN_SCATTER := 0.32
+const GOLDEN_SCATTER := 0.15
 var look_depth: bool = true
 const NIGHT_SUN := Color("a9a6ee")
 
@@ -4346,8 +4357,13 @@ func set_reduced_motion(value: bool) -> void:
 ## sun_energy, sun_elev, ambient_energy. Empty in play.
 var look_override: Dictionary = {}
 const GOLDEN_GLOW := 0.5
-const GOLDEN_FILL_ENERGY := 0.0
-const GOLDEN_FILL_COLOR := "c6bdec"
+const GOLDEN_FILL_ENERGY := 0.5
+const GOLDEN_FILL_COLOR := "9499ff"
+const GOLDEN_FILL_AZ := 337.0
+const GOLDEN_FILL_ELEV := -45.0
+## Sky glow direction (degrees; same azimuth convention as the sun's rotation_degrees.y).
+const GOLDEN_GLOW_AZ := 208.0
+const GOLDEN_GLOW_ELEV := 6.0
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
@@ -4365,6 +4381,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	_lake_material.set_shader_parameter("horizon", (day.lake_horizon as Color).lerp(Color("3a3466"), night))
 	if _skyglow_material != null:
 		_skyglow_material.set_shader_parameter("sun_dir", toward_sun)
+		# The glow is decoupled from the key (consult 01): it sits near the hero view axis while the
+		# key comes from the side, as the concepts do.
+		var g_az: float = deg_to_rad(float(look_override.get("glow_az", GOLDEN_GLOW_AZ)))
+		var g_el: float = deg_to_rad(float(look_override.get("glow_elev", GOLDEN_GLOW_ELEV)))
+		_skyglow_material.set_shader_parameter("glow_dir", Vector3(sin(g_az) * cos(g_el), sin(g_el), cos(g_az) * cos(g_el)))
 		_skyglow_material.set_shader_parameter("night", night)
 		_skyglow_material.set_shader_parameter("rain", rain)
 		_skyglow_material.set_shader_parameter("strength", float(look_override.get("glow", GOLDEN_GLOW)))
@@ -4374,7 +4395,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("rain", rain)
 		material.set_shader_parameter("sun_dir", toward_sun)
 	sun.light_color = (day.sun as Color).lerp(NIGHT_SUN, night).lerp(Color("ffa86a"), sunset * 0.5)
-	sun.light_energy = lerpf(float(look_override.get("sun_energy", 1.55)), 0.60, night) * lerpf(1.0, 0.65, rain)
+	sun.light_energy = lerpf(float(look_override.get("sun_energy", GOLDEN_SUN_ENERGY if look_depth else 1.55)), 0.60, night) * lerpf(1.0, 0.65, rain)
 	sun.rotation_degrees.x = lerpf(float(look_override.get("sun_elev", GOLDEN_SUN_ELEV if look_depth else -22.0)), -27.45, night)
 	sun.rotation_degrees.y = lerpf(float(look_override.get("sun_az", GOLDEN_SUN_AZ if look_depth else 130.0)), 153.79, night)
 	sun.light_angular_distance = 2.2
@@ -4382,7 +4403,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.ambient_light_color = (day.ambient as Color).lerp(Color("8f90c8"), night)
 	# Fill energy stays at 0.32: a stronger fill (0.42 tried, sweep 173032) lifted the shadow
 	# sides and flattened the walls into pale curtains; only the fill colour turns cooler.
-	environment.ambient_light_energy = float(look_override.get("ambient_energy", 0.32))
+	environment.ambient_light_energy = lerpf(float(look_override.get("ambient_energy", GOLDEN_AMBIENT_ENERGY if look_depth else 0.32)), 0.32, night)
 	# Front fill (golden hour): the key sits behind the valley, so faces toward the cameras would be
 	# all shadow side; the world's shadowless sky-fill light is turned to face away from the sun
 	# (azimuth + 180, low) in a cool lavender, by day only. It gives front faces N.L form.
@@ -4390,7 +4411,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	var fill_energy: float = float(look_override.get("fill_energy", GOLDEN_FILL_ENERGY if look_depth else 0.0))
 	if fill is DirectionalLight3D and is_instance_valid(fill) and fill_energy > 0.0 and night < 1.0:
 		var day_w: float = (1.0 - night) * (1.0 - 0.6 * rain)
-		(fill as DirectionalLight3D).rotation_degrees = Vector3(float(look_override.get("fill_elev", -24.0)), sun.rotation_degrees.y + 180.0, 0.0).lerp((fill as DirectionalLight3D).rotation_degrees, night)
+		var fill_az: float = float(look_override.get("fill_az", GOLDEN_FILL_AZ if GOLDEN_FILL_AZ >= 0.0 else sun.rotation_degrees.y + 180.0))
+		(fill as DirectionalLight3D).rotation_degrees = Vector3(float(look_override.get("fill_elev", GOLDEN_FILL_ELEV)), fill_az, 0.0).lerp((fill as DirectionalLight3D).rotation_degrees, night)
 		(fill as DirectionalLight3D).light_energy = lerpf((fill as DirectionalLight3D).light_energy, fill_energy, day_w)
 		(fill as DirectionalLight3D).light_color = (fill as DirectionalLight3D).light_color.lerp(Color(str(look_override.get("fill_color", GOLDEN_FILL_COLOR))), day_w)
 	environment.fog_enabled = not _debug_colors
@@ -4402,8 +4424,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(FOG_BEGIN, 200.0, rain)
 	environment.fog_depth_end = 1400.0 if atmosphere_previous else lerpf(FOG_END, 1400.0, rain)
 	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
-	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(FOG_DENSITY, 0.7, rain)))
-	environment.fog_aerial_perspective = 0.15
+	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(lerpf(float(look_override.get("fog_density", GOLDEN_FOG_DENSITY if look_depth else FOG_DENSITY)), FOG_DENSITY, night), 0.7, rain)))
+	environment.fog_aerial_perspective = lerpf(float(look_override.get("aerial", GOLDEN_AERIAL if look_depth else 0.15)), 0.15, night)
 	# Overcast rain has no sun to scatter: the golden-hour scatter lit the rain haze pink (vista rain).
 	environment.fog_sun_scatter = float(look_override.get("scatter", GOLDEN_SCATTER if look_depth else 0.1)) * (1.0 - night) * (1.0 - rain)
 	environment.fog_sky_affect = 0.0

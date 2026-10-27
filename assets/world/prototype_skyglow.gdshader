@@ -6,6 +6,8 @@ render_mode unshaded, blend_add, depth_draw_never, cull_front, fog_disabled, sha
 // It only adds light over the sky (all scenery is nearer than the dome); off at night and in rain.
 // It also draws the sun disc (the prototype hides the world's 120 m sun sphere by render layer).
 uniform vec3 sun_dir = vec3(0.77, 0.25, -0.64);
+// Direction of the warm halo and horizon band (decoupled from the key light); the disc uses sun_dir.
+uniform vec3 glow_dir = vec3(0.77, 0.15, -0.64);
 uniform vec3 glow_color : source_color = vec3(1.0, 0.72, 0.45);
 uniform float strength = 0.35;
 uniform float night = 0.0;
@@ -17,8 +19,9 @@ void vertex() {
 }
 void fragment() {
 	vec3 d = normalize(v_dir);
-	vec3 s = normalize(sun_dir);
+	vec3 s = normalize(glow_dir);
 	float facing = max(dot(d, s), 0.0);
+	float sun_facing = max(dot(d, normalize(sun_dir)), 0.0);
 	float halo = pow(facing, 5.0) * 0.55 + pow(facing, 40.0) * 0.6;
 	vec2 dh = normalize(d.xz + vec2(1e-5));
 	vec2 sh = normalize(s.xz + vec2(1e-5));
@@ -28,6 +31,6 @@ void fragment() {
 	float k = (halo + band * 0.6) * above * strength * (1.0 - night) * (1.0 - rain);
 	// Sun disc (~1.3 degrees) on the dome, so scenery in front of it occludes it (the world's own
 	// 120 m sun sphere drew over the far walls once the sun moved into view).
-	float disc = smoothstep(0.99970, 0.99982, facing) * above * (1.0 - night) * (1.0 - rain);
+	float disc = smoothstep(0.99970, 0.99982, sun_facing) * above * (1.0 - night) * (1.0 - rain);
 	ALBEDO = glow_color * k + vec3(1.0, 0.86, 0.66) * disc * 1.6;
 }
