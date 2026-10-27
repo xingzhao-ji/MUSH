@@ -168,9 +168,14 @@ void fragment() {
 		albedo *= 0.68 + 0.36 * smoothstep(0.0, 0.5, UV.y);
 		float moss_line = smoothstep(0.24, 0.05, UV.y + (fbm(vec2(UV.x * 8.0, 1.0)) - 0.5) * 0.10);
 		albedo = mix(albedo, moss_mean * 1.2, moss_line * 0.75);
+		// Contact: the flare darkens into the soil (the stems are buried ~10% of their length), so the
+		// foot reads as rooted rather than a pale hem on the grass (review 03).
+		albedo *= mix(0.45, 1.0, smoothstep(0.07, 0.2, UV.y + (fbm(vec2(UV.x * 10.0, 4.0)) - 0.5) * 0.04));
 		float collar = smoothstep(0.86, 1.0, UV.y);
 		emit = amber * collar * 0.24 * glow;
-		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.08 * glow;
+		// Spot glow gathers in the buttress valleys (1 - cavity); by day it drew a dotted vertical line
+		// down the stem (review 03), so it is a night effect only.
+		emit += amber * spots(vec2(UV.x * 50.0, UV.y * 30.0), 0.25) * (1.0 - v_cavity) * smoothstep(0.3, 0.9, UV.y) * 0.08 * glow * night;
 		rough = 0.96;
 		spec = 0.06;
 		float hero_w = 0.0;
