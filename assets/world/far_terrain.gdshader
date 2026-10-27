@@ -75,8 +75,12 @@ void fragment() {
 	// darker clover hollows and warm dry grass, and a little less saturation. (Shader-painted
 	// flower dots were tried and read as scattered litter, sweep 180054; meadow flowers need geometry.)
 	float meadow_patch = fbm(v_world.xz * 0.018 + vec2(fbm(v_world.xz * 0.005) * 3.0));
-	moss *= mix(vec3(0.76, 0.85, 0.80), vec3(1.10, 1.04, 0.82), smoothstep(0.3, 0.75, meadow_patch));
-	moss = mix(moss, vec3(dot(moss, vec3(0.299, 0.587, 0.114))), 0.15);
+	// Warmer, lighter, less saturated than the raw moss (review 03: near grass L*22-30, hue 69,
+	// saturation 0.87; target hue 50-60, saturation <= 0.6, L*32-40).
+	// Faded out over the clearing feather, where the far moss is matched to the baked clearing.
+	vec3 meadow = moss * mix(vec3(0.94, 0.96, 0.84), vec3(1.18, 1.07, 0.80), smoothstep(0.3, 0.75, meadow_patch));
+	meadow = mix(meadow, vec3(dot(meadow, vec3(0.299, 0.587, 0.114))), 0.28) * 1.16;
+	moss = mix(meadow, moss, feather);
 	// Damp valley floor.
 	moss = mix(moss, moss * vec3(0.62, 0.86, 0.84), smoothstep(-25.0, -60.0, h));
 	// Lake shore (lake level -82 m). A uniform pale sand ring read as a kiddie-pool rim and as a
