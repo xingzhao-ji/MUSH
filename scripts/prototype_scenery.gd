@@ -101,6 +101,9 @@ const SKYGLOW_RADIUS := 2350.0
 var _skyglow: MeshInstance3D
 var _skyglow_material: ShaderMaterial
 const Erratics := preload("res://scripts/prototype_erratics.gd")
+const Forest := preload("res://scripts/prototype_forest.gd")
+## Distant forest: tree forms instead of the three-lobe "gumdrop" clump (FOREST_TREES false restores it).
+const FOREST_TREES := true
 ## Glacial erratics: clustered angular granite blocks on the open slopes of the lake basin and the
 ## vista's near field (the open meadows read as plain lawn). Visual only (no collision, no
 ## shadows), kept off the walking ribbons, the stream, the lake, the clearing and the giants.
@@ -1545,6 +1548,11 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 		if a is Color: base_color = a
 		if b is Color: accent_color = b
 	var clump: ArrayMesh = _clump_mesh()
+	# Tree forms (FOREST_TREES): spires -> conifer, crowns -> 70% broadleaf / 30% conifer (by index
+	# hash, so the random stream and every position are unchanged), spreading -> umbrella crown.
+	var forms: Array[ArrayMesh] = [clump, clump, clump]
+	if FOREST_TREES: forms = [Forest.conifer_mesh(), Forest.broadleaf_mesh(), Forest.spreading_mesh()]
+	var kinds: Array[int] = []
 	var xs: Array[Transform3D] = []
 	var colors: Array[Color] = []
 	var tries: int = 0
@@ -1587,11 +1595,20 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 			if _inside_wall(x, z): escarpment_report["clumps_in_rock"] = int(escarpment_report.get("clumps_in_rock", 0)) + 1
 			xs.pop_back()
 			continue
+		var kind: int = 0 if form < 0.3 else (2 if form >= 0.8 else (0 if (xs.size() * 2654435761) % 10 < 3 else 1))
+		kinds.append(kind)
+		# Tree crowns cover less of their box than the solid clump did: crowns 15% wider (density).
+		if kind != 0 and FOREST_TREES:
+			var last: Transform3D = xs[xs.size() - 1]
+			xs[xs.size() - 1] = Transform3D(last.basis * Basis.from_scale(Vector3(1.15, 1.0, 1.15)), last.origin)
+		# Conifers lean darker and bluer than the broadleaf stands.
+		if kind == 0 and FOREST_TREES: tone = Color(tone.r * 0.82, tone.g * 0.92, tone.b * 0.95)
 		colors.append(tone)
 	_legacy_mesa = false
 	_skip_slice_bed = false
 	carpet_count = xs.size()
-	carpet_triangles = (clump.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3) * carpet_count
+	carpet_triangles = 0
+	for k: int in kinds: carpet_triangles += _triangle_count(forms[k])
 	# One shared material; 400 m spatial chunks so off-screen forest is frustum-culled
 	# (a single map-wide MultiMesh was always drawn, even from inside the clearing).
 	var material := ShaderMaterial.new()
@@ -1600,21 +1617,21 @@ func _add_carpet(rng: RandomNumberGenerator) -> void:
 	_art.append(material)
 	var chunks: Dictionary = {}
 	for index: int in xs.size():
-		var cell := Vector2i(floori(xs[index].origin.x / 400.0), floori(xs[index].origin.z / 400.0))
+		var cell := Vector3i(floori(xs[index].origin.x / 400.0), floori(xs[index].origin.z / 400.0), kinds[index])
 		if not chunks.has(cell): chunks[cell] = []
 		chunks[cell].append(index)
-	for cell: Vector2i in chunks:
+	for cell: Vector3i in chunks:
 		var members: Array = chunks[cell]
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
 		multi.use_colors = true
-		multi.mesh = clump
+		multi.mesh = forms[cell.z]
 		multi.instance_count = members.size()
 		for k: int in members.size():
 			multi.set_instance_transform(k, xs[members[k]])
 			multi.set_instance_color(k, colors[members[k]])
 		var node := MultiMeshInstance3D.new()
-		node.name = "ForestCarpet_%d_%d" % [cell.x, cell.y]
+		node.name = "ForestCarpet_%d_%d_%s" % [cell.x, cell.y, ["conifer", "broadleaf", "spreading"][cell.z]]
 		node.multimesh = multi
 		node.material_override = material
 		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
