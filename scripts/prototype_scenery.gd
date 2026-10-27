@@ -561,6 +561,45 @@ func _compute_baked_extent() -> Rect2:
 
 # --- Setup ---
 
+## The world's camera-following sky (ProposedSky36: stars, constellation lines, visible sun) is a
+## 120 m dome, which was fine for the enclosed clearing but sits in front of the prototype's
+## 0.6-1.8 km geology, so stars drew over the mountains at night. Scaling the dome root (the world
+## only copies the camera position into it each frame) moves it beyond the geology while every
+## star keeps its angular size and its own instance transform; the sky's unshaded materials skip
+## depth fog so the farther stars are not dimmed. Startup only; prototype mode only.
+const SKY_DOME_SCALE := 19.0
+var sky_dome_report: Dictionary = {"pushed": false}
+func _push_sky_dome() -> void:
+	var root: Variant = _world.get("_r36_root")
+	if not (root is Node3D) or not is_instance_valid(root): 
+		sky_dome_report = {"pushed": false, "reason": "no ProposedSky36 root"}
+		return
+	# The root's basis is rewritten every frame by the sky orbit (motion-world), so the star field
+	# and constellation lines are scaled in place instead (same parents and names, so the existing
+	# sky bindings still hold; instance transforms untouched). The visible sun is repositioned to
+	# 120 m by the world each frame and only shows by day; it is left as is.
+	var scaled: Array[String] = []
+	for key: String in ["_stars", "_r36_lines"]:
+		var child: Variant = _world.get(key)
+		if child is Node3D and is_instance_valid(child) and (child as Node3D).get_parent() == root:
+			(child as Node3D).scale = Vector3.ONE * SKY_DOME_SCALE
+			scaled.append(key)
+	var materials: int = 0
+	for node: Node in (root as Node3D).find_children("*", "GeometryInstance3D", true, false):
+		var geometry := node as GeometryInstance3D
+		var list: Array[Material] = [geometry.material_override]
+		var mesh: Mesh = null
+		if geometry is MeshInstance3D: mesh = (geometry as MeshInstance3D).mesh
+		elif geometry is MultiMeshInstance3D and (geometry as MultiMeshInstance3D).multimesh != null: mesh = (geometry as MultiMeshInstance3D).multimesh.mesh
+		if mesh != null:
+			for s: int in mesh.get_surface_count(): list.append(mesh.surface_get_material(s))
+		for material: Material in list:
+			if material is BaseMaterial3D and not (material as BaseMaterial3D).disable_fog:
+				(material as BaseMaterial3D).disable_fog = true
+				materials += 1
+	sky_dome_report = {"pushed": scaled.size() == 2, "scaled": scaled, "scale": SKY_DOME_SCALE, "dome_radius_m": 120.0 * SKY_DOME_SCALE, "fog_exempt_materials": materials, "far_plane": FAR_PLANE}
+	print("SKY_DOME ", JSON.stringify(sky_dome_report))
+
 func configure(world: Node3D) -> void:
 	_world = world
 	name = "PrototypeScenery"
@@ -613,6 +652,7 @@ func configure(world: Node3D) -> void:
 	if not "no_understory" in skip: _add_corridor_understory()
 	if not "no_shore_groves" in skip: _add_shore_groves()
 	if not geology_skip: _add_wall()
+	_push_sky_dome()
 	if "no_giants" in skip:
 		for node: MultiMeshInstance3D in _nodes: node.visible = false
 	diagnostic_skips = skip
