@@ -10,7 +10,8 @@ uniform float night = 0.0;
 uniform float rain = 0.0;
 uniform float shimmer_time = 0.0;
 uniform float shimmer_amount = 1.0;
-uniform float day_strength = 0.16;
+// By day the drips read as rain lines (review 05): nearly off until dusk/night.
+uniform float day_strength = 0.04;
 uniform float night_strength = 0.9;
 varying vec3 v_world;
 

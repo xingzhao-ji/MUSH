@@ -14,6 +14,8 @@ uniform float strength = 0.55;
 // Spray plume look (0 = valley mist): darker overall tone so it never clips above the sky, and
 // billow shading from the drifting noise so it is not a flat white card.
 uniform float billow = 0.0;
+// Gap strength (0 = solid bank).
+uniform float holes = 0.0;
 // Capture-only diagnosis (0 = final); 4 = flat mask.
 uniform int debug_view = 0;
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear_mipmap;
@@ -43,6 +45,8 @@ void fragment() {
 	float sides = smoothstep(0.0, 0.22, UV.x) * smoothstep(1.0, 0.78, UV.x);
 	float base = pow(1.0 - clamp(UV.y, 0.0, 1.0), 1.8);
 	float a = sides * base * smoothstep(0.28, 0.72, body * 0.75 + wisps * 0.35);
+	// Holes: large slow gaps so a bank reads as layered mist with breaks, not a flat sheet (review 05).
+	a *= mix(1.0, smoothstep(0.32, 0.62, fbm(vec2(along * 0.45 + 5.1 - drift * 0.6, v_world.y * 0.006 + 1.7))), holes);
 	// Soft contact: fade over the last 30 m before the sheet meets the scene behind or below it.
 	float depth = texture(depth_tex, SCREEN_UV).r;
 	vec4 upos = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, depth, 1.0);
@@ -52,7 +56,8 @@ void fragment() {
 	// Never a card near the viewer.
 	a *= smoothstep(140.0, 320.0, frag_z);
 	ALPHA = clamp(a * strength * mix(1.0, 1.3, rain) * mix(1.0, 0.8, night), 0.0, 1.0);
-	vec3 day = vec3(0.90, 0.88, 0.93);
+	// Lavender in shade (concepts: mist hue ~237-270, saturation ~0.2); it was near-grey (sat 0.03-0.08).
+	vec3 day = vec3(0.80, 0.78, 0.93);
 	vec3 dusk = vec3(0.24, 0.24, 0.40);
 	ALBEDO = mix(mix(day, vec3(0.72, 0.72, 0.76), rain), dusk, night);
 	ALBEDO *= mix(1.0, 0.8 * mix(0.78, 1.0, smoothstep(0.3, 0.75, body * 0.6 + wisps * 0.5)), billow);

@@ -60,6 +60,9 @@ void fragment() {
 		float streak = smoothstep(0.35, 0.8, flow * 0.65 + fine * 0.45);
 		float edge = 1.0 - smoothstep(0.55 - 0.25 * UV.y, 1.0, across);
 		ALBEDO = mix(vec3(0.70, 0.80, 0.84), vec3(0.97, 0.98, 0.99), streak);
+		// Falling water is translucent and catches the sky from every side: a little self-light by day
+		// so the fall stays white when the low sun is behind it (shore fall core fell 75 -> 50, review 05).
+		EMISSION = ALBEDO * 0.28 * (1.0 - night) * (1.0 - 0.5 * rain);
 		ALPHA = clamp(mix(0.5, 0.95, streak) * edge * smoothstep(0.0, 0.03, UV.y), 0.0, 1.0);
 		ROUGHNESS = 0.35;
 		SPECULAR = 0.4;

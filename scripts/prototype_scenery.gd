@@ -3231,6 +3231,7 @@ func _add_valley_mist() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = MIST_SHADER
 	material.set_shader_parameter("strength", VALLEY_MIST_STRENGTH)
+	material.set_shader_parameter("holes", 0.6)
 	_geology_materials.append(material)
 	var node := MeshInstance3D.new()
 	node.name = "ValleyMist"
@@ -4345,6 +4346,8 @@ func set_reduced_motion(value: bool) -> void:
 ## sun_energy, sun_elev, ambient_energy. Empty in play.
 var look_override: Dictionary = {}
 const GOLDEN_GLOW := 0.5
+const GOLDEN_FILL_ENERGY := 0.0
+const GOLDEN_FILL_COLOR := "c6bdec"
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
@@ -4380,6 +4383,16 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# Fill energy stays at 0.32: a stronger fill (0.42 tried, sweep 173032) lifted the shadow
 	# sides and flattened the walls into pale curtains; only the fill colour turns cooler.
 	environment.ambient_light_energy = float(look_override.get("ambient_energy", 0.32))
+	# Front fill (golden hour): the key sits behind the valley, so faces toward the cameras would be
+	# all shadow side; the world's shadowless sky-fill light is turned to face away from the sun
+	# (azimuth + 180, low) in a cool lavender, by day only. It gives front faces N.L form.
+	var fill: Variant = _world.get("_sky_fill")
+	var fill_energy: float = float(look_override.get("fill_energy", GOLDEN_FILL_ENERGY if look_depth else 0.0))
+	if fill is DirectionalLight3D and is_instance_valid(fill) and fill_energy > 0.0 and night < 1.0:
+		var day_w: float = (1.0 - night) * (1.0 - 0.6 * rain)
+		(fill as DirectionalLight3D).rotation_degrees = Vector3(float(look_override.get("fill_elev", -24.0)), sun.rotation_degrees.y + 180.0, 0.0).lerp((fill as DirectionalLight3D).rotation_degrees, night)
+		(fill as DirectionalLight3D).light_energy = lerpf((fill as DirectionalLight3D).light_energy, fill_energy, day_w)
+		(fill as DirectionalLight3D).light_color = (fill as DirectionalLight3D).light_color.lerp(Color(str(look_override.get("fill_color", GOLDEN_FILL_COLOR))), day_w)
 	environment.fog_enabled = not _debug_colors
 	# Rain haze is a darker slate (9c97b4 at 0.5 lifted the walls above the overcast sky: vista rain
 	# massif 75.9 vs sky 74.6, review 03); the rain fog density is 0.7 instead of the previous 0.8.
