@@ -508,7 +508,7 @@ def inspect(suite, output, duration, expected_vsync=1):
         assert report["schema"] == "mush-slice-traversal/1" and report["mode"] == "geology"
         failed = [c["label"] for c in report["checks"] if not c["passed"]]
         assert report["checks"] and not failed and report["passed"], failed or "geology report not passed"
-        expected = [f"geo-{view}-day.png" for view in ("overlook", "knoll", "shore", "side", "overview", "basin", "hero")] + [f"geo-{view}-night.png" for view in ("overlook", "knoll", "shore", "hero")] + [f"geo-{view}-rain.png" for view in ("overlook", "shore", "hero")]
+        expected = [f"geo-{view}-day.png" for view in ("overlook", "knoll", "shore", "side", "overview", "basin", "hero", "vista")] + [f"geo-{view}-night.png" for view in ("overlook", "knoll", "shore", "hero", "vista")] + [f"geo-{view}-rain.png" for view in ("overlook", "shore", "hero", "vista")]
         assert [image["file"] for image in report["images"]] == expected, "Expected every geology view"
         spec = importlib.util.spec_from_file_location("mush_png", ROOT / "tools/check_png.py")
         module = importlib.util.module_from_spec(spec)

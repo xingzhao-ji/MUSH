@@ -295,6 +295,7 @@ func _run() -> void:
 		elif "--water-motion" in arguments: await _water_motion_scenario()
 		elif "--geology-diag" in arguments: await _geology_diag_scenario()
 		elif "--geology" in arguments: await _geology_scenario()
+		elif "--camera-sweep" in arguments: await _camera_sweep_scenario()
 		elif "--cap-pairs" in arguments: await _cap_pairs_scenario("shape" if "--cap-shape" in arguments else ("leaf" if "--leaf-craft" in arguments else "craft"))
 		else: await _scenario()
 	_release()
@@ -1051,7 +1052,11 @@ func _geology_scenario() -> void:
 	var basin_eye: Vector3 = basin_pose.get("position", Vector3(-150.0, scenery.terrain_height(-150.0, -400.0) + 8.0, -400.0))
 	var basin_aim: Vector3 = basin_pose.get("target", Vector3(basin_xz.x, 100.0, basin_xz.y))
 	var views: Array = [["overlook", pose.position, pose.target, pose.fov], ["knoll", knoll, Vector3(-60.0, 60.0, -700.0), 60.0], ["shore", shore, falls_aim, 60.0],
-		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0], ["basin", basin_eye, basin_aim, 60.0], ["hero", hero_pose.get("position", knoll), hero_pose.get("target", Vector3(-560.0, 170.0, -560.0)), 55.0]]
+		["side", side, Vector3(-600.0, 200.0, -800.0), 60.0], ["overview", Vector3(-320.0, 620.0, 520.0), Vector3(150.0, -40.0, -480.0), 62.0], ["basin", basin_eye, basin_aim, 60.0], ["hero", hero_pose.get("position", knoll), hero_pose.get("target", Vector3(-560.0, 170.0, -560.0)), 55.0],
+		# Vista (new, labelled camera; composition chosen by a camera sweep, 172824/173142): creature
+		# eye on the walkable slice east of the lake, looking WNW across the lake to the falls with
+		# the hero giant's cap framing the upper right (the concept's refuge/vista relationship).
+		["vista", Vector3(350.0, scenery.rendered_terrain_height(350.0, 100.0) + 1.7, 100.0), Vector3(-300.0, 90.0, -760.0), 60.0]]
 	var review := Camera3D.new()
 	review.far = 2600.0
 	game.add_child(review)
@@ -1059,8 +1064,8 @@ func _geology_scenario() -> void:
 		game.world.set_appearance(mood[1], mood[2], false)
 		await get_tree().create_timer(4.5).timeout
 		for view: Array in views:
-			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore", "hero"]: continue
-			if mood[0] == "rain" and not view[0] in ["overlook", "shore", "hero"]: continue
+			if mood[0] == "night" and not view[0] in ["overlook", "knoll", "shore", "hero", "vista"]: continue
+			if mood[0] == "rain" and not view[0] in ["overlook", "shore", "hero", "vista"]: continue
 			scenery.set_overview(view[0] == "overview")
 			review.fov = view[3]
 			review.position = view[1]
@@ -1073,7 +1078,39 @@ func _geology_scenario() -> void:
 	player._camera.make_current()
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
-	_check("Geology views captured (day 7 incl. the new basin and hero views, night 4, rain 3)", images.size() == 14, images.size())
+	_check("Geology views captured (day 8 incl. the basin, hero and vista views, night 5, rain 4)", images.size() == 17, images.size())
+
+## Composition exploration only (not an acceptance check): renders candidate review cameras
+## listed in MUSH_SWEEP as JSON [[label, [x, z], eye_height_m, [tx, ty, tz], fov, mood], ...],
+## eye placed eye_height_m above the rendered terrain (or the lake surface, if higher);
+## mood is "day", "night" or "rain". Captures are named sweep-<label>-<mood>.png.
+func _camera_sweep_scenario() -> void:
+	player.teleport_safe(Vector3(-2.0, 0.08, 22.0), PI)
+	await _frames(60)
+	var specs: Variant = JSON.parse_string(OS.get_environment("MUSH_SWEEP"))
+	if not _check("Sweep poses supplied (MUSH_SWEEP JSON list)", specs is Array and not (specs as Array).is_empty(), OS.get_environment("MUSH_SWEEP")): return
+	var review := Camera3D.new()
+	review.far = 2600.0
+	game.add_child(review)
+	var mood_now: String = ""
+	for spec: Array in specs:
+		var mood: String = str(spec[5]) if spec.size() > 5 else "day"
+		if mood != mood_now:
+			game.world.set_appearance(mood == "night", mood == "rain", false)
+			await get_tree().create_timer(4.5).timeout
+			mood_now = mood
+		var ground: float = maxf(scenery.rendered_terrain_height(float(spec[1][0]), float(spec[1][1])), -82.0)
+		review.fov = float(spec[4])
+		review.position = Vector3(float(spec[1][0]), ground + float(spec[2]), float(spec[1][1]))
+		review.look_at(Vector3(float(spec[3][0]), float(spec[3][1]), float(spec[3][2])))
+		review.make_current()
+		await _frames(30)
+		await _capture("sweep-%s-%s" % [str(spec[0]), mood])
+		images[images.size() - 1]["frame"] = {"camera": _v(review.position), "aim": spec[3], "fov": spec[4]}
+	player._camera.make_current()
+	review.queue_free()
+	game.world.set_appearance(false, false, false)
+	_check("Sweep views captured", images.size() == (specs as Array).size(), images.size())
 
 ## Controlled geology diagnosis at the shore and side poses (day): the same frame in the final
 ## rendering, without depth fog, as unlit albedo, as world normals, as uniform grey lit by the
