@@ -2509,22 +2509,74 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 		for si: int in mesh.get_surface_count():
 			var src := mesh.surface_get_material(si) as StandardMaterial3D
 			if src == null: continue
-			if not _blender_mat_cache.has(src):
-				var m: StandardMaterial3D = src.duplicate()
-				m.set_meta("day_tint", src.albedo_color * tint)
-				_refuge_mats.append(m)
-				if fills.has(src.resource_name.to_lower()) and not m.emission_enabled:
-					var f: Array = fills[src.resource_name.to_lower()]
-					m.emission_enabled = true
-					m.emission = f[0]
-					m.set_meta("day_fill", f[1])
-					_blender_glow.append(m)
-				elif m.emission_enabled:
-					m.set_meta("glow", m.emission_energy_multiplier)
-					m.set_meta("night_only", "nightglow" in src.resource_name.to_lower())
-					_blender_glow.append(m)
-				_blender_mat_cache[src] = m
-			node.set_surface_override_material(si, _blender_mat_cache[src])
+			node.set_surface_override_material(si, _blender_mat(src, tint, fills))
+
+## The scene copy of a Blender model's material: refuge day/night/rain tint (day_tint x tint), emissive ones
+## on _blender_glow, `fills` {name: [emission colour, day energy]} for a daylight self-fill. Cached per source.
+func _blender_mat(src: StandardMaterial3D, tint: Color = Color.WHITE, fills: Dictionary = {}) -> StandardMaterial3D:
+	if _blender_mat_cache.has(src): return _blender_mat_cache[src]
+	var m: StandardMaterial3D = src.duplicate()
+	m.set_meta("day_tint", src.albedo_color * tint)
+	_refuge_mats.append(m)
+	if fills.has(src.resource_name.to_lower()) and not m.emission_enabled:
+		var f: Array = fills[src.resource_name.to_lower()]
+		m.emission_enabled = true
+		m.emission = f[0]
+		m.set_meta("day_fill", f[1])
+		_blender_glow.append(m)
+	elif m.emission_enabled:
+		m.set_meta("glow", m.emission_energy_multiplier)
+		m.set_meta("night_only", "nightglow" in src.resource_name.to_lower())
+		_blender_glow.append(m)
+	_blender_mat_cache[src] = m
+	return m
+
+## Blender flora (MUSH-exchange/blender/scripts/flora.py, ChatGPT sheet mush-sheet-flora-01): five glowing
+## flowers and four leaf clumps, one glb each, batched into MultiMeshes per mesh part (_flora_flush).
+const FLORA_DIR := "res://assets/world/models/blender/flora/"
+const FLORA_BLOOMS: Array = ["flora_bell.glb", "flora_star.glb", "flora_lily.glb", "flora_pink.glb", "flora_cup.glb", "flora_bell.glb", "flora_star.glb"]
+## Broad dark leaves lead (capture pr14: two ferns in six made a pale fern field).
+const FLORA_LEAVES: Array = ["flora_broadleaf.glb", "flora_broadleaf.glb", "flora_sword.glb", "flora_broadleaf.glb", "flora_fern.glb", "flora_broadleaf.glb", "flora_sword.glb"]
+var _flora_batches: Dictionary = {}
+var flora_report: Dictionary = {}
+func _flora_ready() -> bool:
+	return ResourceLoader.exists(FLORA_DIR + "flora_fern.glb") and OS.get_environment("MUSH_NO_FLORA") == ""
+
+## Queue one flora model, scaled so its largest extent is `size` m (height-fitting blew the low leaf
+## clumps up into 2 m blades, capture pr17), base on `at`.
+func _flora_put(file: String, at: Vector3, size: float, yaw: float, lean: Vector2 = Vector2.ZERO) -> void:
+	var path: String = FLORA_DIR + file
+	var box: AABB = _model_box(path)
+	var k: float = size / maxf(maxf(box.size.x, box.size.z), maxf(box.size.y, 0.01))
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3(1, 0, 0), lean.x) * Basis(Vector3(0, 0, 1), lean.y) * Basis.from_scale(Vector3.ONE * k)
+	if not _flora_batches.has(path): _flora_batches[path] = []
+	_flora_batches[path].append(Transform3D(basis, at - basis * Vector3(0, box.position.y, 0)))
+
+func _flora_flush() -> void:
+	var nodes: int = 0
+	var count: int = 0
+	for path: String in _flora_batches:
+		var xs: Array = _flora_batches[path]
+		count += xs.size()
+		for part: Array in _model_parts(path):
+			var mesh: Mesh = part[0]
+			var multi := MultiMesh.new()
+			multi.transform_format = MultiMesh.TRANSFORM_3D
+			multi.mesh = mesh
+			multi.instance_count = xs.size()
+			for i: int in xs.size(): multi.set_instance_transform(i, (xs[i] as Transform3D) * (part[1] as Transform3D))
+			var node := MultiMeshInstance3D.new()
+			node.name = "Flora_%s_%d" % [path.get_file().get_basename(), nodes]
+			node.multimesh = multi
+			var src := mesh.surface_get_material(0) as StandardMaterial3D if mesh.get_surface_count() > 0 else null
+			if src != null: node.material_override = _blender_mat(src)
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+			add_child(node)
+			_static.append(node)
+			nodes += 1
+	flora_report = {"instances": count, "multimesh_nodes": nodes, "models": _flora_batches.size()}
+	_flora_batches.clear()
 
 ## Giant mushrooms rebuilt in Blender from a ChatGPT modeling sheet (MUSH-exchange/blender/scripts/giant.py;
 ## cap radius 7 m, cap rim underside 1.125 x 7 m above the base). Each giant gets one, scaled so its cap
@@ -2616,7 +2668,10 @@ const PROM_DIST := 95.0
 const PROM_SCALE := Vector3(2.6, 1.5, 2.6)
 const PROM_TINT := Color(0.82, 0.82, 0.78)
 ## 16 m read 180 x 122 px at 96 m (capture pr01; goal cottage 247 x 140 px with its porch posts).
-const PROM_COTTAGE_HEIGHT := 18.5
+## 18.5 m still read small (Gemini on pr13: scale the cottage ~1.25x; goal 247 x 140 px).
+const PROM_COTTAGE_HEIGHT := 21.0
+## Lanterns along the stair rib, Blender (x, y, z) on its outer edge.
+const PROM_STAIR_LANTERNS: Array = [[8.4, 3.0, 10.75], [10.6, -3.6, 6.65], [12.4, -7.6, 3.25]]
 ## Blender tiers: [centre x, centre y (Blender y = -glTF z), radius x, radius y, top].
 const PROM_TIERS: Array = [[-1.0, -1.2, 10.5, 8.6, 6.0], [-1.6, 1.0, 7.6, 6.1, 11.7]]
 var _prom_xf := Transform3D.IDENTITY
@@ -2761,6 +2816,8 @@ func _add_refuge_cottage() -> Dictionary:
 
 func _add_refuge_lanterns() -> int:
 	var placed: int = 0
+	# On the promontory the refuge is ~1.7x scale (cottage PROM_COTTAGE_HEIGHT): lanterns 1.8x, so they read at 96 m.
+	var lh: float = LANTERN_HEIGHT * (1.8 if _prom_active else 1.0)
 	if _refuge_lamp_material == null:
 		_refuge_lamp_material = StandardMaterial3D.new()
 		_refuge_lamp_material.albedo_color = Color("ffcf8a")
@@ -2768,7 +2825,7 @@ func _add_refuge_lanterns() -> int:
 		_refuge_lamp_material.emission = Color("ffa040")
 		_refuge_lamp_material.emission_energy_multiplier = 2.0
 	var post := BoxMesh.new()
-	post.size = Vector3(0.2, LANTERN_HEIGHT, 0.2)
+	post.size = Vector3(0.2, lh, 0.2)
 	var wood := StandardMaterial3D.new()
 	wood.albedo_color = Color("5a3a22")
 	wood.roughness = 0.9
@@ -2786,13 +2843,13 @@ func _add_refuge_lanterns() -> int:
 	_refuge_bead_material.albedo_color = Color("ffc070")
 	for at: Vector3 in refuge_lanterns:
 		var yaw: float = refuge_facing + 0.5 * float(placed)
-		if not (ResourceLoader.exists(LANTERN_MODEL) and _refuge_model(LANTERN_MODEL, at, yaw, LANTERN_HEIGHT, "RefugeLantern%d" % placed)):
-			_refuge_mesh(post, wood, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT * 0.5, 0)), "RefugeLanternPost%d" % placed)
-			_refuge_mesh(lamp, _refuge_lamp_material, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT - 0.2, 0)), "RefugeLanternLamp%d" % placed)
-		_refuge_light(at + Vector3(0, LANTERN_HEIGHT - 0.3, 0), 8.0, "RefugeLanternLight%d" % placed)
+		if not (ResourceLoader.exists(LANTERN_MODEL) and _refuge_model(LANTERN_MODEL, at, yaw, lh, "RefugeLantern%d" % placed)):
+			_refuge_mesh(post, wood, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, lh * 0.5, 0)), "RefugeLanternPost%d" % placed)
+			_refuge_mesh(lamp, _refuge_lamp_material, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, lh - 0.2, 0)), "RefugeLanternLamp%d" % placed)
+		_refuge_light(at + Vector3(0, lh - 0.3, 0), 8.0, "RefugeLanternLight%d" % placed)
 		# Lamp core seen from the vista (review 11: lantern cores never reached L*85 at 75 m): a small
 		# emissive bead in the lamp housing, drawn only beyond 38 m so close views keep the model's glass.
-		var bead := _refuge_mesh(bead_mesh, _refuge_bead_material, Transform3D(Basis.IDENTITY, at + Basis(Vector3.UP, yaw) * (Vector3(-0.17, 0.6, 0.0) * (LANTERN_HEIGHT / 0.98))), "RefugeLanternBead%d" % placed)
+		var bead := _refuge_mesh(bead_mesh, _refuge_bead_material, Transform3D(Basis.IDENTITY, at + Basis(Vector3.UP, yaw) * (Vector3(-0.17, 0.6, 0.0) * (lh / 0.98))), "RefugeLanternBead%d" % placed)
 		bead.visibility_range_begin = 38.0
 		placed += 1
 	return placed
@@ -3148,6 +3205,10 @@ const KIT_TREE_LEAF_TINT := Color(0.74, 0.7, 0.44)
 const KIT_PLANT_LEAF_TINT := Color(0.46, 0.45, 0.3)
 const LEDGE_LEAVES := 80
 const LEDGE_BLOOMS := 26
+## With the Blender flora: denser and smaller blooms (ChatGPT review: the foreground flowers too large and sparse).
+## 110 left bright ledge ground showing between the clumps (capture pr16).
+const FLORA_LEDGE_LEAVES := 160
+const FLORA_LEDGE_BLOOMS := 44
 ## Luminous image-to-3D lilies in the bank, small and spread out (six at 1.6-2.8 m clumped into one lavender
 ## mass, capture 233955).
 const LEDGE_LILIES := 1
@@ -3279,8 +3340,13 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 			var half: float = 0.45 * (float(spec[2]) - float(spec[1]))
 			hero.append([best, h, Rect2(float(spec[0]) - half, float(spec[1]), half * 2.0, float(spec[2]) - float(spec[1]))])
 			lily_spots.append(best)
-	for i: int in 900:
-		if leaf_n >= LEDGE_LEAVES and bloom_n >= LEDGE_BLOOMS: break
+	# Blender flora (ChatGPT sheet mush-sheet-flora-01) when present, denser (review: kit flowers too large,
+	# uniform and sparse); the kit plants otherwise.
+	var use_flora: bool = _flora_ready()
+	var n_leaves: int = FLORA_LEDGE_LEAVES if use_flora else LEDGE_LEAVES
+	var n_blooms: int = FLORA_LEDGE_BLOOMS if use_flora else LEDGE_BLOOMS
+	for i: int in 1400:
+		if leaf_n >= n_leaves and bloom_n >= n_blooms: break
 		var b: float = prng.randf_range(LEDGE_BEARING.x + 2.0, LEDGE_BEARING.y - 2.0)
 		var r: float = prng.randf_range(LEDGE_RANGE.x + 1.5, _ledge_outer(b, noise) - 0.6)
 		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(b))
@@ -3288,11 +3354,14 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		p.y = _ledge_height(eye, look_h, b, r, noise)
 		var base_s: Vector2 = _vista_screen(eye, p)
 		if base_s.x < -1.15 or base_s.x > -0.25 or base_s.y < -1.0 - 0.6: continue
-		var bloom: bool = bloom_n < LEDGE_BLOOMS and (leaf_n >= LEDGE_LEAVES or prng.randf() < 0.4)
+		var bloom: bool = bloom_n < n_blooms and (leaf_n >= n_leaves or prng.randf() < 0.4)
 		var path: String = blooms[prng.randi() % blooms.size()] if bloom else leafy[prng.randi() % leafy.size()]
-		# Target size (largest extent) in metres: leaves 0.9-1.8 m, bloom clusters 0.5-0.9 m.
+		if use_flora: path = FLORA_BLOOMS[prng.randi() % FLORA_BLOOMS.size()] if bloom else FLORA_LEAVES[prng.randi() % FLORA_LEAVES.size()]
+		# Target size (largest extent) in metres: leaves 0.9-1.8 m, bloom clusters 0.5-0.9 m; flora flowers
+		# 0.7-1.2 m.
 		var want: float = prng.randf_range(0.5, 0.9) if bloom else prng.randf_range(0.9, 1.8)
-		var s: float = want / _model_size(path)
+		if use_flora and bloom: want = prng.randf_range(0.7, 1.2)
+		var s: float = 1.0 if use_flora else want / _model_size(path)
 		# Keep tops under the cottage's foot (px y >= 590 for px x < 230), so the bank never covers the door.
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))
 		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
@@ -3305,7 +3374,8 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 			var hr: Rect2 = (hl[2] as Rect2).grow(20.0)
 			if base_px > hr.position.x and base_px < hr.end.x and px.y < hr.end.y and p.distance_to(eye) < (hl[0] as Vector3).distance_to(eye) + 0.5: blocks = true
 		if blocks: continue
-		_refuge_put(batches, path, p - Vector3(0, 0.08, 0), s, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
+		if use_flora: _flora_put(path, p - Vector3(0, 0.06, 0), want, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
+		else: _refuge_put(batches, path, p - Vector3(0, 0.08, 0), s, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
 		if bloom: bloom_n += 1
 		else: leaf_n += 1
 		screen_lo = screen_lo.min(px)
@@ -3543,6 +3613,9 @@ func _add_vista_refuge() -> void:
 		var front: float = float(PROM_TIERS[PROM_TIERS.size() - 1][3]) * PROM_SCALE.z * 0.78
 		refuge_lanterns = [home + toward * front + side * 3.2 * PROM_SCALE.x, home + toward * front - side * 3.2 * PROM_SCALE.x, home - toward * 2.4 * PROM_SCALE.z - side * 4.6 * PROM_SCALE.x]
 	for i: int in refuge_lanterns.size(): refuge_lanterns[i].y = _mesh_ground(refuge_lanterns[i].x, refuge_lanterns[i].z)
+	if on_prom:
+		# Lanterns down the stair (Gemini on pr13: warm lanterns along the path, as in the goal).
+		for q: Array in PROM_STAIR_LANTERNS: refuge_lanterns.append(_prom_xf * Vector3(float(q[0]), float(q[2]), -float(q[1])))
 	var fence_n: int = 0
 	for k: int in (0 if on_prom else edge.size() - 1):
 		var a: Vector3 = edge[k]
@@ -3761,10 +3834,11 @@ func _add_vista_refuge() -> void:
 	counts["far_shore_tree_px_py_m"] = far_tree_px
 	var ledges: Dictionary = _add_face_ledges(eye, batches)
 	var stats: Dictionary = _refuge_flush(batches)
+	_flora_flush()
 	var cottage: Dictionary = _add_refuge_cottage()
 	counts["lanterns"] = _add_refuge_lanterns()
 	_prom_active = false
-	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "promontory": promontory_report, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
+	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "promontory": promontory_report, "flora": flora_report, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
 	vista_refuge_report.merge(stats)
 	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 

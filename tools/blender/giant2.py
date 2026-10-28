@@ -35,6 +35,8 @@ UNDER = [(0.15, 1.26), (0.4, 1.255), (0.7, 1.25), (0.905, 1.25)]
 # 0.055 R above the lip.
 STEM = [(0.32, -0.06), (0.31, 0.0), (0.26, 0.07), (0.2, 0.17), (0.155, 0.32), (0.125, 0.5), (0.112, 0.7), (0.108, 0.9),
         (0.125, 1.1), (0.15, 1.26)]
+# v4 (ChatGPT and Gemini on pr13: stem still too thin, widen ~1.25-1.3x; the root moss read as lily pads)
+STEM = [(r * (1.25 if 0.05 < z < 1.15 else 1.12), z) for r, z in STEM]
 def S(pts): return [(r * R, z * K * R) for r, z in pts]
 
 L.lathe("cap_top", S(TOP), 80, M["cap"], close_top=True)
@@ -123,8 +125,8 @@ for k in range(8):
     L.lathe("drip%d" % k, [(0.0, 0.0), (0.09, 0.08), (0.11, 0.18), (0.06, length * 0.7), (0.03, length)], 10, M["drip"], close_top=True,
             deform=lambda x, y, z, th, i, a=a, rr=rr, length=length: (x + rr * math.cos(a), y + rr * math.sin(a), 1.19 * K * R - length + z))
 
-# moss on the root shoulders
-for k, (a0, reach) in enumerate(zip(LOBES, REACH)):
+# moss on the root shoulders (off in v4)
+for k, (a0, reach) in enumerate(zip(LOBES, REACH) if False else []):
     for j in range(3):
         rr = (0.2 + 0.1 * reach + rnd.uniform(-0.02, 0.02)) * R
         a = a0 + rnd.uniform(-0.25, 0.25)

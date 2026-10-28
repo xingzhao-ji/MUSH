@@ -5,6 +5,7 @@ from mathutils import Vector, Matrix
 
 def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    _mats.clear()   # the factory reset removed the materials this cache pointed at
 
 def hexcol(h, a=1.0):
     h = h.lstrip("#")

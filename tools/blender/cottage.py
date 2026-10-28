@@ -10,11 +10,11 @@ L.reset()
 rnd = random.Random(7)
 
 M = {
-    "cap": L.mat("cap", "#7f5a5c", 0.75),
+    "cap": L.mat("cap", "#98725e", 0.75),
     "spot": L.mat("spot", "#cfb0ab", 0.8),
     "gill": L.mat("gill", "#f8af65", 0.7, "#f6a352", 1.6),
     "rib": L.mat("gill_rib", "#c9783f", 0.7, "#d98236", 0.6),
-    "plaster": L.mat("plaster", "#d9c3ab", 0.9),
+    "plaster": L.mat("plaster", "#d6a86c", 0.9),
     "wood": L.mat("timber", "#9d6b4a", 0.8),
     "wood_dark": L.mat("timber_dark", "#6b4429", 0.85),
     "glass": L.mat("glass", "#fcbe67", 0.3, "#ffb040", 4.0),
