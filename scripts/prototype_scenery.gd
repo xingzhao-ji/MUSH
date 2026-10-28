@@ -2614,7 +2614,11 @@ const GIANT_HERO_TILT_LEFT := 0.0
 ## Cap tops rendered dark violet (pr06 dome #8a70b0, goal #b89cc8): beyond what an albedo can lift, so a warm
 ## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
 ## Pink-beige at 0.35 washed every cap near white with the spots lost (capture pr07): a lavender fill at 0.12.
-const GIANT_FILLS := {"cap": [Color("c8a0c0"), 0.12]}
+## 0.12 still read a little bright and thick (ChatGPT checkpoint 2): 0.07.
+const GIANT_FILLS := {"cap": [Color("c8a0c0"), 0.07]}
+## The hero's root flare stood clear of its sloping ground (ChatGPT checkpoint 2: the stem ends above the
+## shoreline): sunk this far (m).
+const GIANT_HERO_SINK := 12.0
 ## Stem top / gill plane (model y): 1.30 x 0.945 x 7 m.
 const GIANT_MODEL_PIVOT := 8.3
 var giant_blender_report: Dictionary = {"placed": 0}
@@ -2624,7 +2628,8 @@ func _add_blender_giants() -> void:
 	var hero_ground: float = NAN
 	for row: Array in _giant_specs():
 		var x: float = row[0]; var z: float = row[1]; var r: float = row[2]; var h: float = row[3]
-		var ground: float = terrain_height(x, z)
+		var sink: float = GIANT_HERO_SINK if placed == 0 else 0.0
+		var ground: float = terrain_height(x, z) - sink
 		var s := Vector3(r / GIANT_MODEL_R, h / GIANT_MODEL_UNDERSIDE, r / GIANT_MODEL_R)
 		var yaw: float = 0.9 + 1.7 * float(placed)
 		var cap_xf := Transform3D.IDENTITY
@@ -2660,7 +2665,10 @@ func _add_blender_giants() -> void:
 ## V2 (promontory2.glb, ChatGPT sheet mush-sheet-promontory-02, after review: V1 read as thin bright-green
 ## shelves over pale round boulders with a straight stack of steps): two thick tiers of faceted rock columns
 ## under hanging moss caps and an S-curve slab stair on a grassy rib down the right flank.
-const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory2.glb"
+## V3 (promontory3.glb, ChatGPT sheet mush-sheet-promontory-03, after ChatGPT checkpoint 2: V2's vertical
+## striped column walls read as constructed): the V2 layout with faceted boulder masses for faces and the stair
+## set in a boulder-lined grassy slope.
+const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory3.glb"
 const PROM_SCREEN := Vector2(-0.68, -0.36)
 const PROM_DIST := 95.0
 ## V2 at 2.0 tall showed the top tier as a 15 m pale flat-lit rock face below the moss (capture pr12; the
@@ -3207,7 +3215,7 @@ const LEDGE_LEAVES := 80
 const LEDGE_BLOOMS := 26
 ## With the Blender flora: denser and smaller blooms (ChatGPT review: the foreground flowers too large and sparse).
 ## 110 left bright ledge ground showing between the clumps (capture pr16).
-const FLORA_LEDGE_LEAVES := 160
+const FLORA_LEDGE_LEAVES := 190
 const FLORA_LEDGE_BLOOMS := 44
 ## Luminous image-to-3D lilies in the bank, small and spread out (six at 1.6-2.8 m clumped into one lavender
 ## mass, capture 233955).
@@ -3218,7 +3226,8 @@ const LEDGE_LILIES := 1
 ## a pale self-light). Top 560 made the left one a 2.45 m bloom cluster over the cottage door (capture
 ## 005730), so it is smaller and the right one larger.
 ## Review 22: lily A sat ~80 px low (wanted in y540-640) and lily B was 43 px and half hidden.
-const LEDGE_HERO_LILIES: Array = [[42.0, 545.0, 640.0], [372.0, 585.0, 720.0]]
+## ChatGPT checkpoint 2 (Blender round): the foreground blooms too large and exposed: tops 40 px lower.
+const LEDGE_HERO_LILIES: Array = [[42.0, 585.0, 640.0], [372.0, 625.0, 720.0]]
 ## Desat 0.6 / glow 0.35 clipped the petals to white (capture 010151); 0.4 / 0.18 still read near-white
 ## (C*13-21). The goal's lilies are glowing lavender, C*30-36 at h_ab 300-305, L*74 (review 22): full
 ## colour, a magenta-leaning tint and only a little self-light.
@@ -3360,7 +3369,8 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		# Target size (largest extent) in metres: leaves 0.9-1.8 m, bloom clusters 0.5-0.9 m; flora flowers
 		# 0.7-1.2 m.
 		var want: float = prng.randf_range(0.5, 0.9) if bloom else prng.randf_range(0.9, 1.8)
-		if use_flora and bloom: want = prng.randf_range(0.7, 1.2)
+		# ChatGPT checkpoint 2: blooms 25-35% smaller, more leaf cover.
+		if use_flora and bloom: want = prng.randf_range(0.5, 0.85)
 		var s: float = 1.0 if use_flora else want / _model_size(path)
 		# Keep tops under the cottage's foot (px y >= 590 for px x < 230), so the bank never covers the door.
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))

@@ -11,10 +11,10 @@ rnd = random.Random(7)
 
 M = {
     "cap": L.mat("cap", "#98725e", 0.75),
-    "spot": L.mat("spot", "#cfb0ab", 0.8),
+    "spot": L.mat("spot", "#b9958a", 0.8),
     "gill": L.mat("gill", "#f8af65", 0.7, "#f6a352", 1.6),
     "rib": L.mat("gill_rib", "#c9783f", 0.7, "#d98236", 0.6),
-    "plaster": L.mat("plaster", "#d6a86c", 0.9),
+    "plaster": L.mat("plaster", "#bb8c5e", 0.9),
     "wood": L.mat("timber", "#9d6b4a", 0.8),
     "wood_dark": L.mat("timber_dark", "#6b4429", 0.85),
     "glass": L.mat("glass", "#fcbe67", 0.3, "#ffb040", 4.0),
@@ -59,6 +59,8 @@ def z_top(r):
 spots = [(0.45, 0, 0.42), (1.3, 40, 0.5), (1.4, 160, 0.42), (1.2, 270, 0.45), (2.2, -20, 0.55), (2.1, 80, 0.38), (2.3, 130, 0.5),
          (2.0, 200, 0.4), (2.25, 250, 0.52), (2.9, 20, 0.36), (2.85, 60, 0.3), (2.95, 105, 0.42), (2.8, 175, 0.33), (3.0, 220, 0.4),
          (2.9, 300, 0.45), (3.1, -45, 0.32), (1.8, -60, 0.35), (2.6, 320, 0.3), (0.9, 110, 0.3), (3.15, 145, 0.28)]
+# v6 (ChatGPT checkpoint 2: large pale spots read as a toy house): spots 0.65x, lower contrast
+spots = [(r, a, s * 0.65) for r, a, s in spots]
 for k, (r, adeg, s) in enumerate(spots):
     cx, cy = r * math.cos(math.radians(adeg)), r * math.sin(math.radians(adeg))
     # two rings so the disc bends with the cap instead of cutting through it (v1 showed dark cracks)

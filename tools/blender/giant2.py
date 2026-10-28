@@ -69,8 +69,9 @@ for layer, off in ((0, 0.0), (1, -0.01)):
         for t_i in range(rows):
             t = t_i / (rows - 1)
             fr = math.sin(8 * th + 0.6 * math.sin(3 * th))
-            rr = (0.14 + 0.1 * t ** 1.3 + 0.03 * t * fr + off) * R
-            zz = (1.17 - 0.28 * t - 0.04 * t * fr) * K * R
+            # v5 (ChatGPT checkpoint 2: the skirt read as angular flaps): hangs close to the stem in deep folds
+            rr = (0.165 + 0.045 * t ** 1.5 + 0.03 * t * fr + off) * R
+            zz = (1.17 - 0.3 * t - 0.05 * t * fr) * K * R
             verts.append((rr * math.cos(th), rr * math.sin(th), zz))
     for j in range(segs):
         j2 = (j + 1) % segs
