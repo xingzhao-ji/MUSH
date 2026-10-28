@@ -2272,12 +2272,18 @@ func _refuge_material(source: Material) -> Material:
 	# interiors keep a value floor like the terrain's soft daylight (review 10: interiors p5 4).
 	# Kit flower petals glow faintly by day only (their own albedo reads orange under the golden key)
 	# and go dark at night (review 10: unlit petals outshone the giants at night).
+	# Tree leaf cards carry the crown shading as vertex colour (_crown_shaded); meshes without it read white.
+	if "leaves" in label and "tree" in label:
+		m.vertex_color_use_as_albedo = true
+		m.set_meta("crown", true)
 	if "leaves" in label or "bark" in label:
 		m.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
 		m.emission_enabled = true
 		m.emission = Color(0.62, 0.6, 0.52)
 		m.emission_texture = m.albedo_texture
-		m.emission_energy_multiplier = 0.12
+		# The self-fill ignores the crown shading, so on tree leaves it is the value floor (L*~30).
+		m.set_meta("fill", CROWN_FILL if ("leaves" in label and "tree" in label) else 0.12)
+		m.emission_energy_multiplier = float(m.get_meta("fill"))
 		_refuge_fill.append(m)
 	elif "flower" in label:
 		# Petal shader: same sheet and tint, with a centre-out night glow (assets/world/refuge_petal.gdshader).
@@ -2291,6 +2297,61 @@ func _refuge_material(source: Material) -> Material:
 	_refuge_mats.append(m)
 	return m
 
+## Crown depth on kit tree leaf cards (consult fable-01: the goal's crowns are rounded masses with lit
+## tops and dark cores, tree box p5 L*18; ours read as flat cut-outs, p5 35, with shadows off). Baked
+## once per model as vertex colour (the leaf material multiplies albedo by it): darker toward the crown
+## bottom and the trunk axis, with clump-scale pockets. [bottom, top, core] multipliers and the pocket
+## depth; 1/1/1, 0 = previous look. Height and core alone moved the vista tree box only 2 L* (most
+## visible cards sit on the outer top, capture 000634): the pockets carry the dark gaps.
+## Vertex colour is stored unorm, so the top value clamps at 1: CROWN_GAIN lifts the leaf albedo instead.
+## 0.4/1.12/0.6, pockets 0.55, fill 0.04 and no gain took the vista tree box to L*27.4, p5 16.5 (goal
+## 41.3 / 18, capture 001100).
+const CROWN_SHADE := Vector3(0.5, 1.0, 0.7)
+const CROWN_POCKETS := 0.45
+## Per channel: a flat 1.5 gave the vista tree box L*37.7, chroma 33.5, hue 111 (goal 41.3, 27.3, 102),
+## capture 001303; warmer and less saturated here.
+const CROWN_GAIN := Vector3(1.55, 1.45, 1.25)
+## Tree-leaf self-fill (previous 0.12 for all leaves and bark): it does not take the vertex shading,
+## so it set the crown floor at L*~30 (tree box p5 33.5 with the shading, goal 18, capture 000859).
+const CROWN_FILL := 0.05
+func _crown_shaded(mesh: Mesh) -> Mesh:
+	var src := mesh as ArrayMesh
+	if src == null: return mesh
+	var leafy: bool = false
+	for si: int in src.get_surface_count():
+		var mat: Material = src.surface_get_material(si)
+		if mat != null and "leaves" in mat.resource_name.to_lower() and "tree" in mat.resource_name.to_lower(): leafy = true
+	if not leafy: return mesh
+	var pockets := FastNoiseLite.new()
+	pockets.seed = 913
+	pockets.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	var out := ArrayMesh.new()
+	for si: int in src.get_surface_count():
+		var arrays: Array = src.surface_get_arrays(si)
+		var mat: Material = src.surface_get_material(si)
+		var label: String = mat.resource_name.to_lower() if mat != null else ""
+		if "leaves" in label and "tree" in label:
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var box := AABB(verts[0], Vector3.ZERO)
+			for v: Vector3 in verts: box = box.expand(v)
+			var centre := Vector2(box.get_center().x, box.get_center().z)
+			var reach: float = maxf(box.size.x, box.size.z) * 0.5
+			# Pockets about a fifth of the crown across, whatever the model's units.
+			pockets.frequency = 5.0 / maxf(box.size.y, 0.01)
+			var cols := PackedColorArray()
+			cols.resize(verts.size())
+			for i: int in verts.size():
+				var v: Vector3 = verts[i]
+				var t: float = smoothstep(0.0, 1.0, (v.y - box.position.y) / maxf(box.size.y, 0.01))
+				var r: float = clampf(Vector2(v.x, v.z).distance_to(centre) / maxf(reach, 0.01), 0.0, 1.0)
+				var k: float = lerpf(CROWN_SHADE.x, CROWN_SHADE.y, t) * lerpf(CROWN_SHADE.z, 1.0, smoothstep(0.2, 0.85, r))
+				k *= 1.0 - CROWN_POCKETS * smoothstep(0.05, 0.45, pockets.get_noise_3d(v.x, v.y, v.z))
+				cols[i] = Color(k, k, k)
+			arrays[Mesh.ARRAY_COLOR] = cols
+		out.add_surface_from_arrays(src.surface_get_primitive_type(si), arrays)
+		out.surface_set_material(out.get_surface_count() - 1, mat)
+	return out
+
 func _refuge_flush(batches: Dictionary) -> Dictionary:
 	var stats: Dictionary = {"instances": 0, "triangles": 0, "nodes": 0, "models": {}}
 	for path: String in batches:
@@ -2301,7 +2362,7 @@ func _refuge_flush(batches: Dictionary) -> Dictionary:
 			continue
 		stats["models"][path.get_file()] = list.size()
 		for part: Array in parts:
-			var mesh: Mesh = (part[0] as Mesh).duplicate()
+			var mesh: Mesh = _crown_shaded((part[0] as Mesh).duplicate())
 			var local: Transform3D = part[1]
 			for si: int in mesh.get_surface_count():
 				var mat: Material = mesh.surface_get_material(si)
@@ -5766,6 +5827,10 @@ const LEDGE_RISER_DIM := 0.8
 ## Warm tan risers (goal riser L*46, hue 68; ours read grey-violet).
 const LEDGE_RISER_TINT := Vector3(1.15, 0.97, 0.8)
 const NEAR_FILL := 0.45
+## Environment adjustment by day (prototype apply_look only); 1 / 1 = off. Vista frame dE 15.4 -> 15.3 at
+## 0.92 / 1.05 and 14.9 at 0.85 / 1.05 (upper sky 10.8 -> 10.1), capture 001733.
+const GRADE_SATURATION := 0.85
+const GRADE_CONTRAST := 1.05
 ## Day sky endpoints before the warm gold pass; rain blends from these so the overcast is unchanged.
 const RAIN_SKY_TOP_BASE := Color("3a3c86")
 const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
@@ -5842,6 +5907,14 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		# Night keeps the previous golden stem tones (786978 / a88f8a); the day tones are lighter (consult fable-01).
 		stem_material.set_shader_parameter("stem_bark", Color(str(look_override.get("stem_bark", GOLDEN_STEM_BARK))).lerp(Color("786978"), night) if look_depth else Color(0.47, 0.41, 0.47))
 		stem_material.set_shader_parameter("stem_light", Color(str(look_override.get("stem_light", GOLDEN_STEM_LIGHT))).lerp(Color("a88f8a"), night) if look_depth else Color(0.66, 0.56, 0.54))
+	# Final grade (consult fable-01: one try at saturation 0.92 / contrast 1.05); 1 / 1 leaves it off.
+	if look_depth:
+		# Day only: night and rain keep their approved palettes.
+		var grade_sat: float = lerpf(float(look_override.get("grade_sat", GRADE_SATURATION)), 1.0, maxf(night, rain))
+		var grade_con: float = lerpf(float(look_override.get("grade_con", GRADE_CONTRAST)), 1.0, maxf(night, rain))
+		environment.adjustment_enabled = not (is_equal_approx(grade_sat, 1.0) and is_equal_approx(grade_con, 1.0))
+		environment.adjustment_saturation = grade_sat
+		environment.adjustment_contrast = grade_con
 	# Capture-only shelf exploration (keys ledge_fill, ledge_grass [r,g,b], ledge_desat, ledge_fleck, ledge_riser_dim).
 	if _terrain_material != null:
 		for key: String in ["ledge_fill", "ledge_desat", "ledge_fleck", "ledge_riser_dim"]:
@@ -6026,8 +6099,12 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)
 	# Vista refuge: flower petals and lanterns glow softly by day and carry the night.
 	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
-	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
-	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
+	# Tree leaves: the crown shading only darkens (vertex colour is unorm), so their albedo is lifted to keep
+	# the crown mean (look_override crown_gain / crown_fill for capture-only exploration).
+	var cg: Array = look_override.get("crown_gain", [CROWN_GAIN.x, CROWN_GAIN.y, CROWN_GAIN.z])
+	var crown_gain := Color(float(cg[0]), float(cg[1]), float(cg[2]))
+	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint * (crown_gain if m.has_meta("crown") else Color.WHITE)
+	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = (float(look_override.get("crown_fill", CROWN_FILL)) if leaf_fill.has_meta("crown") else float(leaf_fill.get_meta("fill", 0.12))) * (1.0 - night) * (1.0 - 0.5 * rain)
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
 	for petal: ShaderMaterial in _refuge_petals:
 		# Lower day value and rim: the desaturated sheet rendered near white under the golden key (review 15:
