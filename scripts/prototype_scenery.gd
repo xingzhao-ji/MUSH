@@ -159,6 +159,10 @@ const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const CATTAIL_MODEL := "res://assets/world/models/tripo/cattails.glb"
 ## Shore review camera (stream_view_pose ground point): shore plants keep 30 m clear of it.
 const SHORE_CAMERA := Vector2(387.12, -300.14)
+# The shore capture looks toward (-600, -560) from SHORE_CAMERA.
+const SHORE_VIEW := Vector2(-0.9671, -0.2546)
+const REED_SHADER := preload("res://assets/world/refuge_reed.gdshader")
+var _reed_material: ShaderMaterial
 const CORNER_CATTAILS := 0
 const COTTAGE_HEIGHT := 11.0
 const LANTERN_HEIGHT := 2.6
@@ -223,7 +227,8 @@ const DAY_SUN := Color("ffc07e")
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
 ## 2026-10-27 (Gemini goal frame): warm gold sky. Previous: sun ffcc94, fog b8958c, sky_top 3a3c86, sky_horizon c4a7bd;
 ## vista top-third hue 266 -> 30, warm-lit 10.7% -> 28% (goal 34.5%), highlight 2.7% -> 8.8% (goal 8.5%), sweep 200852.
-const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("504478"), "sky_horizon": Color("eaa87c"), "lake_horizon": Color("f0b890")}
+## Review 15 value pass: sky_top 504478 -> 3e3c8c, sky_horizon eaa87c -> e88c52 (see GOLDEN_CLOUD_GLOW).
+const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("3e3c8c"), "sky_horizon": Color("e88c52"), "lake_horizon": Color("f0b890")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
@@ -2627,9 +2632,11 @@ func _cattail_clump_mesh() -> ArrayMesh:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 731
-	var stalk_c := Color(0.36, 0.42, 0.2)
-	var head_c := Color(0.36, 0.25, 0.16)
-	var blade_c := Color(0.3, 0.4, 0.16)
+	# sRGB picks taken to linear (the reed shader reads COLOR as linear albedo): olive stalks, brown heads
+	# (hue ~25, saturation ~0.4; review 15 wanted L*30-45 heads), deep green blades.
+	var stalk_c := Color("6c7c42").srgb_to_linear()
+	var head_c := Color("5c4636").srgb_to_linear()
+	var blade_c := Color("587436").srgb_to_linear()
 	var prism := func(a: Vector3, b: Vector3, r0: float, r1: float, c: Color) -> void:
 		for i: int in 5:
 			var a0: float = TAU * float(i) / 5.0
@@ -2641,13 +2648,20 @@ func _cattail_clump_mesh() -> ArrayMesh:
 				st.add_vertex(v)
 	for k: int in 5:
 		var base := Vector3(rng.randf_range(-0.12, 0.12), 0.0, rng.randf_range(-0.12, 0.12))
-		var h: float = rng.randf_range(0.78, 1.0)
+		var h: float = rng.randf_range(0.8, 1.0)
 		var top: Vector3 = base + Vector3(rng.randf_range(-0.06, 0.06), h, rng.randf_range(-0.06, 0.06))
-		var head_lo: Vector3 = base.lerp(top, 0.7)
-		var head_hi: Vector3 = base.lerp(top, 0.9)
-		prism.call(base, head_lo, 0.009, 0.007, stalk_c)
-		prism.call(head_lo, head_hi, 0.03, 0.03, head_c)
-		prism.call(head_hi, top, 0.006, 0.002, stalk_c)
+		# Heads well above the blades (0.66-0.88 of the stalk) and slim (radius 0.05): a fatter head read
+		# as a row of corn dogs (capture fix28); 0.022 m was under a pixel at 160-550 m (review 15).
+		# One stalk in five is a bare spike.
+		var head_lo: Vector3 = base.lerp(top, 0.66)
+		var head_hi: Vector3 = base.lerp(top, 0.88)
+		if k == 4:
+			prism.call(base, top, 0.011, 0.002, stalk_c)
+			continue
+		prism.call(base, head_lo, 0.011, 0.009, stalk_c)
+		prism.call(head_lo, head_lo.lerp(head_hi, 0.15), 0.035, 0.05, head_c)
+		prism.call(head_lo.lerp(head_hi, 0.15), head_hi, 0.05, 0.04, head_c)
+		prism.call(head_hi, top, 0.007, 0.002, stalk_c)
 	for k: int in 6:
 		var yaw: float = TAU * float(k) / 6.0 + rng.randf_range(-0.3, 0.3)
 		var out := Vector3(cos(yaw), 0.0, sin(yaw))
@@ -2666,6 +2680,69 @@ func _cattail_clump_mesh() -> ArrayMesh:
 				st.add_vertex(v)
 	st.generate_normals()
 	return st.commit()
+
+## A reed clump (unit height): nine tapering, leaning blades shaded from an olive base to straw-green
+## tips in vertex colour, so the waterline band reads as green/tan reeds (review 15: the tinted kit
+## grass cards went near-black against the lake). ~110 triangles.
+func _reed_clump_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 947
+	# Deep green body to a muted olive tip (the straw tips read as pale lime cards, capture fix28).
+	var base_c := Color("3c5428").srgb_to_linear()
+	var mid_c := Color("5a7634").srgb_to_linear()
+	var tip_c := Color("8c9450").srgb_to_linear()
+	for k: int in 9:
+		var yaw: float = TAU * float(k) / 9.0 + rng.randf_range(-0.35, 0.35)
+		var out := Vector3(cos(yaw), 0.0, sin(yaw))
+		var side := Vector3(-out.z, 0.0, out.x)
+		var h: float = rng.randf_range(0.55, 1.0)
+		var lean: float = rng.randf_range(0.03, 0.16)
+		var root := out * rng.randf_range(0.0, 0.1)
+		var rows: Array[Vector3] = []
+		for i: int in 5:
+			var t: float = float(i) / 4.0
+			rows.append(root + out * (lean * t * t) + Vector3(0, h * t, 0))
+		for i: int in 4:
+			var w0: float = 0.03 * (1.0 - float(i) / 4.0)
+			var w1: float = 0.03 * (1.0 - float(i + 1) / 4.0)
+			var c0: Color = base_c.lerp(mid_c, float(i) / 2.0) if i < 2 else mid_c.lerp(tip_c, float(i - 2) / 2.0)
+			var c1: Color = base_c.lerp(mid_c, float(i + 1) / 2.0) if i + 1 <= 2 else mid_c.lerp(tip_c, float(i - 1) / 2.0)
+			var quad: Array = [[rows[i] - side * w0, c0], [rows[i + 1] - side * w1, c1], [rows[i] + side * w0, c0], [rows[i] + side * w0, c0], [rows[i + 1] - side * w1, c1], [rows[i + 1] + side * w1, c1]]
+			for vc: Array in quad:
+				st.set_color(vc[1])
+				st.add_vertex(vc[0])
+	st.generate_normals()
+	return st.commit()
+
+## One MultiMesh of a vertex-colour clump under the shared reed material (no shadows, no collision).
+func _reed_multimesh(mesh: ArrayMesh, xforms: Array[Transform3D], label: String) -> void:
+	if xforms.is_empty(): return
+	if _reed_material == null:
+		_reed_material = ShaderMaterial.new()
+		_reed_material.shader = REED_SHADER
+	mesh.surface_set_material(0, _reed_material)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xforms.size()
+	for i: int in xforms.size(): mm.set_instance_transform(i, xforms[i])
+	var node := MultiMeshInstance3D.new()
+	node.name = label
+	node.multimesh = mm
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_nodes.append(node)
+
+## The shore camera's frame stays clear of reeds: only ground in front of it (within ~70 degrees of its
+## view) and within 30 m is excluded, so reeds can line the dry rim beside and behind it (review 15:
+## the round 30 m exclusion left the vista's lower-right shore bare).
+func _shore_view_blocked(at: Vector2) -> bool:
+	var d: Vector2 = at - SHORE_CAMERA
+	if d.length() < 4.0: return true
+	return d.length() < 30.0 and d.normalized().dot(SHORE_VIEW) > 0.35
 
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
@@ -2870,7 +2947,7 @@ func _add_vista_refuge() -> void:
 				var q: Vector3 = hit + Vector3(grng.randf_range(-6.0, 6.0), 0.0, grng.randf_range(-6.0, 6.0))
 				q.y = _mesh_ground(q.x, q.z)
 				# On the dry rim only: stems standing in the water drew bright shore-contact halos (review 11).
-				if q.y < LAKE_Y + 0.6 or q.y > LAKE_Y + 2.6 or Vector2(q.x, q.z).distance_to(SHORE_CAMERA) < 30.0: continue
+				if q.y < LAKE_Y + 0.6 or q.y > LAKE_Y + 2.6 or _shore_view_blocked(Vector2(q.x, q.z)): continue
 				if _refuge_model(CATTAIL_MODEL, q, grng.randf() * TAU, grng.randf_range(2.4, 4.4), "RefugeCattails%d" % reed_n):
 					reed_n += 1
 					# Brown cattail heads are not lamps, and are muted (head saturation <= 0.40).
@@ -2885,6 +2962,7 @@ func _add_vista_refuge() -> void:
 	var shore_cols: int = 0
 	var cattail_band: int = 0
 	var cattail_xf: Array[Transform3D] = []
+	var reed_xf: Array[Transform3D] = []
 	var bx: float = -0.3
 	while bx <= 1.0:
 		var by: float = -0.42
@@ -2909,45 +2987,53 @@ func _add_vista_refuge() -> void:
 							shore = mh
 					# Ragged: clumps and gaps along the shore (a continuous strip read as a hedge).
 					var clump: float = sin(shore.x * 0.11 + shore.z * 0.07) + 0.6 * sin(shore.x * 0.37 - shore.z * 0.23)
-					if clump > -0.35 and Vector2(shore.x, shore.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(shore.x, shore.z)) > 1.6:
+					# Gaps only where the clump field is lowest (review 15: reeds on 29% of shoreline columns, target 50%).
+					if clump > -0.8 and not _shore_view_blocked(Vector2(shore.x, shore.z)) and _ribbon_gap(Vector2(shore.x, shore.z)) > 1.6:
 						shore_cols += 1
-						for k: int in grng.randi_range(1, 3) + (2 if clump > 0.8 else 0):
+						for k: int in grng.randi_range(1, 3) + (2 if clump > 0.6 else 0):
 							var q: Vector3 = shore + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
 							q.y = _mesh_ground(q.x, q.z)
 							if q.y < LAKE_Y + 0.4: continue
-							# 2.3-6 m reed clumps; the near shore is 160-550 m out, so 10-30 px; dark olive.
-							if k == 0 and grng.randf() < 0.55:
-								# Cattail clumps among the reeds (review 14: >= 30% of clumps with heads).
-								cattail_xf.append(Transform3D(Basis(Vector3.UP, grng.randf() * TAU).scaled(Vector3.ONE * grng.randf_range(2.4, 4.0)), q - Vector3(0, 0.05, 0)))
+							var yaw_k: float = grng.randf() * TAU
+							# Cattail clumps among the reeds (review 14: >= 30% of clumps with heads): 4-6.5 m, so the
+							# heads come to ~3-6 px at the near shore (160-550 m).
+							if k == 0 and grng.randf() < 0.4:
+								var cs: float = grng.randf_range(4.0, 6.5)
+								cattail_xf.append(Transform3D(Basis(Vector3.UP, yaw_k).scaled(Vector3(cs * 0.8, cs, cs * 0.8)), q - Vector3(0, 0.05, 0)))
 								continue
-							# Slender and tall (reeds, not lawn tufts): narrowed 0.55 across, stretched 1.5 up.
-							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if k % 2 == 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.2, 2.4) * (1.25 if k % 2 == 1 else 1.0), grng.randf() * TAU, Vector2.ZERO, Vector3(0.55, 1.5, 0.55))
+							# Reed clumps 3-6.5 m tall and narrow (10-30 px at that range).
+							var s: float = grng.randf_range(3.0, 6.5)
+							reed_xf.append(Transform3D(Basis(Vector3.UP, yaw_k).scaled(Vector3(s * 0.65, s, s * 0.65)), q - Vector3(0, 0.05, 0)))
 							band_n += 1
 					break
 			by -= 0.006
 		bx += 0.005
 	counts["shore_columns"] = shore_cols
-	if not cattail_xf.is_empty():
-		var clump: ArrayMesh = _cattail_clump_mesh()
-		var cmat := StandardMaterial3D.new()
-		cmat.vertex_color_use_as_albedo = true
-		cmat.roughness = 1.0
-		cmat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		cmat.set_meta("day_tint", Color.WHITE)
-		_refuge_mats.append(cmat)
-		clump.surface_set_material(0, cmat)
-		var cmm := MultiMesh.new()
-		cmm.transform_format = MultiMesh.TRANSFORM_3D
-		cmm.mesh = clump
-		cmm.instance_count = cattail_xf.size()
-		for i: int in cattail_xf.size(): cmm.set_instance_transform(i, cattail_xf[i])
-		var cnode := MultiMeshInstance3D.new()
-		cnode.name = "RefugeShoreCattails"
-		cnode.multimesh = cmm
-		cnode.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		cnode.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-		add_child(cnode)
-		_nodes.append(cnode)
+	# The low right bank in the frame's lower right (goal: cattails and reeds by the water there; review 15:
+	# >= 10 clusters in (940,620,1280,720)). Its own seeded generator, so later placements keep their seeds.
+	var bank_rng := RandomNumberGenerator.new()
+	bank_rng.seed = 20261029
+	var bank_n: int = 0
+	# The bank is 350-450 m out, so single clumps were specks (capture fix28b): each spot is a dense stand
+	# of 3-6 clumps, which reads as one reed cluster.
+	for i: int in 260:
+		if bank_n >= 30: break
+		var hit: Vector3 = _vista_ray_ground(bank_rng.randf_range(0.46, 1.0), bank_rng.randf_range(-0.99, -0.7), 800.0)
+		if hit == Vector3.INF or hit.y < LAKE_Y + 0.4 or hit.y > LAKE_Y + 3.5: continue
+		if _shore_view_blocked(Vector2(hit.x, hit.z)) or _ribbon_gap(Vector2(hit.x, hit.z)) < 1.6: continue
+		for j: int in bank_rng.randi_range(3, 6):
+			var bq: Vector3 = hit + Vector3(bank_rng.randf_range(-2.5, 2.5), 0.0, bank_rng.randf_range(-2.5, 2.5))
+			bq.y = _mesh_ground(bq.x, bq.z)
+			if bq.y < LAKE_Y + 0.4 or _shore_view_blocked(Vector2(bq.x, bq.z)): continue
+			var by_yaw: float = bank_rng.randf() * TAU
+			var bs: float = bank_rng.randf_range(4.5, 7.0)
+			if j == 0 or bank_rng.randf() < 0.3: cattail_xf.append(Transform3D(Basis(Vector3.UP, by_yaw).scaled(Vector3(bs * 0.8, bs, bs * 0.8)), bq - Vector3(0, 0.05, 0)))
+			else: reed_xf.append(Transform3D(Basis(Vector3.UP, by_yaw).scaled(Vector3(bs * 0.65, bs, bs * 0.65)), bq - Vector3(0, 0.05, 0)))
+		bank_n += 1
+	counts["bank_stands"] = bank_n
+	counts["band_reeds"] = reed_xf.size()
+	_reed_multimesh(_cattail_clump_mesh(), cattail_xf, "RefugeShoreCattails")
+	_reed_multimesh(_reed_clump_mesh(), reed_xf, "RefugeShoreReeds")
 	counts["band_cattails"] = cattail_xf.size()
 	# Tall cattails on the drop below the eye's right frame the lower-right corner, as the lilies frame
 	# the left (goal: cattails against the water at the lower right).
@@ -5356,7 +5442,7 @@ func set_reduced_motion(value: bool) -> void:
 ## Capture-only look exploration (camera sweep): day endpoint colours by DEPTH_LOOK key plus
 ## sun_energy, sun_elev, ambient_energy. Empty in play.
 var look_override: Dictionary = {}
-const GOLDEN_GLOW := 0.35
+const GOLDEN_GLOW := 0.18
 const GOLDEN_FILL_ENERGY := 0.5
 const GOLDEN_FILL_COLOR := "9499ff"
 const GOLDEN_FILL_AZ := 337.0
@@ -5370,6 +5456,8 @@ const GOLDEN_CAP_GLOW := 1.0
 ## Bold gill plates on the lit cap undersides (Gemini goal frame: gold radial gills with dark gaps
 ## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
 const GOLDEN_GILL_BOLD := 1.0
+# Refuge petal albedo by day (see apply_look).
+const PETAL_DAY_VALUE := 0.82
 ## Giant stem tones in the golden look (previous: bark 0.47/0.41/0.47, light 0.66/0.56/0.54, as the shader defaults).
 const GOLDEN_STEM_BARK := "786978"
 const GOLDEN_STEM_LIGHT := "a88f8a"
@@ -5383,11 +5471,15 @@ const NEAR_FILL := 0.45
 ## Day sky endpoints before the warm gold pass; rain blends from these so the overcast is unchanged.
 const RAIN_SKY_TOP_BASE := Color("3a3c86")
 const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
-const GOLDEN_CLOUD_GLOW := 1.4
-const GOLDEN_CLOUD_GLOW_POWER := 2.5
-const GOLDEN_CLOUD_GLOW_COLOR := "ff9c4c"
-const GOLDEN_HORIZON_GLOW := 1.3
-const GOLDEN_HORIZON_GLOW_POWER := 16.0
+## Review 15: the warm sky read washed peach (mid L*81.9 vs the goal's 68.2) and lost the concepts'
+## lavender zenith. A deeper, more saturated amber glow held tighter to the horizon (cloud power 8,
+## horizon power 32), a weaker glow dome and a violet top: palette sweeps 203806-210422, variant R2:
+## mid L*69 hue 15, zenith L*63 hue ~330, top-200-row lavender 20% / amber 67%.
+const GOLDEN_CLOUD_GLOW := 1.5
+const GOLDEN_CLOUD_GLOW_POWER := 8.0
+const GOLDEN_CLOUD_GLOW_COLOR := "f07a34"
+const GOLDEN_HORIZON_GLOW := 2.0
+const GOLDEN_HORIZON_GLOW_POWER := 32.0
 const GOLDEN_REFLECT_FLOOR := 0.5
 const GOLDEN_GLOW_BAND := 0.0
 const GOLDEN_FAR_DOME := 0.5
@@ -5563,8 +5655,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
 	for petal: ShaderMaterial in _refuge_petals:
-		var pc: Color = (petal.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
+		# Lower day value and rim: the desaturated sheet rendered near white under the golden key (review 15:
+		# refuge bell medians 81-86, target 60-75); night keeps its approved tint and rim.
+		var pc: Color = (petal.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint * lerpf(PETAL_DAY_VALUE, 1.0, night)
 		petal.set_shader_parameter("tint", Vector3(pc.r, pc.g, pc.b))
+		petal.set_shader_parameter("rim", lerpf(0.08, 0.3, night))
 		petal.set_shader_parameter("day_glow", 0.08 * (1.0 - night) * (1.0 - 0.4 * rain))
 		petal.set_shader_parameter("night_glow", 0.95 * night * (1.0 - 0.3 * rain))
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
@@ -5578,6 +5673,12 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 			prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.48, night))
 			prop.set_shader_parameter("desat", 0.9 * night)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
+	# Shore reeds: the refuge's night/rain tint, a daylight self-fill and warm transmission (backlit by
+	# the golden key), both falling away at night.
+	if _reed_material != null:
+		_reed_material.set_shader_parameter("tint", Vector3(refuge_tint.r, refuge_tint.g, refuge_tint.b))
+		_reed_material.set_shader_parameter("fill", lerpf(0.24 * (1.0 - 0.5 * rain), 0.04, night))
+		_reed_material.set_shader_parameter("backlight", 0.32 * (1.0 - night) * (1.0 - 0.6 * rain))
 
 func get_report() -> Dictionary:
 	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.

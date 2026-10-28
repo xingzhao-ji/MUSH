@@ -9,6 +9,9 @@ uniform vec3 glow_color : source_color = vec3(0.82, 0.6, 1.0);
 uniform float day_glow = 0.08;
 uniform float night_glow = 0.0;
 uniform float alpha_cut = 0.2;
+// Rim light: low by day (0.3 blew the refuge bells out under the golden key, review 15: 6.4% above
+// L*92), full at night where it carries the petal edges.
+uniform float rim = 0.3;
 
 void fragment() {
 	vec4 t = texture(albedo_tex, UV);
@@ -16,8 +19,8 @@ void fragment() {
 	ALPHA_SCISSOR_THRESHOLD = alpha_cut;
 	ALBEDO = t.rgb * tint;
 	ROUGHNESS = 1.0;
-	// As the kit material had: a soft rim, so back-lit petals at golden hour stay luminous.
-	RIM = 0.3;
+	// As the kit material had: a soft rim, so back-lit petals stay luminous (low by day, see rim).
+	RIM = rim;
 	RIM_TINT = 0.8;
 	float facing = abs(dot(normalize(NORMAL), normalize(VIEW)));
 	float heart = pow(facing, 2.5);

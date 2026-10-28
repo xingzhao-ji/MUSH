@@ -215,6 +215,8 @@ void fragment() {
 					// Deep gaps, compact bright plates (review 11: striation 1.02 vs 1.5, 21% above L*80).
 					// Deeper amber on the crests (review 13: gill saturation 0.38 vs 0.45); less boost at the stem.
 					gold_grad *= mix(vec3(1.0), vec3(1.0, 0.8, 0.55) * 2.3 * pow(gb, 1.4), gk);
+					// The gold dims into the gill throat by the stem (review 15: stem box 31.5% above L*80, target <= 25%).
+					gold_grad *= 1.0 - 0.3 * smoothstep(0.6, 0.95, t) * clamp(gill_bold, 0.0, 1.0);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);
