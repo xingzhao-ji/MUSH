@@ -1,4 +1,4 @@
-Mushroom cottage, lantern post and luminous lilies: 3D models generated in Tripo Studio
+Mushroom cottage, lantern post, luminous lilies and cattails: 3D models generated in Tripo Studio
 Generated 2026-10-27 in Tripo Studio (studio.tripo3d.ai), owner's account (Pro plan), privacy Private.
 Mode: HD Model, H3.1, Ultra Mesh Quality, texture 2K, Remove Lighting, PBR, triangles.
   mush_cottage.glb      job ca00b20e-e1c8-43c7-b7ed-c86c3de373fd  polycount target 40000 (37,996 tris)  45 credits
@@ -6,13 +6,19 @@ Mode: HD Model, H3.1, Ultra Mesh Quality, texture 2K, Remove Lighting, PBR, tria
   glow_flowers.glb      job 380a2d39-2959-45cd-8ab4-8f522f731f54  polycount target 12000 (11,427 tris)  45 credits
                         text-to-3D (Gemini image generation was erroring); prompt: a clump of five to seven
                         lily-like blossoms, pale lavender to white petals with glowing blue-white cores, teal leaves.
-Studio balance 1300 before, 1165 after (135 credits).
+  cattails.glb          job bb1fae89-520c-4e7f-9c94-9bf2d6cf018e  polycount target 12000  45 credits, text-to-3D
+                        (a clump of tall cattail reeds, olive and sage blades, brown cattail heads).
+Studio balance 1300 before, 1120 after (180 credits).
 Inputs: two isolated reference images generated in Google Gemini (owner's account) from the
 Gemini goal frame of the vista; kept outside the repository (the Gemini conversation and the Tripo job inputs), not used as game assets.
 Exported as GLB with 2K textures; the GLB textures were extracted by the Godot importer (files below).
 Use is subject to the Tripo Studio terms for the owner's plan.
 
 Retained files under assets/world/models/tripo:
+  cattails.glb  2246556 bytes  sha256 5dde2fcba7e24e078f06e62f294e406f1999ea97032101a7a62bbc1ecffdc40d
+  cattails_cattails_basecolor.jpg  463044 bytes  sha256 e4bfe0e2de9549301d46a63b5958e396e1542c112f82def1c4c11c4c508dcbe3
+  cattails_cattails_normal.png  753012 bytes  sha256 fff99cfae284275ee2ed3419909ac9587716fe1d3cde022ffd508df92e5287fd
+  cattails_cattails_rm.jpg  624064 bytes  sha256 e4fcadf002099cf36e9712448cc86eaefe04697cc75c128c4d355385bf766ec4
   glow_flowers.glb  2538308 bytes  sha256 d342e239f18e6b52f2a1bc9e9e638ba580bff1368ce98abaf54c7bbba2c5d380
   glow_flowers_glow_flowers_basecolor.jpg  621892 bytes  sha256 9a90b35e38a1e404b06612df831d96049ea2ce5a83f55cfdc28d5e1dafa6d2a4
   glow_flowers_glow_flowers_normal.png  754704 bytes  sha256 e53b5dae9aeccd376142ef0a02f265d07ce5c532bcb844076daeb1844aeb05bc

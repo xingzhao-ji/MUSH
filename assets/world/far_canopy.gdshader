@@ -192,6 +192,8 @@ void fragment() {
 				// under_gain > 1 (horizon giants): the pale lip strip is included and the gold reaches the margin.
 				float dg = day_glow * (1.0 - night) * mix(smoothstep(0.0, 0.06, t), 1.0, clamp(under_gain - 1.0, 0.0, 1.0));
 				float warm = pow(clamp(t, 0.0, 1.0), 0.8 / max(under_gain, 1.0));
+				// Bold gills carry the gold out toward the margin (review 10: hero gills hue 20-35, sat >= 0.45).
+				if (gill_bold > 0.0) warm = mix(warm, 0.62 + 0.38 * warm, clamp(gill_bold, 0.0, 1.0) * 0.85);
 				vec3 gold_grad = mix(vec3(0.28, 0.22, 0.50), vec3(1.0, 0.42, 0.06), warm) * (0.8 + 0.35 * lines);
 				if (gill_bold > 0.0) {
 					// From the vista the hero underside is a grazing band (~6 m of cap per pixel row), so
@@ -204,7 +206,7 @@ void fragment() {
 					float plate = mix(0.5, 0.5 + 0.5 * sin(p_p), aa(p_p));
 					float gb = clamp(0.62 * bundle + 0.38 * plate, 0.0, 1.0);
 					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.6 * smoothstep(0.8, 1.0, t));
-					gold_grad *= mix(1.0, 0.15 + 1.35 * pow(gb, 0.8), gk);
+					gold_grad *= mix(1.0, 0.08 + 1.45 * pow(gb, 0.8), gk);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);

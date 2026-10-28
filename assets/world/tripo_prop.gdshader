@@ -24,6 +24,7 @@ void fragment() {
 	float sat = (mx - mn) / max(mx, 0.001);
 	float warm = smoothstep(glow_floor, glow_floor + 0.25, c.r) * smoothstep(0.35, 0.6, sat) * smoothstep(-0.02, 0.06, c.g - c.b) * smoothstep(0.28, 0.5, c.g);
 	EMISSION = c * warm * glow;
-	float cool = smoothstep(0.62, 0.92, mx) * smoothstep(-0.02, 0.08, c.b - c.r);
+	// Cores only: blue-white/cyan texels (green over red); lavender petals (red over green) stay lit material.
+	float cool = smoothstep(0.55, 0.85, c.b) * smoothstep(0.0, 0.08, c.g - c.r);
 	EMISSION += c * cool * cool_glow;
 }
