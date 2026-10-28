@@ -227,8 +227,8 @@ const DAY_SUN := Color("ffc07e")
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
 ## 2026-10-27 (Gemini goal frame): warm gold sky. Previous: sun ffcc94, fog b8958c, sky_top 3a3c86, sky_horizon c4a7bd;
 ## vista top-third hue 266 -> 30, warm-lit 10.7% -> 28% (goal 34.5%), highlight 2.7% -> 8.8% (goal 8.5%), sweep 200852.
-## Review 15/16 value and hue passes: sky_top 504478 -> 48488e, sky_horizon eaa87c -> c4824c (see GOLDEN_CLOUD_GLOW).
-const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("48488e"), "sky_horizon": Color("c4824c"), "lake_horizon": Color("f0b890")}
+## Review 15-18 value and hue passes: sky_top 504478 -> 48488e, sky_horizon eaa87c -> b87a48 (see GOLDEN_CLOUD_GLOW, GOLDEN_WARM_TOP).
+const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("48488e"), "sky_horizon": Color("b87a48"), "lake_horizon": Color("f0b890")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
@@ -5500,12 +5500,24 @@ const GOLDEN_DOME_COLOR := "f08030"
 ## (saturation 0.27-0.33, clipping at the hero-day far giant). A violet stop above the band, glow-band
 ## clouds fully tinted and a fainter margin rim: sweeps 220537-220757, variant B6: zenith hue 280 L*56,
 ## upper sky violet 20% / magenta 15% / amber 42%, glow box saturation 0.41 with no clipping.
-const GOLDEN_ZENITH_COLOR := "5a4aa0"
-const GOLDEN_ZENITH_MIX := 0.8
+## Review 18: the violet zenith took the vista further from the goal (upper-sky colour distance 14.5 ->
+## 18.7), so it now applies only away from the glow azimuth (GOLDEN_WARM_*), and is softer.
+const GOLDEN_ZENITH_COLOR := "6c5c9c"
+const GOLDEN_ZENITH_MIX := 0.7
 const GOLDEN_ZENITH_LO := 0.40
 const GOLDEN_ZENITH_HI := 0.56
 const GOLDEN_CLOUD_TINT := 1.0
 const GOLDEN_CLOUD_RIM := 0.15
+## Warm top toward the glow azimuth and warm cream cloud bodies (drifting-clouds37; 0 = off). Toward the
+## glow (cos^3 of the azimuth difference) the sky is amber to the zenith, as in the goal frame; away from
+## it (refuge, shore views) the violet stop returns. Sweeps 221839-222058, variant C7: vista upper sky
+## amber 69% / violet 9% / magenta 5% (goal 76/7/6), mid L*72.7, zenith L*68.3 hue 25, highlights 6.1%,
+## warm-lit 34.8% (goal 34.5%).
+const GOLDEN_WARM_TOP := "946450"
+const GOLDEN_WARM_MIX := 1.0
+const GOLDEN_WARM_POWER := 3.0
+const GOLDEN_CLOUD_WARM := "f0cca0"
+const GOLDEN_CLOUD_WARM_MIX := 0.8
 const GOLDEN_GLOW_BAND := 8.0
 const GOLDEN_FAR_DOME := 0.5
 const GOLDEN_FAR_UNDER := 1.5
@@ -5681,6 +5693,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		sky.set_shader_parameter("zenith_hi", float(look_override.get("zenith_hi", GOLDEN_ZENITH_HI)))
 		sky.set_shader_parameter("cloud_glow_tint", lerpf(0.7, float(look_override.get("cloud_tint", GOLDEN_CLOUD_TINT)), (1.0 - night) * (1.0 - rain)) if look_depth else 0.7)
 		sky.set_shader_parameter("cloud_rim", lerpf(0.45, float(look_override.get("cloud_rim", GOLDEN_CLOUD_RIM)), (1.0 - night) * (1.0 - rain)) if look_depth else 0.45)
+		var wt: Color = Color(str(look_override.get("warm_top", GOLDEN_WARM_TOP)))
+		wt.a = float(look_override.get("warm_mix", GOLDEN_WARM_MIX)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0
+		sky.set_shader_parameter("warm_top", wt)
+		sky.set_shader_parameter("warm_power", float(look_override.get("warm_power", GOLDEN_WARM_POWER)))
+		var cw: Color = Color(str(look_override.get("cloud_warm", GOLDEN_CLOUD_WARM)))
+		cw.a = float(look_override.get("cloud_warm_mix", GOLDEN_CLOUD_WARM_MIX)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0
+		sky.set_shader_parameter("cloud_warm", cw)
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", sky_top_now)
 	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)

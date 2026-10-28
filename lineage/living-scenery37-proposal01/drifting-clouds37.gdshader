@@ -27,6 +27,14 @@ uniform float zenith_hi = 0.56;
 // (0.7 / 0.45 = previous look; the margins whitened the glow band, review 17: saturation 0.27-0.33).
 uniform float cloud_glow_tint = 0.7;
 uniform float cloud_rim = 0.45;
+// Azimuth-dependent top (alpha 0 = previous look): toward the glow's azimuth the gradient tops out in
+// this warm colour instead of top_color, and the zenith stop is held back there, so the sky stays amber
+// to the zenith on the glow side and turns violet away from it (review 18: the violet zenith took the
+// vista further from the goal frame, whose sky is amber to the top).
+uniform vec4 warm_top : source_color = vec4(0.79, 0.56, 0.46, 0.0);
+uniform float warm_power = 2.0;
+// Warm cream cloud bodies by day (alpha 0 = previous neutral clouds).
+uniform vec4 cloud_warm : source_color = vec4(1.0, 0.87, 0.68, 0.0);
 float hash3(vec3 p) {
  p=fract(p*.1031); p+=dot(p,p.yzx+33.33); return fract((p.x+p.y)*p.z);
 }
@@ -38,11 +46,13 @@ void sky() {
  // Direction-based sky, not reference imagery or camera-facing scenery.
  // Proposed explicit cloud drift; no shader TIME or POSITION clock.
  float height=max(EYEDIR.y,0.0);
- vec3 base=mix(horizon_color.rgb,top_color.rgb,pow(height,.45));
+ float warm_k=0.0;
+ if(warm_top.a>0.0) warm_k=pow(max(dot(normalize(EYEDIR.xz+vec2(1e-5)),normalize(cloud_glow_dir.xz+vec2(1e-5))),0.0),warm_power)*warm_top.a;
+ vec3 base=mix(horizon_color.rgb,mix(top_color.rgb,warm_top.rgb,warm_k),pow(height,.45));
  float glow_facing=max(dot(EYEDIR,normalize(cloud_glow_dir)),0.0);
  float band=exp(-max(EYEDIR.y-max(cloud_glow_dir.y,0.0),0.0)*glow_band);
  if(horizon_glow>0.0) base=mix(base,cloud_glow_color.rgb,clamp(pow(glow_facing,horizon_glow_power)*band*horizon_glow,0.0,1.0));
- if(zenith_color.a>0.0) base=mix(base,zenith_color.rgb,zenith_color.a*smoothstep(zenith_lo,zenith_hi,height));
+ if(zenith_color.a>0.0) base=mix(base,zenith_color.rgb,zenith_color.a*smoothstep(zenith_lo,zenith_hi,height)*(1.0-warm_k));
  if(EYEDIR.y<0.0) {
   COLOR=mix(horizon_color.rgb,ground_color.rgb,clamp(-EYEDIR.y*2.0,0.0,1.0));
  } else {
@@ -50,7 +60,7 @@ void sky() {
   float cloud=noise3(p)*.58+noise3(p*2.1)*.28+noise3(p*4.3)*.14;
   float coverage=smoothstep(.52-rain_amount*.08,.70,cloud);
   coverage*=smoothstep(.03,.17,height)*(1.0-night_amount*.92);
-  vec3 cloud_color=mix(vec3(.93,.90,.82),vec3(.35,.42,.48),rain_amount*.72);
+  vec3 cloud_color=mix(mix(vec3(.93,.90,.82),cloud_warm.rgb,cloud_warm.a),vec3(.35,.42,.48),rain_amount*.72);
   cloud_color=mix(cloud_color,vec3(.013,.025,.075),night_amount);
   float glow_k=0.0;
   if(cloud_glow>0.0) {
