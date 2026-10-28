@@ -117,7 +117,18 @@ const ERRATIC_REGION := Rect2(-420.0, -720.0, 860.0, 900.0)
 const ERRATIC_CELL := 26.0
 ## Vista review camera (geology "vista" view; off the walking ribbons, ~120 m east of the slice).
 const VISTA_EYE := Vector2(350.0, 100.0)
-const VISTA_AIM := Vector2(-300.0, -760.0)
+## Concept-1 vista (design-reference/mush-concept-1.png, the project's original reference; the user, 2026-10-28:
+## work toward it, not the later Gemini goal frame): looking down ~15 degrees into the valley with the hero
+## mushroom tree in the upper centre-right, the cottage terrace in the left third. Previous aim (-300, 90, -760).
+## The hero tree's cap centre sits 27.5 degrees right of the view centre (concept x ~965 of 1280).
+## Eye VISTA_EYE_H above the ground: the concept looks down a deep valley from a cliff-top terrace.
+const VISTA_AIM := Vector2(-36.0, -713.0)
+const VISTA_TARGET := Vector3(-36.0, -163.0, -713.0)
+const VISTA_EYE_H := 45.0
+## The concept-1 composition (C1_VISTA; _add_concept_vista) replaces the Gemini-goal refuge, vista grove and
+## screen-anchored erratics. MUSH_GOAL_VISTA=1 restores those, the 1.7 m eye and this goal-frame aim.
+const C1_VISTA := true
+const VISTA_TARGET_GOAL := Vector3(-300.0, 90.0, -760.0)
 ## Hand-placed blocks where the vista frame's lower-left sees the ground (the camera stands at
 ## the top of a steep drop): [screen x, screen y in -1..1 (y up), size m]; vertical FOV 60, 16:9,
 ## eye 1.7 m above the rendered ground, as in the geology vista view.
@@ -831,8 +842,11 @@ func configure(world: Node3D) -> void:
 		if not "no_vista_understory" in skip: _add_corridor_understory(UNDERSTORY_VISTA_Z, "vista", 2.0, 70.0)
 	if not "no_shore_groves" in skip: _add_shore_groves()
 	if not "no_erratics" in skip: _add_meadow_erratics()
-	if not "no_vista_grove" in skip: _add_vista_grove()
-	if VISTA_REFUGE and not "no_vista_refuge" in skip: _add_vista_refuge()
+	if _c1_on():
+		if not "no_vista_refuge" in skip: _add_concept_vista()
+	else:
+		if not "no_vista_grove" in skip: _add_vista_grove()
+		if VISTA_REFUGE and not "no_vista_refuge" in skip: _add_vista_refuge()
 	if not "no_horizon_giants" in skip: _add_horizon_giants()
 	if not geology_skip:
 		_add_wall()
@@ -2136,9 +2150,8 @@ func _add_cap_tendrils(cap_poses: Array[Transform3D], label: String, seed: int) 
 ## above the rendered ground, as in the geology vista view) first meets the rendered ground, or
 ## Vector3.INF within max_m (2 m steps beyond 200 m).
 func _vista_ray_ground(sx: float, sy: float, max_m: float = 400.0) -> Vector3:
-	var eye_ground: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
-	var eye := Vector3(VISTA_EYE.x, maxf(eye_ground if not is_nan(eye_ground) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
-	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var eye: Vector3 = _vista_eye()
+	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
 	var up: Vector3 = right.cross(look)
 	var ray: Vector3 = (look + right * sx * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * sy * tan(deg_to_rad(30.0))).normalized()
@@ -2420,7 +2433,7 @@ func _refuge_flush(batches: Dictionary) -> Dictionary:
 
 ## Screen position (x right, y up, -1..1 at the frame edges) of a world point in the vista view.
 func _vista_screen(eye: Vector3, p: Vector3) -> Vector2:
-	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
 	var up: Vector3 = right.cross(look)
 	var v: Vector3 = p - eye
@@ -2430,7 +2443,16 @@ func _vista_screen(eye: Vector3, p: Vector3) -> Vector2:
 
 func _vista_eye() -> Vector3:
 	var g: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
-	return Vector3(VISTA_EYE.x, maxf(g if not is_nan(g) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
+	return Vector3(VISTA_EYE.x, maxf(g if not is_nan(g) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + (VISTA_EYE_H if _c1_on() else 1.7), VISTA_EYE.y)
+
+func _vista_target() -> Vector3:
+	return VISTA_TARGET if _c1_on() else VISTA_TARGET_GOAL
+
+func _vista_aim() -> Vector2:
+	return VISTA_AIM if _c1_on() else Vector2(VISTA_TARGET_GOAL.x, VISTA_TARGET_GOAL.z)
+
+func _c1_on() -> bool:
+	return C1_VISTA and OS.get_environment("MUSH_GOAL_VISTA") == ""
 
 ## Scatter `count` copies of the models in `paths` within `radius` m of the ground hit under screen
 ## point (sx, sy), on rendered ground no steeper than max_slope, off the ribbons and above the lake
@@ -2623,6 +2645,19 @@ func _shore_put(file: String, xf: Transform3D) -> void:
 ## tapering from a wide rooted base. Its rim's lowest point is at 1.125 R like V1.
 const GIANT_BLENDER := "res://assets/world/models/blender/giant2.glb"
 const GIANT_HERO_BLENDER := "res://assets/world/models/blender/giant2_hero.glb"
+## Concept-1 hero (mushtree.py, ChatGPT sheet mush-c1-sheet-mushtree-01 from design-reference/mush-concept-1.png):
+## a violet vein-lit cap over a glowing golden underside crossed by the trunk's branches. Model cap radius 7,
+## rim underside 7.72; sunk this far (m).
+const HERO_TREE_BLENDER := "res://assets/world/models/blender/mushtree.glb"
+const HERO_TREE_R := 7.0
+const HERO_TREE_UNDERSIDE := 7.72
+## Capture c1v07: at 1.35 x 1.0 the cap ran off the frame's top and right with only its underside showing; concept
+## cap at x 720-1210, dome from the frame top, rim near y 90.
+const HERO_TREE_WIDEN := 1.0
+const HERO_TREE_TALL := 0.8
+const HERO_TREE_SINK := 12.0
+## Lavender self-fill on the bark (capture c1v03: the backlit trunk read as a saturated navy mass).
+const HERO_TREE_FILLS := {"hero_tree_bark": [Color("9a8fb8"), 0.16, Color("6a6aa0"), 0.3, 0.2]}
 const GIANT_MODEL_R := 7.0
 const GIANT_MODEL_UNDERSIDE := 7.875
 ## The giants' camera-facing sides are shadow sides under the golden back light, lit only by the lavender
@@ -2683,6 +2718,7 @@ func _add_blender_giants() -> void:
 	if GIANT_BLENDER == "" or not ResourceLoader.exists(GIANT_BLENDER): return
 	var placed: int = 0
 	var hero_ground: float = NAN
+	var tree: bool = HERO_TREE_BLENDER != "" and ResourceLoader.exists(HERO_TREE_BLENDER)
 	for row: Array in _giant_specs():
 		var x: float = row[0]; var z: float = row[1]; var r: float = row[2]; var h: float = row[3]
 		var sink: float = GIANT_HERO_SINK if placed == 0 else 0.0
@@ -2691,6 +2727,14 @@ func _add_blender_giants() -> void:
 		var yaw: float = 0.9 + 1.7 * float(placed)
 		var cap_xf := Transform3D.IDENTITY
 		var cap_xz: float = 1.0
+		if placed == 0 and tree:
+			# Concept-1's mushroom tree: the GIANTS hero footprint widened HERO_TREE_WIDEN (the concept cap spans 35 degrees).
+			ground = terrain_height(x, z) - HERO_TREE_SINK
+			s = Vector3(r * HERO_TREE_WIDEN / HERO_TREE_R, h * HERO_TREE_TALL / HERO_TREE_UNDERSIDE, r * HERO_TREE_WIDEN / HERO_TREE_R)
+			_blender_place(HERO_TREE_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant0", Color.WHITE, Transform3D.IDENTITY, HERO_TREE_FILLS)
+			hero_ground = ground
+			placed += 1
+			continue
 		if placed == 0:
 			s.y *= GIANT_HERO_HEIGHT_SCALE
 			s.x *= GIANT_HERO_STEM_XZ
@@ -2702,7 +2746,7 @@ func _add_blender_giants() -> void:
 			# cap seen from below filled the frame's top right with gills).
 			var eye := Vector3(VISTA_EYE.x, 0.0, VISTA_EYE.y)
 			var to_eye: Vector3 = Vector3(eye.x - x, 0.0, eye.z - z).normalized()
-			var look: Vector3 = Vector3(VISTA_AIM.x - VISTA_EYE.x, 0.0, VISTA_AIM.y - VISTA_EYE.y).normalized()
+			var look: Vector3 = Vector3(_vista_aim().x - VISTA_EYE.x, 0.0, _vista_aim().y - VISTA_EYE.y).normalized()
 			var screen_left: Vector3 = -look.cross(Vector3.UP).normalized()
 			var d: Vector3 = (to_eye + screen_left * GIANT_HERO_TILT_LEFT).normalized()
 			var pivot := Vector3(x, ground + GIANT_MODEL_PIVOT * s.y, z)
@@ -2763,7 +2807,7 @@ var _prom_xf := Transform3D.IDENTITY
 var _prom_active: bool = false
 var promontory_report: Dictionary = {"built": false}
 func _promontory_home(eye: Vector3) -> Vector3:
-	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
 	var up: Vector3 = right.cross(look)
 	var ray: Vector3 = (look + right * PROM_SCREEN.x * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * PROM_SCREEN.y * tan(deg_to_rad(30.0))).normalized()
@@ -3713,7 +3757,7 @@ func _add_vista_refuge() -> void:
 		print("REFUGE_PROBE eye=", eye, " ", JSON.stringify(rows))
 		# Near ground around the eye: [bearing deg from the view axis, horizontal m, ground y, screen x, y of a point 0.6 m up].
 		var near: Array = []
-		var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
+		var look_h: Vector3 = Vector3(_vista_aim().x - eye.x, 0.0, _vista_aim().y - eye.z).normalized()
 		for bearing: float in [-55.0, -45.0, -35.0, -25.0, -15.0, -5.0, 5.0, 15.0, 25.0, 35.0, 45.0, 55.0]:
 			for dist: float in [2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 13.0, 16.0, 20.0, 25.0, 32.0, 40.0]:
 				var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(-bearing))
@@ -3877,7 +3921,7 @@ func _add_vista_refuge() -> void:
 	# Own generator, so additions elsewhere in the refuge never reshuffle the framing flowers.
 	var grng := RandomNumberGenerator.new()
 	grng.seed = 20261028
-	var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
+	var look_h: Vector3 = Vector3(_vista_aim().x - eye.x, 0.0, _vista_aim().y - eye.z).normalized()
 	for i: int in 60:
 		if giant_n >= VISTA_GIANT_LILIES: break
 		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(grng.randf_range(30.0, 56.0)))
@@ -4152,6 +4196,199 @@ func _add_vista_refuge() -> void:
 	vista_refuge_report.merge(stats)
 	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 
+## Concept-1 vista (design-reference/mush-concept-1.png): from a cliff-top home terrace the eye looks down a
+## misty valley of cliff islands and bridges to the hero mushroom tree. Visual only (no collision, no shadows).
+## Built in steps: valley mist banks where the frame sees low ground (C1_MIST_*).
+const C1_MIST_TOP := -20.0
+const C1_MIST_STRENGTH := 0.55
+var concept_vista_report: Dictionary = {}
+func _add_concept_vista() -> void:
+	var eye: Vector3 = _vista_eye()
+	concept_vista_report = {"eye": _v3(eye), "target": _v3(_vista_target())}
+	concept_vista_report["terrace"] = _add_c1_terrace(eye)
+	concept_vista_report["valley"] = _add_c1_valley(eye)
+	concept_vista_report["mist"] = _add_c1_mist(eye)
+	concept_vista_report["mist_decks"] = _add_c1_decks(eye)
+	print("CONCEPT_VISTA ", JSON.stringify(concept_vista_report))
+
+## Home terrace (MUSH-exchange/blender/scripts/terrace.py, ChatGPT sheet mush-c1-sheet-terrace-01): authored in
+## the vista camera's own frame (Blender camera at (0, 0, C1_TERRACE_CAM_H) looking along +Y, pitched 15.3 degrees
+## down, vertical FOV 60, key points placed by concept-1 pixel), so it stands C1_TERRACE_CAM_H below the eye with its
+## forward on the view heading. Warm lights at the window, the patio and the path lanterns (model-local, metres).
+const C1_TERRACE := "res://assets/world/models/blender/c1/terrace.glb"
+const C1_TERRACE_CAM_H := 7.0
+const C1_TERRACE_LIGHTS: Array = [[-13.7, 3.1, -16.4, 9.0], [-7.4, 3.5, -15.5, 10.0], [-12.8, 2.3, -14.3, 6.0], [-7.4, 1.1, -14.3, 6.0], [-1.9, 1.0, -14.0, 6.0], [-4.4, 0.1, -12.5, 6.0]]
+func _add_c1_terrace(eye: Vector3) -> Dictionary:
+	if not ResourceLoader.exists(C1_TERRACE): return {"built": false}
+	var look: Vector3 = _vista_target() - eye
+	var xf := Transform3D(Basis(Vector3.UP, atan2(-look.x, -look.z)), eye - Vector3(0.0, C1_TERRACE_CAM_H, 0.0))
+	_blender_place(C1_TERRACE, xf, "C1Terrace")
+	for k: int in C1_TERRACE_LIGHTS.size():
+		var l: Array = C1_TERRACE_LIGHTS[k]
+		_refuge_light(xf * Vector3(float(l[0]), float(l[1]), float(l[2])), float(l[3]), "C1TerraceLight%d" % k)
+	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size()}
+
+## Valley kit (MUSH-exchange/blender/scripts/valley.py, ChatGPT sheet mush-c1-sheet-valley-01): cliff pillar islands,
+## a wide island and arched viaducts standing in the lake and the basin beyond, as concept-1's misty valley.
+## Islands: [model, concept pixel x (bearing), horizontal distance m, top height above LAKE_Y, width m], based
+## C1_SINK below the water. Bridges: [px, m, px, m (the two deck ends), deck height above LAKE_Y]. Model sizes
+## [height, width]: pillar 100 x 44, island 60 x 200, bridge deck 90 over 312 m, spire 26.6.
+const C1_KIT := "res://assets/world/models/blender/c1/"
+const C1_KIT_DIMS := {"pillar": [100.0, 44.0], "island": [60.0, 200.0], "bridge": [90.0, 312.0], "spire": [26.6, 10.0]}
+const C1_SINK := 14.0
+const C1_ISLANDS: Array = [["pillar", 470.0, 950.0, 135.0, 80.0], ["pillar", 560.0, 700.0, 95.0, 55.0], ["pillar", 740.0, 560.0, 85.0, 50.0],
+	["island", 900.0, 520.0, 95.0, 220.0], ["pillar", 1150.0, 480.0, 90.0, 70.0], ["pillar", 1050.0, 650.0, 120.0, 60.0],
+	["pillar", 330.0, 1100.0, 160.0, 90.0], ["island", 640.0, 1150.0, 110.0, 260.0], ["pillar", 820.0, 1000.0, 150.0, 70.0]]
+const C1_BRIDGES: Array = [[560.0, 700.0, 900.0, 520.0, 80.0], [470.0, 950.0, 820.0, 1000.0, 120.0], [1050.0, 650.0, 1150.0, 480.0, 75.0], [330.0, 1100.0, 470.0, 950.0, 125.0]]
+var _c1_bases: Array = []
+func _c1_point(eye: Vector3, px: float, dist: float) -> Vector2:
+	var look: Vector3 = _vista_target() - eye
+	look.y = 0.0
+	look = look.normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var th: float = atan((px - 640.0) / 640.0 * tan(deg_to_rad(30.0)) * 16.0 / 9.0)
+	var d: Vector3 = look * cos(th) + right * sin(th)
+	return Vector2(eye.x + d.x * dist, eye.z + d.z * dist)
+
+func _add_c1_valley(eye: Vector3) -> Dictionary:
+	var placed: Array = []
+	_c1_bases.clear()
+	for spec: Array in C1_ISLANDS:
+		var path: String = C1_KIT + str(spec[0]) + ".glb"
+		if not ResourceLoader.exists(path): continue
+		var dims: Array = C1_KIT_DIMS[spec[0]]
+		var p: Vector2 = _c1_point(eye, float(spec[1]), float(spec[2]))
+		var base: float = LAKE_Y - C1_SINK
+		var top: float = LAKE_Y + float(spec[3])
+		var k: float = float(spec[4]) / float(dims[1])
+		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
+		var xf := Transform3D(Basis(Vector3.UP, atan2(to_eye.x, to_eye.y)) * Basis.from_scale(Vector3(k, (top - base) / float(dims[0]), k)), Vector3(p.x, base, p.y))
+		_blender_place(path, xf, "C1%s%d" % [str(spec[0]).capitalize(), placed.size()])
+		_c1_bases.append([p, float(spec[4])])
+		placed.append([spec[0], snappedf(p.x, 1.0), snappedf(p.y, 1.0), snappedf(terrain_height(p.x, p.y), 1.0)])
+	var bridges: Array = []
+	var bpath: String = C1_KIT + "bridge.glb"
+	if ResourceLoader.exists(bpath):
+		for spec: Array in C1_BRIDGES:
+			var a: Vector2 = _c1_point(eye, float(spec[0]), float(spec[1]))
+			var b: Vector2 = _c1_point(eye, float(spec[2]), float(spec[3]))
+			var d := Vector3(b.x - a.x, 0.0, b.y - a.y)
+			var span: float = d.length()
+			var dir: Vector3 = d / maxf(span, 0.01)
+			var base: float = LAKE_Y - C1_SINK
+			var sy: float = (LAKE_Y + float(spec[4]) - base) / 90.0
+			var sz: float = clampf(span / 312.0, 0.6, 1.5)
+			var basis := Basis(dir * (span / 312.0), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
+			_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
+			bridges.append([snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[4]), 1.0)])
+	return {"islands": placed, "bridges": bridges}
+
+## Mist decks: near-horizontal layers over the basin floor (c1_mist_deck.gdshader fades them out for a camera near or
+## below a deck, so the lake shore never sees a ceiling). [height above LAKE_Y, coverage, strength].
+const C1_MIST_DECK_SHADER := preload("res://assets/world/c1_mist_deck.gdshader")
+## Capture c1v09: at +5 m the lowest deck sat too close to the water for the soft contact fade and the lake still read.
+const C1_DECKS: Array = [[10.0, 0.7, 0.85], [22.0, 0.5, 0.72], [38.0, 0.32, 0.55]]
+func _add_c1_decks(eye: Vector3) -> int:
+	var look: Vector3 = _vista_target() - eye
+	look.y = 0.0
+	look = look.normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var n: int = 0
+	for spec: Array in C1_DECKS:
+		var y: float = LAKE_Y + float(spec[0])
+		var c: Vector3 = Vector3(eye.x, y, eye.z) + look * 850.0
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var corners: Array = [[c - look * 700.0 - right * 1000.0, Vector2(0, 0)], [c - look * 700.0 + right * 1000.0, Vector2(1, 0)], [c + look * 700.0 + right * 1000.0, Vector2(1, 1)], [c + look * 700.0 - right * 1000.0, Vector2(0, 1)]]
+		for k: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(corners[k][1])
+			st.add_vertex(corners[k][0])
+		var material := ShaderMaterial.new()
+		material.shader = C1_MIST_DECK_SHADER
+		material.set_shader_parameter("deck_y", y)
+		material.set_shader_parameter("coverage", float(spec[1]))
+		material.set_shader_parameter("strength", float(spec[2]))
+		material.set_shader_parameter("day_tint", Color("b4b4e0"))
+		material.render_priority = 1 + n
+		_geology_materials.append(material)
+		var node := MeshInstance3D.new()
+		node.name = "ConceptMistDeck%d" % n
+		node.mesh = st.commit()
+		node.material_override = material
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		add_child(node)
+		_static.append(node)
+		n += 1
+	return n
+
+## Mist banks: soft sheets facing the eye where vista rays meet ground below C1_MIST_TOP, sized with distance.
+func _add_c1_mist(eye: Vector3) -> Dictionary:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261040
+	var n: int = 0
+	for row: int in 9:
+		for col: int in 13:
+			var sx: float = -1.05 + col * 0.175 + rng.randf_range(-0.06, 0.06)
+			var sy: float = -0.95 + row * 0.13 + rng.randf_range(-0.04, 0.04)
+			var hit: Vector3 = _vista_ray_ground(sx, sy, 2200.0)
+			if hit == Vector3.INF: continue
+			var y0: float = maxf(hit.y, LAKE_Y)
+			if y0 > C1_MIST_TOP: continue
+			var dist: float = Vector2(hit.x - eye.x, hit.z - eye.z).length()
+			if dist < 180.0: continue
+			var face: Vector2 = Vector2(eye.x - hit.x, eye.z - hit.z).normalized()
+			var along := Vector2(-face.y, face.x).rotated(rng.randf_range(-0.3, 0.3))
+			var half_w: float = dist * rng.randf_range(0.16, 0.26)
+			var height: float = dist * rng.randf_range(0.07, 0.12)
+			# Base under the ground so the soft contact fade hides it (capture c1v04: bases above the water drew hard lines).
+			var base: float = y0 - 8.0
+			var c := Vector2(hit.x, hit.z)
+			var a: Vector2 = c - along * half_w
+			var b: Vector2 = c + along * half_w
+			var corners: Array = [[Vector3(a.x, base, a.y), Vector2(0, 0)], [Vector3(b.x, base, b.y), Vector2(1, 0)], [Vector3(b.x, base + height, b.y), Vector2(1, 1)], [Vector3(a.x, base + height, a.y), Vector2(0, 1)]]
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(corners[k][1])
+				st.add_vertex(corners[k][0])
+			n += 1
+	# banks round each island's foot, so the pillars rise out of mist (concept-1)
+	for ib: Array in _c1_bases:
+		var c: Vector2 = ib[0]
+		var w: float = float(ib[1])
+		var face: Vector2 = Vector2(eye.x - c.x, eye.z - c.y).normalized()
+		for j: int in 3:
+			var along := Vector2(-face.y, face.x).rotated(rng.randf_range(-0.25, 0.25))
+			var cc: Vector2 = c + face * (w * 0.5 + 10.0 + 25.0 * j) + along * rng.randf_range(-w * 0.4, w * 0.4)
+			var half_w: float = w * rng.randf_range(0.8, 1.3)
+			var height: float = rng.randf_range(30.0, 55.0)
+			var base: float = LAKE_Y - 8.0 + 10.0 * j
+			var a: Vector2 = cc - along * half_w
+			var b: Vector2 = cc + along * half_w
+			var corners: Array = [[Vector3(a.x, base, a.y), Vector2(0, 0)], [Vector3(b.x, base, b.y), Vector2(1, 0)], [Vector3(b.x, base + height, b.y), Vector2(1, 1)], [Vector3(a.x, base + height, a.y), Vector2(0, 1)]]
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(corners[k][1])
+				st.add_vertex(corners[k][0])
+			n += 1
+	if n == 0: return {"sheets": 0}
+	var material := ShaderMaterial.new()
+	material.shader = MIST_SHADER
+	material.set_shader_parameter("strength", C1_MIST_STRENGTH)
+	material.set_shader_parameter("holes", 0.45)
+	material.set_shader_parameter("day_tint", Color("b8b6e2"))
+	material.set_shader_parameter("glow_tint", Color("f0d2d6"))
+	_geology_materials.append(material)
+	var node := MeshInstance3D.new()
+	node.name = "ConceptMist"
+	node.mesh = st.commit()
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	return {"sheets": n}
+
 ## Ribbon falls on the far granite walls seen from the vista (review 06/07 and the Gemini paintover:
 ## two or three thin falls on the central walls). Each is placed on the West Wall station whose crest
 ## projects nearest a vista screen x (1280 px frame) and hangs down that station's own face profile
@@ -4161,9 +4398,8 @@ const FAR_FALLS: Array = [[742.0, 9.0], [818.0, 12.0], [905.0, 8.0]]
 func _add_far_ribbon_falls() -> void:
 	far_falls_report = {"built": false}
 	if _wall.size() < 3: return
-	var eye_ground: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
-	var eye := Vector3(VISTA_EYE.x, maxf(eye_ground if not is_nan(eye_ground) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
-	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var eye: Vector3 = _vista_eye()
+	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
 	var up: Vector3 = right.cross(look)
 	var k_tan: float = tan(deg_to_rad(30.0))
@@ -4327,13 +4563,12 @@ func _add_meadow_erratics() -> void:
 	field.seed = 77
 	field.frequency = 0.006
 	var leads: Array = []
-	var eye_ground: float = rendered_terrain_height(VISTA_EYE.x, VISTA_EYE.y)
-	var eye := Vector3(VISTA_EYE.x, maxf(eye_ground if not is_nan(eye_ground) else terrain_height(VISTA_EYE.x, VISTA_EYE.y), LAKE_Y) + 1.7, VISTA_EYE.y)
-	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var eye: Vector3 = _vista_eye()
+	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
 	var up: Vector3 = right.cross(look)
 	var anchor_hits: Array = []
-	for anchor: Array in ERRATIC_ANCHORS:
+	for anchor: Array in (ERRATIC_ANCHORS if not _c1_on() else []):
 		var ray: Vector3 = (look + right * float(anchor[0]) * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * float(anchor[1]) * tan(deg_to_rad(30.0))).normalized()
 		for step: int in range(2, 400):
 			var q: Vector3 = eye + ray * float(step)
@@ -6635,8 +6870,27 @@ const SOFT_HEMI := 0.3
 const SOFT_HEMI_COLOR := "9e94e0"
 const SOFT_BOUNCE := 0.3
 
-## Amber/lavender grade, written after the shared lighting owner's endpoints.
+## Concept-1 dusk palette (design-reference/mush-concept-1.png: violet-blue sky over a peach-pink horizon, lavender
+## mist and fog, a softer warm key), the defaults under any capture look_override while C1_VISTA is on. Sweep c1v05
+## variant B (frame distance to concept-1 35.0 -> 34.0, top band 39.7 -> 38.2).
+const C1_LOOK := {"day_sky_top": "4c56a8", "day_sky_horizon": "f0b898", "day_fog": "7c80b8", "day_ambient": "8a88c0", "day_sun": "ffb8a0",
+	"day_lake_horizon": "b0a8d0", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "f0c0c8",
+	"cloud_glow_color": "f0a080", "glow_color": "f08868", "mist_warm": "e0c0d8", "grade_sat": 0.85, "sun_energy": 1.05, "fog_density": 1.0,
+	"far_fog": 0.8, "ambient_energy": 0.32,
+	# c1v09 variant F3: a pale rose fill and a greyer ambient (the lavender fill turned grey rock indigo), a warmer key.
+	"fill_color": "c8b4b8", "fill_energy": 0.25, "hemi_color": "a8a0c8",
+	# c1v12 variant V1: denser, nearer haze (16x9 distance 25.0 -> 24.3).
+	"fog_begin": 300.0}
+
+## Amber/lavender grade, written after the shared lighting owner's endpoints. With C1_VISTA on, C1_LOOK supplies
+## the defaults under look_override for this call.
 func apply_look(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
+	var own: Dictionary = look_override
+	if _c1_on(): look_override = C1_LOOK.merged(own, true)
+	_apply_look_impl(environment, sun, night, rain, sunset)
+	look_override = own
+
+func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
 	var toward_sun: Vector3 = sun.global_basis.z.normalized()
 	for pair: Array in _crown_sync:
 		for key: String in ["wind_time", "wind_displacement_m", "night_amount"]:
