@@ -78,10 +78,11 @@ M = {
 }
 
 # ---- cap top: broad dome with a rolled rim ------------------------------------------------------------------
-TOP = [(6.95, 7.72), (7.1, 7.88), (7.15, 8.1), (7.05, 8.35), (6.6, 8.75), (5.8, 9.2), (4.6, 9.62), (3.2, 9.95), (1.6, 10.15), (0.0, 10.22)]
+# v5 (ChatGPT checkpoint after milestone 1: a flat roof-like canopy; the concept's cap is a deep dome): taller dome.
+TOP = [(6.95, 7.72), (7.1, 7.9), (7.18, 8.2), (7.1, 8.55), (6.7, 9.1), (5.9, 9.75), (4.7, 10.3), (3.3, 10.72), (1.7, 10.98), (0.0, 11.06)]
 cap = L.lathe("cap", TOP, 120, M["cap"], close_top=True)
 # v4 (capture c1v09: the dome read saturated ultramarine; concept dome is a lighter lavender-blue)
-paint(cap, lambda co, i: mix(ramp([(0.0, "#4c4a96"), (0.55, "#6a66bc"), (0.85, "#8a84d6"), (1.0, "#a49ae6")], math.hypot(co.x, co.y) / R),
+paint(cap, lambda co, i: mix(ramp([(0.0, "#5c5aa6"), (0.55, "#7a76c8"), (0.85, "#9a94e0"), (1.0, "#b4aaee")], math.hypot(co.x, co.y) / R),
                             srgb("#9a86ff"), 0.35 * max(0.0, noise.noise(Vector((co.x * 0.9, co.y * 0.9, 0.3))))))
 # glowing rim band
 rim = L.lathe("rim", [(7.0, 7.76), (7.13, 7.92), (7.16, 8.08), (7.08, 8.2)], 120, M["rim"])
@@ -151,7 +152,7 @@ for s in range(N_STR):
         t = i / 15
         z = -0.25 + t * 7.1
         # buttress flare at the base, a waist at mid height, spreading again into the branches
-        spread = 2.0 * (1 - t) ** 3.0 + 0.95 + 3.6 * max(0.0, t - 0.7) ** 1.3
+        spread = 2.0 * (1 - t) ** 3.0 + 0.85 + 2.2 * max(0.0, t - 0.45) ** 1.4 + 2.4 * max(0.0, t - 0.8) ** 1.2
         a = a0 + twist * t * 2.2
         pts.append(Vector((spread * math.cos(a), spread * math.sin(a), max(z, -0.25) if i else -0.35)))
         radii.append(0.36 * (1 - 0.45 * t) + 0.12)
@@ -178,6 +179,33 @@ for s in range(N_STR):
     if s % 3 != 2:
         gp = [pp + (pp - Vector((0, 0, pp.z))).normalized() * radii[i] * 0.9 for i, pp in enumerate(pts) if 2 <= i <= 13]
         tube("seam%d" % s, gp, [0.05] * len(gp), M["bglow"], lambda t, co: srgb("#8fd0ff"), sides=4)
+# v5: a branch network under the cap (concept: the trunk splits into many limbs that spread radially and merge into
+# the underside, dark against the glow). 16 limbs from the trunk top, each forking twice, twigs at the tips.
+def under_z(r):
+    return 7.12 + 0.55 * min(1.0, r / R) ** 0.8
+def limb(a, r0, z0, w0, n, depth, seed):
+    rr = random.Random(seed)
+    pts, rad = [], []
+    r, z = r0, z0
+    for i in range(n + 1):
+        t = i / n
+        pts.append(Vector((r * math.cos(a), r * math.sin(a), z)))
+        rad.append(max(0.035, w0 * (1.0 - 0.75 * t)))
+        a += rr.uniform(-0.12, 0.12)
+        r += (6.75 - r0) / n
+        z = z + (under_z(r) - 0.08 - z) * (0.45 + 0.4 * t)
+    tube("limb_%d_%d" % (depth, seed), pts, rad, M["bark"], branch_col, sides=6 if depth == 0 else 4)
+    if depth < 2:
+        for f in (0.32, 0.58):
+            i = int(n * f)
+            q = pts[i]
+            for sgn in (-1, 1):
+                if rr.random() < 0.75:
+                    limb(math.atan2(q.y, q.x) + sgn * rr.uniform(0.18, 0.4), math.hypot(q.x, q.y), q.z, rad[i] * 0.6, max(3, n - i), depth + 1, seed * 7 + i * 3 + (sgn > 0))
+for k in range(16):
+    a = 2 * math.pi * k / 16 + rnd.uniform(-0.08, 0.08)
+    limb(a, 1.4, 6.6, 0.42, 9, 0, 300 + k)
+
 # buttress roots spreading on the ground
 for k in range(16):
     a = 2 * math.pi * k / 16 + rnd.uniform(-0.15, 0.15)

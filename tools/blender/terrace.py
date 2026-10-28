@@ -121,15 +121,16 @@ M = {
     "rock": vmat("hero_terrace_rock", 0.9),
     "turf": vmat("hero_terrace_turf", 0.95),
     "leaf": vmat("hero_terrace_leaf", 0.85),
+    "canopy": vmat("hero_terrace_canopy", 0.85),
     "bark": vmat("hero_terrace_bark", 0.85),
     "flag": vmat("hero_terrace_flag", 0.85),
-    "timber": L.mat("terrace_timber", "#7a5232", 0.8),
+    "timber": L.mat("terrace_timber", "#65412f", 0.8),
     "timber_dark": L.mat("terrace_timber_dark", "#4e321e", 0.85),
     "plank": L.mat("terrace_plank", "#8a6440", 0.85),
     "plaster": L.mat("terrace_plaster", "#8e6c4c", 0.9),
     # v3 (cell analysis c1v11: the concept's house cell is warm orange, L34 a17 b30; ours read pale yellow-white)
-    "window": L.mat("terrace_window_glow", "#ffa850", 0.5, "#ff8c30", 2.6),
-    "interior": L.mat("terrace_interior_glow", "#b86020", 0.7, "#d87028", 1.4),
+    "window": L.mat("terrace_window_glow", "#f6b66d", 0.5, "#ff9038", 3.6),
+    "interior": L.mat("terrace_interior_glow", "#b86020", 0.7, "#e07028", 2.2),
     "canvas": L.mat("terrace_canvas", "#cdb494", 0.9, "#e0a060", 0.25),
     "sofa": L.mat("terrace_sofa", "#cdb090", 0.9),
     "cushion_r": L.mat("terrace_cushion_red", "#c0603c", 0.9),
@@ -204,7 +205,7 @@ def poly_dist(x, y, poly):
 # Mound: an earth dome behind the front wall, top MOUND_TOP; its foot follows the front wall.
 MOUND_C = FRONT_BASE - HOUSE_NORMAL * 6.5 + HOUSE_TANGENT * 1.0
 MOUND_R = (10.5, 7.5)   # along the front, depth
-MOUND_TOP = 8.6
+MOUND_TOP = 7.4   # v4 (ChatGPT checkpoint: the broad dark mound hid the glowing facade): lower
 
 def mound_h(x, y):
     d = Vector((x, y, 0.0)) - Vector((MOUND_C.x, MOUND_C.y, 0.0))
@@ -242,7 +243,7 @@ def ground_h(x, y):
     de = -poly_dist(x, y, EDGE)
     if de < 2.0: base -= (2.0 - de) * 0.6
     base += 0.25 * noise.noise(Vector((x * 0.15, y * 0.15, 3.1))) + 0.08 * noise.noise(Vector((x * 0.6, y * 0.6, 7.7)))
-    if pd < 1.5: base = pz - 0.05
+    if pd < 1.9: base = pz - 0.05
     return base
 
 def build_ground():
@@ -497,8 +498,8 @@ for k, u in enumerate((-3.0, 2.6, 6.2)):
 # awning: cream canvas from the wall top over the patio on two poles, sagging
 # v2 (preview t1: the canvas covered the whole patio; the concept's awning runs from above the window's right
 # shoulder over the patio's back-right only)
-aw_u0, aw_u1 = 1.4, 7.0
-aw_poles = [wall_pt(7.4, 0.0, 3.4), wall_pt(1.6, 0.0, 3.0)]
+aw_u0, aw_u1 = 2.6, 6.8   # v4: a smaller awning (ChatGPT: it out-shouted the entrance)
+aw_poles = [wall_pt(7.0, 0.0, 2.6), wall_pt(2.8, 0.0, 2.4)]
 for k, p in enumerate(aw_poles):
     L.cyl("aw_pole%d" % k, 0.08, 2.7, (p.x, p.y, PATIO_Z + 1.35), M["timber"], verts=8)
 av, af = [], []
@@ -544,16 +545,17 @@ for k in range(len(PATH_C) - 1):
     a, b = PATH_C[k], PATH_C[k + 1]
     d = (b - a); d.z = 0
     yaw = math.atan2(d.y, d.x)
-    for j in range(2 if k > 18 else 1):
-        off = Vector((-d.y, d.x, 0)).normalized() * (rnd.uniform(-0.45, 0.45) if k > 18 else 0.0)
+    # v4 (ChatGPT: path narrow and fragmented; concept ~2-3 m of large overlapping flagstones)
+    for j in range(3 if k > 18 else 1):
+        off = Vector((-d.y, d.x, 0)).normalized() * ((j - 1) * 0.85 + rnd.uniform(-0.2, 0.2) if k > 18 else 0.0)
         p = a + off
-        s = rnd.uniform(0.55, 0.9) if k > 18 else 0.95
+        s = rnd.uniform(0.6, 0.95) if k > 18 else 1.05
         z = p.z + (0.05 if k > 18 else 0.0)
         st = L.lathe("pstone%d_%d" % (k, j), [(s, z - 0.15), (s * 0.97, z + 0.06), (0.0, z + 0.08)], 10, M["flag"], close_top=True, smooth=False,
                      deform=lambda x, y, zz, th, i_, p=p, s=s, k=k, yaw=yaw: (p.x + (x * 1.5 * math.cos(yaw) - y * math.sin(yaw)) * (1 + 0.15 * math.sin(3 * th + k)),
                                                                               p.y + (x * 1.5 * math.sin(yaw) + y * math.cos(yaw)) * (1 + 0.15 * math.sin(3 * th + k)), zz))
         tone = rnd.uniform(0, 1)
-        paint(st, lambda co, i_, tone=tone: mix(srgb("#bcab96"), srgb("#8e8070"), tone))
+        paint(st, lambda co, i_, tone=tone: mix(srgb("#968878"), srgb("#6c6258"), tone))   # v5: darker (capture c1v21: the lit path out-shone the concept's)
 # risers under the steps between the patio and the path
 for k in range(4):
     p = PATH_C[min(k * 2, len(PATH_C) - 1)]
@@ -596,7 +598,7 @@ def bush(name, p, s, seed):
     for j in range(5):
         q = p + Vector((r2.uniform(-0.6, 0.6) * s, r2.uniform(-0.6, 0.6) * s, r2.uniform(0.2, 0.7) * s))
         bblob(M["leaf"], s * r2.uniform(0.45, 0.7), tuple(q), squash=(1, 1, 0.85), sub=2, seed=seed + j, jitter=0.2,
-              col=lambda co, q=q, s=s: mix(srgb("#1c3024"), srgb("#44663a"), 0.5 + (co.z - q.z) / (s * 0.9)))
+              col=lambda co, q=q, s=s: mix(srgb("#16242a"), srgb("#3a5848"), 0.5 + (co.z - q.z) / (s * 0.9)))   # v5: bluer, the concept's violet-dark foreground
 
 beds = [  # (px, py, z guess, count, spread m)
     (90, 600, -2.0, 220, 4.5), (260, 640, -2.6, 150, 3.5), (380, 690, -3.2, 90, 2.5), (150, 500, -0.6, 110, 3.0), (30, 680, -3.4, 120, 3.0),
@@ -607,17 +609,17 @@ for (x, y, z, cnt, spread) in beds:
     for _ in range(cnt):
         p = c + Vector((rnd.uniform(-spread, spread), rnd.uniform(-spread, spread), 0))
         pd, _ = path_info(p.x, p.y)
-        if pd < 1.4 or in_poly(p.x, p.y, PATIO_PTS) or poly_dist(p.x, p.y, EDGE) > -0.5: continue
+        if pd < 1.9 or in_poly(p.x, p.y, PATIO_PTS) or poly_dist(p.x, p.y, EDGE) > -0.5: continue
         g = ground_h(p.x, p.y)
         r = rnd.random()
-        if r < 0.45:
-            flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.25, 0.7))), M["lav"], rnd.uniform(0.18, 0.3))
+        if r < 0.55:
+            flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.3, 0.8))), M["lav"], rnd.uniform(0.22, 0.42))
         elif r < 0.55:
-            flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.25, 0.6))), M["pink"], rnd.uniform(0.18, 0.28))
+            flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.3, 0.7))), M["pink"], rnd.uniform(0.2, 0.36))
         elif r < 0.62:
             flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.25, 0.5))), M["white"], rnd.uniform(0.12, 0.18))
         else:
-            bush("fb%d" % fk, Vector((p.x, p.y, g)), rnd.uniform(0.35, 0.7), 900 + fk)
+            bush("fb%d" % fk, Vector((p.x, p.y, g)), rnd.uniform(0.5, 1.1), 900 + fk)
         fk += 1
 # big glowing lilies in the frame's lower left (concept: luminous blue lilies at the corner)
 for k, (x, y, z, s) in enumerate([(50, 600, -2.6, 1.25), (140, 650, -3.0, 1.0), (10, 700, -3.6, 1.1), (180, 560, -2.0, 0.7), (380, 700, -3.4, 0.8), (240, 610, -2.4, 0.6),
@@ -646,7 +648,7 @@ for i in range(NR):
         mf.append((i * NA + j, i * NA + j2, (i + 1) * NA + j2, (i + 1) * NA + j))
 mound = L.obj_from("mound", mv, mf, M["turf"])
 paint(mound, lambda co, i: mix(srgb("#2a4228"), srgb("#56743a"), 0.5 + 0.6 * noise.noise(Vector((co.x * 0.4, co.y * 0.4, co.z * 0.4)))))
-for k in range(60):
+for k in range(170):
     a = rnd.uniform(0, 2 * math.pi); rr = math.sqrt(rnd.uniform(0.0, 0.85))
     p = Vector((MOUND_C.x, MOUND_C.y, 0)) + HOUSE_TANGENT * math.cos(a) * rr * MOUND_R[0] - HOUSE_NORMAL * math.sin(a) * rr * MOUND_R[1]
     z = PATIO_Z + (MOUND_TOP - PATIO_Z) * max(0.0, 1.0 - rr * rr) ** 0.55
@@ -696,7 +698,7 @@ for k in range(7):
 # branches: big limbs spreading toward the front-right over the terrace, and left
 leaf_centres = []
 # v3 (cell analysis c1v10: the canopy darkened the concept's bright sky at x 320-640): shorter right-hand limbs
-limbs = [((0.45, -0.9), 12.5, 15.0, 1.4), ((1.0, -0.35), 13.5, 11.0, 1.3), ((-0.8, -0.6), 12.0, 12.0, 1.2), ((0.2, 0.9), 15.0, 9.0, 1.0), ((-0.5, 0.8), 13.0, 8.0, 1.0), ((0.1, -1.0), 11.5, 15.0, 1.1)]
+limbs = [((0.45, -0.9), 12.5, 12.5, 1.4), ((1.0, -0.35), 13.5, 9.0, 1.3), ((-0.8, -0.6), 12.0, 12.0, 1.2), ((0.2, 0.9), 15.0, 9.0, 1.0), ((-0.5, 0.8), 13.0, 8.0, 1.0), ((0.1, -1.0), 11.5, 15.0, 1.1)]
 for k, (d2, ztop, length, r0) in enumerate(limbs):
     d = Vector((d2[0], d2[1], 0)).normalized()
     start = trunk_pts[5 + (k % 4)]
@@ -724,10 +726,42 @@ for k, c in enumerate(leaf_centres):
     for j in range(5):
         q = c + Vector((rnd.uniform(-2.4, 2.4), rnd.uniform(-2.4, 2.4), rnd.uniform(-0.8, 1.6)))
         s = rnd.uniform(1.8, 3.0)
-        bblob(M["leaf"], s, tuple(q), squash=(1.0, 1.0, 0.7), sub=2, seed=k * 10 + j, jitter=0.22,
+        bblob(M["canopy"], s, tuple(q), squash=(1.0, 1.0, 0.7), sub=2, seed=k * 10 + j, jitter=0.22,
               col=lambda co, q=q, s=s: mix(srgb("#22341e"), srgb("#5a7a40"), 0.45 + 0.75 * (co.z - q.z) / (s * 0.7)))
 
 # ---------------------------------------------------------------------------------------------------------
+# v4 facade (ChatGPT checkpoint: make the glowing home front the centrepiece): a great curved timber arch framing
+# window and door, wall lanterns either side of the window, vines from the turf lip, roots draping over the top.
+arc_pts = []
+for i in range(25):
+    t = i / 24
+    u = -4.7 + 10.9 * t
+    z = 4.75 * math.sin(math.pi * t) ** 0.7 - 0.2   # v5: hugs the wall top (capture c1v15: the arch towered over the house)
+    arc_pts.append((u, z))
+frame_tube("great_arch", arc_pts, 0.35, 0.42, M["timber"])
+frame_tube("great_arch_in", [(u * 0.93 + 0.08, z * 0.93) for u, z in arc_pts], 0.42, 0.22, M["timber_dark"])
+for i in range(0, 25, 3):
+    u, z = arc_pts[i]
+    a = wall_pt(u, z + 0.35, 0.35); b = wall_pt(u * 0.86 + 0.2, z * 0.86 + 0.35, 0.45)
+    ob = L.cyl("arch_spoke%d" % i, 0.09, (b - a).length, (a + b) / 2, M["timber_dark"], verts=6); ob.rotation_euler = (b - a).to_track_quat("Z", "Y").to_euler()
+for u in (-2.9, 2.75):
+    lantern("wall_lamp%d" % int(u * 10), wall_pt(u, 2.7, 0.6))
+for k in range(26):
+    u = rnd.choice((rnd.uniform(-5.0, -2.7), rnd.uniform(2.4, 3.1), rnd.uniform(5.4, 6.4)))   # not across the window or door
+    top = 4.4 - 0.9 * ((u - 1.5) / 6.1) ** 2
+    ln = rnd.uniform(0.6, 2.0)
+    base = wall_pt(u, top - 0.2, 0.62)
+    for b_i in range(7):
+        t = b_i / 7
+        q = base + Vector((0, 0, -ln * t)) + HOUSE_NORMAL * (0.05 * math.sin(b_i))
+        bblob(M["leaf"] if rnd.random() < 0.8 else M["wisteria"], 0.12 * (1.0 - 0.4 * t), tuple(q), squash=(1.2, 1.2, 1.0), sub=1, jitter=0.3,
+              col=lambda co: srgb("#2c4a2c"))
+for k in range(4):
+    u0 = -4.5 + 2.2 * k + rnd.uniform(-0.3, 0.3)
+    top = 4.4 - 0.9 * ((u0 - 1.5) / 6.1) ** 2
+    pts = [wall_pt(u0 + 0.4, top + 1.6, -1.5), wall_pt(u0 + 0.2, top + 0.9, 0.2), wall_pt(u0, top - 0.2, 0.75), wall_pt(u0 - 0.1, top - 1.2, 0.7)]
+    tube("facade_root%d" % k, pts, [0.32, 0.26, 0.18, 0.08], M["bark"], lambda co, i: srgb("#5a4634"), sides=7)
+
 flush_batches()
 print("TRIS_BEFORE_JOIN", L.tri_count())
 names = list(L.join_by_material())

@@ -2653,7 +2653,7 @@ const HERO_TREE_R := 7.0
 const HERO_TREE_UNDERSIDE := 7.72
 ## Capture c1v07: at 1.35 x 1.0 the cap ran off the frame's top and right with only its underside showing; concept
 ## cap at x 720-1210, dome from the frame top, rim near y 90.
-const HERO_TREE_WIDEN := 1.0
+const HERO_TREE_WIDEN := 0.9
 const HERO_TREE_TALL := 0.8
 const HERO_TREE_SINK := 12.0
 ## Lavender self-fill on the bark (capture c1v03: the backlit trunk read as a saturated navy mass).
@@ -4209,6 +4209,7 @@ func _add_concept_vista() -> void:
 	concept_vista_report["valley"] = _add_c1_valley(eye)
 	concept_vista_report["mist"] = _add_c1_mist(eye)
 	concept_vista_report["mist_decks"] = _add_c1_decks(eye)
+	concept_vista_report["backdrop"] = _add_c1_backdrop(eye)
 	print("CONCEPT_VISTA ", JSON.stringify(concept_vista_report))
 
 ## Home terrace (MUSH-exchange/blender/scripts/terrace.py, ChatGPT sheet mush-c1-sheet-terrace-01): authored in
@@ -4217,15 +4218,25 @@ func _add_concept_vista() -> void:
 ## forward on the view heading. Warm lights at the window, the patio and the path lanterns (model-local, metres).
 const C1_TERRACE := "res://assets/world/models/blender/c1/terrace.glb"
 const C1_TERRACE_CAM_H := 7.0
-const C1_TERRACE_LIGHTS: Array = [[-13.7, 3.1, -16.4, 9.0], [-7.4, 3.5, -15.5, 10.0], [-12.8, 2.3, -14.3, 6.0], [-7.4, 1.1, -14.3, 6.0], [-1.9, 1.0, -14.0, 6.0], [-4.4, 0.1, -12.5, 6.0]]
+## Cell analysis c1v19: the concept's house cell is warm orange (L34 a17 b30), ours L31 a6 b12: larger warm pools at
+## the window and over the patio, and a day self-fill on the dark canopy and turf (C1_TERRACE_FILLS).
+const C1_TERRACE_LIGHTS: Array = [[-13.7, 3.1, -16.4, 14.0], [-7.4, 3.5, -15.5, 14.0], [-12.8, 2.3, -14.3, 8.0], [-7.4, 1.1, -14.3, 7.0], [-1.9, 1.0, -14.0, 7.0], [-4.4, 0.1, -12.5, 7.0], [-11.0, 4.5, -13.5, 12.0]]
+## The fill is on the tree canopy only (capture c1v20: on all leaves it lifted the concept's dark violet foreground).
+const C1_TERRACE_FILLS := {"hero_terrace_canopy": [Color("4a5a3c"), 0.18, Color("1c2430"), 0.05, 0.1], "hero_terrace_turf": [Color("3c4a30"), 0.1, Color("1c2430"), 0.05, 0.08]}
+## The terrace lights' own energy (day, night): stronger warm pools than the refuge lights' 0.9 by day.
+const C1_LIGHT_ENERGY := Vector2(2.2, 3.0)
+var _c1_lights: Array[OmniLight3D] = []
 func _add_c1_terrace(eye: Vector3) -> Dictionary:
 	if not ResourceLoader.exists(C1_TERRACE): return {"built": false}
 	var look: Vector3 = _vista_target() - eye
 	var xf := Transform3D(Basis(Vector3.UP, atan2(-look.x, -look.z)), eye - Vector3(0.0, C1_TERRACE_CAM_H, 0.0))
-	_blender_place(C1_TERRACE, xf, "C1Terrace")
+	_blender_place(C1_TERRACE, xf, "C1Terrace", Color.WHITE, Transform3D.IDENTITY, C1_TERRACE_FILLS)
 	for k: int in C1_TERRACE_LIGHTS.size():
 		var l: Array = C1_TERRACE_LIGHTS[k]
 		_refuge_light(xf * Vector3(float(l[0]), float(l[1]), float(l[2])), float(l[3]), "C1TerraceLight%d" % k)
+		var light: OmniLight3D = _refuge_lights.pop_back()
+		light.light_color = Color("ff9f50")
+		_c1_lights.append(light)
 	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size()}
 
 ## Valley kit (MUSH-exchange/blender/scripts/valley.py, ChatGPT sheet mush-c1-sheet-valley-01): cliff pillar islands,
@@ -4234,13 +4245,21 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 ## C1_SINK below the water. Bridges: [px, m, px, m (the two deck ends), deck height above LAKE_Y]. Model sizes
 ## [height, width]: pillar 100 x 44, island 60 x 200, bridge deck 90 over 312 m, spire 26.6.
 const C1_KIT := "res://assets/world/models/blender/c1/"
-const C1_KIT_DIMS := {"pillar": [100.0, 44.0], "island": [60.0, 200.0], "bridge": [90.0, 312.0], "spire": [26.6, 10.0]}
+const C1_KIT_DIMS := {"pillar": [100.0, 44.0], "island": [60.0, 200.0], "bridge": [90.0, 312.0], "spire": [26.6, 10.0],
+	"mesa_wide": [70.0, 220.0], "mesa_round": [95.0, 130.0], "rock_tall": [170.0, 70.0], "mesa_lobed": [120.0, 180.0], "viaduct": [80.0, 312.0], "arch": [70.0, 152.0]}
 const C1_SINK := 14.0
-const C1_ISLANDS: Array = [["pillar", 470.0, 950.0, 135.0, 80.0], ["pillar", 560.0, 700.0, 95.0, 55.0], ["pillar", 740.0, 560.0, 85.0, 50.0],
-	["island", 900.0, 520.0, 95.0, 220.0], ["pillar", 1150.0, 480.0, 90.0, 70.0], ["pillar", 1050.0, 650.0, 120.0, 60.0],
-	["pillar", 330.0, 1100.0, 160.0, 90.0], ["island", 640.0, 1150.0, 110.0, 260.0], ["pillar", 820.0, 1000.0, 150.0, 70.0]]
-const C1_BRIDGES: Array = [[560.0, 700.0, 900.0, 520.0, 80.0], [470.0, 950.0, 820.0, 1000.0, 120.0], [1050.0, 650.0, 1150.0, 480.0, 75.0], [330.0, 1100.0, 470.0, 950.0, 125.0]]
+## V2 (valley2.py; ChatGPT checkpoint after milestone 1: V1 read as rows of rectangular towers with evenly spaced
+## arches): irregular mesas and rocks in three overlapping depth layers at very different heights.
+const C1_ISLANDS: Array = [
+	["rock_tall", 560.0, 1250.0, 210.0, 70.0], ["mesa_lobed", 700.0, 1150.0, 150.0, 220.0], ["rock_tall", 1010.0, 1200.0, 230.0, 80.0], ["mesa_round", 380.0, 1100.0, 160.0, 140.0],
+	["mesa_round", 480.0, 820.0, 120.0, 150.0], ["rock_tall", 615.0, 760.0, 150.0, 60.0], ["mesa_lobed", 880.0, 650.0, 110.0, 200.0], ["mesa_round", 1180.0, 600.0, 95.0, 120.0],
+	["mesa_wide", 760.0, 450.0, 55.0, 240.0], ["mesa_round", 1080.0, 420.0, 70.0, 110.0], ["rock_tall", 560.0, 520.0, 95.0, 50.0]]
+## [model, px, m, px, m, deck height above LAKE_Y]
+const C1_BRIDGES: Array = [["viaduct", 480.0, 820.0, 880.0, 650.0, 112.0], ["arch", 560.0, 520.0, 760.0, 450.0, 78.0], ["viaduct", 380.0, 1100.0, 700.0, 1150.0, 150.0], ["arch", 1080.0, 420.0, 1180.0, 600.0, 88.0]]
 var _c1_bases: Array = []
+## Height fraction for the mid-cliff mist bank in front of island i (varied, deterministic).
+func rng_mid(i: int) -> float:
+	return [0.42, 0.55, 0.35, 0.6, 0.48, 0.38, 0.52, 0.45, 0.3, 0.58, 0.4][i % 11]
 func _c1_point(eye: Vector3, px: float, dist: float) -> Vector2:
 	var look: Vector3 = _vista_target() - eye
 	look.y = 0.0
@@ -4257,37 +4276,91 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var path: String = C1_KIT + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(path): continue
 		var dims: Array = C1_KIT_DIMS[spec[0]]
-		var p: Vector2 = _c1_point(eye, float(spec[1]), float(spec[2]))
+		# Keep islands in the lake and the wet basin floor: step in toward the eye until the ground is low (capture
+		# c1v14 put two far ones on the west slope and the basin wall).
+		var dist: float = float(spec[2])
+		var p: Vector2 = _c1_point(eye, float(spec[1]), dist)
+		while terrain_height(p.x, p.y) > LAKE_Y + 8.0 and dist > float(spec[2]) - 500.0:
+			dist -= 40.0
+			p = _c1_point(eye, float(spec[1]), dist)
+		if terrain_height(p.x, p.y) > LAKE_Y + 8.0:
+			placed.append([spec[0], "skipped: dry ground"])
+			continue
 		var base: float = LAKE_Y - C1_SINK
 		var top: float = LAKE_Y + float(spec[3])
 		var k: float = float(spec[4]) / float(dims[1])
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
 		var xf := Transform3D(Basis(Vector3.UP, atan2(to_eye.x, to_eye.y)) * Basis.from_scale(Vector3(k, (top - base) / float(dims[0]), k)), Vector3(p.x, base, p.y))
 		_blender_place(path, xf, "C1%s%d" % [str(spec[0]).capitalize(), placed.size()])
-		_c1_bases.append([p, float(spec[4])])
+		_c1_bases.append([p, float(spec[4]), LAKE_Y + float(spec[3]) * rng_mid(placed.size())])
 		placed.append([spec[0], snappedf(p.x, 1.0), snappedf(p.y, 1.0), snappedf(terrain_height(p.x, p.y), 1.0)])
 	var bridges: Array = []
-	var bpath: String = C1_KIT + "bridge.glb"
-	if ResourceLoader.exists(bpath):
-		for spec: Array in C1_BRIDGES:
-			var a: Vector2 = _c1_point(eye, float(spec[0]), float(spec[1]))
-			var b: Vector2 = _c1_point(eye, float(spec[2]), float(spec[3]))
-			var d := Vector3(b.x - a.x, 0.0, b.y - a.y)
-			var span: float = d.length()
-			var dir: Vector3 = d / maxf(span, 0.01)
-			var base: float = LAKE_Y - C1_SINK
-			var sy: float = (LAKE_Y + float(spec[4]) - base) / 90.0
-			var sz: float = clampf(span / 312.0, 0.6, 1.5)
-			var basis := Basis(dir * (span / 312.0), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
-			_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
-			bridges.append([snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[4]), 1.0)])
+	for spec: Array in C1_BRIDGES:
+		var bpath: String = C1_KIT + str(spec[0]) + ".glb"
+		if not ResourceLoader.exists(bpath): continue
+		var bdims: Array = C1_KIT_DIMS[spec[0]]
+		var a: Vector2 = _c1_point(eye, float(spec[1]), float(spec[2]))
+		var b: Vector2 = _c1_point(eye, float(spec[3]), float(spec[4]))
+		var d := Vector3(b.x - a.x, 0.0, b.y - a.y)
+		var span: float = d.length()
+		var dir: Vector3 = d / maxf(span, 0.01)
+		var base: float = LAKE_Y - C1_SINK
+		var sy: float = (LAKE_Y + float(spec[5]) - base) / float(bdims[0])
+		var sz: float = clampf(span / float(bdims[1]), 0.6, 1.5)
+		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
+		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
+		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
 	return {"islands": placed, "bridges": bridges}
+
+## Far backdrop (c1_backdrop.gdshader): a curved haze card C1_BACKDROP_R from the eye, beyond the islands and in front
+## of the basin's far wall, with the concept's peach sunset band, cloud banks and distant spire silhouettes. Faded out
+## for a camera low in the basin. [bearing from the view axis, degrees, left and right].
+const C1_BACKDROP_SHADER := preload("res://assets/world/c1_backdrop.gdshader")
+const C1_BACKDROP_R := 1350.0
+const C1_BACKDROP_ARC := Vector2(-65.0, 70.0)
+func _add_c1_backdrop(eye: Vector3) -> bool:
+	var look: Vector3 = _vista_target() - eye
+	look.y = 0.0
+	look = look.normalized()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var segs: int = 36
+	var y0: float = LAKE_Y + 20.0
+	var y1: float = y0 + 1100.0
+	for i: int in segs:
+		var quad: Array = []
+		for k: int in 2:
+			var t: float = float(i + k) / segs
+			var bearing: float = deg_to_rad(lerpf(C1_BACKDROP_ARC.x, C1_BACKDROP_ARC.y, t))
+			var d: Vector3 = look.rotated(Vector3.UP, -bearing)
+			quad.append([Vector3(eye.x, 0.0, eye.z) + d * C1_BACKDROP_R, t])
+		var corners: Array = [[Vector3(quad[0][0].x, y0, quad[0][0].z), Vector2(quad[0][1], 0)], [Vector3(quad[1][0].x, y0, quad[1][0].z), Vector2(quad[1][1], 0)],
+			[Vector3(quad[1][0].x, y1, quad[1][0].z), Vector2(quad[1][1], 1)], [Vector3(quad[0][0].x, y1, quad[0][0].z), Vector2(quad[0][1], 1)]]
+		for k: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(corners[k][1])
+			st.add_vertex(corners[k][0])
+	var material := ShaderMaterial.new()
+	material.shader = C1_BACKDROP_SHADER
+	material.set_shader_parameter("glow_u", (0.0 - C1_BACKDROP_ARC.x) / (C1_BACKDROP_ARC.y - C1_BACKDROP_ARC.x))
+	material.render_priority = -10
+	_geology_materials.append(material)
+	var node := MeshInstance3D.new()
+	node.name = "ConceptBackdrop"
+	node.mesh = st.commit()
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	return true
 
 ## Mist decks: near-horizontal layers over the basin floor (c1_mist_deck.gdshader fades them out for a camera near or
 ## below a deck, so the lake shore never sees a ceiling). [height above LAKE_Y, coverage, strength].
 const C1_MIST_DECK_SHADER := preload("res://assets/world/c1_mist_deck.gdshader")
 ## Capture c1v09: at +5 m the lowest deck sat too close to the water for the soft contact fade and the lake still read.
-const C1_DECKS: Array = [[10.0, 0.7, 0.85], [22.0, 0.5, 0.72], [38.0, 0.32, 0.55]]
+## V2 (ChatGPT checkpoint: fog read as one level layer; the concept layers it by depth and height): two sparse
+## decks higher up drape banks across the islands' middles.
+const C1_DECKS: Array = [[10.0, 0.7, 0.85], [22.0, 0.5, 0.72], [38.0, 0.32, 0.55], [62.0, 0.26, 0.5], [96.0, 0.18, 0.42]]
 func _add_c1_decks(eye: Vector3) -> int:
 	var look: Vector3 = _vista_target() - eye
 	look.y = 0.0
@@ -4308,7 +4381,7 @@ func _add_c1_decks(eye: Vector3) -> int:
 		material.set_shader_parameter("deck_y", y)
 		material.set_shader_parameter("coverage", float(spec[1]))
 		material.set_shader_parameter("strength", float(spec[2]))
-		material.set_shader_parameter("day_tint", Color("b4b4e0"))
+		material.set_shader_parameter("day_tint", Color("a8a8dc"))
 		material.render_priority = 1 + n
 		_geology_materials.append(material)
 		var node := MeshInstance3D.new()
@@ -4353,10 +4426,23 @@ func _add_c1_mist(eye: Vector3) -> Dictionary:
 				st.set_uv(corners[k][1])
 				st.add_vertex(corners[k][0])
 			n += 1
-	# banks round each island's foot, so the pillars rise out of mist (concept-1)
+	# banks round each island's foot, so the pillars rise out of mist (concept-1), and (V2, capture c1v15: the mesas
+	# stood clear of one low layer) a bank part-way up in front of each, so the islands rise out of mist at varied levels
 	for ib: Array in _c1_bases:
 		var c: Vector2 = ib[0]
 		var w: float = float(ib[1])
+		var mid: float = float(ib[2])
+		var facem: Vector2 = Vector2(eye.x - c.x, eye.z - c.y).normalized()
+		var alongm := Vector2(-facem.y, facem.x)
+		var cm: Vector2 = c + facem * (w * 0.55 + 15.0)
+		var am: Vector2 = cm - alongm * w * 0.9
+		var bm: Vector2 = cm + alongm * w * 0.9
+		var hm: float = rng.randf_range(30.0, 50.0)
+		var cornersm: Array = [[Vector3(am.x, mid, am.y), Vector2(0, 0)], [Vector3(bm.x, mid, bm.y), Vector2(1, 0)], [Vector3(bm.x, mid + hm, bm.y), Vector2(1, 1)], [Vector3(am.x, mid + hm, am.y), Vector2(0, 1)]]
+		for k: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(cornersm[k][1])
+			st.add_vertex(cornersm[k][0])
+		n += 1
 		var face: Vector2 = Vector2(eye.x - c.x, eye.z - c.y).normalized()
 		for j: int in 3:
 			var along := Vector2(-face.y, face.x).rotated(rng.randf_range(-0.25, 0.25))
@@ -6875,7 +6961,7 @@ const SOFT_BOUNCE := 0.3
 ## variant B (frame distance to concept-1 35.0 -> 34.0, top band 39.7 -> 38.2).
 const C1_LOOK := {"day_sky_top": "4c56a8", "day_sky_horizon": "f0b898", "day_fog": "7c80b8", "day_ambient": "8a88c0", "day_sun": "ffb8a0",
 	"day_lake_horizon": "b0a8d0", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "f0c0c8",
-	"cloud_glow_color": "f0a080", "glow_color": "f08868", "mist_warm": "e0c0d8", "grade_sat": 0.85, "sun_energy": 1.05, "fog_density": 1.0,
+	"cloud_glow_color": "f0a080", "glow_color": "f08868", "mist_warm": "c8c0e8", "grade_sat": 0.85, "sun_energy": 1.05, "fog_density": 1.0,
 	"far_fog": 0.8, "ambient_energy": 0.32,
 	# c1v09 variant F3: a pale rose fill and a greyer ambient (the lavender fill turned grey rock indigo), a warmer key.
 	"fill_color": "c8b4b8", "fill_energy": 0.25, "hemi_color": "a8a0c8",
@@ -7140,6 +7226,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 			prop.set_shader_parameter("desat", lerpf(float(look_override.get("hero_lily_desat", LEDGE_HERO_LILY_DESAT)) if pale else 0.0, 0.9, night))
 			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
+	for light: OmniLight3D in _c1_lights: light.light_energy = lerpf(C1_LIGHT_ENERGY.x, C1_LIGHT_ENERGY.y, maxf(night, rain * 0.6))
 	# Blender models: window glass, gills and lanterns brighter at night and in rain.
 	for glow_m: StandardMaterial3D in _blender_glow:
 		if glow_m.has_meta("day_fill"):

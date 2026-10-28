@@ -11,8 +11,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 import mushlib as L
 from mathutils import Vector, noise
 
-out_dir, out_png = sys.argv[sys.argv.index("--") + 1:][:2]
-os.makedirs(out_dir, exist_ok=True)
+if "--" in sys.argv:
+    out_dir, out_png = sys.argv[sys.argv.index("--") + 1:][:2]
+    os.makedirs(out_dir, exist_ok=True)
 
 def srgb(h):
     h = h.lstrip("#"); return tuple(int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
@@ -354,16 +355,17 @@ def bridge_piece():
         spire(M, Vector((x, 0, DECK)), 14.0, int(x) + 500)
     flush("bridge")
 
-island_piece("pillar", 22.0, 20.0, 100.0, 34, 7, 1, 2, 11)
-island_piece("island", 100.0, 40.0, 60.0, 70, 22, 3, 3, 23)
-spire_piece()
-bridge_piece()
+if __name__ == "__main__" and os.path.basename(sys.argv[sys.argv.index("-P") + 1]) == "valley.py":
+    island_piece("pillar", 22.0, 20.0, 100.0, 34, 7, 1, 2, 11)
+    island_piece("island", 100.0, 40.0, 60.0, 70, 22, 3, 3, 23)
+    spire_piece()
+    bridge_piece()
 
-# contact render of the kit
-L.reset()
-for i, name in enumerate(("pillar", "island", "bridge", "spire")):
-    bpy.ops.import_scene.gltf(filepath=os.path.join(out_dir, name + ".glb"))
-    for ob in bpy.context.selected_objects:
-        ob.location.x += (-260, -80, 180, 400)[i]
-files = L.sheet_render(out_png, 820.0, center=(60, 0, 60), views=[("front", (0, -900, 0), (90, 0, 0)), ("hero", (-400, -700, 300), None)])
-print("RENDERS", files)
+    # contact render of the kit
+    L.reset()
+    for i, name in enumerate(("pillar", "island", "bridge", "spire")):
+        bpy.ops.import_scene.gltf(filepath=os.path.join(out_dir, name + ".glb"))
+        for ob in bpy.context.selected_objects:
+            ob.location.x += (-260, -80, 180, 400)[i]
+    files = L.sheet_render(out_png, 820.0, center=(60, 0, 60), views=[("front", (0, -900, 0), (90, 0, 0)), ("hero", (-400, -700, 300), None)])
+    print("RENDERS", files)
