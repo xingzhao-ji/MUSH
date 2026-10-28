@@ -2309,11 +2309,20 @@ func _refuge_material(source: Material) -> Material:
 const CROWN_SHADE := Vector3(0.5, 1.0, 0.7)
 const CROWN_POCKETS := 0.45
 ## Per channel: a flat 1.5 gave the vista tree box L*37.7, chroma 33.5, hue 111 (goal 41.3, 27.3, 102),
-## capture 001303; warmer and less saturated here.
-const CROWN_GAIN := Vector3(1.55, 1.45, 1.25)
+## capture 001303. 1.55/1.45/1.25 under the day grade: L*35.4, too green (review 21: L*40-44 wanted,
+## warmer hue). 2.3/2.0/1.4: L*47.1, chroma 41; 2.05/1.8/1.3: L*43.0, chroma 37 (goal 27), capture
+## 005730; 2.0/1.78/1.6: L*42.3, chroma 36.5 (capture 010151); more blue again to hold the chroma down.
+const CROWN_GAIN := Vector3(1.85, 1.72, 1.85)
 ## Tree-leaf self-fill (previous 0.12 for all leaves and bark): it does not take the vertex shading,
 ## so it set the crown floor at L*~30 (tree box p5 33.5 with the shading, goal 18, capture 000859).
 const CROWN_FILL := 0.05
+## Rain lift and night fill / rim for crowns (review 21: rain tree box L*20.9, want >= 28; night L*3.6,
+## want 7-10 with a lit edge). 0.1 / 0.05 overshot: rain L*44.3, night a flat grey-green L*18.1 (capture
+## 005730).
+const CROWN_RAIN_FILL := 0.04
+const CROWN_NIGHT_FILL := 0.015
+const CROWN_NIGHT_FILL_COLOR := Color(0.45, 0.52, 0.8)
+const CROWN_NIGHT_RIM := 0.6
 func _crown_shaded(mesh: Mesh) -> Mesh:
 	var src := mesh as ArrayMesh
 	if src == null: return mesh
@@ -2936,7 +2945,18 @@ const LEDGE_LEAVES := 80
 const LEDGE_BLOOMS := 26
 ## Luminous image-to-3D lilies in the bank, small and spread out (six at 1.6-2.8 m clumped into one lavender
 ## mass, capture 233955).
-const LEDGE_LILIES := 3
+const LEDGE_LILIES := 1
+## Review 21: the goal's two pale glowing lilies at (0,540,160,640) and (330,640,420,720) are the brightest
+## things in its lower frame; ours were small blue-violet blooms sunk in the bank (blocks dE 39-49).
+## [centre px x, top px y, base px y]; the first sits left of the cottage door. Pale by day (desat, tint,
+## a pale self-light). Top 560 made the left one a 2.45 m bloom cluster over the cottage door (capture
+## 005730), so it is smaller and the right one larger.
+const LEDGE_HERO_LILIES: Array = [[42.0, 590.0, 672.0], [380.0, 600.0, 735.0]]
+const LEDGE_HERO_LILY_TINT := Vector3(1.08, 1.08, 1.16)
+## Desat 0.6 / glow 0.35 clipped the petals to white (6% of each lily box above L*92, goal 1-3%; the goal's
+## lilies are blue-white, hue ~220-250, saturation ~0.35), capture 010151.
+const LEDGE_HERO_LILY_DESAT := 0.4
+const LEDGE_HERO_LILY_GLOW := 0.18
 ## The giant lily grove and giant framing leaves the ledge replaces (previous: 8 and 8).
 const VISTA_GIANT_LILIES := 1
 const VISTA_FRAMING_LEAVES := 0
@@ -3011,6 +3031,10 @@ func _ledge_mesh(eye: Vector3, look_h: Vector3, bearing: Vector2, noise: FastNoi
 	_static.append(node)
 	return grid
 
+## Hero lily yaws: fixed, so the bloom faces stay turned toward the eye's side.
+func _hero_lily_yaw(i: int) -> float:
+	return [0.6, 2.3][i % 2]
+
 func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: Dictionary, noise: FastNoiseLite, grid: Array, nb: int, nr: int) -> void:
 	var prng := RandomNumberGenerator.new()
 	prng.seed = 20261030
@@ -3023,6 +3047,31 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 	var lily_spots: Array = []
 	var screen_lo: Vector2 = Vector2(INF, INF)
 	var screen_hi: Vector2 = Vector2(-INF, -INF)
+	# Two pale hero lilies where the goal has its brightest blooms (review 21), found first so the bank's
+	# leaves keep out of their way: [centre px x, top px y, base px y]. Own generator (bank seeds unchanged).
+	var hero: Array = []
+	if ResourceLoader.exists(FLOWER_MODEL):
+		var hrng := RandomNumberGenerator.new()
+		hrng.seed = 20261034
+		for spec: Array in LEDGE_HERO_LILIES:
+			var best: Vector3 = Vector3.INF
+			var best_d: float = INF
+			for k: int in 3000:
+				var b: float = hrng.randf_range(LEDGE_BEARING.x + 1.0, LEDGE_BEARING.y - 1.0)
+				var r: float = hrng.randf_range(LEDGE_RANGE.x + 1.0, _ledge_outer(b, noise) - 1.0)
+				var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+				p.y = _ledge_height(eye, look_h, b, r, noise)
+				var s: Vector2 = _vista_screen(eye, p)
+				var d: float = Vector2((s.x + 1.0) * 640.0, (1.0 - s.y) * 360.0).distance_to(Vector2(float(spec[0]), float(spec[2])))
+				if d < best_d:
+					best_d = d
+					best = p
+			if best == Vector3.INF: continue
+			var h: float = 0.6
+			while h < 3.2 and (1.0 - _vista_screen(eye, best + Vector3(0, h, 0)).y) * 360.0 > float(spec[1]): h += 0.05
+			var half: float = 0.45 * (float(spec[2]) - float(spec[1]))
+			hero.append([best, h, Rect2(float(spec[0]) - half, float(spec[1]), half * 2.0, float(spec[2]) - float(spec[1]))])
+			lily_spots.append(best)
 	for i: int in 900:
 		if leaf_n >= LEDGE_LEAVES and bloom_n >= LEDGE_BLOOMS: break
 		var b: float = prng.randf_range(LEDGE_BEARING.x + 2.0, LEDGE_BEARING.y - 2.0)
@@ -3041,11 +3090,25 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))
 		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
 		if px.x < 230.0 and px.y < 590.0: continue
+		# Nothing in front of a hero lily: skip a plant nearer the eye whose top lands in its screen box.
+		var blocks: bool = false
+		for hl: Array in hero:
+			if (hl[2] as Rect2).grow(12.0).has_point(px) and p.distance_to(eye) < (hl[0] as Vector3).distance_to(eye) + 0.5: blocks = true
+		if blocks: continue
 		_refuge_put(batches, path, p - Vector3(0, 0.08, 0), s, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
 		if bloom: bloom_n += 1
 		else: leaf_n += 1
 		screen_lo = screen_lo.min(px)
 		screen_hi = screen_hi.max(px)
+	var hero_px: Array = []
+	for hl: Array in hero:
+		if _refuge_model(FLOWER_MODEL, (hl[0] as Vector3) - Vector3(0, 0.05, 0), _hero_lily_yaw(hero_px.size()), float(hl[1]), "LedgeHeroLily%d" % hero_px.size(), true):
+			var hp: ShaderMaterial = _refuge_props[_refuge_props.size() - 1]
+			hp.set_meta("pale", true)
+			hp.set_shader_parameter("base_tint", LEDGE_HERO_LILY_TINT)
+			var r2: Rect2 = hl[2]
+			hero_px.append([roundi(r2.get_center().x), roundi(r2.position.y), roundi(r2.end.y), snappedf(float(hl[1]), 0.05), roundi((hl[0] as Vector3).distance_to(eye))])
+	counts["ledge_hero_lilies_px_top_base_h_m"] = hero_px
 	# A few small luminous lilies among them, so the foreground keeps a soft glow at night.
 	if ResourceLoader.exists(FLOWER_MODEL):
 		for i: int in 200:
@@ -3096,8 +3159,9 @@ func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts
 	var crng := RandomNumberGenerator.new()
 	crng.seed = 20261033
 	# Broad leaves and flowering bushes; wispy grass read as near-black spikes against the water (corner box
-	# L*32.7 against the goal's 38.6, capture 003321).
-	var plants: Array = [QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf", QN + "Plant_7_Big.gltf", QN + "Grass_Common_Tall.gltf", QN + "Flower_4_Group.gltf", QN + "Bush_Common.gltf", QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf"]
+	# L*32.7 against the goal's 38.6, capture 003321), and tall common grass left black blade cards (review
+	# 21: 9.8% of the box below L*12).
+	var plants: Array = [QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf", QN + "Plant_7_Big.gltf", QN + "Plant_1_Big.gltf", QN + "Flower_4_Group.gltf", QN + "Bush_Common.gltf", QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf"]
 	var cat_xf: Array[Transform3D] = []
 	var plant_n: int = 0
 	var lo := Vector2(INF, INF)
@@ -5880,10 +5944,13 @@ const HERO_RAIN_LIFT := 0.85
 const LEDGE_FILL := 0.6
 ## Shelf-top grass and risers (far_terrain ledge_grass / ledge_desat / ledge_fleck / ledge_riser_dim;
 ## previous 2.7/2.75/2.15, 0.55, 0.2, 0.62).
+## Review 21: the step tops still read as flat lime plates with hard dark fronts: less saturated tops
+## (0.2 -> 0.35; it also greys the face grass, which the goal keeps fairly rich) and lighter fronts
+## (0.8 -> 0.9).
 const LEDGE_GRASS := Vector3(2.1, 2.15, 0.75)
-const LEDGE_DESAT := 0.2
+const LEDGE_DESAT := 0.35
 const LEDGE_FLECK := 0.5
-const LEDGE_RISER_DIM := 0.8
+const LEDGE_RISER_DIM := 0.9
 ## Warm tan risers (goal riser L*46, hue 68; ours read grey-violet).
 const LEDGE_RISER_TINT := Vector3(1.15, 0.97, 0.8)
 ## Lake shore (far_terrain shore_wet: wet band height m, gravel strip strength; previous 0.5 / 0.9).
@@ -6171,7 +6238,18 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	var cg: Array = look_override.get("crown_gain", [CROWN_GAIN.x, CROWN_GAIN.y, CROWN_GAIN.z])
 	var crown_gain := Color(float(cg[0]), float(cg[1]), float(cg[2]))
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint * (crown_gain if m.has_meta("crown") else Color.WHITE)
-	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = (float(look_override.get("crown_fill", CROWN_FILL)) if leaf_fill.has_meta("crown") else float(leaf_fill.get_meta("fill", 0.12))) * (1.0 - night) * (1.0 - 0.5 * rain)
+	for leaf_fill: StandardMaterial3D in _refuge_fill:
+		if not leaf_fill.has_meta("crown"):
+			leaf_fill.emission_energy_multiplier = float(leaf_fill.get_meta("fill", 0.12)) * (1.0 - night) * (1.0 - 0.5 * rain)
+			continue
+		# Crowns (review 21): a rain lift, and at night a faint cool fill plus a moonlit rim so the canopy is
+		# not a formless black cut-out (night tree box L*3.6, rain 20.9).
+		var day_fill: float = float(look_override.get("crown_fill", CROWN_FILL)) + float(look_override.get("crown_rain_fill", CROWN_RAIN_FILL)) * rain
+		leaf_fill.emission_energy_multiplier = lerpf(day_fill, float(look_override.get("crown_night_fill", CROWN_NIGHT_FILL)), night)
+		leaf_fill.emission = Color(0.62, 0.6, 0.52).lerp(CROWN_NIGHT_FILL_COLOR, night)
+		leaf_fill.rim_enabled = true
+		leaf_fill.rim = float(look_override.get("crown_night_rim", CROWN_NIGHT_RIM)) * night
+		leaf_fill.rim_tint = 0.3
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
 	for petal: ShaderMaterial in _refuge_petals:
 		# Lower day value and rim: the desaturated sheet rendered near white under the golden key (review 15:
@@ -6189,8 +6267,10 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		prop.set_shader_parameter("tint", Vector3(pt.r, pt.g, pt.b))
 		prop.set_shader_parameter("glow", lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
 		if prop.get_meta("luminous", false):
-			prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.48, night))
-			prop.set_shader_parameter("desat", 0.9 * night)
+			var pale: bool = prop.get_meta("pale", false)
+			prop.set_shader_parameter("cool_glow", lerpf(0.55 if pale else 0.25, 0.48, night))
+			prop.set_shader_parameter("desat", lerpf(float(look_override.get("hero_lily_desat", LEDGE_HERO_LILY_DESAT)) if pale else 0.0, 0.9, night))
+			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 	# Shore reeds: the refuge's night/rain tint, a daylight self-fill and warm transmission (backlit by
 	# the golden key), both falling away at night.

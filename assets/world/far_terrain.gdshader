@@ -220,7 +220,8 @@ void fragment() {
 		fg *= (1.0 - ledge_riser) * (1.0 - clamp(COLOR.r, 0.0, 1.0));
 		// Slightly darker than the shelf tops (the slope turns from the sky), with mottled bare patches.
 		rockiness = mix(rockiness, rockiness * smoothstep(0.62, 0.8, mottle) * 0.6, fg);
-		moss = mix(moss, ledge_moss * 0.8, fg * (1.0 - ledge_top));
+		// Varied, not flat (review 21: an untextured olive wall): mottled lighter and darker swathes.
+		moss = mix(moss, ledge_moss * (0.55 + 0.5 * mottle + 0.25 * (fleck - 0.5)), fg * (1.0 - ledge_top));
 	}
 	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= mix(vec3(1.0), ledge_riser_tint * ledge_riser_dim, ledge_riser);

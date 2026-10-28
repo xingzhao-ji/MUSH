@@ -14,6 +14,9 @@ uniform float glow = 1.0;
 uniform float glow_floor = 0.6;
 // Cool glow (luminous petals and cores): bright texels with blue over red emit; 0 = off.
 uniform float cool_glow = 0.0;
+// Pale self-light over the whole bloom (hero lilies by day: the goal's lilies are the brightest, palest
+// things in the lower frame); 0 = off.
+uniform float pale_glow = 0.0;
 
 void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb;
@@ -30,4 +33,6 @@ void fragment() {
 	// Cores only: blue-white/cyan texels (green over red); lavender petals (red over green) stay lit material.
 	float cool = smoothstep(0.55, 0.85, c.b) * smoothstep(0.0, 0.08, c.g - c.r);
 	EMISSION += c * cool * cool_glow;
+	// Petals only (bright texels), lifted toward white so they read pale, not lavender.
+	EMISSION += mix(cc, vec3(1.0), 0.45) * smoothstep(0.3, 0.6, mx) * pale_glow * base_tint * tint;
 }
