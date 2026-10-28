@@ -46,6 +46,8 @@ uniform float soft_range = 900.0;
 // Tended ground (x, z, radius m, strength; strength 0 = off): moss instead of exposed rock inside the
 // disc, e.g. the vista refuge's terrace (review 10: it read as grey gravel).
 uniform vec4 garden_disc = vec4(0.0);
+// Skylight on the tended ground (0 = off): the hero's far bank faces away from the low back sun.
+uniform float garden_fill = 0.0;
 // Skylight on escarpment shelf tops (0 = off).
 uniform float ledge_fill = 0.0;
 // Shelf-top grass: gain on the (partly desaturated) moss mean, how much it is desaturated, fleck
@@ -200,8 +202,9 @@ void fragment() {
 	float covered = (1.0 - exposure) * smoothstep(0.38, 0.62, mottle + (fleck - 0.5) * 0.35 - dry + 0.12);
 	float rugged = max(smoothstep(0.12, 0.30, steep), smoothstep(30.0, 120.0, h) * smoothstep(450.0, 700.0, length(v_world.xz)));
 	float rockiness = 1.0 - mix(1.0 - smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18), covered, rugged);
+	float g = 0.0;
 	if (garden_disc.w > 0.0) {
-		float g = garden_disc.w * smoothstep(garden_disc.z, garden_disc.z * 0.55, length(v_world.xz - garden_disc.xy));
+		g = garden_disc.w * smoothstep(garden_disc.z, garden_disc.z * 0.55, length(v_world.xz - garden_disc.xy));
 		rockiness *= 1.0 - g;
 		// The near moss detail reads as grey grit up close; tended ground leans to a soft lit lawn.
 		moss = mix(moss, moss_mean * vec3(1.25, 1.3, 0.92) * (0.9 + 0.2 * fleck), g * 0.8);
@@ -271,6 +274,7 @@ void fragment() {
 		// Shelf tops catch open skylight the low back sun never gives them (review 14: tops sat at or
 		// below their risers, L*31 vs 32).
 		EMISSION += albedo * ledge_top * ledge_fill * (1.0 - night) * (1.0 - 0.5 * rain);
+		EMISSION += albedo * garden_fill * g * (1.0 - wet) * (1.0 - night) * (1.0 - 0.5 * rain);
 		if (near_fill_disc.w > 0.0) EMISSION += albedo * near_fill_disc.w * smoothstep(near_fill_disc.z, near_fill_disc.z * 0.4, length(v_world.xz - near_fill_disc.xy)) * (1.0 - night) * (1.0 - 0.5 * rain);
 	}
 	ROUGHNESS = mix(mix(0.95, 0.82, rockiness), 0.55, wet_margin * (1.0 - rockiness));

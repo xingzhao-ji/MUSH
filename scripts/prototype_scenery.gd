@@ -158,7 +158,10 @@ var _refuge_foot: float = 6.5
 const COTTAGE_MODEL := "res://assets/world/models/tripo/mush_cottage.glb"
 ## Cottage rebuilt in Blender from a ChatGPT modeling sheet (MUSH-exchange/blender/scripts/cottage.py);
 ## "" falls back to the image-to-3D model above.
-const COTTAGE_BLENDER := "res://assets/world/models/blender/cottage.glb"
+## V2 (cottage2.py, ChatGPT sheet mush-sheet-cottage-02; V1 read as a tall round yurt under a huge purple dome):
+## the goal's wide, low timber cottage under a lumpy dusky-mauve cap with pale spots, a mushroom chimney cap, a
+## canvas awning frame with a hanging lantern, a plank deck with railings and corner lantern posts.
+const COTTAGE_BLENDER := "res://assets/world/models/blender/cottage2.glb"
 const LANTERN_MODEL := "res://assets/world/models/tripo/lantern_post.glb"
 const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const CATTAIL_MODEL := "res://assets/world/models/tripo/cattails.glb"
@@ -2504,7 +2507,7 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 		var xf: Transform3D = root * (parts[i][1] as Transform3D)
 		# cap_xf (world space) moves only the cap parts (giant cap, spots, gills, ribs, drips).
 		if cap_xf != Transform3D.IDENTITY and mesh.get_surface_count() > 0 and mesh.surface_get_material(0) != null:
-			if mesh.surface_get_material(0).resource_name.to_lower() in ["cap", "spot_nightglow", "gill", "gill_rib", "drip"]: xf = cap_xf * xf
+			if mesh.surface_get_material(0).resource_name.to_lower() in ["cap", "spot_nightglow", "gill", "gill_rib", "drip", "gill_frill"]: xf = cap_xf * xf
 		var node := _refuge_mesh(mesh, null, xf, "%s_%d" % [label, i])
 		for si: int in mesh.get_surface_count():
 			var src := mesh.surface_get_material(si) as StandardMaterial3D
@@ -2520,7 +2523,7 @@ func _blender_mat(src: StandardMaterial3D, tint: Color = Color.WHITE, fills: Dic
 	# stem its flute shading (giant2.py v8); the import left them unused, so the plants rendered white (capture
 	# pr49). Meshes without colours read white vertex colour, so other "stem" materials are unchanged.
 	var src_name: String = src.resource_name.to_lower()
-	if src_name.begins_with("hero_") or src_name == "stem": m.vertex_color_use_as_albedo = true
+	if src_name.begins_with("hero_") or src_name in ["stem", "gill_frill"]: m.vertex_color_use_as_albedo = true
 	# At full night glow the cup and lilies flattened into uniform pale discs (capture pr51).
 	if src_name.begins_with("hero_"): m.set_meta("night_scale", 0.35)
 	m.set_meta("day_tint", src.albedo_color * tint)
@@ -2619,6 +2622,7 @@ func _shore_put(file: String, xf: Transform3D) -> void:
 ## straight, skirt an angular collar): domed cap with a rim curling under the gills, flowing skirt, a stem
 ## tapering from a wide rooted base. Its rim's lowest point is at 1.125 R like V1.
 const GIANT_BLENDER := "res://assets/world/models/blender/giant2.glb"
+const GIANT_HERO_BLENDER := "res://assets/world/models/blender/giant2_hero.glb"
 const GIANT_MODEL_R := 7.0
 const GIANT_MODEL_UNDERSIDE := 7.875
 ## The giants' camera-facing sides are shadow sides under the golden back light, lit only by the lavender
@@ -2643,19 +2647,22 @@ const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
 ## a thin one: tipped 4 degrees away from the eye instead, so more of the underside shows.
 ## Review 23: -4 pushed the cap up into the top-right sky (blocks (1200,80) 8->22, (1200,240) 3->16): -1.5.
 ## Review 24: the cap's right edge still ~12 px high at -1.5: -0.5.
-const GIANT_HERO_TILT_DEG := -0.5
+## Hero V3 (giant2_hero.glb, a gill frill under the rim): the goal shows the hero cap's spotted top over a broad
+## gill band, which a level cap seen from below cannot; tipped toward the eye the top shows and the frill's near
+## side carries the gill band (capture pr43 tipped 12 degrees without the frill: top but no gills).
+const GIANT_HERO_TILT_DEG := 12.0
 ## Review 24: at night the gill band (L*59) outshone the caps (L*35): giant gills glow at this share of the
 ## night level.
 const GIANT_GILL_NIGHT_SCALE := 0.55
 ## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
 ## ChatGPT checkpoint 3 asked for a rounder dome (+20%); 1.35 tall pushed the dome off the frame's top right
 ## (capture pr41: cell (1120-1280, 120-240) dE 22.9 -> 28.1): kept at 1.1.
-const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
-const GIANT_HERO_HEIGHT_SCALE := 0.81
+const GIANT_HERO_CAP_SCALE := Vector3(0.74, 0.85, 0.74)
+const GIANT_HERO_HEIGHT_SCALE := 0.95
 ## ChatGPT checkpoint 3 / capture pr35: the hero stem and skirt read as a wide draped trunk (~200 px against
 ## the goal's ~110 px slender stem): stem and skirt this much across, the cap kept at full width.
 const GIANT_HERO_STEM_XZ := 0.68
-const GIANT_HERO_TILT_LEFT := 0.0
+const GIANT_HERO_TILT_LEFT := 0.7
 ## Cap tops rendered dark violet (pr06 dome #8a70b0, goal #b89cc8): beyond what an albedo can lift, so a warm
 ## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
 ## Pink-beige at 0.35 washed every cap near white with the spots lost (capture pr07): a lavender fill at 0.12.
@@ -2700,14 +2707,15 @@ func _add_blender_giants() -> void:
 			var d: Vector3 = (to_eye + screen_left * GIANT_HERO_TILT_LEFT).normalized()
 			var pivot := Vector3(x, ground + GIANT_MODEL_PIVOT * s.y, z)
 			cap_xf = Transform3D(Basis(Vector3.UP.cross(d).normalized(), deg_to_rad(GIANT_HERO_TILT_DEG)) * Basis.from_scale(GIANT_HERO_CAP_SCALE * Vector3(cap_xz, 1.0, cap_xz)), pivot) * Transform3D(Basis.IDENTITY, -pivot)
-		_blender_place(GIANT_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant%d" % placed, GIANT_SHADE_COMP, cap_xf, GIANT_FILLS)
+		var model: String = GIANT_HERO_BLENDER if placed == 0 and ResourceLoader.exists(GIANT_HERO_BLENDER) else GIANT_BLENDER
+		_blender_place(model, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant%d" % placed, GIANT_SHADE_COMP, cap_xf, GIANT_FILLS)
 		if placed == 0: hero_ground = ground
 		placed += 1
 	for node: Node in _nodes:
 		if String(node.name) in ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"]: (node as Node3D).visible = false
-	for part: Array in _model_parts(GIANT_BLENDER):
+	for part: Array in _model_parts(GIANT_BLENDER) + (_model_parts(GIANT_HERO_BLENDER) if ResourceLoader.exists(GIANT_HERO_BLENDER) else []):
 		var gsrc := (part[0] as Mesh).surface_get_material(0) as StandardMaterial3D
-		if gsrc != null and gsrc.resource_name.to_lower() in ["gill", "gill_rib"] and _blender_mat_cache.has(gsrc):
+		if gsrc != null and gsrc.resource_name.to_lower() in ["gill", "gill_rib", "gill_frill"] and _blender_mat_cache.has(gsrc):
 			(_blender_mat_cache[gsrc] as StandardMaterial3D).set_meta("night_scale", GIANT_GILL_NIGHT_SCALE)
 	giant_blender_report = {"placed": placed, "model": GIANT_BLENDER.get_file(), "hidden": ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"],
 		"hero_ground": snappedf(hero_ground, 0.1), "hero_tilt_deg": GIANT_HERO_TILT_DEG}
@@ -2741,7 +2749,11 @@ const PROM_SCALE := Vector3(2.6, 1.5, 2.6)
 const PROM_TINT := Color(0.82, 0.82, 0.78)
 ## 16 m read 180 x 122 px at 96 m (capture pr01; goal cottage 247 x 140 px with its porch posts).
 ## 18.5 m still read small (Gemini on pr13: scale the cottage ~1.25x; goal 247 x 140 px).
-const PROM_COTTAGE_HEIGHT := 21.0
+## Cottage V2 is wider and lower (11.2 m deck and awning, 8.3 m to the chimney cap): 18.5 m tall keeps the goal's
+## ~250 px width.
+const PROM_COTTAGE_HEIGHT := 18.5
+## The goal sees the cottage three-quarter from its front-left (the awning side): turned this far (degrees).
+const COTTAGE_YAW_OFFSET := 18.0
 ## Lanterns along the stair rib, Blender (x, y, z) on its outer edge.
 ## V5: on the outer shoulder at 20, 50 and 80% of the stair.
 const PROM_STAIR_LANTERNS: Array = [[8.5, 2.9, 9.6], [9.8, -1.8, 6.1], [11.1, -4.6, 2.2]]
@@ -2846,7 +2858,7 @@ func _add_refuge_cottage() -> Dictionary:
 	var k_door: float = ch / COTTAGE_HEIGHT
 	var door: Vector3 = at + Vector3(sin(yaw), 0.0, cos(yaw)) * 3.6 * k_door + Vector3(0, 1.6 * k_door, 0)
 	_refuge_light(door + Vector3(sin(yaw), 0.0, cos(yaw)) * 1.2 * k_door, 10.0 * k_door, "RefugeDoorLight")
-	if COTTAGE_BLENDER != "" and ResourceLoader.exists(COTTAGE_BLENDER) and _blender_model(COTTAGE_BLENDER, at - Vector3(0, 0.3, 0), yaw, ch, "RefugeCottage"):
+	if COTTAGE_BLENDER != "" and ResourceLoader.exists(COTTAGE_BLENDER) and _blender_model(COTTAGE_BLENDER, at - Vector3(0, 0.3, 0), yaw + deg_to_rad(COTTAGE_YAW_OFFSET if _prom_active else 0.0), ch, "RefugeCottage"):
 		return {"cottage": COTTAGE_BLENDER.get_file(), "height_m": ch, "source": "ChatGPT sheet -> Blender", "on_promontory": _prom_active}
 	if ResourceLoader.exists(COTTAGE_MODEL) and _refuge_model(COTTAGE_MODEL, at - Vector3(0, 0.3, 0), yaw, COTTAGE_HEIGHT, "RefugeCottage"):
 		return {"cottage": COTTAGE_MODEL.get_file(), "height_m": COTTAGE_HEIGHT}
@@ -3644,6 +3656,50 @@ func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts
 		corners.append([roundi((s.x + 1.0) * 640.0), roundi((1.0 - s.y) * 360.0)])
 	counts["corner_bank"] = {"cattails": cat_xf.size(), "plants": plant_n, "shore_kit": shore_kit, "corners_px": corners, "plant_tops_px": [lo, hi]}
 
+## Hero's far bank lawn (on the promontory): [offset x, offset z from the hero's foot, radius m, strength] and the
+## skylight fill it gets.
+## Capture pr66 (fill 0.6): a flat lime lawn; the goal's bank is darker greens broken by round bushes.
+const HERO_LAWN: Array = [-40.0, 120.0, 330.0, 0.95]
+const HERO_LAWN_FILL := 0.3
+## Bush mounds on that bank: dark broad-leaf clumps (hero_broadleaf, vertex-coloured) 9-22 m across at 400-900 m
+## (~1 m a pixel), the shore kit's rush between them; own generator.
+const HERO_BANK_BUSHES := 80
+const HERO_BANK_TUFTS := 50
+func _add_hero_bank(eye: Vector3) -> Dictionary:
+	var hrng := RandomNumberGenerator.new()
+	hrng.seed = 20261039
+	var hero: Array = _giant_specs()[0]
+	var hc := Vector2(float(hero[0]), float(hero[1]))
+	var bush_path: String = HERO_DIR + "hero_broadleaf.glb"
+	if not ResourceLoader.exists(bush_path): return {}
+	var bbox: AABB = _model_box(bush_path)
+	var n_b: int = 0
+	var n_t: int = 0
+	for i: int in 2000:
+		if n_b >= HERO_BANK_BUSHES and n_t >= HERO_BANK_TUFTS: break
+		var hit: Vector3 = _vista_ray_ground(hrng.randf_range(0.15, 1.0), hrng.randf_range(-0.55, -0.12), 1400.0)
+		if hit == Vector3.INF or hit.y < LAKE_Y + 0.3: continue
+		var d: float = hit.distance_to(eye)
+		if d < 200.0 or d > 1000.0: continue
+		if _ribbon_gap(Vector2(hit.x, hit.z)) < 10.0: continue
+		if Vector2(hit.x, hit.z).distance_to(hc) < 0.16 * float(hero[2]): continue
+		var sp: Vector2 = _vista_screen(eye, hit)
+		var py: float = (1.0 - sp.y) * 360.0
+		if py < 455.0 or py > 600.0: continue
+		var k: float = d / 650.0
+		if n_b < HERO_BANK_BUSHES and (n_t >= HERO_BANK_TUFTS or hrng.randf() < 0.62):
+			var want: float = hrng.randf_range(9.0, 22.0) * k
+			var sc: float = want / maxf(maxf(bbox.size.x, bbox.size.z), 0.01)
+			var basis := Basis(Vector3.UP, hrng.randf() * TAU) * Basis.from_scale(Vector3(sc, sc * hrng.randf_range(0.8, 1.3), sc))
+			if not _flora_batches.has(bush_path): _flora_batches[bush_path] = []
+			_flora_batches[bush_path].append(Transform3D(basis, hit - Vector3(0, 0.8, 0) - basis * Vector3(0, bbox.position.y, 0)))
+			n_b += 1
+		elif _shore_ready():
+			_shore_put("shore_rush.glb", Transform3D(Basis(Vector3.UP, hrng.randf() * TAU).scaled(Vector3.ONE * hrng.randf_range(5.0, 9.0) * k), hit - Vector3(0, 0.4, 0)))
+			n_t += 1
+		else:
+			n_t += 1
+	return {"bushes": n_b, "tufts": n_t}
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
 	var eye: Vector3 = _vista_eye()
@@ -3697,6 +3753,12 @@ func _add_vista_refuge() -> void:
 	# On the promontory the garden disc fell on the old terrace in front of it as a bare lime lawn (probe28: rays at
 	# px (192,612) meet that terrace 59 m out at y 23): off there.
 	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.0 if on_prom else 0.92))
+	# With the promontory the disc moves to the hero's far bank instead (goal: a lit green bank with bushes round
+	# the hero's foot at (760-1280, 400-520); ours a dark bare olive band, capture pr65), with a skylight fill.
+	if on_prom:
+		var hero_g: Array = _giant_specs()[0]
+		_terrain_material.set_shader_parameter("garden_disc", Vector4(float(hero_g[0]) + HERO_LAWN[0], float(hero_g[1]) + HERO_LAWN[1], HERO_LAWN[2], HERO_LAWN[3]))
+		_terrain_material.set_shader_parameter("garden_fill", HERO_LAWN_FILL)
 	_terrain_material.set_shader_parameter("ledge_fill", LEDGE_FILL)
 	_terrain_material.set_shader_parameter("ledge_grass", LEDGE_GRASS)
 	_terrain_material.set_shader_parameter("ledge_desat", LEDGE_DESAT)
@@ -4040,6 +4102,7 @@ func _add_vista_refuge() -> void:
 		shore_n += 1
 	counts["far_shore_trees"] = shore_n
 	counts["far_shore_tree_px_py_m"] = far_tree_px
+	if on_prom: counts["hero_bank"] = _add_hero_bank(eye)
 	# Review 23: with the home on the promontory the terrace clusters no longer reach the slope below it, which
 	# read as a bare lime lawn at (100,560,470,640) (goal: dark leaves with lilies). Flora scattered on the
 	# rendered ground under that screen box.

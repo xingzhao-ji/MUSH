@@ -9,6 +9,9 @@ import mushlib as L
 from mathutils import Vector
 
 out_glb, out_png = sys.argv[sys.argv.index("--") + 1:][:2]
+# "hero" after the paths builds the vista hero variant (giant2_hero.glb): a glowing gill frill hanging from the
+# rim, so a cap tipped toward the eye shows the goal's spotted top over a band of gills.
+HERO = "hero" in sys.argv[sys.argv.index("--") + 1:]
 L.reset()
 rnd = random.Random(23)
 R = 7.0
@@ -142,6 +145,44 @@ for k, (r, adeg, s) in enumerate(spots):
         a_, b_ = 1 + i, 1 + (i + 1) % n
         faces.append((a_, a_ + n, b_ + n, b_))
     L.obj_from("spot%d" % k, verts, faces, M["spot"])
+
+# v9 hero variant (the goal paints the hero cap's spotted top AND a broad gill band under its near rim, which a
+# camera below the cap cannot see at once; tipping the cap toward the eye shows the top but hides the gills,
+# capture pr43): a gill frill hanging 0.18 R under the rim. On a cap tipped toward the eye its near side faces
+# the camera as a band of radiating gills under the dome. Vertex colours: darker under the cap, glowing at the
+# hem, radial gill stripes; material "gill_frill" (tips with the cap in Godot).
+if HERO:
+    fm = bpy.data.materials.new("gill_frill"); fm.use_nodes = True
+    _fn = fm.node_tree; _fb = _fn.nodes.get("Principled BSDF")
+    _fvc = _fn.nodes.new("ShaderNodeVertexColor"); _fvc.layer_name = "Col"
+    _fn.links.new(_fvc.outputs["Color"], _fb.inputs["Base Color"])
+    _fb.inputs["Roughness"].default_value = 0.7
+    # capture pr68: at 2.6 the band blew out to a flat pale yellow; 1.5 of a deeper orange keeps the stripes
+    _fb.inputs["Emission Color"].default_value = L.hexcol("#ec8530")
+    _fb.inputs["Emission Strength"].default_value = 1.5
+    fsegs, frows = 300, 6
+    fv, ff, fc = [], [], []
+    for j in range(fsegs):
+        th = 2 * math.pi * j / fsegs
+        stripe = (0.5 + 0.5 * math.cos(150 * th)) ** 2
+        for t_i in range(frows):
+            t = t_i / (frows - 1)
+            rr = (0.95 + 0.045 * t) * R
+            zz = (1.22 - 0.24 * t) * K * R + 0.025 * R * t * math.sin(32 * th)
+            fv.append((rr * math.cos(th), rr * math.sin(th), zz))
+            base = (0.78 + 0.2 * t, 0.42 + 0.3 * t, 0.12 + 0.16 * t)
+            dark = (0.5, 0.22, 0.06)
+            fc.append(tuple(base[k] + (dark[k] - base[k]) * 0.55 * stripe for k in range(3)))
+    for j in range(fsegs):
+        j2 = (j + 1) % fsegs
+        for t_i in range(frows - 1):
+            ff.append((j * frows + t_i, j2 * frows + t_i, j2 * frows + t_i + 1, j * frows + t_i + 1))
+    _fo = L.obj_from("gill_frill", fv, ff, fm)
+    _fcol = _fo.data.color_attributes.new(name="Col", type="BYTE_COLOR", domain="POINT")
+    for _i in range(len(fv)):
+        _fcol.data[_i].color_srgb = (min(1, fc[_i][0]), min(1, fc[_i][1]), min(1, fc[_i][2]), 1.0)
+    _fo.data.color_attributes.active_color = _fcol
+    _sol = _fo.modifiers.new("solid", "SOLIDIFY"); _sol.thickness = 0.06
 
 # luminous drips hanging from the curled rim
 for k in range(8):
