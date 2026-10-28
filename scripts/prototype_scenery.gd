@@ -2527,6 +2527,8 @@ func _add_vista_refuge() -> void:
 	var side: Vector3 = toward.cross(Vector3.UP).normalized()
 	refuge_home = home
 	refuge_facing = atan2(toward.x, toward.z)
+	var garden: Vector3 = home + toward * 14.0 + side * 2.0
+	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.92))
 	# Broadleaf trees behind and left of the cottage (goal: a lush tree wall up the frame's left edge).
 	var tree_n: int = 0
 	for i: int in 16:
@@ -2680,7 +2682,10 @@ func _add_vista_refuge() -> void:
 				var q: Vector3 = hit + Vector3(grng.randf_range(-6.0, 6.0), 0.0, grng.randf_range(-6.0, 6.0))
 				q.y = _mesh_ground(q.x, q.z)
 				if q.y < LAKE_Y - 1.0 or q.y > LAKE_Y + 2.0: continue
-				if _refuge_model(CATTAIL_MODEL, q - Vector3(0, 0.2, 0), grng.randf() * TAU, grng.randf_range(3.5, 5.5), "RefugeCattails%d" % reed_n): reed_n += 1
+				if _refuge_model(CATTAIL_MODEL, q - Vector3(0, 0.2, 0), grng.randf() * TAU, grng.randf_range(3.5, 5.5), "RefugeCattails%d" % reed_n):
+					reed_n += 1
+					# Brown cattail heads are not lamps: lift the warm-glow floor out of reach.
+					(_refuge_props[_refuge_props.size() - 1]).set_shader_parameter("glow_floor", 2.0)
 		counts["cattail_stands"] = stands
 		vista_refuge_report["cattail_spots_x_z_px_py_m"] = cattail_spots
 	counts["cattails"] = reed_n

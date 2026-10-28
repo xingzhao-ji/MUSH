@@ -43,6 +43,9 @@ uniform float wrap_light = 0.0;
 uniform vec3 hemi_sky = vec3(0.0);
 uniform vec3 hemi_ground = vec3(0.0);
 uniform float soft_range = 900.0;
+// Tended ground (x, z, radius m, strength; strength 0 = off): moss instead of exposed rock inside the
+// disc, e.g. the vista refuge's terrace (review 10: it read as grey gravel).
+uniform vec4 garden_disc = vec4(0.0);
 varying vec3 v_world;
 varying vec3 v_normal;
 
@@ -181,6 +184,12 @@ void fragment() {
 	float covered = (1.0 - exposure) * smoothstep(0.38, 0.62, mottle + (fleck - 0.5) * 0.35 - dry + 0.12);
 	float rugged = max(smoothstep(0.12, 0.30, steep), smoothstep(30.0, 120.0, h) * smoothstep(450.0, 700.0, length(v_world.xz)));
 	float rockiness = 1.0 - mix(1.0 - smoothstep(0.26, 0.46, steep + (macro - 0.5) * 0.18), covered, rugged);
+	if (garden_disc.w > 0.0) {
+		float g = garden_disc.w * smoothstep(garden_disc.z, garden_disc.z * 0.55, length(v_world.xz - garden_disc.xy));
+		rockiness *= 1.0 - g;
+		// The near moss detail reads as grey grit up close; tended ground leans to a soft lit lawn.
+		moss = mix(moss, moss_mean * vec3(1.25, 1.3, 0.92) * (0.9 + 0.2 * fleck), g * 0.8);
+	}
 	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= 0.88 + 0.24 * macro;
 	vec3 fill = vec3(0.0);
