@@ -5486,7 +5486,7 @@ const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
 ## variant Z8: magenta 11%, amber 45%, mid L*73.7 hue 18, zenith L*66.5, warm-lit 26.6%.
 ## (Pulling the glow edge toward grey instead of magenta, tried in the sky shader, left the upper sky a
 ## dull taupe: sweep 211758.)
-const GOLDEN_CLOUD_GLOW := 2.0
+const GOLDEN_CLOUD_GLOW := 3.2
 const GOLDEN_CLOUD_GLOW_POWER := 3.0
 const GOLDEN_CLOUD_GLOW_COLOR := "dc8636"
 const GOLDEN_HORIZON_GLOW := 4.5
@@ -5495,6 +5495,17 @@ const GOLDEN_HORIZON_GLOW_POWER := 3.0
 ## 0.5 -> 0.75 and ffb873 -> f08030 lift the vista lake ~8 L* with the sky hues unchanged (sweep 215354).
 const GOLDEN_REFLECT_FLOOR := 0.75
 const GOLDEN_DOME_COLOR := "f08030"
+## Sky zenith stop and glow-band cloud colour (drifting-clouds37; previous look: mix 0, tint 0.7, rim 0.45).
+## Review 17: the vista zenith read rose (hue 337-350, target 260-320) and the glow band whitened
+## (saturation 0.27-0.33, clipping at the hero-day far giant). A violet stop above the band, glow-band
+## clouds fully tinted and a fainter margin rim: sweeps 220537-220757, variant B6: zenith hue 280 L*56,
+## upper sky violet 20% / magenta 15% / amber 42%, glow box saturation 0.41 with no clipping.
+const GOLDEN_ZENITH_COLOR := "5a4aa0"
+const GOLDEN_ZENITH_MIX := 0.8
+const GOLDEN_ZENITH_LO := 0.40
+const GOLDEN_ZENITH_HI := 0.56
+const GOLDEN_CLOUD_TINT := 1.0
+const GOLDEN_CLOUD_RIM := 0.15
 const GOLDEN_GLOW_BAND := 8.0
 const GOLDEN_FAR_DOME := 0.5
 const GOLDEN_FAR_UNDER := 1.5
@@ -5663,6 +5674,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		sky.set_shader_parameter("horizon_glow", float(look_override.get("horizon_glow", GOLDEN_HORIZON_GLOW)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0)
 		sky.set_shader_parameter("horizon_glow_power", float(look_override.get("horizon_glow_power", GOLDEN_HORIZON_GLOW_POWER)))
 		sky.set_shader_parameter("glow_band", float(look_override.get("glow_band", GOLDEN_GLOW_BAND)) if look_depth else 0.0)
+		var zc: Color = Color(str(look_override.get("zenith_color", GOLDEN_ZENITH_COLOR)))
+		zc.a = float(look_override.get("zenith_mix", GOLDEN_ZENITH_MIX)) * (1.0 - night) * (1.0 - rain) if look_depth else 0.0
+		sky.set_shader_parameter("zenith_color", zc)
+		sky.set_shader_parameter("zenith_lo", float(look_override.get("zenith_lo", GOLDEN_ZENITH_LO)))
+		sky.set_shader_parameter("zenith_hi", float(look_override.get("zenith_hi", GOLDEN_ZENITH_HI)))
+		sky.set_shader_parameter("cloud_glow_tint", lerpf(0.7, float(look_override.get("cloud_tint", GOLDEN_CLOUD_TINT)), (1.0 - night) * (1.0 - rain)) if look_depth else 0.7)
+		sky.set_shader_parameter("cloud_rim", lerpf(0.45, float(look_override.get("cloud_rim", GOLDEN_CLOUD_RIM)), (1.0 - night) * (1.0 - rain)) if look_depth else 0.45)
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", sky_top_now)
 	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)
