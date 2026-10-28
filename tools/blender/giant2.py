@@ -13,11 +13,13 @@ L.reset()
 rnd = random.Random(23)
 R = 7.0
 
+# v7 (review 23: cap top violet h 323 C*28 vs the goal's mauve h 353 C*19; stem flat-shaded): pinker cap,
+# more and smaller spots, deeper flutes.
 # v3 (capture pr12 against the goal): stem and skirt back to the colours that rendered at the goal's stem
 # (pr08 stem 129,92,117 vs goal 124,92,120); gills darker and dimmer (pr12 237,173,95 vs 199,134,81).
 M = {
-    "cap": L.mat("cap", "#a888c8", 0.7),
-    "spot": L.mat("spot_nightglow", "#e4c8ec", 0.75, "#f2c6e6", 1.2),
+    "cap": L.mat("cap", "#b08cae", 0.7),
+    "spot": L.mat("spot_nightglow", "#e4c8ec", 0.75, "#d9b4ee", 0.35),
     "gill": L.mat("gill", "#d98a40", 0.7, "#f39a3d", 0.9),
     "rib": L.mat("gill_rib", "#c06e30", 0.7, "#e88a35", 0.6),
     "drip": L.mat("drip", "#fbd98a", 0.3, "#ffd47a", 3.0),
@@ -55,7 +57,7 @@ def stem_deform(x, y, z, th, i):
     k = 0.6 + 0.4 * lobe
     k = 1.0 + (k - 1.0) * base_w
     # v6: deeper flutes so the stem shades in vertical ridges (the goal's stem is fluted, ours read flat)
-    k *= 1.0 + 0.085 * math.cos(14 * th + 0.6 * zr * 10) * (1.0 - 0.5 * base_w)
+    k *= 1.0 + 0.13 * math.cos(14 * th + 0.6 * zr * 10) * (1.0 - 0.5 * base_w)
     lean = 0.05 * R * max(0.0, zr - 0.2) ** 1.5
     return x * k + lean, y * k, z
 L.lathe("stem", S(STEM), 96, M["stem"], deform=stem_deform)
@@ -99,9 +101,9 @@ def z_top(r):
         if r0 <= r <= r1: return z0 + (z1 - z0) * (r - r0) / (r1 - r0)
     return pts[-1][1] if r > pts[-1][0] else pts[0][1]
 spots = [(0.0, 0, 0.12)]
-for k in range(46):
+for k in range(72):
     rr = math.sqrt(rnd.uniform(0.02, 0.86))
-    spots.append((rr, rnd.uniform(0, 360), rnd.uniform(0.03, 0.075) * (1.45 if rr < 0.45 else 1.0)))
+    spots.append((rr, rnd.uniform(0, 360), rnd.uniform(0.022, 0.055) * (1.4 if rr < 0.45 else 1.0)))
 for k, (r, adeg, s) in enumerate(spots):
     r *= R; s *= R
     cx, cy = r * math.cos(math.radians(adeg)), r * math.sin(math.radians(adeg))

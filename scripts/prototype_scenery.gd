@@ -2523,6 +2523,11 @@ func _blender_mat(src: StandardMaterial3D, tint: Color = Color.WHITE, fills: Dic
 		m.emission_enabled = true
 		m.emission = f[0]
 		m.set_meta("day_fill", f[1])
+		m.set_meta("day_fill_col", f[0])
+		if f.size() >= 4:
+			m.set_meta("night_fill", f[3])
+			m.set_meta("night_fill_col", f[2])
+		if f.size() >= 5: m.set_meta("rain_fill", f[4])
 		_blender_glow.append(m)
 	elif m.emission_enabled:
 		m.set_meta("glow", m.emission_energy_multiplier)
@@ -2569,7 +2574,9 @@ func _flora_flush() -> void:
 			node.name = "Flora_%s_%d" % [path.get_file().get_basename(), nodes]
 			node.multimesh = multi
 			var src := mesh.surface_get_material(0) as StandardMaterial3D if mesh.get_surface_count() > 0 else null
-			if src != null: node.material_override = _blender_mat(src)
+			if src != null:
+				node.material_override = _blender_mat(src)
+				node.material_override.set_meta("flora", true)
 			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 			add_child(node)
@@ -2608,7 +2615,8 @@ const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
 ## a near-level cap, right edge y 135-215): tipped toward the eye only, 3 degrees, 1.25 tall.
 ## Milestone compare (pr20 vs goal): the goal shows a broad glowing gill band (y 195-265) under the dome, ours
 ## a thin one: tipped 4 degrees away from the eye instead, so more of the underside shows.
-const GIANT_HERO_TILT_DEG := -4.0
+## Review 23: -4 pushed the cap up into the top-right sky (blocks (1200,80) 8->22, (1200,240) 3->16): -1.5.
+const GIANT_HERO_TILT_DEG := -1.5
 ## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
 const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
 const GIANT_HERO_HEIGHT_SCALE := 0.81
@@ -2617,7 +2625,11 @@ const GIANT_HERO_TILT_LEFT := 0.0
 ## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
 ## Pink-beige at 0.35 washed every cap near white with the spots lost (capture pr07): a lavender fill at 0.12.
 ## 0.12 still read a little bright and thick (ChatGPT checkpoint 2): 0.07.
-const GIANT_FILLS := {"cap": [Color("c8a0c0"), 0.07]}
+## Review 23: at night the caps were navy discs (L*20) over black stems (L*5); the procedural caps glowed
+## lavender. [day colour, day energy, night colour, night energy]: a lavender night glow on the cap top
+## (target L*28-40, C*35-45, h 300-310) and a faint mauve fill on stem and skirt (target L* >= 14).
+## Fifth value: an extra fill in rain (review 23: rain caps L*44 vs ckpt38 68, stems 28 vs 43).
+const GIANT_FILLS := {"cap": [Color("d4a8b8"), 0.07, Color("8a68d8"), 0.35, 0.22], "stem": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1], "skirt": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1]}
 ## The hero's root flare stood clear of its sloping ground (ChatGPT checkpoint 2: the stem ends above the
 ## shoreline): sunk this far (m).
 const GIANT_HERO_SINK := 12.0
@@ -3218,6 +3230,9 @@ const LEDGE_BLOOMS := 26
 ## With the Blender flora: denser and smaller blooms (ChatGPT review: the foreground flowers too large and sparse).
 ## 110 left bright ledge ground showing between the clumps (capture pr16).
 const FLORA_LEDGE_LEAVES := 190
+const PROM_SLOPE_FLORA := 200
+const FLORA_LEDGE_BAND := 90
+const PROM_TERRACE_FLORA := 220
 const FLORA_LEDGE_BLOOMS := 44
 ## Luminous image-to-3D lilies in the bank, small and spread out (six at 1.6-2.8 m clumped into one lavender
 ## mass, capture 233955).
@@ -3373,11 +3388,14 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		var want: float = prng.randf_range(0.5, 0.9) if bloom else prng.randf_range(0.9, 1.8)
 		# ChatGPT checkpoint 2: blooms 25-35% smaller, more leaf cover.
 		if use_flora and bloom: want = prng.randf_range(0.5, 0.85)
+		# Review 23: the flora leaf clumps (wide and low) left the slope (100,560,470,640) a bare lime lawn.
+		if use_flora and not bloom: want = prng.randf_range(1.5, 2.8) * (0.62 if path == "flora_sword.glb" else 1.0)
 		var s: float = 1.0 if use_flora else want / _model_size(path)
-		# Keep tops under the cottage's foot (px y >= 590 for px x < 230), so the bank never covers the door.
+		# Keep tops under the cottage's foot (px y >= 590 for px x < 230), so the bank never covers the door; on the
+		# promontory the foot is at y ~490 (review 23: the old 590 line left the slope below it a bare lawn).
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))
 		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
-		if px.x < 230.0 and px.y < 590.0: continue
+		if px.x < 230.0 and px.y < (500.0 if _prom_active else 590.0): continue
 		# Nothing in front of a hero lily: skip a plant nearer the eye that stands in its screen columns and
 		# rises into its box (review 22: a top-in-box test let tall leaves stand in front).
 		var blocks: bool = false
@@ -3392,6 +3410,24 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		else: leaf_n += 1
 		screen_lo = screen_lo.min(px)
 		screen_hi = screen_hi.max(px)
+	# Review 23 / capture pr26: the ledge's far band (rays at y 600-640 meet it 13-15 m out) stayed a bare lime
+	# hump between the bank and the promontory: a band of leaf clumps with a few blooms along the outer edge.
+	if use_flora:
+		var band_n: int = 0
+		for i: int in 400:
+			if band_n >= FLORA_LEDGE_BAND: break
+			var b: float = prng.randf_range(LEDGE_BEARING.x + 2.0, LEDGE_BEARING.y - 8.0)
+			var outer: float = _ledge_outer(b, noise)
+			var r: float = prng.randf_range(outer - 3.2, outer - 0.4)
+			var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+			p.y = _ledge_height(eye, look_h, b, r, noise)
+			var bs: Vector2 = _vista_screen(eye, p)
+			if bs.x < -1.1 or bs.x > -0.2: continue
+			var bloom: bool = prng.randf() < 0.25
+			var f: String = FLORA_BLOOMS[prng.randi() % FLORA_BLOOMS.size()] if bloom else FLORA_LEAVES[prng.randi() % FLORA_LEAVES.size()]
+			_flora_put(f, p - Vector3(0, 0.06, 0), prng.randf_range(0.6, 0.95) if bloom else prng.randf_range(1.4, 2.4) * (0.62 if f == "flora_sword.glb" else 1.0), prng.randf() * TAU)
+			band_n += 1
+		counts["ledge_band_flora"] = band_n
 	var hero_px: Array = []
 	for hl: Array in hero:
 		if _refuge_model(FLOWER_MODEL, (hl[0] as Vector3) - Vector3(0, 0.05, 0), _hero_lily_yaw(hero_px.size()), float(hl[1]), "LedgeHeroLily%d" % hero_px.size(), true):
@@ -3413,7 +3449,7 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 			var h: float = prng.randf_range(1.1, 1.7)
 			var top: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
 			var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
-			if px.x < 230.0 and px.y < 590.0: continue
+			if px.x < 230.0 and px.y < (500.0 if _prom_active else 590.0): continue
 			if px.x < 0.0 or px.x > 420.0 or px.y > 700.0: continue
 			var crowded: bool = false
 			for q: Vector3 in lily_spots:
@@ -3534,7 +3570,9 @@ func _add_vista_refuge() -> void:
 		_add_promontory(home, refuge_facing, eye)
 		_refuge_foot = 6.5 * PROM_COTTAGE_HEIGHT / COTTAGE_HEIGHT
 	var garden: Vector3 = home + toward * 14.0 + side * 2.0
-	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.92))
+	# On the promontory the garden disc fell on the old terrace in front of it as a bare lime lawn (probe28: rays at
+	# px (192,612) meet that terrace 59 m out at y 23): off there.
+	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.0 if on_prom else 0.92))
 	_terrain_material.set_shader_parameter("ledge_fill", LEDGE_FILL)
 	_terrain_material.set_shader_parameter("ledge_grass", LEDGE_GRASS)
 	_terrain_material.set_shader_parameter("ledge_desat", LEDGE_DESAT)
@@ -3844,6 +3882,45 @@ func _add_vista_refuge() -> void:
 		shore_n += 1
 	counts["far_shore_trees"] = shore_n
 	counts["far_shore_tree_px_py_m"] = far_tree_px
+	# Review 23: with the home on the promontory the terrace clusters no longer reach the slope below it, which
+	# read as a bare lime lawn at (100,560,470,640) (goal: dark leaves with lilies). Flora scattered on the
+	# rendered ground under that screen box.
+	if on_prom and _flora_ready():
+		var srng := RandomNumberGenerator.new()
+		srng.seed = 20261035
+		var slope_n: int = 0
+		# The old terrace in front of the promontory (probe28: 50-70 m out at y ~23) is what showed as the lawn:
+		# flora on the rendered ground under that screen box.
+		var terrace_n: int = 0
+		for i: int in 900:
+			if terrace_n >= PROM_TERRACE_FLORA: break
+			var hit: Vector3 = _vista_ray_ground(srng.randf_range(-0.9, -0.25), srng.randf_range(-0.82, -0.5), 400.0)
+			if hit == Vector3.INF or hit.y < LAKE_Y + 0.6 or hit.distance_to(eye) > 140.0: continue
+			if _prom_tier_e(hit.x, hit.z, 0) < 1.15: continue
+			var tb: bool = srng.randf() < 0.22
+			var tf: String = FLORA_BLOOMS[srng.randi() % FLORA_BLOOMS.size()] if tb else FLORA_LEAVES[srng.randi() % FLORA_LEAVES.size()]
+			var tsize: float = (srng.randf_range(0.9, 1.4) if tb else srng.randf_range(2.0, 3.4) * (0.62 if tf == "flora_sword.glb" else 1.0)) * hit.distance_to(eye) / 70.0
+			_flora_put(tf, hit - Vector3(0, 0.1, 0), tsize, srng.randf() * TAU)
+			terrace_n += 1
+		counts["terrace_flora"] = terrace_n
+		# The promontory's lower tier top (capture pr23): plants on it too.
+		for i: int in 1200:
+			if slope_n >= PROM_SLOPE_FLORA: break
+			var t0: Array = PROM_TIERS[0]
+			var ang: float = srng.randf() * TAU
+			# Out to the rolled moss lip (capture pr25: the lip band at rr 0.85-1.05 stayed a bare lime band).
+			var rr: float = sqrt(srng.randf_range(0.2, 1.0))
+			var mpos := Vector3(float(t0[0]) + float(t0[2]) * rr * cos(ang), float(t0[4]) + 0.1 - 0.9 * maxf(0.0, rr - 0.9) * 10.0, -(float(t0[1]) + float(t0[3]) * rr * sin(ang)))
+			var hit: Vector3 = _prom_xf * mpos
+			if _prom_tier_e(hit.x, hit.z, 1) < 1.05: continue
+			var hs: Vector2 = _vista_screen(eye, hit)
+			if hs.x > -0.2: continue
+			var bloom: bool = srng.randf() < 0.22
+			var f: String = FLORA_BLOOMS[srng.randi() % FLORA_BLOOMS.size()] if bloom else FLORA_LEAVES[srng.randi() % FLORA_LEAVES.size()]
+			var size: float = (srng.randf_range(0.9, 1.5) if bloom else srng.randf_range(2.0, 3.4)) * hit.distance_to(eye) / 70.0
+			_flora_put(f, hit - Vector3(0, 0.1, 0), size, srng.randf() * TAU, Vector2(srng.randf_range(-0.08, 0.08), srng.randf_range(-0.08, 0.08)))
+			slope_n += 1
+		counts["slope_flora"] = slope_n
 	var ledges: Dictionary = _add_face_ledges(eye, batches)
 	var stats: Dictionary = _refuge_flush(batches)
 	_flora_flush()
@@ -6591,10 +6668,16 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# Blender models: window glass, gills and lanterns brighter at night and in rain.
 	for glow_m: StandardMaterial3D in _blender_glow:
 		if glow_m.has_meta("day_fill"):
-			# A daylight self-fill (giant cap tops), off at night, halved in rain.
-			glow_m.emission_energy_multiplier = float(glow_m.get_meta("day_fill")) * (1.0 - night) * (1.0 - 0.5 * rain)
+			# A self-fill (giant caps and stems): the day fill, halved in rain, turning into the night glow.
+			var day_e: float = float(glow_m.get_meta("day_fill")) * (1.0 - 0.5 * rain) + float(glow_m.get_meta("rain_fill", 0.0)) * rain
+			glow_m.emission_energy_multiplier = lerpf(day_e, float(glow_m.get_meta("night_fill", 0.0)), night)
+			glow_m.emission = (glow_m.get_meta("day_fill_col") as Color).lerp(glow_m.get_meta("night_fill_col", glow_m.get_meta("day_fill_col")) as Color, night)
 			continue
 		var day_k: float = 0.0 if glow_m.get_meta("night_only", false) else BLENDER_DAY_GLOW
+		if glow_m.get_meta("flora", false):
+			# Flora petals keep their day glow in rain (review 23: the blue stars glowed brighter in rain than by day).
+			glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, BLENDER_NIGHT_GLOW, night)
+			continue
 		glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, BLENDER_NIGHT_GLOW, maxf(night, rain * 0.5))
 	# Shore reeds: the refuge's night/rain tint, a daylight self-fill and warm transmission (backlit by
 	# the golden key), both falling away at night.

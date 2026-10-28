@@ -44,7 +44,7 @@ L.reset()
 rnd = random.Random(7)
 
 M = {
-    "moss": L.mat("moss_top", "#6f8f2c", 0.95),
+    "moss": L.mat("moss_top", "#6a8236", 0.95),
     "drape": L.mat("moss_drape", "#55741f", 0.95),
     "grass": L.mat("grass", "#6e8d30", 0.95),
     "stone": L.mat("stone", "#8e7f74", 0.9),
@@ -207,12 +207,14 @@ for i in range(1, len(path)):
     arc.append(arc[-1] + (path[i] - path[i - 1]).length)
 NSLAB = 17
 for k in range(NSLAB):
-    s = arc[-1] * (k + 0.5) / NSLAB
+    # v2 (review 23: a long evenly spaced ladder): jittered spacing, sideways offsets and turns
+    s = min(arc[-1] * (k + 0.5 + rnd.uniform(-0.3, 0.3)) / NSLAB, arc[-1] - 0.01)
     i = next(i for i in range(len(arc) - 1) if arc[i + 1] >= s)
     f = (s - arc[i]) / max(arc[i + 1] - arc[i], 1e-6)
     p = path[i].lerp(path[i + 1], f)
     q = path[i + 1] - path[i]
-    yaw = math.atan2(q.y, q.x)
+    yaw = math.atan2(q.y, q.x) + rnd.uniform(-0.3, 0.3)
+    p = p + Vector((-q.y, q.x, 0.0)).normalized() * rnd.uniform(-0.35, 0.35)
     pts = []
     for j in range(12):
         ph = 2 * math.pi * j / 12
@@ -222,7 +224,7 @@ for k in range(NSLAB):
         ex = abs(c) ** 0.6 * (1 if c >= 0 else -1)
         ey = abs(sn) ** 0.6 * (1 if sn >= 0 else -1)
         pts.append((rr * 0.52 * ex, rr * 0.82 * ey))
-    sw = rnd.uniform(1.25, 1.55)
+    sw = rnd.uniform(1.0, 1.75)
     verts = [(x * sw / 0.82 * 0.82, y * sw / 0.82, 0.0) for x, y in pts] + [(x * sw / 0.82 * 0.78, y * sw / 0.82 * 0.95, 0.34) for x, y in pts]
     faces = [tuple(range(12))[::-1], tuple(range(12, 24))]
     for j in range(12):
@@ -247,11 +249,23 @@ def bush(name, p, s, seed):
 nb = 0
 for ti, (t, out) in enumerate(zip(TIERS, outs)):
     cx, cy, rx, ry, zt, zb, k = t
-    for j in range(26 if ti == 0 else 18):
+    # v2 (review 23: a lime disc rimmed by identical bead shrubs): fewer shrubs in clusters of varied size
+    # (2:1 and more) with gaps, boulders breaking the rim, darker moss mottling on the top
+    for j in range(14 if ti == 0 else 10):
+        jj = rnd.randrange(N_OUT)
+        for m in range(rnd.choice([1, 1, 2, 3])):
+            x, y = out[(jj + m * 2) % N_OUT]
+            if stair_side(x, y): continue
+            bush("bush%d" % nb, (cx + (x - cx) * 0.96, cy + (y - cy) * 0.96, zt + 0.05), rnd.uniform(0.6, 1.9), 500 + nb * 7)
+            nb += 1
+    for j in range(7 if ti == 0 else 5):
         x, y = out[rnd.randrange(N_OUT)]
         if stair_side(x, y): continue
-        bush("bush%d" % nb, (cx + (x - cx) * 0.97, cy + (y - cy) * 0.97, zt + 0.05), rnd.uniform(0.9, 1.5), 500 + nb * 7)
-        nb += 1
+        sz = rnd.uniform(1.4, 2.4)
+        rock("rim%d_%d" % (ti, j), Vector((cx + (x - cx) * 0.99, cy + (y - cy) * 0.99, zt + 0.1)), (sz * 1.3, sz, sz * 0.8), M["stone"], yaw=rnd.uniform(0, 6.28), seed=9100 + ti * 50 + j)
+    for j in range(16 if ti == 0 else 12):
+        a = rnd.uniform(0, 2 * math.pi); r = math.sqrt(rnd.uniform(0.0, 0.85))
+        L.blob("mott%d_%d" % (ti, j), rnd.uniform(1.2, 2.6), (cx + rx * r * math.cos(a), cy + ry * r * math.sin(a), zt + 0.18), M["drape"], squash=(1.4, 1.0, 0.06), seed=9300 + ti * 50 + j)
 for i in range(3, len(path) - 2, 4):
     p = path[i]
     q = path[i + 1] - path[i - 1]

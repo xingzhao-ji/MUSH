@@ -46,6 +46,9 @@ def deform(x, y, z, th, i):
 
 L.lathe("cap_top", TOP, 64, M["cap"], close_top=True, deform=deform)
 L.lathe("cap_under", UNDER, 64, M["gill"], deform=deform)
+# v7 (review 23: the eave read as a plain brown dome; the goal shows a warm lit fringe under the brim): a thin
+# glowing gill fringe hanging just inside the rim lip, visible from the front
+L.lathe("gill_fringe", [(3.32, 2.70), (3.50, 2.76), (3.56, 2.86)], 64, M["gill"], deform=deform)
 
 def z_top(r):
     pts = sorted([(rr, zz) for rr, zz in TOP[4:]], key=lambda p: p[0])
@@ -186,16 +189,16 @@ for k, a in enumerate((-30, 30)):
     L.box("wall_post%d" % k, (0.18, 0.14, 2.6), pol(2.42, a, DECK_Z + 1.25), M["wood"], rot=(0, 0, math.radians(a)), bevel=0.02)
 
 # ---- chimney ---------------------------------------------------------------------------------------------
-ch = pol(1.75, 150, 0)
-for row in range(5):
+ch = pol(1.75, 205, 0)
+for row in range(7):
     for col in range(2):
         z = 3.75 + row * 0.38
         off = 0.16 if row % 2 else 0.0
         L.box("chim%d_%d" % (row, col), (0.34, 0.66, 0.36), (ch.x - 0.17 + col * 0.34 + (off - 0.08) * 0.3, ch.y, z),
               M["stone"] if (row + col) % 2 else M["stone_dark"], bevel=0.035)
-L.lathe("chim_cap", [(0.0, 5.62), (0.48, 5.62), (0.55, 5.70), (0.5, 5.84), (0.34, 5.98), (0.0, 6.06)], 24, M["cap"], close_top=True, close_bottom=True,
+L.lathe("chim_cap", [(0.0, 6.38), (0.48, 6.38), (0.55, 6.46), (0.5, 6.60), (0.34, 6.74), (0.0, 6.82)], 24, M["cap"], close_top=True, close_bottom=True,
         deform=lambda x, y, z, th, i: (x + ch.x, y + ch.y, z))
-L.lathe("chim_gill", [(0.0, 5.60), (0.47, 5.61)], 24, M["gill"], deform=lambda x, y, z, th, i: (x + ch.x, y + ch.y, z))
+L.lathe("chim_gill", [(0.0, 6.36), (0.47, 6.37)], 24, M["gill"], deform=lambda x, y, z, th, i: (x + ch.x, y + ch.y, z))
 
 # ---- lantern ---------------------------------------------------------------------------------------------
 lp = pol(3.55, -66, 2.05)
