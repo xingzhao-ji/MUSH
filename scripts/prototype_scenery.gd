@@ -2641,8 +2641,13 @@ const GIANT_HERO_TILT_DEG := -0.5
 ## night level.
 const GIANT_GILL_NIGHT_SCALE := 0.55
 ## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
+## ChatGPT checkpoint 3 asked for a rounder dome (+20%); 1.35 tall pushed the dome off the frame's top right
+## (capture pr41: cell (1120-1280, 120-240) dE 22.9 -> 28.1): kept at 1.1.
 const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
 const GIANT_HERO_HEIGHT_SCALE := 0.81
+## ChatGPT checkpoint 3 / capture pr35: the hero stem and skirt read as a wide draped trunk (~200 px against
+## the goal's ~110 px slender stem): stem and skirt this much across, the cap kept at full width.
+const GIANT_HERO_STEM_XZ := 0.68
 const GIANT_HERO_TILT_LEFT := 0.0
 ## Cap tops rendered dark violet (pr06 dome #8a70b0, goal #b89cc8): beyond what an albedo can lift, so a warm
 ## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
@@ -2671,7 +2676,12 @@ func _add_blender_giants() -> void:
 		var s := Vector3(r / GIANT_MODEL_R, h / GIANT_MODEL_UNDERSIDE, r / GIANT_MODEL_R)
 		var yaw: float = 0.9 + 1.7 * float(placed)
 		var cap_xf := Transform3D.IDENTITY
-		if placed == 0: s.y *= GIANT_HERO_HEIGHT_SCALE
+		var cap_xz: float = 1.0
+		if placed == 0:
+			s.y *= GIANT_HERO_HEIGHT_SCALE
+			s.x *= GIANT_HERO_STEM_XZ
+			s.z *= GIANT_HERO_STEM_XZ
+			cap_xz = 1.0 / GIANT_HERO_STEM_XZ
 		if placed == 0 and GIANT_HERO_TILT_DEG != 0.0:
 			# Hero cap tipped toward the vista and the frame's left about the stem top, as the procedural
 			# hero's bent stem did: the goal shows its dome over a thin band of gills (capture pr01: a level
@@ -2682,7 +2692,7 @@ func _add_blender_giants() -> void:
 			var screen_left: Vector3 = -look.cross(Vector3.UP).normalized()
 			var d: Vector3 = (to_eye + screen_left * GIANT_HERO_TILT_LEFT).normalized()
 			var pivot := Vector3(x, ground + GIANT_MODEL_PIVOT * s.y, z)
-			cap_xf = Transform3D(Basis(Vector3.UP.cross(d).normalized(), deg_to_rad(GIANT_HERO_TILT_DEG)) * Basis.from_scale(GIANT_HERO_CAP_SCALE), pivot) * Transform3D(Basis.IDENTITY, -pivot)
+			cap_xf = Transform3D(Basis(Vector3.UP.cross(d).normalized(), deg_to_rad(GIANT_HERO_TILT_DEG)) * Basis.from_scale(GIANT_HERO_CAP_SCALE * Vector3(cap_xz, 1.0, cap_xz)), pivot) * Transform3D(Basis.IDENTITY, -pivot)
 		_blender_place(GIANT_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant%d" % placed, GIANT_SHADE_COMP, cap_xf, GIANT_FILLS)
 		if placed == 0: hero_ground = ground
 		placed += 1
@@ -2712,7 +2722,10 @@ func _add_blender_giants() -> void:
 ## set in a boulder-lined grassy slope.
 ## V4 (promontory4.py; review 24: the stair still read as one long straight ladder): the same rock and moss
 ## build with the stair in three short flights and two flat landings where it turns.
-const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory4.glb"
+## V5 (promontory5.py, ChatGPT sheet mush-sheet-stair-04; checkpoint 3: V4 read as a constructed zigzag with
+## rectangular landings): ten large oval slabs on stepped treads in one continuous rounded grassy slope along
+## a short S-curve, mossy rocks where it steepens and at the foot.
+const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory5.glb"
 const PROM_SCREEN := Vector2(-0.68, -0.36)
 const PROM_DIST := 95.0
 ## V2 at 2.0 tall showed the top tier as a 15 m pale flat-lit rock face below the moss (capture pr12; the
@@ -2723,8 +2736,8 @@ const PROM_TINT := Color(0.82, 0.82, 0.78)
 ## 18.5 m still read small (Gemini on pr13: scale the cottage ~1.25x; goal 247 x 140 px).
 const PROM_COTTAGE_HEIGHT := 21.0
 ## Lanterns along the stair rib, Blender (x, y, z) on its outer edge.
-## V4: beside the two landings and the last flight.
-const PROM_STAIR_LANTERNS: Array = [[10.4, 2.6, 8.95], [7.2, -6.0, 5.7], [12.8, -6.5, 3.6]]
+## V5: on the outer shoulder at 20, 50 and 80% of the stair.
+const PROM_STAIR_LANTERNS: Array = [[8.5, 2.9, 9.6], [9.8, -1.8, 6.1], [11.1, -4.6, 2.2]]
 ## Blender tiers: [centre x, centre y (Blender y = -glTF z), radius x, radius y, top].
 const PROM_TIERS: Array = [[-1.0, -1.2, 10.5, 8.6, 6.0], [-1.6, 1.0, 7.6, 6.1, 11.7]]
 var _prom_xf := Transform3D.IDENTITY
