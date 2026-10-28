@@ -48,6 +48,16 @@ uniform float soft_range = 900.0;
 uniform vec4 garden_disc = vec4(0.0);
 // Skylight on escarpment shelf tops (0 = off).
 uniform float ledge_fill = 0.0;
+// Shelf-top grass: gain on the (partly desaturated) moss mean, how much it is desaturated, fleck
+// variation, and how far the rock risers are dimmed. Defaults keep the previous look.
+uniform vec3 ledge_grass = vec3(2.7, 2.75, 2.15);
+uniform float ledge_desat = 0.55;
+uniform float ledge_fleck = 0.2;
+uniform float ledge_riser_dim = 0.62;
+uniform vec3 ledge_riser_tint = vec3(1.0);
+// Grass over the steep face between the shelves (x, z, radius m, strength; 0 = off): the goal's hillside
+// below the cottage is grass with rock steps, not rock with grass trims.
+uniform vec4 face_grass_disc = vec4(0.0);
 // Skylight on the back-lit near slopes in front of a review camera (x, z, radius m, strength; 0 = off).
 uniform vec4 near_fill_disc = vec4(0.0);
 varying vec3 v_world;
@@ -201,9 +211,17 @@ void fragment() {
 	rockiness = mix(rockiness, 0.0, ledge_top);
 	rockiness = mix(rockiness, 1.0, ledge_riser);
 	// Light, sun-bleached grass on the shelf tops (review 14: tops sat darker than risers at sat 0.75).
-	moss = mix(moss, mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), 0.55) * vec3(2.7, 2.75, 2.15) * (0.9 + 0.2 * fleck), ledge_top);
+	vec3 ledge_moss = mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), ledge_desat) * ledge_grass * (1.0 - 0.5 * ledge_fleck + ledge_fleck * fleck);
+	moss = mix(moss, ledge_moss, ledge_top);
+	if (face_grass_disc.w > 0.0) {
+		float fg = face_grass_disc.w * smoothstep(face_grass_disc.z, face_grass_disc.z * 0.6, length(v_world.xz - face_grass_disc.xy));
+		fg *= (1.0 - ledge_riser) * (1.0 - clamp(COLOR.r, 0.0, 1.0));
+		// Slightly darker than the shelf tops (the slope turns from the sky), with mottled bare patches.
+		rockiness = mix(rockiness, rockiness * smoothstep(0.62, 0.8, mottle) * 0.6, fg);
+		moss = mix(moss, ledge_moss * 0.8, fg * (1.0 - ledge_top));
+	}
 	vec3 albedo = mix(moss, rock, rockiness);
-	albedo *= mix(1.0, 0.62, ledge_riser);
+	albedo *= mix(vec3(1.0), ledge_riser_tint * ledge_riser_dim, ledge_riser);
 	albedo *= 0.88 + 0.24 * macro;
 	vec3 fill = vec3(0.0);
 	float targeted = focus * rockiness;

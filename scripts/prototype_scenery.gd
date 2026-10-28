@@ -2529,7 +2529,20 @@ func _add_refuge_lanterns() -> int:
 ## The face is found in screen space: for each column the vista rays that land 150-340 m out on steep
 ## ground. Shelves follow the face at chosen heights: a lit moss top, a rock riser and an underside,
 ## from vertex colour. Visual only: no collision, no shadows.
-func _add_face_ledges(eye: Vector3) -> Dictionary:
+## Outcrop heights as fractions down the face (previous: six treads 0.05-0.9, 15 m wide, 5 m risers),
+## their mean width and riser depth (m), and the lip shrubs (share of lip points, size range m).
+## Seen ~20 degrees from above, a 7 m riser under a 13 m top read as a rock cliff with thin grass trims
+## (capture 235204); 18 m tops on 4.5 m risers over the bare rock face read as floating green pads
+## (capture 235440). Now grass over the face (FACE_GRASS) with five rounded, wandering rock steps; 0.9
+## left it a uniform green mass (grassy share 28%, chroma 38), 0.6 keeps rock mottling (33%, chroma 31;
+## goal 41%, 34), capture 235804.
+const FACE_OUTCROPS: Array = [0.06, 0.26, 0.46, 0.66, 0.86]
+const FACE_OUTCROP_WIDTH := 14.0
+const FACE_OUTCROP_DEPTH := 5.5
+const FACE_GRASS := 0.7
+const FACE_SHRUB_SHARE := 0.6
+const FACE_SHRUB_SIZE := Vector2(3.5, 6.0)
+func _add_face_ledges(eye: Vector3, batches: Dictionary) -> Dictionary:
 	var columns: Array = []
 	var top: float = -INF
 	var bottom: float = INF
@@ -2551,6 +2564,19 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 		columns.append(hits)
 		sx += 0.015
 	if top - bottom < 12.0: return {"built": false, "reason": "no face", "range_m": snappedf(top - bottom, 0.1)}
+	# Grass over the face itself, so the shelves are rock steps in a grassy hillside (goal) rather than
+	# grass trims on a rock wall: a disc over all face hits.
+	var centre := Vector2.ZERO
+	var hit_n: int = 0
+	for hits: Array in columns:
+		for h: Vector3 in hits:
+			centre += Vector2(h.x, h.z)
+			hit_n += 1
+	centre /= float(maxi(hit_n, 1))
+	var reach: float = 0.0
+	for hits: Array in columns:
+		for h: Vector3 in hits: reach = maxf(reach, centre.distance_to(Vector2(h.x, h.z)))
+	_terrain_material.set_shader_parameter("face_grass_disc", Vector4(centre.x, centre.y, reach + 12.0, FACE_GRASS))
 	var vertices := PackedVector3Array()
 	var colors := PackedColorArray()
 	var indices := PackedInt32Array()
@@ -2559,27 +2585,44 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 	noise.seed = 4711
 	noise.frequency = 0.08
 	var levels: Array = []
-	# Broad grassy terraces stepping down the face (goal: lush stepped ledges), rock bands between.
-	for f: float in [0.05, 0.22, 0.4, 0.58, 0.76, 0.9]: levels.append([top - (top - bottom) * f, 0, columns.size(), 15.0, 5.0])
+	# Grass-capped rock outcrops stepping down the face, rock between (consult fable-01 D: six equal
+	# parallel treads read as a rice paddy; the goal has a few rounded outcrops with shrubs on the lips).
+	for f: float in FACE_OUTCROPS: levels.append([top - (top - bottom) * f, 0, columns.size(), FACE_OUTCROP_WIDTH, FACE_OUTCROP_DEPTH])
 	# Steps: short shelves stacked 3.6 m apart, stepping one column right each, down from the top edge.
 	for i: int in 6: levels.append([top - 3.0 - 3.6 * float(i), 1 + i, 4 + i, 4.5, 3.4])
+	var lips: Array = []
 	for level: Array in levels:
 		var y: float = level[0]
 		var strip: Array = []
+		var broad: bool = int(level[1]) == 0
 		for c: int in range(int(level[1]), mini(int(level[2]), columns.size())):
 			var best: Vector3 = Vector3.INF
 			for h: Vector3 in columns[c]:
 				if absf(h.y - y) < 2.5 and (best == Vector3.INF or absf(h.y - y) < absf(best.y - y)): best = h
 			# Notches: the long ledges break where the noise dips, so the face keeps a ragged outline.
-			var notch: bool = int(level[1]) == 0 and best != Vector3.INF and noise.get_noise_2d(best.x * 0.6, best.z * 0.6) < -0.28
+			var notch: bool = broad and best != Vector3.INF and noise.get_noise_2d(best.x * 0.6, best.z * 0.6) < -0.28
 			if best == Vector3.INF or notch:
-				if strip.size() >= 2: _ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices); shelves += 1
+				if strip.size() >= 2: _ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices, lips if broad else []); shelves += 1
 				strip = []
 				continue
 			strip.append(best)
 		if strip.size() >= 2:
-			_ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices)
+			_ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices, lips if broad else [])
 			shelves += 1
+	# Shrubs along the outcrop lips (goal: rounded bushes softening each edge).
+	var shrubs: int = 0
+	var srng := RandomNumberGenerator.new()
+	srng.seed = 20261032
+	var shrub_paths: Array = [QN + "Bush_Common.gltf", QN + "Bush_Common.gltf", QN + "Bush_Common_Flowers.gltf", QN + "Fern_1.gltf"]
+	var last: Vector3 = Vector3.INF
+	for lip: Vector3 in lips:
+		if srng.randf() > FACE_SHRUB_SHARE: continue
+		if last != Vector3.INF and last.distance_to(lip) < 5.0: continue
+		var path: String = shrub_paths[srng.randi() % shrub_paths.size()]
+		var want: float = srng.randf_range(FACE_SHRUB_SIZE.x, FACE_SHRUB_SIZE.y)
+		_refuge_put(batches, path, lip - Vector3(0, 0.4, 0), want / _model_size(path), srng.randf() * TAU)
+		last = lip
+		shrubs += 1
 	if indices.is_empty(): return {"built": false, "reason": "no strips"}
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -2595,35 +2638,39 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 	# The world's own ground material: moss on the tops, triplanar granite on the risers (review 12:
 	# vertex-colour strips read as lime foam boards).
 	_refuge_mesh(mesh, _terrain_material, Transform3D.IDENTITY, "RefugeFaceLedges")
-	return {"built": true, "face_y": [snappedf(bottom, 0.1), snappedf(top, 0.1)], "shelves": shelves, "triangles": indices.size() / 3}
+	return {"built": true, "face_y": [snappedf(bottom, 0.1), snappedf(top, 0.1)], "shelves": shelves, "lip_shrubs": shrubs, "triangles": indices.size() / 3}
 
-func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite, vertices: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array) -> void:
+func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite, vertices: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array, lips: Array = []) -> void:
 	var base: int = vertices.size()
 	for i: int in strip.size():
 		var p: Vector3 = strip[i]
-		# Mottled moss tops and weathered rock risers (a flat colour read as white plastic strips).
-		var m: float = noise.get_noise_2d(p.x * 3.1, p.z * 3.1) * 0.5 + 0.5
-		var moss := Color(0.1, 0.17, 0.04).lerp(Color(0.17, 0.24, 0.06), m)
-		var rock := Color(0.17, 0.15, 0.14).lerp(Color(0.24, 0.21, 0.19), 1.0 - m)
-		var under := Color(0.12, 0.11, 0.11)
 		var gx: float = _mesh_ground(p.x + 1.0, p.z) - _mesh_ground(p.x - 1.0, p.z)
 		var gz: float = _mesh_ground(p.x, p.z + 1.0) - _mesh_ground(p.x, p.z - 1.0)
 		var out := Vector3(-gx, 0.0, -gz).normalized()
-		var w: float = width * (0.75 + 0.5 * (noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5))
-		var lift: float = 0.4
-		# Vertex colour is the terrain shader's riparian mask: keep it at zero.
-		# Colour r = 0 (no riparian), g = ledge part for the terrain shader: 1 top, 0.5 lip and riser.
+		# Wandering outline: the width swells and narrows over ~40 m and the lip rises and dips, so no two
+		# shelves run parallel (consult fable-01 D: straight treads).
+		var swell: float = noise.get_noise_2d(p.x * 0.3 + 40.0, p.z * 0.3) * 0.5 + 0.5
+		var w: float = width * (0.55 + 0.9 * swell) * (0.85 + 0.3 * (noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5))
+		var lift: float = 0.4 + noise.get_noise_2d(p.x * 0.5, p.z * 0.5 + 17.0) * 1.4
+		# Vertex colour is the terrain shader's riparian mask: keep r at zero.
+		# g = ledge part for the terrain shader: 1 top, 0.85 the rounded grass lip, 0.5 riser.
 		var top_c := Color(0, 1, 0)
+		var lip_c := Color(0, 0.85, 0)
 		var rise_c := Color(0, 0.5, 0)
+		# Domed top, a rounded grass lip rolling over, a bulging rock riser, then back under the face.
 		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(top_c)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(top_c)
-		vertices.append(p + out * (w + 0.6) + Vector3(0, lift - 1.2, 0)); colors.append(rise_c)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(rise_c)
+		vertices.append(p + out * w * 0.5 + Vector3(0, lift + 0.3 * swell, 0)); colors.append(top_c)
+		vertices.append(p + out * w * 0.9 + Vector3(0, lift - 0.3, 0)); colors.append(top_c)
+		vertices.append(p + out * (w + 0.6) + Vector3(0, lift - 1.0, 0)); colors.append(top_c)
+		vertices.append(p + out * (w + 0.8) + Vector3(0, lift - 2.0, 0)); colors.append(lip_c)
+		vertices.append(p + out * (w + 0.5) + Vector3(0, lift - 1.0 - depth * 0.6, 0)); colors.append(rise_c)
+		vertices.append(p + out * (w - 0.2) + Vector3(0, lift - depth, 0)); colors.append(rise_c)
 		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(rise_c)
+		lips.append(p + out * (w + 0.2) + Vector3(0, lift - 0.5, 0))
 	for i: int in strip.size() - 1:
-		var a: int = base + i * 5
-		var b: int = a + 5
-		for k: int in 4:
+		var a: int = base + i * 8
+		var b: int = a + 8
+		for k: int in 7:
 			indices.append(a + k); indices.append(b + k); indices.append(a + k + 1)
 			indices.append(a + k + 1); indices.append(b + k); indices.append(b + k + 1)
 
@@ -3008,6 +3055,11 @@ func _add_vista_refuge() -> void:
 	var garden: Vector3 = home + toward * 14.0 + side * 2.0
 	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.92))
 	_terrain_material.set_shader_parameter("ledge_fill", LEDGE_FILL)
+	_terrain_material.set_shader_parameter("ledge_grass", LEDGE_GRASS)
+	_terrain_material.set_shader_parameter("ledge_desat", LEDGE_DESAT)
+	_terrain_material.set_shader_parameter("ledge_fleck", LEDGE_FLECK)
+	_terrain_material.set_shader_parameter("ledge_riser_dim", LEDGE_RISER_DIM)
+	_terrain_material.set_shader_parameter("ledge_riser_tint", LEDGE_RISER_TINT)
 	# The slope between the eye and the terrace faces away from the low back sun (review 14: the
 	# vista's bottom-left quarter is ~35% below L*28 against ~27% in the goal).
 	var near: Vector3 = _vista_ray_ground(-0.25, -0.92, 300.0)
@@ -3298,8 +3350,8 @@ func _add_vista_refuge() -> void:
 		shore_n += 1
 	counts["far_shore_trees"] = shore_n
 	counts["far_shore_tree_px_py_m"] = far_tree_px
+	var ledges: Dictionary = _add_face_ledges(eye, batches)
 	var stats: Dictionary = _refuge_flush(batches)
-	var ledges: Dictionary = _add_face_ledges(eye)
 	var cottage: Dictionary = _add_refuge_cottage()
 	counts["lanterns"] = _add_refuge_lanterns()
 	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
@@ -5702,7 +5754,17 @@ const HERO_RAIN_GLOW_DROP := 0.15
 const HERO_RAIN_LIFT := 0.85
 ## Skylight on the escarpment shelf tops below the refuge (far_terrain ledge_fill). 0.9 left the tops
 ## +8.7 above their risers (review 16, target >= 10).
-const LEDGE_FILL := 1.2
+## Consult fable-01 D: shelf tops read chalky lime (L*56-59, chroma 31-33) against the goal's deep olive
+## (L*39-49, chroma 37-43): half the skylight, a more saturated, warmer grass, lighter risers.
+const LEDGE_FILL := 0.6
+## Shelf-top grass and risers (far_terrain ledge_grass / ledge_desat / ledge_fleck / ledge_riser_dim;
+## previous 2.7/2.75/2.15, 0.55, 0.2, 0.62).
+const LEDGE_GRASS := Vector3(2.1, 2.15, 0.75)
+const LEDGE_DESAT := 0.2
+const LEDGE_FLECK := 0.5
+const LEDGE_RISER_DIM := 0.8
+## Warm tan risers (goal riser L*46, hue 68; ours read grey-violet).
+const LEDGE_RISER_TINT := Vector3(1.15, 0.97, 0.8)
 const NEAR_FILL := 0.45
 ## Day sky endpoints before the warm gold pass; rain blends from these so the overcast is unchanged.
 const RAIN_SKY_TOP_BASE := Color("3a3c86")
@@ -5780,6 +5842,17 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		# Night keeps the previous golden stem tones (786978 / a88f8a); the day tones are lighter (consult fable-01).
 		stem_material.set_shader_parameter("stem_bark", Color(str(look_override.get("stem_bark", GOLDEN_STEM_BARK))).lerp(Color("786978"), night) if look_depth else Color(0.47, 0.41, 0.47))
 		stem_material.set_shader_parameter("stem_light", Color(str(look_override.get("stem_light", GOLDEN_STEM_LIGHT))).lerp(Color("a88f8a"), night) if look_depth else Color(0.66, 0.56, 0.54))
+	# Capture-only shelf exploration (keys ledge_fill, ledge_grass [r,g,b], ledge_desat, ledge_fleck, ledge_riser_dim).
+	if _terrain_material != null:
+		for key: String in ["ledge_fill", "ledge_desat", "ledge_fleck", "ledge_riser_dim"]:
+			if look_override.has(key): _terrain_material.set_shader_parameter(key, float(look_override[key]))
+		for key: String in ["ledge_grass", "ledge_riser_tint"]:
+			if look_override.has(key):
+				var lg: Array = look_override[key]
+				_terrain_material.set_shader_parameter(key, Vector3(float(lg[0]), float(lg[1]), float(lg[2])))
+		if look_override.has("face_grass"):
+			var fd: Vector4 = _terrain_material.get_shader_parameter("face_grass_disc")
+			_terrain_material.set_shader_parameter("face_grass_disc", Vector4(fd.x, fd.y, fd.z, float(look_override["face_grass"])))
 	if not look_override.is_empty():
 		day = day.duplicate()
 		for key: String in look_override:
