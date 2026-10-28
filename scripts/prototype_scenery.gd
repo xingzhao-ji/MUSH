@@ -2273,8 +2273,8 @@ func _refuge_material(source: Material) -> Material:
 		m.emission = Color(0.82, 0.6, 1.0)
 		# Rim light gives petals an edge falloff under the lanterns (review 13/14: flat cutouts at night).
 		m.rim_enabled = true
-		m.rim = 0.7
-		m.rim_tint = 0.4
+		m.rim = 0.3
+		m.rim_tint = 0.8
 		m.emission_texture = m.albedo_texture
 		m.emission_energy_multiplier = 0.08
 		_refuge_glow.append(m)
