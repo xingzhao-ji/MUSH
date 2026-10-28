@@ -139,6 +139,8 @@ const QV := "res://assets/world/models/quaternius_village/"
 var vista_refuge_report: Dictionary = {}
 var _model_cache: Dictionary = {}
 var _refuge_glow: Array[StandardMaterial3D] = []
+var _refuge_petals: Array[ShaderMaterial] = []
+const PETAL_SHADER := preload("res://assets/world/refuge_petal.gdshader")
 var _refuge_mats: Array[StandardMaterial3D] = []
 var _refuge_fill: Array[StandardMaterial3D] = []
 var _refuge_mat_cache: Dictionary = {}
@@ -219,7 +221,9 @@ const DAY_SUN := Color("ffc07e")
 ## lavender fog below the sky, a darker zenith, and the warm glow dome decoupled from the key (near
 ## the view axis), as the concepts do. Vista (L*): massif range 39 -> 53, far block 80 (above the
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
-const DEPTH_LOOK := {"sun": Color("ffcc94"), "ambient": Color("9e94e0"), "fog": Color("b8958c"), "sky_top": Color("3a3c86"), "sky_horizon": Color("c4a7bd"), "lake_horizon": Color("f0b890")}
+## 2026-10-27 (Gemini goal frame): warm gold sky. Previous: sun ffcc94, fog b8958c, sky_top 3a3c86, sky_horizon c4a7bd;
+## vista top-third hue 266 -> 30, warm-lit 10.7% -> 28% (goal 34.5%), highlight 2.7% -> 8.8% (goal 8.5%), sweep 200852.
+const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("504478"), "sky_horizon": Color("eaa87c"), "lake_horizon": Color("f0b890")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
@@ -2269,15 +2273,14 @@ func _refuge_material(source: Material) -> Material:
 		m.emission_energy_multiplier = 0.12
 		_refuge_fill.append(m)
 	elif "flower" in label:
-		m.emission_enabled = true
-		m.emission = Color(0.82, 0.6, 1.0)
-		# Rim light gives petals an edge falloff under the lanterns (review 13/14: flat cutouts at night).
-		m.rim_enabled = true
-		m.rim = 0.3
-		m.rim_tint = 0.8
-		m.emission_texture = m.albedo_texture
-		m.emission_energy_multiplier = 0.08
-		_refuge_glow.append(m)
+		# Petal shader: same sheet and tint, with a centre-out night glow (assets/world/refuge_petal.gdshader).
+		var petal := ShaderMaterial.new()
+		petal.shader = PETAL_SHADER
+		petal.set_shader_parameter("albedo_tex", m.albedo_texture)
+		petal.set_shader_parameter("alpha_cut", base.alpha_scissor_threshold if base.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR else 0.2)
+		petal.set_meta("day_tint", base.albedo_color * tint)
+		_refuge_petals.append(petal)
+		return petal
 	_refuge_mats.append(m)
 	return m
 
@@ -2617,6 +2620,53 @@ func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite
 			indices.append(a + k); indices.append(b + k); indices.append(a + k + 1)
 			indices.append(a + k + 1); indices.append(b + k); indices.append(b + k + 1)
 
+## A light cattail clump (unit height): five slender stalks with velvet brown heads and spikes, and
+## six tapering blades, in vertex colour. ~180 triangles, so the waterline band can carry hundreds.
+func _cattail_clump_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 731
+	var stalk_c := Color(0.36, 0.42, 0.2)
+	var head_c := Color(0.36, 0.25, 0.16)
+	var blade_c := Color(0.3, 0.4, 0.16)
+	var prism := func(a: Vector3, b: Vector3, r0: float, r1: float, c: Color) -> void:
+		for i: int in 5:
+			var a0: float = TAU * float(i) / 5.0
+			var a1: float = TAU * float(i + 1) / 5.0
+			var d0 := Vector3(cos(a0), 0.0, sin(a0))
+			var d1 := Vector3(cos(a1), 0.0, sin(a1))
+			for v: Vector3 in [a + d0 * r0, b + d0 * r1, a + d1 * r0, a + d1 * r0, b + d0 * r1, b + d1 * r1]:
+				st.set_color(c)
+				st.add_vertex(v)
+	for k: int in 5:
+		var base := Vector3(rng.randf_range(-0.12, 0.12), 0.0, rng.randf_range(-0.12, 0.12))
+		var h: float = rng.randf_range(0.78, 1.0)
+		var top: Vector3 = base + Vector3(rng.randf_range(-0.06, 0.06), h, rng.randf_range(-0.06, 0.06))
+		var head_lo: Vector3 = base.lerp(top, 0.7)
+		var head_hi: Vector3 = base.lerp(top, 0.9)
+		prism.call(base, head_lo, 0.009, 0.007, stalk_c)
+		prism.call(head_lo, head_hi, 0.03, 0.03, head_c)
+		prism.call(head_hi, top, 0.006, 0.002, stalk_c)
+	for k: int in 6:
+		var yaw: float = TAU * float(k) / 6.0 + rng.randf_range(-0.3, 0.3)
+		var out := Vector3(cos(yaw), 0.0, sin(yaw))
+		var side := Vector3(-out.z, 0.0, out.x)
+		var h: float = rng.randf_range(0.55, 0.85)
+		var lean: float = rng.randf_range(0.08, 0.22)
+		var rows: Array[Vector3] = []
+		for i: int in 4:
+			var t: float = float(i) / 3.0
+			rows.append(out * (0.04 + lean * t * t) + Vector3(0, h * t, 0))
+		for i: int in 3:
+			var w0: float = 0.022 * (1.0 - float(i) / 3.0)
+			var w1: float = 0.022 * (1.0 - float(i + 1) / 3.0)
+			for v: Vector3 in [rows[i] - side * w0, rows[i + 1] - side * w1, rows[i] + side * w0, rows[i] + side * w0, rows[i + 1] - side * w1, rows[i + 1] + side * w1]:
+				st.set_color(blade_c)
+				st.add_vertex(v)
+	st.generate_normals()
+	return st.commit()
+
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
 	var eye: Vector3 = _vista_eye()
@@ -2662,6 +2712,11 @@ func _add_vista_refuge() -> void:
 	refuge_facing = atan2(toward.x, toward.z)
 	var garden: Vector3 = home + toward * 14.0 + side * 2.0
 	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.92))
+	_terrain_material.set_shader_parameter("ledge_fill", LEDGE_FILL)
+	# The slope between the eye and the terrace faces away from the low back sun (review 14: the
+	# vista's bottom-left quarter is ~35% below L*28 against ~27% in the goal).
+	var near: Vector3 = _vista_ray_ground(-0.25, -0.92, 300.0)
+	if near != Vector3.INF: _terrain_material.set_shader_parameter("near_fill_disc", Vector4(near.x, near.z, 75.0, NEAR_FILL))
 	# Broadleaf trees behind and left of the cottage (goal: a lush tree wall up the frame's left edge).
 	var tree_n: int = 0
 	for i: int in 16:
@@ -2829,6 +2884,7 @@ func _add_vista_refuge() -> void:
 	var band_n: int = 0
 	var shore_cols: int = 0
 	var cattail_band: int = 0
+	var cattail_xf: Array[Transform3D] = []
 	var bx: float = -0.3
 	while bx <= 1.0:
 		var by: float = -0.42
@@ -2860,6 +2916,10 @@ func _add_vista_refuge() -> void:
 							q.y = _mesh_ground(q.x, q.z)
 							if q.y < LAKE_Y + 0.4: continue
 							# 2.3-6 m reed clumps; the near shore is 160-550 m out, so 10-30 px; dark olive.
+							if k == 0 and grng.randf() < 0.55:
+								# Cattail clumps among the reeds (review 14: >= 30% of clumps with heads).
+								cattail_xf.append(Transform3D(Basis(Vector3.UP, grng.randf() * TAU).scaled(Vector3.ONE * grng.randf_range(2.4, 4.0)), q - Vector3(0, 0.05, 0)))
+								continue
 							# Slender and tall (reeds, not lawn tufts): narrowed 0.55 across, stretched 1.5 up.
 							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if k % 2 == 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.2, 2.4) * (1.25 if k % 2 == 1 else 1.0), grng.randf() * TAU, Vector2.ZERO, Vector3(0.55, 1.5, 0.55))
 							band_n += 1
@@ -2867,7 +2927,28 @@ func _add_vista_refuge() -> void:
 			by -= 0.006
 		bx += 0.005
 	counts["shore_columns"] = shore_cols
-	counts["band_cattails"] = cattail_band
+	if not cattail_xf.is_empty():
+		var clump: ArrayMesh = _cattail_clump_mesh()
+		var cmat := StandardMaterial3D.new()
+		cmat.vertex_color_use_as_albedo = true
+		cmat.roughness = 1.0
+		cmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		cmat.set_meta("day_tint", Color.WHITE)
+		_refuge_mats.append(cmat)
+		clump.surface_set_material(0, cmat)
+		var cmm := MultiMesh.new()
+		cmm.transform_format = MultiMesh.TRANSFORM_3D
+		cmm.mesh = clump
+		cmm.instance_count = cattail_xf.size()
+		for i: int in cattail_xf.size(): cmm.set_instance_transform(i, cattail_xf[i])
+		var cnode := MultiMeshInstance3D.new()
+		cnode.name = "RefugeShoreCattails"
+		cnode.multimesh = cmm
+		cnode.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		cnode.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		add_child(cnode)
+		_nodes.append(cnode)
+	counts["band_cattails"] = cattail_xf.size()
 	# Tall cattails on the drop below the eye's right frame the lower-right corner, as the lilies frame
 	# the left (goal: cattails against the water at the lower right).
 	var corner_n: int = 0
@@ -5289,12 +5370,23 @@ const GOLDEN_CAP_GLOW := 1.0
 ## Bold gill plates on the lit cap undersides (Gemini goal frame: gold radial gills with dark gaps
 ## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
 const GOLDEN_GILL_BOLD := 1.0
+## Giant stem tones in the golden look (previous: bark 0.47/0.41/0.47, light 0.66/0.56/0.54, as the shader defaults).
+const GOLDEN_STEM_BARK := "786978"
+const GOLDEN_STEM_LIGHT := "a88f8a"
 ## Overcast lift on cap undersides in rain (review 10-12: far undersides sat ~20 below the rain sky).
 const RAIN_UNDER_LIFT := 0.3
-const GOLDEN_CLOUD_GLOW := 1.0
-const GOLDEN_CLOUD_GLOW_POWER := 4.0
-const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
-const GOLDEN_HORIZON_GLOW := 0.9
+## Share of the hero cap's day glow lost in full rain (far caps lose all of it).
+const HERO_RAIN_GLOW_DROP := 0.45
+## Skylight on the escarpment shelf tops below the refuge (far_terrain ledge_fill).
+const LEDGE_FILL := 0.9
+const NEAR_FILL := 0.45
+## Day sky endpoints before the warm gold pass; rain blends from these so the overcast is unchanged.
+const RAIN_SKY_TOP_BASE := Color("3a3c86")
+const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
+const GOLDEN_CLOUD_GLOW := 1.4
+const GOLDEN_CLOUD_GLOW_POWER := 2.5
+const GOLDEN_CLOUD_GLOW_COLOR := "ff9c4c"
+const GOLDEN_HORIZON_GLOW := 1.3
 const GOLDEN_HORIZON_GLOW_POWER := 16.0
 const GOLDEN_REFLECT_FLOOR := 0.5
 const GOLDEN_GLOW_BAND := 0.0
@@ -5320,6 +5412,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for pair: Array in _understory_sync:
 		(pair[1] as ShaderMaterial).set_shader_parameter("night_amount", (pair[0] as ShaderMaterial).get_shader_parameter("night_amount"))
 	var day: Dictionary = DEPTH_LOOK if look_depth else {"sun": DAY_SUN, "ambient": Color("d2d0ca"), "fog": Color("a2b3d4"), "sky_top": Color("41529f"), "sky_horizon": Color("f4c49a"), "lake_horizon": Color("f2b08e")}
+	# Capture-only palette exploration: look_override "day_<key>" replaces a day endpoint (hex string).
+	if look_depth:
+		for key: String in day.keys():
+			if look_override.has("day_" + key): day = day.merged({key: Color(str(look_override["day_" + key]))}, true)
+	if stem_material != null:
+		stem_material.set_shader_parameter("stem_bark", Color(str(look_override.get("stem_bark", GOLDEN_STEM_BARK))) if look_depth else Color(0.47, 0.41, 0.47))
+		stem_material.set_shader_parameter("stem_light", Color(str(look_override.get("stem_light", GOLDEN_STEM_LIGHT))) if look_depth else Color(0.66, 0.56, 0.54))
 	if not look_override.is_empty():
 		day = day.duplicate()
 		for key: String in look_override:
@@ -5360,6 +5459,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("day_glow", cap_day_glow)
 		material.set_shader_parameter("gill_bold", gill_bold)
 		material.set_shader_parameter("rain_lift", RAIN_UNDER_LIFT * rain if look_depth else 0.0)
+	# The hero cap is near enough to keep part of its gold under the overcast (review 13/14: the rain
+	# underside went cold lavender, hue ~300, saturation 0.13-0.16).
+	if cap_material != null and look_depth:
+		cap_material.set_shader_parameter("day_glow", float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - HERO_RAIN_GLOW_DROP * rain))
+		cap_material.set_shader_parameter("gill_bold", float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) * (1.0 - HERO_RAIN_GLOW_DROP * rain))
 	if cap_material != null and not cap_material in _art:
 		cap_material.set_shader_parameter("day_glow", cap_day_glow)
 		cap_material.set_shader_parameter("gill_bold", gill_bold)
@@ -5422,7 +5526,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# night and rain get their own amounts: 0.55 at night keeps the warm night glow seen before
 	# (0.88-0.95 of the plain fog colour in rain left dark mauve silhouettes, geology 143308).
 	# The engine's aerial perspective pulls far haze toward the sky colour; the cap follows it.
-	var horizon_now: Color = (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4)
+	# Rain overcast keeps the pre-gold sky endpoints (the warm day sky stayed pink in rain, capture 201101): the
+	# rain target is the previous day colour taken through night and the old rain blend.
+	var sky_top_now: Color = (day.sky_top as Color).lerp(Color("141a44"), night).lerp(RAIN_SKY_TOP_BASE.lerp(Color("141a44"), night).lerp(Color("5d5f86"), 0.4), rain)
+	var sky_horizon_now: Color = (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(RAIN_SKY_HORIZON_BASE.lerp(Color("3a3466"), night).lerp(Color("a79aa8"), 0.4), rain)
+	var horizon_now: Color = sky_horizon_now
 	# Rain: c9c0d8 at full strength made the left giant a flat cutout 13 above the overcast behind it
 	# (review 09); the sky there measures ~L*60, so rain blends toward 968eaa at 0.93 (0.85 left the underside 16 below the sky, geology 144833).
 	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("b4abc6"), rain).srgb_to_linear()
@@ -5433,8 +5541,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	if sky != null:
 		# Less pink: a bluer top and a golden (not peach-pink) horizon, so their blend
 		# reads violet-to-gold rather than one pink wash.
-		sky.set_shader_parameter("top_color", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
-		sky.set_shader_parameter("horizon_color", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+		sky.set_shader_parameter("top_color", sky_top_now)
+		sky.set_shader_parameter("horizon_color", sky_horizon_now)
 		# Gold cloud light toward the glow (review 06: the concepts' amber is mostly in the sky). Day,
 		# golden hour only.
 		var c_az: float = deg_to_rad(float(look_override.get("glow_az", GOLDEN_GLOW_AZ)))
@@ -5447,14 +5555,18 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		sky.set_shader_parameter("horizon_glow_power", float(look_override.get("horizon_glow_power", GOLDEN_HORIZON_GLOW_POWER)))
 		sky.set_shader_parameter("glow_band", float(look_override.get("glow_band", GOLDEN_GLOW_BAND)) if look_depth else 0.0)
 	# The lake's sky-gradient fallback follows the same sky colours.
-	_lake_material.set_shader_parameter("sky_top", (day.sky_top as Color).lerp(Color("141a44"), night).lerp(Color("5d5f86"), rain * 0.4))
-	_lake_material.set_shader_parameter("sky_horizon", (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4))
+	_lake_material.set_shader_parameter("sky_top", sky_top_now)
+	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)
 	# Vista refuge: flower petals and lanterns glow softly by day and carry the night.
 	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
-	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.16, night) * (1.0 - 0.4 * rain)
+	for petal: ShaderMaterial in _refuge_petals:
+		var pc: Color = (petal.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
+		petal.set_shader_parameter("tint", Vector3(pc.r, pc.g, pc.b))
+		petal.set_shader_parameter("day_glow", 0.08 * (1.0 - night) * (1.0 - 0.4 * rain))
+		petal.set_shader_parameter("night_glow", 0.95 * night * (1.0 - 0.3 * rain))
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
 	# Luminous lilies keep a lavender night tone (review 11: they went ultramarine, sat 0.67).
 	var lily_tint: Color = Color(1.12, 1.1, 1.1).lerp(Color(0.64, 0.44, 0.5), night).lerp(Color(0.62, 0.58, 0.64), rain * (1.0 - night))

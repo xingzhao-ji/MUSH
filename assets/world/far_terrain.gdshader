@@ -46,6 +46,10 @@ uniform float soft_range = 900.0;
 // Tended ground (x, z, radius m, strength; strength 0 = off): moss instead of exposed rock inside the
 // disc, e.g. the vista refuge's terrace (review 10: it read as grey gravel).
 uniform vec4 garden_disc = vec4(0.0);
+// Skylight on escarpment shelf tops (0 = off).
+uniform float ledge_fill = 0.0;
+// Skylight on the back-lit near slopes in front of a review camera (x, z, radius m, strength; 0 = off).
+uniform vec4 near_fill_disc = vec4(0.0);
 varying vec3 v_world;
 varying vec3 v_normal;
 
@@ -197,7 +201,7 @@ void fragment() {
 	rockiness = mix(rockiness, 0.0, ledge_top);
 	rockiness = mix(rockiness, 1.0, ledge_riser);
 	// Light, sun-bleached grass on the shelf tops (review 14: tops sat darker than risers at sat 0.75).
-	moss = mix(moss, mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), 0.45) * vec3(2.7, 2.75, 2.1) * (0.9 + 0.2 * fleck), ledge_top);
+	moss = mix(moss, mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), 0.55) * vec3(2.7, 2.75, 2.15) * (0.9 + 0.2 * fleck), ledge_top);
 	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= mix(1.0, 0.62, ledge_riser);
 	albedo *= 0.88 + 0.24 * macro;
@@ -240,6 +244,10 @@ void fragment() {
 	} else {
 		ALBEDO = albedo;
 		EMISSION = fill + soft_daylight(n, albedo, dist);
+		// Shelf tops catch open skylight the low back sun never gives them (review 14: tops sat at or
+		// below their risers, L*31 vs 32).
+		EMISSION += albedo * ledge_top * ledge_fill * (1.0 - night) * (1.0 - 0.5 * rain);
+		if (near_fill_disc.w > 0.0) EMISSION += albedo * near_fill_disc.w * smoothstep(near_fill_disc.z, near_fill_disc.z * 0.4, length(v_world.xz - near_fill_disc.xy)) * (1.0 - night) * (1.0 - 0.5 * rain);
 	}
 	ROUGHNESS = mix(mix(0.95, 0.82, rockiness), 0.55, wet_margin * (1.0 - rockiness));
 	SPECULAR = mix(0.12, 0.25, wet_margin * (1.0 - rockiness));

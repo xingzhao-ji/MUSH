@@ -18,6 +18,7 @@ uniform vec3 flesh : source_color = vec3(0.66, 0.50, 0.80);
 uniform vec3 flesh_rim : source_color = vec3(0.82, 0.68, 0.88);
 uniform vec3 gill : source_color = vec3(0.86, 0.70, 0.66);
 uniform vec3 stem_bark : source_color = vec3(0.47, 0.41, 0.47);
+uniform vec3 stem_light : source_color = vec3(0.66, 0.56, 0.54);
 // Mode 2 rock brightness (1.6 = the spires and rim boulders); the meadow erratics use less, and
 // moss_cover > 0 adds lichen-moss on their upper faces and a damp, darker foot.
 uniform float rock_gain = 1.6;
@@ -213,7 +214,7 @@ void fragment() {
 					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.85 * smoothstep(0.62, 1.0, t));
 					// Deep gaps, compact bright plates (review 11: striation 1.02 vs 1.5, 21% above L*80).
 					// Deeper amber on the crests (review 13: gill saturation 0.38 vs 0.45); less boost at the stem.
-					gold_grad *= mix(vec3(1.0), vec3(1.0, 0.8, 0.55) * 2.45 * pow(gb, 1.4), gk);
+					gold_grad *= mix(vec3(1.0), vec3(1.0, 0.8, 0.55) * 2.3 * pow(gb, 1.4), gk);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);
@@ -229,7 +230,7 @@ void fragment() {
 		float fibre = mix(0.5, fbm(vec2(UV.x * 26.0, UV.y * 1.2)), aa(UV.x * 26.0));
 		float grain = mix(0.5, fbm(vec2(UV.x * 70.0, UV.y * 5.0)), aa(UV.x * 70.0));
 		vec3 dark = stem_bark * 0.45;
-		vec3 light = vec3(0.66, 0.56, 0.54);
+		vec3 light = stem_light;
 		albedo = mix(dark, light, clamp(v_cavity * 0.7 + macro * 0.35 - 0.08, 0.0, 1.0));
 		albedo *= (0.9 + 0.14 * fibre) * (0.95 + 0.08 * grain);
 		albedo *= 0.68 + 0.36 * smoothstep(0.0, 0.5, UV.y);
