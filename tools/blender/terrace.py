@@ -14,7 +14,15 @@ sys.path.insert(0, os.path.dirname(__file__))
 import mushlib as L
 from mathutils import Vector, noise
 
-out_glb, out_png = sys.argv[sys.argv.index("--") + 1:][:2]
+_args = sys.argv[sys.argv.index("--") + 1:]
+out_glb, out_png = _args[:2]
+# "nohouse": the ground, path, fence, lanterns and beds only; the home, patio, mound and tree are replaced in Godot by
+# the Tripo Studio image-to-3D terrace (the user, 2026-10-28: the scripted models read generic).
+NOHOUSE = len(_args) > 2 and _args[2] in ("nohouse", "props")
+# "props" (also nohouse): the procedural lilies, dark blob bushes and decagon slabs leave too (capture s09: they read as
+# cotton balls, black boulders and brown tiles); Godot places Tripo lilies, shrubs and a rock outcrop instead, and the
+# path becomes many small sunk irregular stones.
+PROPS = len(_args) > 2 and _args[2] == "props"
 L.reset()
 rnd = random.Random(1040)
 
@@ -107,8 +115,20 @@ def bcyl(mat_, r, a, c, sides=6, col=None):
         k2 = (k + 1) % sides
         b[2].append((base + k, base + k2, base + sides + k2, base + sides + k))
 
+def house_zone(p):
+    """The home, patio, mound and ancient tree (dropped in the nohouse variant)."""
+    if poly_dist(p.x, p.y, PATIO_PTS) < 1.2: return True
+    if mound_h(p.x, p.y) is not None or ((Vector((p.x, p.y, 0)) - Vector((MOUND_C.x, MOUND_C.y, 0))).length < 12.0 and p.z > PATIO_Z - 0.5): return True
+    if (Vector((p.x, p.y, 0)) - Vector((TREE_BASE.x, TREE_BASE.y, 0))).length < 26.0 and p.z > 3.5: return True
+    if near_facade(p.x, p.y) and p.z > PATIO_Z - 1.5: return True
+    return False
+
 def flush_batches():
     for name, (mat_, v, f, c) in BATCH.items():
+        if NOHOUSE and v:
+            f = [fc for fc in f if not house_zone(sum((v[i] for i in fc), Vector()) / len(fc))]
+            used = sorted({i for fc in f for i in fc}); remap = {o: n for n, o in enumerate(used)}
+            v = [v[i] for i in used]; c = [c[i] for i in used]; f = [tuple(remap[i] for i in fc) for fc in f]
         if not v: continue
         ob = L.obj_from("batch_" + name, v, f, mat_)
         if name.startswith("hero_"):
@@ -208,6 +228,7 @@ MOUND_R = (10.5, 7.5)   # along the front, depth
 MOUND_TOP = 7.4   # v4 (ChatGPT checkpoint: the broad dark mound hid the glowing facade): lower
 
 def mound_h(x, y):
+    if NOHOUSE: return None   # the Tripo terrace brings its own mound
     d = Vector((x, y, 0.0)) - Vector((MOUND_C.x, MOUND_C.y, 0.0))
     a = d.dot(HOUSE_TANGENT) / MOUND_R[0]; b = d.dot(-HOUSE_NORMAL) / MOUND_R[1]
     r2 = a * a + b * b
@@ -226,7 +247,10 @@ def ground_h(x, y):
     # base: a gentle slope down toward the camera and the right edge, following the path's level
     base = pz + 0.5 * max(0.0, 3.0 - pd) * 0.0 + min(2.5, max(0.0, pd - 1.6) * 0.32)
     # rises behind toward the patio and the mound
-    if in_poly(x, y, PATIO_PTS) or poly_dist(x, y, PATIO_PTS) < 1.2:
+    if NOHOUSE and (poly_dist(x, y, PATIO_PTS) < 6.0 or (Vector((x, y, 0)) - Vector((MOUND_C.x, MOUND_C.y, 0))).length < 13.0):
+        # the Tripo home stands here on its own rock base: keep the ground well below its patio
+        base = min(base, PATIO_Z - 7.0)
+    elif in_poly(x, y, PATIO_PTS) or poly_dist(x, y, PATIO_PTS) < 1.2:
         base = PATIO_Z - 0.1
     else:
         dp = poly_dist(x, y, PATIO_PTS)
@@ -333,6 +357,9 @@ lip = [(600, 430, 0.0), (640, 480, -1.2), (690, 540, -2.2), (735, 590, -3.0), (8
 for k, (x, y, z) in enumerate(lip):
     p = px(x, y, z)
     s = rnd.uniform(1.6, 3.2)
+    if NOHOUSE:
+        if poly_dist(p.x, p.y, PATIO_PTS) < 8.0: continue   # (they floated over the lowered ground)
+        p.z = ground_h(p.x, p.y)
     rock("lip%d" % k, (p.x, p.y, p.z - s * 0.25), (s * 1.3, s * 1.1, s * 0.9), 300 + k)
 
 # ---- the house: curved timber front wall, round-arched window, arched door, beams, turf roof -------------------
@@ -541,7 +568,35 @@ for i in range(len(wall_line) - 1):
                     bblob(mm, 0.11 * (1.0 - 0.6 * t), (q.x + rnd.uniform(-0.05, 0.05), q.y, PATIO_Z - 0.1 - ln * t), squash=(1, 1, 1.3), sub=1, jitter=0.3)
 
 # ---- steps and flagstone path ----------------------------------------------------------------------------
+def pathstone(name, loc, size, seed):
+    r2 = random.Random(seed)
+    bm = bmesh.new()
+    for _ in range(12):
+        th = r2.uniform(0, 2 * math.pi); rr = r2.uniform(0.75, 1.0)
+        for zz in (-0.5, 0.5):
+            bm.verts.new((rr * math.cos(th) * size[0] * 0.5, rr * math.sin(th) * size[1] * 0.5, zz * size[2] * (0.6 if zz < 0 else 1.0)))
+    bmesh.ops.convex_hull(bm, input=bm.verts[:])
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(ob)
+    ob.data.materials.append(M["flag"])
+    ob.location = loc; ob.rotation_euler = (0.0, 0.0, r2.uniform(0, 6.28))
+    tone = r2.uniform(0.0, 1.0)
+    moss = 0.5 if r2.random() < 0.2 else 0.0
+    paint(ob, lambda co, i: mix(mix(srgb("#8c8480"), srgb("#5e5658"), tone), srgb("#4a6232"), moss))
+    return ob
+if PROPS:
+    for k in range(len(PATH_C) - 1):
+        a, b = PATH_C[k], PATH_C[k + 1]
+        d = (b - a); d.z = 0
+        nrm = Vector((-d.y, d.x, 0)).normalized()
+        w = 0.7 if k < 18 else 1.25   # half width: narrow steps near the patio, a 2.5 m path lower down
+        for j in range(4 if k > 18 else 2):
+            p = a + d * rnd.uniform(0.0, 1.0) + nrm * rnd.uniform(-w, w)
+            g = ground_h(p.x, p.y)
+            s = rnd.uniform(0.45, 0.8)
+            pathstone("pst%d_%d" % (k, j), (p.x, p.y, g + 0.02), (s * rnd.uniform(1.0, 1.5), s, 0.16), 4000 + k * 7 + j)
 for k in range(len(PATH_C) - 1):
+    if PROPS: break
     if k % (3 if k > 18 else 2): continue   # v5 (ChatGPT checkpoint 2: ~30% fewer, larger slabs)
     a, b = PATH_C[k], PATH_C[k + 1]
     d = (b - a); d.z = 0
@@ -560,6 +615,7 @@ for k in range(len(PATH_C) - 1):
 # risers under the steps between the patio and the path
 for k in range(4):
     p = PATH_C[min(k * 2, len(PATH_C) - 1)]
+    if NOHOUSE: continue
     rock("riser%d" % k, (p.x, p.y, p.z - 0.45), (1.9, 1.0, 0.8), 700 + k)
 
 # fence on the path's right, lantern posts along it
@@ -578,6 +634,7 @@ def side(k, off):
 fence_pts = [side(k, 2.1) for k in range(22, len(PATH_C) - 6, 6)]
 rail_line("fence", fence_pts, lambda p: ground_h(p.x, p.y) - 0.15, posts_every=3.2, h=0.7)
 for k in range(22, len(PATH_C) - 6, 3):
+    if PROPS: break
     q = side(k, 2.6); q.z = ground_h(q.x, q.y)
     bush("fencebush%d" % k, q, rnd.uniform(0.6, 1.0), 1700 + k)
 for k, (x, y, z) in enumerate([(125, 468, 0.3), (350, 512, -0.9), (565, 520, -1.0), (450, 588, -1.9), (680, 650, -3.0)]):
@@ -631,16 +688,18 @@ for (x, y, z, cnt, spread) in beds:
             flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.3, 0.7))), M["pink"], rnd.uniform(0.2, 0.36))
         elif r < 0.62:
             flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.25, 0.5))), M["white"], rnd.uniform(0.12, 0.18))
-        else:
+        elif not PROPS:
             bush("fb%d" % fk, Vector((p.x, p.y, g)), rnd.uniform(0.5, 1.1), 900 + fk)
         fk += 1
 # big glowing lilies in the frame's lower left (concept: luminous blue lilies at the corner)
 for k, (x, y, z, s) in enumerate([(50, 600, -2.6, 1.25), (140, 650, -3.0, 1.0), (10, 700, -3.6, 1.1), (180, 560, -2.0, 0.7), (380, 700, -3.4, 0.8), (240, 610, -2.4, 0.6),
                                    (300, 690, -3.2, 0.55), (90, 520, -1.2, 0.6), (420, 640, -2.6, 0.45)]):
+    if PROPS: break
     g = px(x, y, z)
     lily("lily%d" % k, Vector((g.x, g.y, ground_h(g.x, g.y) + s * 1.4)), s)
 # shrubs along the right cliff edge
 for k, (x, y, z) in enumerate([(700, 610, -3.2), (760, 640, -3.8), (840, 690, -4.6), (640, 560, -2.2), (900, 730, -5.2), (600, 500, -1.0)]):
+    if PROPS: break
     g = px(x, y, z)
     bush("edge%d" % k, Vector((g.x, g.y, ground_h(g.x, g.y))), rnd.uniform(1.0, 1.6), 1200 + k)
 
@@ -775,6 +834,12 @@ for k in range(4):
     pts = [wall_pt(u0 + 0.4, top + 1.6, -1.5), wall_pt(u0 + 0.2, top + 0.9, 0.2), wall_pt(u0, top - 0.2, 0.75), wall_pt(u0 - 0.1, top - 1.2, 0.7)]
     tube("facade_root%d" % k, pts, [0.32, 0.26, 0.18, 0.08], M["bark"], lambda co, i: srgb("#5a4634"), sides=7)
 
+if NOHOUSE:
+    bpy.context.view_layer.update()
+    for ob in list(bpy.context.scene.objects):
+        if ob.type != "MESH" or ob.name in ("ground", "skirt"): continue
+        bb = [ob.matrix_world @ Vector(cc) for cc in ob.bound_box]
+        if house_zone(sum(bb, Vector()) / 8.0): bpy.data.objects.remove(ob, do_unlink=True)
 flush_batches()
 print("TRIS_BEFORE_JOIN", L.tri_count())
 names = list(L.join_by_material())
