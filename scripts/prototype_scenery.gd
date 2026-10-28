@@ -5488,7 +5488,10 @@ const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
 ## dull taupe: sweep 211758.)
 const GOLDEN_CLOUD_GLOW := 3.2
 const GOLDEN_CLOUD_GLOW_POWER := 3.0
-const GOLDEN_CLOUD_GLOW_COLOR := "dc8636"
+## Review 19: dc8636 oversaturated the mid sky (0.61 vs the goal's 0.47); d89458 gives 0.52 and moves the
+## vista's upper sky closer to the goal than any checkpoint (colour distance, top 120 rows: 13.4 -> 10.4;
+## best before was 12.5 at 797d524), highlights 6.1% -> 7.9% (goal 8.5%), sweep 222916 variant D1.
+const GOLDEN_CLOUD_GLOW_COLOR := "d89458"
 const GOLDEN_HORIZON_GLOW := 4.5
 const GOLDEN_HORIZON_GLOW_POWER := 3.0
 ## Lake reflection floor and glow dome colour (review 17: lake 33 vs 38-44, the glow band whitening):
