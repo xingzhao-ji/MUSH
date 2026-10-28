@@ -152,8 +152,13 @@ const TRIPO_SHADER := preload("res://assets/world/tripo_prop.gdshader")
 var refuge_home: Vector3 = Vector3.INF
 var refuge_facing: float = 0.0
 var refuge_lanterns: Array[Vector3] = []
+## Half-size of the cottage footprint kept clear of refuge plants and trees (m).
+var _refuge_foot: float = 6.5
 ## Image-to-3D cottage and lantern (Tripo Studio, from Gemini references); procedural stand-ins until present.
 const COTTAGE_MODEL := "res://assets/world/models/tripo/mush_cottage.glb"
+## Cottage rebuilt in Blender from a ChatGPT modeling sheet (MUSH-exchange/blender/scripts/cottage.py);
+## "" falls back to the image-to-3D model above.
+const COTTAGE_BLENDER := "res://assets/world/models/blender/cottage.glb"
 const LANTERN_MODEL := "res://assets/world/models/tripo/lantern_post.glb"
 const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const CATTAIL_MODEL := "res://assets/world/models/tripo/cattails.glb"
@@ -810,6 +815,7 @@ func configure(world: Node3D) -> void:
 	if "plain_terrain" in skip: _terrain_material.shader = preload("res://assets/world/far_canopy.gdshader"); _terrain_material.set_shader_parameter("mode", 2)
 	if "no_water" in skip: _static[_static.size() - 1].visible = false
 	_add_giants(rng)
+	if not "no_blender_giants" in skip: _add_blender_giants()
 	_add_root_collision()
 	_add_pillars(rng)
 	_add_boulders(rng)
@@ -2201,6 +2207,9 @@ func _grid_coord(i: int) -> float:
 ## Ground under (x, z) as drawn: the detail patches where they exist, else the coarse WorldTerrain
 ## triangle (vertex heights from terrain_height, diagonal i1-i2), so props sit on the rendered surface.
 func _mesh_ground(x: float, z: float) -> float:
+	if _prom_active:
+		var top: float = _prom_ground(x, z)
+		if not is_nan(top): return top
 	var r: float = rendered_terrain_height(x, z)
 	if not is_nan(r): return r
 	var c: int = clampi(floori((signf(x) * pow(absf(x) / TERRAIN_HALF, 1.0 / 1.7) + 1.0) * 0.5 * TERRAIN_CELLS), 0, TERRAIN_CELLS - 1)
@@ -2455,7 +2464,7 @@ func _refuge_cluster(batches: Dictionary, rng: RandomNumberGenerator, paths: Arr
 		if placed >= count: break
 		var t: float = rng.randf_range(t_range.x, t_range.y)
 		var s: float = rng.randf_range(s_range.x, s_range.y)
-		if t < 6.5 and absf(s) < 6.0: continue
+		if t < _refuge_foot and absf(s) < _refuge_foot - 0.5: continue
 		if absf(s - sin(t * 0.12) * 3.0) < 1.4 and t > 6.0: continue
 		var p: Vector3 = home + toward * t + side * s
 		p.y = _mesh_ground(p.x, p.z)
@@ -2467,6 +2476,174 @@ func _refuge_cluster(batches: Dictionary, rng: RandomNumberGenerator, paths: Arr
 		_refuge_put(batches, paths[rng.randi() % paths.size()], p - Vector3(0, 0.05 * k, 0), k, rng.randf() * TAU, Vector2(rng.randf_range(-0.07, 0.07), rng.randf_range(-0.07, 0.07)))
 		placed += 1
 	return placed
+
+## Blender-built models (a ChatGPT modeling sheet rebuilt in Blender, exported as glb): their own flat
+## materials, duplicated into the refuge day/night/rain tint (_refuge_mats); emissive ones (window glass,
+## gills, lanterns) also go on _blender_glow so apply_look raises them at night. Scaled to `height`,
+## base centred on `at`, front (+Z) turned by `yaw`. Visual only: no collision, no shadows.
+var _blender_glow: Array[StandardMaterial3D] = []
+var _blender_mat_cache: Dictionary = {}
+func _blender_model(path: String, at: Vector3, yaw: float, height: float, label: String) -> bool:
+	var parts: Array = _model_parts(path)
+	if parts.is_empty(): return false
+	var box := AABB()
+	for i: int in parts.size():
+		var b: AABB = (parts[i][1] as Transform3D) * (parts[i][0] as Mesh).get_aabb()
+		box = b if i == 0 else box.merge(b)
+	var k: float = height / maxf(box.size.y, 0.001)
+	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
+	_blender_place(path, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre), label)
+	return true
+
+## Place a Blender model with an explicit transform (model units). Materials whose name holds "nightglow"
+## emit only at night (giant cap spots).
+func _blender_place(path: String, root: Transform3D, label: String, tint: Color = Color.WHITE, cap_xf: Transform3D = Transform3D.IDENTITY, fills: Dictionary = {}) -> void:
+	var parts: Array = _model_parts(path)
+	for i: int in parts.size():
+		var mesh: Mesh = parts[i][0]
+		var xf: Transform3D = root * (parts[i][1] as Transform3D)
+		# cap_xf (world space) moves only the cap parts (giant cap, spots, gills, ribs, drips).
+		if cap_xf != Transform3D.IDENTITY and mesh.get_surface_count() > 0 and mesh.surface_get_material(0) != null:
+			if mesh.surface_get_material(0).resource_name.to_lower() in ["cap", "spot_nightglow", "gill", "gill_rib", "drip"]: xf = cap_xf * xf
+		var node := _refuge_mesh(mesh, null, xf, "%s_%d" % [label, i])
+		for si: int in mesh.get_surface_count():
+			var src := mesh.surface_get_material(si) as StandardMaterial3D
+			if src == null: continue
+			if not _blender_mat_cache.has(src):
+				var m: StandardMaterial3D = src.duplicate()
+				m.set_meta("day_tint", src.albedo_color * tint)
+				_refuge_mats.append(m)
+				if fills.has(src.resource_name.to_lower()) and not m.emission_enabled:
+					var f: Array = fills[src.resource_name.to_lower()]
+					m.emission_enabled = true
+					m.emission = f[0]
+					m.set_meta("day_fill", f[1])
+					_blender_glow.append(m)
+				elif m.emission_enabled:
+					m.set_meta("glow", m.emission_energy_multiplier)
+					m.set_meta("night_only", "nightglow" in src.resource_name.to_lower())
+					_blender_glow.append(m)
+				_blender_mat_cache[src] = m
+			node.set_surface_override_material(si, _blender_mat_cache[src])
+
+## Giant mushrooms rebuilt in Blender from a ChatGPT modeling sheet (MUSH-exchange/blender/scripts/giant.py;
+## cap radius 7 m, cap rim underside 1.125 x 7 m above the base). Each giant gets one, scaled so its cap
+## radius and underside height match GIANTS; the procedural caps, stems and tendrils are hidden (their
+## nodes, shader state and reports stay). Visual only; the hero root collision band is unchanged.
+const GIANT_BLENDER := "res://assets/world/models/blender/giant.glb"
+const GIANT_MODEL_R := 7.0
+const GIANT_MODEL_UNDERSIDE := 7.875
+## The giants' camera-facing sides are shadow sides under the golden back light, lit only by the lavender
+## ambient and front fill, so the sheet colours rendered blue-violet (vista stem #65498b vs the goal's
+## #825f75, cap rim #8466b2 vs #8a5e68-#cfa4b5): a warm albedo compensation (sRGB multipliers).
+const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
+## Hero cap tilt (degrees) toward the vista eye plus GIANT_HERO_TILT_LEFT of the frame's left, about the stem
+## top (model y GIANT_MODEL_PIVOT).
+## 14 degrees at full size made the cap a steep slanted disc running off the frame's top right (capture
+## pr02, goal: dome peak at y 130, a thin gill band under the left rim): 9 degrees and 0.84 of GIANTS' radius
+## about the stem top (visual only).
+## Capture pr03 (9 deg, 0.84): rim at (925, 240) and dome top y 90 against the goal's (870, 255) and 130, gill
+## band thin: 6 degrees, 0.92 across and 0.7 tall (the goal's cap is a flatter dome over a broad gill band).
+## Capture pr04 (6 deg, 0.92 x 0.7): gills read but the dome vanished. The goal's rim sits at 12.2 degrees
+## above the vista eye (y 255), i.e. ~205 m at 748 m, where ours stood at 264 m (16.7 degrees, seen from far
+## below): the hero model is 0.81 as tall, its cap full width, 0.85 tall and tipped 4 degrees.
+## Capture pr05 (0.85 tall): rim at the goal's (870-890, 255-270) but the cap a thin edge-on disc; the goal's
+## dome rises ~0.55 R over the rim: 1.5 tall (1.2 of the sheet's squashed dome after the 0.81 height scale).
+## Capture pr06 (1.5 tall, tipped toward the left too): the dome read but rose off the frame's top right (goal:
+## a near-level cap, right edge y 135-215): tipped toward the eye only, 3 degrees, 1.25 tall.
+const GIANT_HERO_TILT_DEG := 3.0
+const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.25, 1.0)
+const GIANT_HERO_HEIGHT_SCALE := 0.81
+const GIANT_HERO_TILT_LEFT := 0.0
+## Cap tops rendered dark violet (pr06 dome #8a70b0, goal #b89cc8): beyond what an albedo can lift, so a warm
+## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
+## Pink-beige at 0.35 washed every cap near white with the spots lost (capture pr07): a lavender fill at 0.12.
+const GIANT_FILLS := {"cap": [Color("c8a0c0"), 0.12]}
+const GIANT_MODEL_PIVOT := 7.63
+var giant_blender_report: Dictionary = {"placed": 0}
+func _add_blender_giants() -> void:
+	if GIANT_BLENDER == "" or not ResourceLoader.exists(GIANT_BLENDER): return
+	var placed: int = 0
+	var hero_ground: float = NAN
+	for row: Array in _giant_specs():
+		var x: float = row[0]; var z: float = row[1]; var r: float = row[2]; var h: float = row[3]
+		var ground: float = terrain_height(x, z)
+		var s := Vector3(r / GIANT_MODEL_R, h / GIANT_MODEL_UNDERSIDE, r / GIANT_MODEL_R)
+		var yaw: float = 0.9 + 1.7 * float(placed)
+		var cap_xf := Transform3D.IDENTITY
+		if placed == 0: s.y *= GIANT_HERO_HEIGHT_SCALE
+		if placed == 0 and GIANT_HERO_TILT_DEG > 0.0:
+			# Hero cap tipped toward the vista and the frame's left about the stem top, as the procedural
+			# hero's bent stem did: the goal shows its dome over a thin band of gills (capture pr01: a level
+			# cap seen from below filled the frame's top right with gills).
+			var eye := Vector3(VISTA_EYE.x, 0.0, VISTA_EYE.y)
+			var to_eye: Vector3 = Vector3(eye.x - x, 0.0, eye.z - z).normalized()
+			var look: Vector3 = Vector3(VISTA_AIM.x - VISTA_EYE.x, 0.0, VISTA_AIM.y - VISTA_EYE.y).normalized()
+			var screen_left: Vector3 = -look.cross(Vector3.UP).normalized()
+			var d: Vector3 = (to_eye + screen_left * GIANT_HERO_TILT_LEFT).normalized()
+			var pivot := Vector3(x, ground + GIANT_MODEL_PIVOT * s.y, z)
+			cap_xf = Transform3D(Basis(Vector3.UP.cross(d).normalized(), deg_to_rad(GIANT_HERO_TILT_DEG)) * Basis.from_scale(GIANT_HERO_CAP_SCALE), pivot) * Transform3D(Basis.IDENTITY, -pivot)
+		_blender_place(GIANT_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant%d" % placed, GIANT_SHADE_COMP, cap_xf, GIANT_FILLS)
+		if placed == 0: hero_ground = ground
+		placed += 1
+	for node: Node in _nodes:
+		if String(node.name) in ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"]: (node as Node3D).visible = false
+	giant_blender_report = {"placed": placed, "model": GIANT_BLENDER.get_file(), "hidden": ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"],
+		"hero_ground": snappedf(hero_ground, 0.1), "hero_tilt_deg": GIANT_HERO_TILT_DEG}
+	print("BLENDER_GIANTS ", JSON.stringify(giant_blender_report))
+
+## Raised mossy promontory under the cottage (consult chatgpt-01 gap 1: the goal's cottage stands on a raised
+## grassy hill at screen (80-327, 345-485); ours sat low on the terrace in the frame's lower-left corner).
+## Built in Blender from ChatGPT sheet mush-sheet-promontory-01 (MUSH-exchange/blender/scripts/promontory.py):
+## three stacked tiers with tops at model y 4, 8 and 12, curved stone steps down the right-front, a rock
+## skirt to y -30 so it can stand on a slope. The cottage stands on the top tier, whose centre is placed on
+## the vista ray through PROM_SCREEN, PROM_DIST horizontal metres out. While the refuge is built, refuge
+## props inside a tier use its top as ground (_mesh_ground). Visual only: no collider, no shadow.
+## MUSH_NO_PROMONTORY=1 restores the terrace refuge for before/after captures.
+const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory.glb"
+const PROM_SCREEN := Vector2(-0.68, -0.36)
+const PROM_DIST := 95.0
+const PROM_SCALE := Vector3(2.6, 2.0, 2.6)
+## 16 m read 180 x 122 px at 96 m (capture pr01; goal cottage 247 x 140 px with its porch posts).
+const PROM_COTTAGE_HEIGHT := 18.5
+## Blender tiers: [centre x, centre y (Blender y = -glTF z), radius x, radius y, top].
+const PROM_TIERS: Array = [[1.0, -1.0, 12.0, 10.0, 4.0], [0.0, 0.2, 10.0, 8.4, 8.0], [-1.0, 1.2, 8.0, 6.6, 12.0]]
+var _prom_xf := Transform3D.IDENTITY
+var _prom_active: bool = false
+var promontory_report: Dictionary = {"built": false}
+func _promontory_home(eye: Vector3) -> Vector3:
+	var look: Vector3 = (Vector3(VISTA_AIM.x, 90.0, VISTA_AIM.y) - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	var ray: Vector3 = (look + right * PROM_SCREEN.x * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * PROM_SCREEN.y * tan(deg_to_rad(30.0))).normalized()
+	return eye + ray * (PROM_DIST / maxf(Vector2(ray.x, ray.z).length(), 0.01))
+
+func _add_promontory(home: Vector3, yaw: float, eye: Vector3) -> void:
+	var top: Array = PROM_TIERS[2]
+	var c := Vector3(float(top[0]), float(top[4]) + 0.1, -float(top[1]))
+	_prom_xf = Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(PROM_SCALE), home) * Transform3D(Basis.IDENTITY, -c)
+	var ground: float = _mesh_ground(home.x, home.z)
+	_blender_place(PROMONTORY_BLENDER, _prom_xf, "RefugePromontory")
+	_prom_active = true
+	var base: Vector2 = _vista_screen(eye, home)
+	var foot: Vector3 = _prom_xf * Vector3(0.0, 0.0, 10.0)
+	promontory_report = {"built": true, "model": PROMONTORY_BLENDER.get_file(), "top": _v3(home), "ground_under_top": snappedf(ground, 0.1),
+		"tier1_front_ground": snappedf(_mesh_ground(foot.x, foot.z), 0.1), "tier1_front_y": snappedf(foot.y, 0.1),
+		"top_px": [roundi((base.x + 1.0) * 640.0), roundi((1.0 - base.y) * 360.0)], "scale": _v3(PROM_SCALE), "dist_m": roundi(home.distance_to(eye))}
+
+## Ellipse measure of a world point against promontory tier i (< 1 inside), in the tier's own radii.
+func _prom_tier_e(x: float, z: float, i: int) -> float:
+	var m: Vector3 = _prom_xf.affine_inverse() * Vector3(x, 0.0, z)
+	var t: Array = PROM_TIERS[i]
+	return pow((m.x - float(t[0])) / float(t[2]), 2.0) + pow((-m.z - float(t[1])) / float(t[3]), 2.0)
+
+## Top of the highest promontory tier holding (x, z), NAN outside them (0.85 of each radius: the moss lip).
+func _prom_ground(x: float, z: float) -> float:
+	for i: int in [2, 1, 0]:
+		if _prom_tier_e(x, z, i) < 0.72:
+			var m: Vector3 = _prom_xf.affine_inverse() * Vector3(x, 0.0, z)
+			return (_prom_xf * Vector3(m.x, float(PROM_TIERS[i][4]) + 0.15, m.z)).y
+	return NAN
 
 func _refuge_mesh(mesh: Mesh, material: Material, xf: Transform3D, label: String) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
@@ -2526,8 +2703,12 @@ func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: 
 func _add_refuge_cottage() -> Dictionary:
 	var at: Vector3 = refuge_home
 	var yaw: float = refuge_facing
-	var door: Vector3 = at + Vector3(sin(yaw), 0.0, cos(yaw)) * 3.6 + Vector3(0, 1.6, 0)
-	_refuge_light(door + Vector3(sin(yaw), 0.0, cos(yaw)) * 1.2, 10.0, "RefugeDoorLight")
+	var ch: float = PROM_COTTAGE_HEIGHT if _prom_active else COTTAGE_HEIGHT
+	var k_door: float = ch / COTTAGE_HEIGHT
+	var door: Vector3 = at + Vector3(sin(yaw), 0.0, cos(yaw)) * 3.6 * k_door + Vector3(0, 1.6 * k_door, 0)
+	_refuge_light(door + Vector3(sin(yaw), 0.0, cos(yaw)) * 1.2 * k_door, 10.0 * k_door, "RefugeDoorLight")
+	if COTTAGE_BLENDER != "" and ResourceLoader.exists(COTTAGE_BLENDER) and _blender_model(COTTAGE_BLENDER, at - Vector3(0, 0.3, 0), yaw, ch, "RefugeCottage"):
+		return {"cottage": COTTAGE_BLENDER.get_file(), "height_m": ch, "source": "ChatGPT sheet -> Blender", "on_promontory": _prom_active}
 	if ResourceLoader.exists(COTTAGE_MODEL) and _refuge_model(COTTAGE_MODEL, at - Vector3(0, 0.3, 0), yaw, COTTAGE_HEIGHT, "RefugeCottage"):
 		return {"cottage": COTTAGE_MODEL.get_file(), "height_m": COTTAGE_HEIGHT}
 	var walls := CylinderMesh.new()
@@ -2920,6 +3101,8 @@ func _add_framing_trees(eye: Vector3, look_h: Vector3, batches: Dictionary, tree
 		var b: float = trng.randf_range(FRAME_TREE_BEARING.x, FRAME_TREE_BEARING.y)
 		var r: float = trng.randf_range(FRAME_TREE_RANGE.x, FRAME_TREE_RANGE.y)
 		var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+		# Not on or against the promontory (its bottom tier plus ~40%): it carries the cottage there.
+		if _prom_active and _prom_tier_e(p.x, p.z, 0) < 1.96: continue
 		p.y = _mesh_ground(p.x, p.z)
 		var too_close: bool = false
 		for q: Vector3 in placed:
@@ -3243,7 +3426,8 @@ func _add_vista_refuge() -> void:
 	# that terrace: cottage at its back, a stepping-stone path down toward the eye, flower beds, a
 	# fence on the cliff edge, broadleaf trees behind; giant glowing flowers on the drop below the
 	# eye frame the corner (goal: luminous flowers at the frame's lower left).
-	var home: Vector3 = _vista_ray_ground(-0.80, -0.62, 300.0)
+	var on_prom: bool = PROMONTORY_BLENDER != "" and ResourceLoader.exists(PROMONTORY_BLENDER) and OS.get_environment("MUSH_NO_PROMONTORY") == ""
+	var home: Vector3 = _promontory_home(eye) if on_prom else _vista_ray_ground(-0.80, -0.62, 300.0)
 	if home == Vector3.INF:
 		vista_refuge_report["reason"] = "no terrace hit"
 		return
@@ -3251,6 +3435,11 @@ func _add_vista_refuge() -> void:
 	var side: Vector3 = toward.cross(Vector3.UP).normalized()
 	refuge_home = home
 	refuge_facing = atan2(toward.x, toward.z)
+	# On the promontory the cottage is PROM_COTTAGE_HEIGHT tall: keep plants and trees off its larger footprint.
+	_refuge_foot = 6.5
+	if on_prom:
+		_add_promontory(home, refuge_facing, eye)
+		_refuge_foot = 6.5 * PROM_COTTAGE_HEIGHT / COTTAGE_HEIGHT
 	var garden: Vector3 = home + toward * 14.0 + side * 2.0
 	_terrain_material.set_shader_parameter("garden_disc", Vector4(garden.x, garden.z, 34.0, 0.92))
 	_terrain_material.set_shader_parameter("ledge_fill", LEDGE_FILL)
@@ -3266,16 +3455,19 @@ func _add_vista_refuge() -> void:
 	if near != Vector3.INF: _terrain_material.set_shader_parameter("near_fill_disc", Vector4(near.x, near.z, 75.0, NEAR_FILL))
 	# Broadleaf trees behind and left of the cottage (goal: a lush tree wall up the frame's left edge).
 	var tree_n: int = 0
-	for i: int in 16:
-		var off: Vector3 = -toward * rng.randf_range(6.0, 30.0) + side * rng.randf_range(-6.0, 26.0)
+	# On the promontory (capture pr01: no tree found room on the top tier) they may stand on the lower tiers
+	# and the slope behind, larger, so their crowns rise behind and left of the cottage as in the goal.
+	for i: int in (60 if on_prom else 16):
+		if on_prom and tree_n >= 9: break
+		var off: Vector3 = -toward * rng.randf_range(6.0, 30.0 if not on_prom else 40.0) + side * rng.randf_range(-6.0, 26.0 if not on_prom else 34.0)
 		# Keep crowns off the cap (review 10: a tree read as growing out of the roof).
-		if off.dot(-toward) < 25.0 and absf(off.dot(side)) < 7.0: continue
+		if off.dot(-toward) < 25.0 and absf(off.dot(side)) < _refuge_foot + 0.5: continue
 		var p: Vector3 = home + off
 		p.y = _mesh_ground(p.x, p.z)
-		if p.y < home.y - 6.0: continue
+		if p.y < home.y - (24.0 if on_prom else 6.0): continue
 		var s: Vector2 = _vista_screen(eye, p)
 		if s.x > -0.6: continue
-		_refuge_put(batches, trees[rng.randi() % trees.size()], p - Vector3(0, 0.3, 0), rng.randf_range(2.0, 3.2), rng.randf() * TAU, Vector2(rng.randf_range(-0.04, 0.04), rng.randf_range(-0.04, 0.04)))
+		_refuge_put(batches, trees[rng.randi() % trees.size()], p - Vector3(0, 0.3, 0), rng.randf_range(2.0, 3.2) * (1.5 if on_prom else 1.0), rng.randf() * TAU, Vector2(rng.randf_range(-0.04, 0.04), rng.randf_range(-0.04, 0.04)))
 		tree_n += 1
 	counts["trees"] = tree_n
 	# Timber fence along the terrace's cliff edge (right of the cottage): the edge is traced in screen
@@ -3302,7 +3494,8 @@ func _add_vista_refuge() -> void:
 		path_end = last_edge + Vector3(home.x - last_edge.x, 0.0, home.z - last_edge.z).normalized() * 5.0
 	var bow: Vector3 = (path_from + path_end) * 0.5 + side * 4.0
 	var path_len: float = path_from.distance_to(path_end)
-	var steps: int = clampi(roundi(path_len / 2.4), 6, 30)
+	# On the promontory its own stone steps are the path (built in Blender).
+	var steps: int = 0 if on_prom else clampi(roundi(path_len / 2.4), 6, 30)
 	for i: int in steps:
 		var t: float = float(i) / float(steps - 1)
 		var p: Vector3 = path_from.lerp(bow, t).lerp(bow.lerp(path_end, t), t)
@@ -3322,7 +3515,7 @@ func _add_vista_refuge() -> void:
 	# Luminous lily clumps (image-to-3D) along the path, alternating sides.
 	var lily_n: int = 0
 	if ResourceLoader.exists(FLOWER_MODEL):
-		for i: int in 7:
+		for i: int in (0 if on_prom else 7):
 			var t: float = lerpf(0.12, 0.92, float(i) / 6.0)
 			var p: Vector3 = path_from.lerp(bow, t).lerp(bow.lerp(path_end, t), t) + side * (1.7 if i % 2 == 0 else -1.7) * rng.randf_range(0.9, 1.3)
 			p.y = _mesh_ground(p.x, p.z)
@@ -3334,9 +3527,13 @@ func _add_vista_refuge() -> void:
 		var la: Vector3 = (bow.lerp(path_end, lt) - path_from.lerp(bow, lt)).normalized().cross(Vector3.UP).normalized()
 		refuge_lanterns.append(lp + la * (2.6 if lt < 0.5 else -2.6))
 	refuge_lanterns.append(path_end - side * 2.0)
+	if on_prom:
+		# Two lanterns at the top tier's front lip and one at the head of the stone steps (front right).
+		var front: float = float(PROM_TIERS[2][3]) * PROM_SCALE.z * 0.78
+		refuge_lanterns = [home + toward * front + side * 3.2 * PROM_SCALE.x, home + toward * front - side * 3.2 * PROM_SCALE.x, home + toward * 1.4 * PROM_SCALE.z - side * 6.0 * PROM_SCALE.x]
 	for i: int in refuge_lanterns.size(): refuge_lanterns[i].y = _mesh_ground(refuge_lanterns[i].x, refuge_lanterns[i].z)
 	var fence_n: int = 0
-	for k: int in edge.size() - 1:
+	for k: int in (0 if on_prom else edge.size() - 1):
 		var a: Vector3 = edge[k]
 		var b: Vector3 = edge[k + 1]
 		var inward: Vector3 = Vector3(home.x - a.x, 0.0, home.z - a.z).normalized() * 1.2
@@ -3555,7 +3752,8 @@ func _add_vista_refuge() -> void:
 	var stats: Dictionary = _refuge_flush(batches)
 	var cottage: Dictionary = _add_refuge_cottage()
 	counts["lanterns"] = _add_refuge_lanterns()
-	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
+	_prom_active = false
+	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "promontory": promontory_report, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
 	vista_refuge_report.merge(stats)
 	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 
@@ -5976,6 +6174,9 @@ const LEDGE_RISER_TINT := Vector3(1.15, 0.97, 0.8)
 ## banks go dark and wet into the water.
 const SHORE_WET := Vector2(1.6, 0.25)
 const NEAR_FILL := 0.45
+## Emission scale on Blender model glow materials (their own glTF strengths), by day and at night.
+const BLENDER_DAY_GLOW := 0.6
+const BLENDER_NIGHT_GLOW := 1.6
 ## Environment adjustment by day (prototype apply_look only); 1 / 1 = off. Vista frame dE 15.4 -> 15.3 at
 ## 0.92 / 1.05 and 14.9 at 0.85 / 1.05 (upper sky 10.8 -> 10.1), capture 001733.
 const GRADE_SATURATION := 0.85
@@ -6290,6 +6491,14 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 			prop.set_shader_parameter("desat", lerpf(float(look_override.get("hero_lily_desat", LEDGE_HERO_LILY_DESAT)) if pale else 0.0, 0.9, night))
 			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
+	# Blender models: window glass, gills and lanterns brighter at night and in rain.
+	for glow_m: StandardMaterial3D in _blender_glow:
+		if glow_m.has_meta("day_fill"):
+			# A daylight self-fill (giant cap tops), off at night, halved in rain.
+			glow_m.emission_energy_multiplier = float(glow_m.get_meta("day_fill")) * (1.0 - night) * (1.0 - 0.5 * rain)
+			continue
+		var day_k: float = 0.0 if glow_m.get_meta("night_only", false) else BLENDER_DAY_GLOW
+		glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, BLENDER_NIGHT_GLOW, maxf(night, rain * 0.5))
 	# Shore reeds: the refuge's night/rain tint, a daylight self-fill and warm transmission (backlit by
 	# the golden key), both falling away at night.
 	if _reed_material != null:
