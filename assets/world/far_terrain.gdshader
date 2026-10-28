@@ -213,7 +213,10 @@ void fragment() {
 	rockiness = mix(rockiness, 0.0, ledge_top);
 	rockiness = mix(rockiness, 1.0, ledge_riser);
 	// Light, sun-bleached grass on the shelf tops (review 14: tops sat darker than risers at sat 0.75).
-	vec3 ledge_moss = mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), ledge_desat) * ledge_grass * (1.0 - 0.5 * ledge_fleck + ledge_fleck * fleck);
+	// Face grass keeps the rich olive; the shelf tops are that colour desaturated by ledge_desat
+	// (review 22: tops C*39 against a target of 18 while the face grass should stay rich).
+	vec3 face_moss = mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), 0.2) * ledge_grass * (1.0 - 0.5 * ledge_fleck + ledge_fleck * fleck);
+	vec3 ledge_moss = mix(face_moss, vec3(dot(face_moss, vec3(0.3, 0.59, 0.11))), ledge_desat);
 	moss = mix(moss, ledge_moss, ledge_top);
 	if (face_grass_disc.w > 0.0) {
 		float fg = face_grass_disc.w * smoothstep(face_grass_disc.z, face_grass_disc.z * 0.6, length(v_world.xz - face_grass_disc.xy));
@@ -221,7 +224,7 @@ void fragment() {
 		// Slightly darker than the shelf tops (the slope turns from the sky), with mottled bare patches.
 		rockiness = mix(rockiness, rockiness * smoothstep(0.62, 0.8, mottle) * 0.6, fg);
 		// Varied, not flat (review 21: an untextured olive wall): mottled lighter and darker swathes.
-		moss = mix(moss, ledge_moss * (0.55 + 0.5 * mottle + 0.25 * (fleck - 0.5)), fg * (1.0 - ledge_top));
+		moss = mix(moss, face_moss * (0.6 + 0.55 * smoothstep(0.35, 0.65, mottle) + 0.3 * (fleck - 0.5)), fg * (1.0 - ledge_top));
 	}
 	vec3 albedo = mix(moss, rock, rockiness);
 	albedo *= mix(vec3(1.0), ledge_riser_tint * ledge_riser_dim, ledge_riser);

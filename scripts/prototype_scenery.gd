@@ -2276,6 +2276,15 @@ func _refuge_material(source: Material) -> Material:
 	if "leaves" in label and "tree" in label:
 		m.vertex_color_use_as_albedo = true
 		m.set_meta("crown", true)
+		# Olive, not chartreuse (review 22: canopy C*38 at h 106 against the goal canopy's C*26 at 113):
+		# a less saturated leaf sheet, so the albedo gain lifts value without lifting chroma.
+		var leaf_sheet: Image = m.albedo_texture.get_image() if m.albedo_texture != null else null
+		if leaf_sheet != null and CROWN_TEX_SATURATION < 1.0:
+			leaf_sheet = leaf_sheet.duplicate()
+			if leaf_sheet.is_compressed(): leaf_sheet.decompress()
+			leaf_sheet.adjust_bcs(1.0, 1.0, CROWN_TEX_SATURATION)
+			leaf_sheet.generate_mipmaps()
+			m.albedo_texture = ImageTexture.create_from_image(leaf_sheet)
 	if "leaves" in label or "bark" in label:
 		m.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
 		m.emission_enabled = true
@@ -2311,8 +2320,10 @@ const CROWN_POCKETS := 0.45
 ## Per channel: a flat 1.5 gave the vista tree box L*37.7, chroma 33.5, hue 111 (goal 41.3, 27.3, 102),
 ## capture 001303. 1.55/1.45/1.25 under the day grade: L*35.4, too green (review 21: L*40-44 wanted,
 ## warmer hue). 2.3/2.0/1.4: L*47.1, chroma 41; 2.05/1.8/1.3: L*43.0, chroma 37 (goal 27), capture
-## 005730; 2.0/1.78/1.6: L*42.3, chroma 36.5 (capture 010151); more blue again to hold the chroma down.
-const CROWN_GAIN := Vector3(1.85, 1.72, 1.85)
+## 005730; 2.0/1.78/1.6: L*42.3, chroma 36.5 (capture 010151); 1.85/1.72/1.85: canopy block L*42.7, C*38,
+## h 106, read chartreuse (review 22; goal canopy L*36.8, C*25.6, h 113). Now on a desaturated sheet.
+const CROWN_GAIN := Vector3(1.75, 1.72, 1.7)
+const CROWN_TEX_SATURATION := 0.55
 ## Tree-leaf self-fill (previous 0.12 for all leaves and bark): it does not take the vertex shading,
 ## so it set the crown floor at L*~30 (tree box p5 33.5 with the shading, goal 18, capture 000859).
 const CROWN_FILL := 0.05
@@ -2951,12 +2962,14 @@ const LEDGE_LILIES := 1
 ## [centre px x, top px y, base px y]; the first sits left of the cottage door. Pale by day (desat, tint,
 ## a pale self-light). Top 560 made the left one a 2.45 m bloom cluster over the cottage door (capture
 ## 005730), so it is smaller and the right one larger.
-const LEDGE_HERO_LILIES: Array = [[42.0, 590.0, 672.0], [380.0, 600.0, 735.0]]
-const LEDGE_HERO_LILY_TINT := Vector3(1.08, 1.08, 1.16)
-## Desat 0.6 / glow 0.35 clipped the petals to white (6% of each lily box above L*92, goal 1-3%; the goal's
-## lilies are blue-white, hue ~220-250, saturation ~0.35), capture 010151.
-const LEDGE_HERO_LILY_DESAT := 0.4
-const LEDGE_HERO_LILY_GLOW := 0.18
+## Review 22: lily A sat ~80 px low (wanted in y540-640) and lily B was 43 px and half hidden.
+const LEDGE_HERO_LILIES: Array = [[42.0, 545.0, 640.0], [372.0, 585.0, 720.0]]
+## Desat 0.6 / glow 0.35 clipped the petals to white (capture 010151); 0.4 / 0.18 still read near-white
+## (C*13-21). The goal's lilies are glowing lavender, C*30-36 at h_ab 300-305, L*74 (review 22): full
+## colour, a magenta-leaning tint and only a little self-light.
+const LEDGE_HERO_LILY_TINT := Vector3(1.16, 0.96, 1.12)
+const LEDGE_HERO_LILY_DESAT := 0.0
+const LEDGE_HERO_LILY_GLOW := 0.12
 ## The giant lily grove and giant framing leaves the ledge replaces (previous: 8 and 8).
 const VISTA_GIANT_LILIES := 1
 const VISTA_FRAMING_LEAVES := 0
@@ -3090,10 +3103,13 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))
 		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
 		if px.x < 230.0 and px.y < 590.0: continue
-		# Nothing in front of a hero lily: skip a plant nearer the eye whose top lands in its screen box.
+		# Nothing in front of a hero lily: skip a plant nearer the eye that stands in its screen columns and
+		# rises into its box (review 22: a top-in-box test let tall leaves stand in front).
 		var blocks: bool = false
+		var base_px: float = (base_s.x + 1.0) * 640.0
 		for hl: Array in hero:
-			if (hl[2] as Rect2).grow(12.0).has_point(px) and p.distance_to(eye) < (hl[0] as Vector3).distance_to(eye) + 0.5: blocks = true
+			var hr: Rect2 = (hl[2] as Rect2).grow(20.0)
+			if base_px > hr.position.x and base_px < hr.end.x and px.y < hr.end.y and p.distance_to(eye) < (hl[0] as Vector3).distance_to(eye) + 0.5: blocks = true
 		if blocks: continue
 		_refuge_put(batches, path, p - Vector3(0, 0.08, 0), s, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
 		if bloom: bloom_n += 1
@@ -5948,7 +5964,9 @@ const LEDGE_FILL := 0.6
 ## (0.2 -> 0.35; it also greys the face grass, which the goal keeps fairly rich) and lighter fronts
 ## (0.8 -> 0.9).
 const LEDGE_GRASS := Vector3(2.1, 2.15, 0.75)
-const LEDGE_DESAT := 0.35
+## 0.35 left the step tops at C*39 (review 22, target <= 18). Now it desaturates only the tops (the face
+## grass keeps the 0.2 olive), so a strong value is safe.
+const LEDGE_DESAT := 0.6
 const LEDGE_FLECK := 0.5
 const LEDGE_RISER_DIM := 0.9
 ## Warm tan risers (goal riser L*46, hue 68; ours read grey-violet).
