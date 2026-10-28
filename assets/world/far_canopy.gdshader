@@ -56,6 +56,8 @@ uniform float under_gain = 1.0;
 // Bold gill plates (mode 0 underside, day glow only; 0 = previous look): ~72 wandering radial plates
 // with dark gaps in the gold, so the gills read at vista distance (the 180 fine gills average out).
 uniform float gill_bold = 0.0;
+// Rain: overcast skylight on the underside (0 = previous look).
+uniform float rain_lift = 0.0;
 // Fog cap (a < 0 = engine fog as before): the horizon giants stand ~2 km out, past the fog end, so
 // the depth fog replaced them with the fog colour and they read as glass discs (review 08). When
 // a >= 0 the fog is this colour at most this amount, so they stay hazy but opaque.
@@ -139,6 +141,7 @@ void fragment() {
 			}
 			// A lit rim only: daytime freckle glow read as white fly-agaric dots (sweep 130225).
 			if (day_glow > 0.0) emit += flesh_rim * smoothstep(0.86, 1.0, s) * 0.25 * day_glow * (1.0 - night);
+			emit += flesh * rain_lift * 0.5;
 			float dv = mix(1.0, dome_value, 1.0 - night);
 			albedo *= dv;
 			emit *= dv;
@@ -158,6 +161,7 @@ void fragment() {
 			// the margin and amber toward the stem (night keeps the amber glow above).
 			emit += mix(vec3(0.62, 0.56, 0.80) * 0.30, amber * 0.75, core * core) * (1.0 - night);
 			rough = 0.85;
+			emit += vec3(0.6, 0.56, 0.68) * rain_lift;
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
 				// Irregular bundles: the angle is warped by low-frequency noise (several bundle widths)
@@ -207,7 +211,7 @@ void fragment() {
 					float gb = clamp(0.62 * bundle + 0.38 * plate, 0.0, 1.0);
 					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.6 * smoothstep(0.8, 1.0, t));
 					// Deep gaps, compact bright plates (review 11: striation 1.02 vs 1.5, 21% above L*80).
-					gold_grad *= mix(1.0, 1.25 * pow(gb, 1.4), gk);
+					gold_grad *= mix(1.0, 2.0 * pow(gb, 1.4), gk);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);

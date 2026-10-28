@@ -155,6 +155,8 @@ const COTTAGE_MODEL := "res://assets/world/models/tripo/mush_cottage.glb"
 const LANTERN_MODEL := "res://assets/world/models/tripo/lantern_post.glb"
 const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const CATTAIL_MODEL := "res://assets/world/models/tripo/cattails.glb"
+## Shore review camera (stream_view_pose ground point): shore plants keep 30 m clear of it.
+const SHORE_CAMERA := Vector2(387.12, -300.14)
 const COTTAGE_HEIGHT := 11.0
 const LANTERN_HEIGHT := 2.6
 var far_falls_report: Dictionary = {}
@@ -2267,7 +2269,7 @@ func _refuge_material(source: Material) -> Material:
 		_refuge_fill.append(m)
 	elif "flower" in label:
 		m.emission_enabled = true
-		m.emission = Color(1.0, 0.8, 1.0)
+		m.emission = Color(0.82, 0.6, 1.0)
 		m.emission_texture = m.albedo_texture
 		m.emission_energy_multiplier = 0.08
 		_refuge_glow.append(m)
@@ -2542,7 +2544,7 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 	noise.seed = 4711
 	noise.frequency = 0.08
 	var levels: Array = []
-	for f: float in [0.28, 0.55, 0.8]: levels.append([top - (top - bottom) * f, 0, columns.size(), 9.0, 5.0])
+	for f: float in [0.05, 0.3, 0.56, 0.8]: levels.append([top - (top - bottom) * f, 0, columns.size(), 9.0, 5.0])
 	# Steps: short shelves stacked 3.6 m apart, stepping one column right each, down from the top edge.
 	for i: int in 6: levels.append([top - 3.0 - 3.6 * float(i), 1 + i, 4 + i, 4.5, 3.4])
 	for level: Array in levels:
@@ -2552,7 +2554,9 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 			var best: Vector3 = Vector3.INF
 			for h: Vector3 in columns[c]:
 				if absf(h.y - y) < 2.5 and (best == Vector3.INF or absf(h.y - y) < absf(best.y - y)): best = h
-			if best == Vector3.INF:
+			# Notches: the long ledges break where the noise dips, so the face keeps a ragged outline.
+			var notch: bool = int(level[1]) == 0 and best != Vector3.INF and noise.get_noise_2d(best.x * 0.6, best.z * 0.6) < -0.28
+			if best == Vector3.INF or notch:
 				if strip.size() >= 2: _ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices); shelves += 1
 				strip = []
 				continue
@@ -2572,13 +2576,9 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 	st.create_from(mesh, 0)
 	st.generate_normals()
 	mesh = st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 1.0
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.set_meta("day_tint", Color.WHITE)
-	_refuge_mats.append(mat)
-	_refuge_mesh(mesh, mat, Transform3D.IDENTITY, "RefugeFaceLedges")
+	# The world's own ground material: moss on the tops, triplanar granite on the risers (review 12:
+	# vertex-colour strips read as lime foam boards).
+	_refuge_mesh(mesh, _terrain_material, Transform3D.IDENTITY, "RefugeFaceLedges")
 	return {"built": true, "face_y": [snappedf(bottom, 0.1), snappedf(top, 0.1)], "shelves": shelves, "triangles": indices.size() / 3}
 
 func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite, vertices: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array) -> void:
@@ -2595,14 +2595,16 @@ func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite
 		var out := Vector3(-gx, 0.0, -gz).normalized()
 		var w: float = width * (0.75 + 0.5 * (noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5))
 		var lift: float = 0.4
-		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(moss)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(moss * 1.08)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(rock)
-		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(under)
+		# Vertex colour is the terrain shader's riparian mask: keep it at zero.
+		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(Color.BLACK)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(Color.BLACK)
+		vertices.append(p + out * (w + 0.6) + Vector3(0, lift - 1.2, 0)); colors.append(Color.BLACK)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(Color.BLACK)
+		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(Color.BLACK)
 	for i: int in strip.size() - 1:
-		var a: int = base + i * 4
-		var b: int = a + 4
-		for k: int in 3:
+		var a: int = base + i * 5
+		var b: int = a + 5
+		for k: int in 4:
 			indices.append(a + k); indices.append(b + k); indices.append(a + k + 1)
 			indices.append(a + k + 1); indices.append(b + k); indices.append(b + k + 1)
 
@@ -2804,8 +2806,8 @@ func _add_vista_refuge() -> void:
 				var q: Vector3 = hit + Vector3(grng.randf_range(-6.0, 6.0), 0.0, grng.randf_range(-6.0, 6.0))
 				q.y = _mesh_ground(q.x, q.z)
 				# On the dry rim only: stems standing in the water drew bright shore-contact halos (review 11).
-				if q.y < LAKE_Y + 0.25 or q.y > LAKE_Y + 2.2: continue
-				if _refuge_model(CATTAIL_MODEL, q - Vector3(0, 0.15, 0), grng.randf() * TAU, grng.randf_range(2.6, 5.4), "RefugeCattails%d" % reed_n):
+				if q.y < LAKE_Y + 0.6 or q.y > LAKE_Y + 2.6 or Vector2(q.x, q.z).distance_to(SHORE_CAMERA) < 30.0: continue
+				if _refuge_model(CATTAIL_MODEL, q, grng.randf() * TAU, grng.randf_range(2.4, 4.4), "RefugeCattails%d" % reed_n):
 					reed_n += 1
 					# Brown cattail heads are not lamps, and are muted (head saturation <= 0.40).
 					var cat: ShaderMaterial = _refuge_props[_refuge_props.size() - 1]
@@ -2813,26 +2815,43 @@ func _add_vista_refuge() -> void:
 					cat.set_shader_parameter("desat", 0.35)
 		counts["cattail_stands"] = stands
 		vista_refuge_report["cattail_spots_x_z_px_py_m"] = cattail_spots
-	# A ragged reed band along the near shore in frame (review 11: 6-14 px at 340-550 m, true scale).
+	# A ragged reed band along the near shoreline in frame (review 11/12: 6-14 px at 340-550 m, true
+	# scale): each screen column is marched down to where the rays leave the lake bed for dry ground.
 	var band_n: int = 0
-	for i: int in 600:
-		if band_n >= 160: break
-		var hit: Vector3 = _vista_ray_ground(grng.randf_range(-0.3, 1.0), grng.randf_range(-0.99, -0.45), 800.0)
-		if hit == Vector3.INF or hit.y < LAKE_Y + 0.2 or hit.y > LAKE_Y + 2.0: continue
-		if _ribbon_gap(Vector2(hit.x, hit.z)) < 3.0: continue
-		_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if band_n % 3 != 0 else "Grass_Common_Tall.gltf"), hit - Vector3(0, 0.1, 0), grng.randf_range(1.6, 3.0), grng.randf() * TAU)
-		band_n += 1
+	var shore_cols: int = 0
+	var bx: float = -0.3
+	while bx <= 1.0:
+		var by: float = -0.42
+		var wet: bool = false
+		while by >= -0.99:
+			var hit: Vector3 = _vista_ray_ground(bx, by, 800.0)
+			if hit != Vector3.INF:
+				if hit.y < LAKE_Y - 0.2: wet = true
+				elif wet and hit.y > LAKE_Y + 0.6 and hit.y < LAKE_Y + 3.0:
+					if Vector2(hit.x, hit.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(hit.x, hit.z)) > 3.0:
+						shore_cols += 1
+						for k: int in grng.randi_range(1, 3):
+							var q: Vector3 = hit + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
+							q.y = _mesh_ground(q.x, q.z)
+							if q.y < LAKE_Y + 0.6: continue
+							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if band_n % 3 != 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.6, 2.8), grng.randf() * TAU)
+							band_n += 1
+					break
+			by -= 0.006
+		bx += 0.008
+	counts["shore_columns"] = shore_cols
 	counts["shore_reed_band"] = band_n
 	counts["cattails"] = reed_n
 	# Round broadleaf trees along the far lake shore (review 10: 3-5 in (640,390,1060,470)).
 	var shore_n: int = 0
 	var far_tree_px: Array = []
 	for i: int in 80:
-		if shore_n >= 7: break
+		if shore_n >= 5: break
 		var hit: Vector3 = _vista_ray_ground(grng.randf_range(0.02, 0.62), grng.randf_range(-0.3, -0.1), 1600.0)
 		if hit == Vector3.INF or hit.y < LAKE_Y + 1.0 or hit.y > LAKE_Y + 30.0: continue
 		if _ribbon_gap(Vector2(hit.x, hit.z)) < 8.0: continue
-		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.5, 0), grng.randf_range(3.0, 3.8), grng.randf() * TAU)
+		# Old giants (35-45 m) so they read at 1-1.3 km through the haze (review 12: 20-40 px).
+		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.8, 0), grng.randf_range(5.0, 6.4), grng.randf() * TAU)
 		var ts: Vector2 = _vista_screen(eye, hit)
 		far_tree_px.append([roundi((ts.x + 1.0) * 640.0), roundi((1.0 - ts.y) * 360.0), roundi(hit.distance_to(eye))])
 		shore_n += 1
@@ -5217,6 +5236,8 @@ const GOLDEN_CAP_GLOW := 1.0
 ## Bold gill plates on the lit cap undersides (Gemini goal frame: gold radial gills with dark gaps
 ## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
 const GOLDEN_GILL_BOLD := 1.0
+## Overcast lift on cap undersides in rain (review 10-12: far undersides sat ~20 below the rain sky).
+const RAIN_UNDER_LIFT := 0.6
 const GOLDEN_CLOUD_GLOW := 1.0
 const GOLDEN_CLOUD_GLOW_POWER := 4.0
 const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
@@ -5285,6 +5306,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for material: ShaderMaterial in _art:
 		material.set_shader_parameter("day_glow", cap_day_glow)
 		material.set_shader_parameter("gill_bold", gill_bold)
+		material.set_shader_parameter("rain_lift", RAIN_UNDER_LIFT * rain if look_depth else 0.0)
 	if cap_material != null and not cap_material in _art:
 		cap_material.set_shader_parameter("day_glow", cap_day_glow)
 		cap_material.set_shader_parameter("gill_bold", gill_bold)
@@ -5350,7 +5372,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	var horizon_now: Color = (day.sky_horizon as Color).lerp(Color("3a3466"), night).lerp(Color("a79aa8"), rain * 0.4)
 	# Rain: c9c0d8 at full strength made the left giant a flat cutout 13 above the overcast behind it
 	# (review 09); the sky there measures ~L*60, so rain blends toward 968eaa at 0.93 (0.85 left the underside 16 below the sky, geology 144833).
-	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("968eaa"), rain).srgb_to_linear()
+	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("b4abc6"), rain).srgb_to_linear()
 	var cap_amount: float = lerpf(lerpf(float(look_override.get("far_fog", GOLDEN_FAR_FOG)) if look_depth else 0.9, 0.55, night), 0.93, rain)
 	for material: ShaderMaterial in [_horizon_cap_material, _horizon_stem_material]:
 		if material != null: material.set_shader_parameter("fog_cap", Color(cap_fog.r, cap_fog.g, cap_fog.b, cap_amount))
@@ -5378,15 +5400,18 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
-	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.01, night) * (1.0 - 0.4 * rain)
+	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
+	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.13, night) * (1.0 - 0.4 * rain)
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
 	# Luminous lilies keep a lavender night tone (review 11: they went ultramarine, sat 0.67).
-	var lily_tint: Color = Color(1.06, 1.06, 1.06).lerp(Color(0.4, 0.34, 0.5), night).lerp(Color(0.6, 0.58, 0.66), rain * (1.0 - night))
+	var lily_tint: Color = Color(1.12, 1.1, 1.1).lerp(Color(0.64, 0.44, 0.5), night).lerp(Color(0.62, 0.58, 0.64), rain * (1.0 - night))
 	for prop: ShaderMaterial in _refuge_props:
 		var pt: Color = lily_tint if prop.get_meta("luminous", false) else refuge_tint
 		prop.set_shader_parameter("tint", Vector3(pt.r, pt.g, pt.b))
 		prop.set_shader_parameter("glow", lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
-		if prop.get_meta("luminous", false): prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.7, night))
+		if prop.get_meta("luminous", false):
+			prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.48, night))
+			prop.set_shader_parameter("desat", 0.9 * night)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 
 func get_report() -> Dictionary:
