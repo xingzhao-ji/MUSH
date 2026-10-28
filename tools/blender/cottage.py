@@ -10,7 +10,7 @@ L.reset()
 rnd = random.Random(7)
 
 M = {
-    "cap": L.mat("cap", "#98725e", 0.75),
+    "cap": L.mat("cap", "#96707a", 0.75),
     "spot": L.mat("spot", "#b9958a", 0.8),
     "gill": L.mat("gill", "#f8af65", 0.7, "#f6a352", 1.6),
     "rib": L.mat("gill_rib", "#c9783f", 0.7, "#d98236", 0.6),
@@ -34,6 +34,10 @@ def pol(r, a, z):
 TOP = [(3.40, 2.87), (3.52, 2.94), (3.60, 3.08), (3.60, 3.22), (3.52, 3.42), (3.30, 3.78), (2.98, 4.15), (2.61, 4.47),
        (2.20, 4.78), (1.75, 5.08), (1.30, 5.34), (0.85, 5.56), (0.45, 5.70), (0.18, 5.76), (0.0, 5.78)]
 UNDER = [(0.0, 3.14), (1.2, 3.14), (2.2, 3.10), (2.8, 3.01), (3.15, 2.93), (3.40, 2.87)]
+# v8 (review 24: the eave glow read as a thin neon trim because the brim was narrow): brim flared ~10% wider
+def _flare(r): return r if r < 2.9 else 2.9 + (r - 2.9) * 1.45
+TOP = [(_flare(r), z) for r, z in TOP]
+UNDER = [(_flare(r), z) for r, z in UNDER]
 
 def droop_z(x, y, z, r):
     # a gentle lean: the front-left of the rim sits lower, as in the sheet's front and hero views
@@ -48,7 +52,7 @@ L.lathe("cap_top", TOP, 64, M["cap"], close_top=True, deform=deform)
 L.lathe("cap_under", UNDER, 64, M["gill"], deform=deform)
 # v7 (review 23: the eave read as a plain brown dome; the goal shows a warm lit fringe under the brim): a thin
 # glowing gill fringe hanging just inside the rim lip, visible from the front
-L.lathe("gill_fringe", [(3.32, 2.70), (3.50, 2.76), (3.56, 2.86)], 64, M["gill"], deform=deform)
+L.lathe("gill_fringe", [(_flare(3.32), 2.62), (_flare(3.50), 2.72), (_flare(3.56), 2.86)], 64, M["gill"], deform=deform)
 
 def z_top(r):
     pts = sorted([(rr, zz) for rr, zz in TOP[4:]], key=lambda p: p[0])

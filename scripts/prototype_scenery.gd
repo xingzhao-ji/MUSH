@@ -2616,7 +2616,11 @@ const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
 ## Milestone compare (pr20 vs goal): the goal shows a broad glowing gill band (y 195-265) under the dome, ours
 ## a thin one: tipped 4 degrees away from the eye instead, so more of the underside shows.
 ## Review 23: -4 pushed the cap up into the top-right sky (blocks (1200,80) 8->22, (1200,240) 3->16): -1.5.
-const GIANT_HERO_TILT_DEG := -1.5
+## Review 24: the cap's right edge still ~12 px high at -1.5: -0.5.
+const GIANT_HERO_TILT_DEG := -0.5
+## Review 24: at night the gill band (L*59) outshone the caps (L*35): giant gills glow at this share of the
+## night level.
+const GIANT_GILL_NIGHT_SCALE := 0.55
 ## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
 const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
 const GIANT_HERO_HEIGHT_SCALE := 0.81
@@ -2629,7 +2633,8 @@ const GIANT_HERO_TILT_LEFT := 0.0
 ## lavender. [day colour, day energy, night colour, night energy]: a lavender night glow on the cap top
 ## (target L*28-40, C*35-45, h 300-310) and a faint mauve fill on stem and skirt (target L* >= 14).
 ## Fifth value: an extra fill in rain (review 23: rain caps L*44 vs ckpt38 68, stems 28 vs 43).
-const GIANT_FILLS := {"cap": [Color("d4a8b8"), 0.07, Color("8a68d8"), 0.35, 0.22], "stem": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1], "skirt": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1]}
+## Review 24: night caps C*57 (target 35-45): a greyer lavender, 0.3.
+const GIANT_FILLS := {"cap": [Color("d4a8b8"), 0.07, Color("8f7cc4"), 0.3, 0.22], "stem": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1], "skirt": [Color("8a6a90"), 0.0, Color("8a6a90"), 0.12, 0.1]}
 ## The hero's root flare stood clear of its sloping ground (ChatGPT checkpoint 2: the stem ends above the
 ## shoreline): sunk this far (m).
 const GIANT_HERO_SINK := 12.0
@@ -2664,6 +2669,10 @@ func _add_blender_giants() -> void:
 		placed += 1
 	for node: Node in _nodes:
 		if String(node.name) in ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"]: (node as Node3D).visible = false
+	for part: Array in _model_parts(GIANT_BLENDER):
+		var gsrc := (part[0] as Mesh).surface_get_material(0) as StandardMaterial3D
+		if gsrc != null and gsrc.resource_name.to_lower() in ["gill", "gill_rib"] and _blender_mat_cache.has(gsrc):
+			(_blender_mat_cache[gsrc] as StandardMaterial3D).set_meta("night_scale", GIANT_GILL_NIGHT_SCALE)
 	giant_blender_report = {"placed": placed, "model": GIANT_BLENDER.get_file(), "hidden": ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"],
 		"hero_ground": snappedf(hero_ground, 0.1), "hero_tilt_deg": GIANT_HERO_TILT_DEG}
 	print("BLENDER_GIANTS ", JSON.stringify(giant_blender_report))
@@ -6674,11 +6683,12 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 			glow_m.emission = (glow_m.get_meta("day_fill_col") as Color).lerp(glow_m.get_meta("night_fill_col", glow_m.get_meta("day_fill_col")) as Color, night)
 			continue
 		var day_k: float = 0.0 if glow_m.get_meta("night_only", false) else BLENDER_DAY_GLOW
+		var night_k: float = BLENDER_NIGHT_GLOW * float(glow_m.get_meta("night_scale", 1.0))
 		if glow_m.get_meta("flora", false):
 			# Flora petals keep their day glow in rain (review 23: the blue stars glowed brighter in rain than by day).
-			glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, BLENDER_NIGHT_GLOW, night)
+			glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, night_k, night)
 			continue
-		glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, BLENDER_NIGHT_GLOW, maxf(night, rain * 0.5))
+		glow_m.emission_energy_multiplier = float(glow_m.get_meta("glow", 1.0)) * lerpf(day_k, night_k, maxf(night, rain * 0.5))
 	# Shore reeds: the refuge's night/rain tint, a daylight self-fill and warm transmission (backlit by
 	# the golden key), both falling away at night.
 	if _reed_material != null:
