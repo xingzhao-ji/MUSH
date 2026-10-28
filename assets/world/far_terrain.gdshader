@@ -190,7 +190,15 @@ void fragment() {
 		// The near moss detail reads as grey grit up close; tended ground leans to a soft lit lawn.
 		moss = mix(moss, moss_mean * vec3(1.25, 1.3, 0.92) * (0.9 + 0.2 * fleck), g * 0.8);
 	}
+	// Escarpment ledges (vertex colour g: 1 = shelf top, 0.5 = riser and lip; 0 = all other terrain):
+	// lit grass tops and shaded rock risers, so the shelves read 15+ L* apart (review 13).
+	float ledge_top = smoothstep(0.75, 1.0, COLOR.g);
+	float ledge_riser = smoothstep(0.25, 0.5, COLOR.g) * (1.0 - ledge_top);
+	rockiness = mix(rockiness, 0.0, ledge_top);
+	rockiness = mix(rockiness, 1.0, ledge_riser);
+	moss = mix(moss, moss_mean * vec3(2.15, 2.2, 1.3) * (0.88 + 0.24 * fleck), ledge_top);
 	vec3 albedo = mix(moss, rock, rockiness);
+	albedo *= mix(1.0, 0.8, ledge_riser);
 	albedo *= 0.88 + 0.24 * macro;
 	vec3 fill = vec3(0.0);
 	float targeted = focus * rockiness;

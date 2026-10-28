@@ -161,7 +161,8 @@ void fragment() {
 			// the margin and amber toward the stem (night keeps the amber glow above).
 			emit += mix(vec3(0.62, 0.56, 0.80) * 0.30, amber * 0.75, core * core) * (1.0 - night);
 			rough = 0.85;
-			emit += vec3(0.6, 0.56, 0.68) * rain_lift;
+			emit += vec3(0.9, 0.4, 0.14) * rain_lift;
+			albedo = mix(albedo, albedo * vec3(0.7, 0.5, 0.4), clamp(rain_lift * 2.0, 0.0, 1.0));
 			if (cap_craft > 0.0) {
 				// Gill bundles (wandering, varied width) and plates; shadowed gaps deepen toward the margin.
 				// Irregular bundles: the angle is warped by low-frequency noise (several bundle widths)
@@ -209,13 +210,14 @@ void fragment() {
 					float p_p = a * 72.0 + wob * 5.0;
 					float plate = mix(0.5, 0.5 + 0.5 * sin(p_p), aa(p_p));
 					float gb = clamp(0.62 * bundle + 0.38 * plate, 0.0, 1.0);
-					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.6 * smoothstep(0.8, 1.0, t));
+					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.85 * smoothstep(0.62, 1.0, t));
 					// Deep gaps, compact bright plates (review 11: striation 1.02 vs 1.5, 21% above L*80).
-					gold_grad *= mix(1.0, 2.0 * pow(gb, 1.4), gk);
+					// Deeper amber on the crests (review 13: gill saturation 0.38 vs 0.45); less boost at the stem.
+					gold_grad *= mix(vec3(1.0), vec3(1.0, 0.8, 0.55) * 2.0 * pow(gb, 1.4), gk);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);
-				emit = mix(emit, (gold_grad * 0.75 + amber * core * core * 0.4) * under_gain, dg);
+				emit = mix(emit, (gold_grad * 0.75 + amber * core * core * mix(0.4, 0.12, clamp(gill_bold, 0.0, 1.0))) * under_gain, dg);
 				// Grazing sky reflection veiled the gold in pale lavender (mid-gill 253, 225, 211).
 				spec = mix(spec, 0.02, dg);
 			}

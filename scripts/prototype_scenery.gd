@@ -2249,11 +2249,11 @@ func _refuge_material(source: Material) -> Material:
 		if sheet != null:
 			sheet = sheet.duplicate()
 			if sheet.is_compressed(): sheet.decompress()
-			sheet.adjust_bcs(1.12, 1.0, 0.22)
+			sheet.adjust_bcs(1.08, 1.3, 0.22)
 			sheet.generate_mipmaps()
 			m.albedo_texture = ImageTexture.create_from_image(sheet)
 		tint = Color(0.92, 0.78, 0.98)
-	elif "grass" in label: tint = Color(0.68, 0.82, 0.48)
+	elif "grass" in label: tint = Color(0.5, 0.56, 0.3)
 	elif "leaves" in label: tint = Color(0.88, 0.9, 0.66)
 	m.set_meta("day_tint", base.albedo_color * tint)
 	# Leaf cards and bark: wrapped diffuse plus a dim self-fill from their own albedo, so crown
@@ -2544,7 +2544,8 @@ func _add_face_ledges(eye: Vector3) -> Dictionary:
 	noise.seed = 4711
 	noise.frequency = 0.08
 	var levels: Array = []
-	for f: float in [0.05, 0.3, 0.56, 0.8]: levels.append([top - (top - bottom) * f, 0, columns.size(), 9.0, 5.0])
+	# Broad grassy terraces stepping down the face (goal: lush stepped ledges), rock bands between.
+	for f: float in [0.05, 0.22, 0.4, 0.58, 0.76, 0.9]: levels.append([top - (top - bottom) * f, 0, columns.size(), 15.0, 5.0])
 	# Steps: short shelves stacked 3.6 m apart, stepping one column right each, down from the top edge.
 	for i: int in 6: levels.append([top - 3.0 - 3.6 * float(i), 1 + i, 4 + i, 4.5, 3.4])
 	for level: Array in levels:
@@ -2596,11 +2597,14 @@ func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite
 		var w: float = width * (0.75 + 0.5 * (noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5))
 		var lift: float = 0.4
 		# Vertex colour is the terrain shader's riparian mask: keep it at zero.
-		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(Color.BLACK)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(Color.BLACK)
-		vertices.append(p + out * (w + 0.6) + Vector3(0, lift - 1.2, 0)); colors.append(Color.BLACK)
-		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(Color.BLACK)
-		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(Color.BLACK)
+		# Colour r = 0 (no riparian), g = ledge part for the terrain shader: 1 top, 0.5 lip and riser.
+		var top_c := Color(0, 1, 0)
+		var rise_c := Color(0, 0.5, 0)
+		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(top_c)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(top_c)
+		vertices.append(p + out * (w + 0.6) + Vector3(0, lift - 1.2, 0)); colors.append(rise_c)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(rise_c)
+		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(rise_c)
 	for i: int in strip.size() - 1:
 		var a: int = base + i * 5
 		var b: int = a + 5
@@ -2822,23 +2826,39 @@ func _add_vista_refuge() -> void:
 	var bx: float = -0.3
 	while bx <= 1.0:
 		var by: float = -0.42
-		var wet: bool = false
+		var wet_by: float = NAN
 		while by >= -0.99:
 			var hit: Vector3 = _vista_ray_ground(bx, by, 800.0)
 			if hit != Vector3.INF:
-				if hit.y < LAKE_Y - 0.2: wet = true
-				elif wet and hit.y > LAKE_Y + 0.6 and hit.y < LAKE_Y + 3.0:
-					if Vector2(hit.x, hit.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(hit.x, hit.z)) > 3.0:
+				if hit.y < LAKE_Y - 0.2: wet_by = by
+				elif not is_nan(wet_by) and hit.y > LAKE_Y + 0.6:
+					# Bisect between the last lake-bed ray and this dry ray for the waterline (+1 m), so steep
+					# banks are found too (most columns failed a fixed +0.6..+6 m window).
+					var lo: float = wet_by
+					var hi: float = by
+					var shore: Vector3 = hit
+					for it: int in 10:
+						var mid: float = (lo + hi) * 0.5
+						var mh: Vector3 = _vista_ray_ground(bx, mid, 800.0)
+						if mh == Vector3.INF: break
+						if mh.y < LAKE_Y + 1.0: lo = mid
+						else:
+							hi = mid
+							shore = mh
+					# Ragged: clumps and gaps along the shore (a continuous strip read as a hedge).
+					var clump: float = sin(shore.x * 0.11 + shore.z * 0.07) + 0.6 * sin(shore.x * 0.37 - shore.z * 0.23)
+					if clump > -0.35 and Vector2(shore.x, shore.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(shore.x, shore.z)) > 3.0:
 						shore_cols += 1
-						for k: int in grng.randi_range(1, 3):
-							var q: Vector3 = hit + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
+						for k: int in grng.randi_range(1, 3) + (2 if clump > 0.8 else 0):
+							var q: Vector3 = shore + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
 							q.y = _mesh_ground(q.x, q.z)
-							if q.y < LAKE_Y + 0.6: continue
-							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if band_n % 3 != 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.6, 2.8), grng.randf() * TAU)
+							if q.y < LAKE_Y + 0.4: continue
+							# 2.3-6 m reed clumps; the near shore is 160-550 m out, so 10-30 px; dark olive.
+							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if k % 2 == 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.4, 3.0) * (1.25 if k % 2 == 1 else 1.0), grng.randf() * TAU)
 							band_n += 1
 					break
 			by -= 0.006
-		bx += 0.008
+		bx += 0.005
 	counts["shore_columns"] = shore_cols
 	counts["shore_reed_band"] = band_n
 	counts["cattails"] = reed_n
@@ -2846,12 +2866,12 @@ func _add_vista_refuge() -> void:
 	var shore_n: int = 0
 	var far_tree_px: Array = []
 	for i: int in 80:
-		if shore_n >= 5: break
+		if shore_n >= 9: break
 		var hit: Vector3 = _vista_ray_ground(grng.randf_range(0.02, 0.62), grng.randf_range(-0.3, -0.1), 1600.0)
 		if hit == Vector3.INF or hit.y < LAKE_Y + 1.0 or hit.y > LAKE_Y + 30.0: continue
 		if _ribbon_gap(Vector2(hit.x, hit.z)) < 8.0: continue
 		# Old giants (35-45 m) so they read at 1-1.3 km through the haze (review 12: 20-40 px).
-		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.8, 0), grng.randf_range(5.0, 6.4), grng.randf() * TAU)
+		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.8, 0), grng.randf_range(6.2, 7.6), grng.randf() * TAU)
 		var ts: Vector2 = _vista_screen(eye, hit)
 		far_tree_px.append([roundi((ts.x + 1.0) * 640.0), roundi((1.0 - ts.y) * 360.0), roundi(hit.distance_to(eye))])
 		shore_n += 1
@@ -5237,7 +5257,7 @@ const GOLDEN_CAP_GLOW := 1.0
 ## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
 const GOLDEN_GILL_BOLD := 1.0
 ## Overcast lift on cap undersides in rain (review 10-12: far undersides sat ~20 below the rain sky).
-const RAIN_UNDER_LIFT := 0.6
+const RAIN_UNDER_LIFT := 0.3
 const GOLDEN_CLOUD_GLOW := 1.0
 const GOLDEN_CLOUD_GLOW_POWER := 4.0
 const GOLDEN_CLOUD_GLOW_COLOR := "ff9f50"
@@ -5401,7 +5421,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
-	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.13, night) * (1.0 - 0.4 * rain)
+	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.07, night) * (1.0 - 0.4 * rain)
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
 	# Luminous lilies keep a lavender night tone (review 11: they went ultramarine, sat 0.67).
 	var lily_tint: Color = Color(1.12, 1.1, 1.1).lerp(Color(0.64, 0.44, 0.5), night).lerp(Color(0.62, 0.58, 0.64), rain * (1.0 - night))
