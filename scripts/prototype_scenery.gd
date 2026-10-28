@@ -5491,7 +5491,10 @@ const GOLDEN_CLOUD_GLOW_POWER := 3.0
 const GOLDEN_CLOUD_GLOW_COLOR := "dc8636"
 const GOLDEN_HORIZON_GLOW := 4.5
 const GOLDEN_HORIZON_GLOW_POWER := 3.0
-const GOLDEN_REFLECT_FLOOR := 0.5
+## Lake reflection floor and glow dome colour (review 17: lake 33 vs 38-44, the glow band whitening):
+## 0.5 -> 0.75 and ffb873 -> f08030 lift the vista lake ~8 L* with the sky hues unchanged (sweep 215354).
+const GOLDEN_REFLECT_FLOOR := 0.75
+const GOLDEN_DOME_COLOR := "f08030"
 const GOLDEN_GLOW_BAND := 8.0
 const GOLDEN_FAR_DOME := 0.5
 const GOLDEN_FAR_UNDER := 1.5
@@ -5539,7 +5542,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		_skyglow_material.set_shader_parameter("night", night)
 		_skyglow_material.set_shader_parameter("rain", rain)
 		_skyglow_material.set_shader_parameter("strength", float(look_override.get("glow", GOLDEN_GLOW)))
-		_skyglow_material.set_shader_parameter("glow_color", Color(str(look_override.get("glow_color", "ffb873"))))
+		_skyglow_material.set_shader_parameter("glow_color", Color(str(look_override.get("glow_color", GOLDEN_DOME_COLOR))))
 		_skyglow_material.set_shader_parameter("halo_power", float(look_override.get("halo_power", GOLDEN_HALO_POWER)))
 		_skyglow_material.set_shader_parameter("halo_gain", float(look_override.get("halo_gain", GOLDEN_HALO_GAIN)))
 	for material: ShaderMaterial in _art + [_terrain_material, _lake_material] + _geology_materials:
