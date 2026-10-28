@@ -2577,6 +2577,8 @@ func _flora_flush() -> void:
 			if src != null:
 				node.material_override = _blender_mat(src)
 				node.material_override.set_meta("flora", true)
+				# Shore kit blades caught the lavender sky as a pale sheen at grazing angles (capture pr34).
+				if path.begins_with(SHORE_DIR): (node.material_override as StandardMaterial3D).metallic_specular = 0.12
 			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 			add_child(node)
@@ -2584,6 +2586,23 @@ func _flora_flush() -> void:
 			nodes += 1
 	flora_report = {"instances": count, "multimesh_nodes": nodes, "models": _flora_batches.size()}
 	_flora_batches.clear()
+
+## Blender lake-shore kit (MUSH-exchange/blender/scripts/shore.py, ChatGPT sheet mush-sheet-shore-01): cattail,
+## plumed reed, rush, iris, wet mossy rocks, half-submerged stones and lily pads, batched with the flora.
+## MUSH_NO_SHORE=1 restores the vertex-colour reed clumps.
+const SHORE_DIR := "res://assets/world/models/blender/shore/"
+func _shore_ready() -> bool:
+	return ResourceLoader.exists(SHORE_DIR + "shore_cattail.glb") and OS.get_environment("MUSH_NO_SHORE") == ""
+
+## Queue one shore model on a reed-clump transform (unit-tall clump meshes): base on xf's origin, xf's
+## rotation, scaled uniformly so the model is xf's height tall.
+func _shore_put(file: String, xf: Transform3D) -> void:
+	var path: String = SHORE_DIR + file
+	var box: AABB = _model_box(path)
+	var k: float = xf.basis.get_scale().y / maxf(box.size.y, 0.01)
+	var basis: Basis = xf.basis.orthonormalized() * Basis.from_scale(Vector3.ONE * k)
+	if not _flora_batches.has(path): _flora_batches[path] = []
+	_flora_batches[path].append(Transform3D(basis, xf.origin - basis * Vector3(0, box.position.y, 0)))
 
 ## Giant mushrooms rebuilt in Blender from a ChatGPT modeling sheet (MUSH-exchange/blender/scripts/giant.py;
 ## cap radius 7 m, cap rim underside 1.125 x 7 m above the base). Each giant gets one, scaled so its cap
@@ -2691,7 +2710,9 @@ func _add_blender_giants() -> void:
 ## V3 (promontory3.glb, ChatGPT sheet mush-sheet-promontory-03, after ChatGPT checkpoint 2: V2's vertical
 ## striped column walls read as constructed): the V2 layout with faceted boulder masses for faces and the stair
 ## set in a boulder-lined grassy slope.
-const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory3.glb"
+## V4 (promontory4.py; review 24: the stair still read as one long straight ladder): the same rock and moss
+## build with the stair in three short flights and two flat landings where it turns.
+const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory4.glb"
 const PROM_SCREEN := Vector2(-0.68, -0.36)
 const PROM_DIST := 95.0
 ## V2 at 2.0 tall showed the top tier as a 15 m pale flat-lit rock face below the moss (capture pr12; the
@@ -2702,7 +2723,8 @@ const PROM_TINT := Color(0.82, 0.82, 0.78)
 ## 18.5 m still read small (Gemini on pr13: scale the cottage ~1.25x; goal 247 x 140 px).
 const PROM_COTTAGE_HEIGHT := 21.0
 ## Lanterns along the stair rib, Blender (x, y, z) on its outer edge.
-const PROM_STAIR_LANTERNS: Array = [[8.4, 3.0, 10.75], [10.6, -3.6, 6.65], [12.4, -7.6, 3.25]]
+## V4: beside the two landings and the last flight.
+const PROM_STAIR_LANTERNS: Array = [[10.4, 2.6, 8.95], [7.2, -6.0, 5.7], [12.8, -6.5, 3.6]]
 ## Blender tiers: [centre x, centre y (Blender y = -glTF z), radius x, radius y, top].
 const PROM_TIERS: Array = [[-1.0, -1.2, 10.5, 8.6, 6.0], [-1.6, 1.0, 7.6, 6.1, 11.7]]
 var _prom_xf := Transform3D.IDENTITY
@@ -3488,6 +3510,12 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 const BANK_CORNER_BEARING := Vector2(-53.0, -27.0)
 const BANK_CORNER_CATTAILS := 0
 const BANK_CORNER_PLANTS := 70
+## With the Blender shore kit (shore.py): [file, min height, max height] m; cattails lead, as in the goal's
+## lower right; tops kept below px 600 (goal: cattail heads at y ~600-625 there).
+## Capture pr33 (cattails 2 in 6 at 1.1-2.0 m, 110 plants): a dense wall of heads up to px 585 against the goal's
+## sparse stands topping out at 600-625 over grass: fewer cattails, lower, more rush.
+const BANK_CORNER_KIT: Array = [["shore_cattail.glb", 1.0, 1.5], ["shore_rush.glb", 0.4, 0.7], ["shore_reed.glb", 0.8, 1.2], ["shore_rush.glb", 0.35, 0.6], ["shore_cattail.glb", 0.9, 1.3], ["shore_rush.glb", 0.45, 0.75], ["shore_iris.glb", 0.5, 0.75]]
+const BANK_CORNER_KIT_PLANTS := 85
 func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: Dictionary) -> void:
 	var noise := FastNoiseLite.new()
 	noise.seed = 5129
@@ -3501,10 +3529,11 @@ func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts
 	var plants: Array = [QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf", QN + "Plant_7_Big.gltf", QN + "Plant_1_Big.gltf", QN + "Flower_4_Group.gltf", QN + "Bush_Common.gltf", QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf"]
 	var cat_xf: Array[Transform3D] = []
 	var plant_n: int = 0
+	var shore_kit: bool = _shore_ready()
 	var lo := Vector2(INF, INF)
 	var hi := Vector2(-INF, -INF)
-	for i: int in 800:
-		if cat_xf.size() >= BANK_CORNER_CATTAILS and plant_n >= BANK_CORNER_PLANTS: break
+	for i: int in 1200:
+		if cat_xf.size() >= BANK_CORNER_CATTAILS and plant_n >= (BANK_CORNER_KIT_PLANTS if shore_kit else BANK_CORNER_PLANTS): break
 		var b: float = crng.randf_range(BANK_CORNER_BEARING.x + 1.0, BANK_CORNER_BEARING.y - 1.5)
 		var r: float = crng.randf_range(LEDGE_RANGE.x + 1.5, _ledge_outer(b, noise) - 0.5)
 		var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
@@ -3513,9 +3542,20 @@ func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts
 		var h: float = crng.randf_range(1.4, 2.4) if cat else crng.randf_range(0.6, 1.5)
 		var top: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
 		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
-		if px.x < 980.0 or px.y < 555.0: continue
+		if px.x < 980.0 or px.y < (600.0 if shore_kit else 555.0): continue
 		if cat:
 			cat_xf.append(Transform3D(Basis(Vector3.UP, crng.randf() * TAU).scaled(Vector3(h * 0.8, h, h * 0.8)), p - Vector3(0, 0.05, 0)))
+		elif shore_kit:
+			# Goal and shore-01 sheet: cattails, reeds, rush and iris against the water, a few round bushes.
+			var roll: float = crng.randf()
+			var yaw: float = crng.randf() * TAU
+			if roll < 0.12:
+				_refuge_put(batches, QN + "Bush_Common.gltf", p - Vector3(0, 0.08, 0), h / _model_size(QN + "Bush_Common.gltf"), yaw)
+			else:
+				var piece: Array = BANK_CORNER_KIT[crng.randi() % BANK_CORNER_KIT.size()]
+				var kh: float = crng.randf_range(float(piece[1]), float(piece[2]))
+				_shore_put(piece[0], Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * kh), p - Vector3(0, 0.06, 0)))
+			plant_n += 1
 		else:
 			var path: String = plants[crng.randi() % plants.size()]
 			_refuge_put(batches, path, p - Vector3(0, 0.08, 0), h / _model_size(path), crng.randf() * TAU)
@@ -3527,7 +3567,7 @@ func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts
 	for c: Vector3 in [grid[0][0], grid[0][10], grid[12][0], grid[12][10], grid[6][10]]:
 		var s: Vector2 = _vista_screen(eye, c)
 		corners.append([roundi((s.x + 1.0) * 640.0), roundi((1.0 - s.y) * 360.0)])
-	counts["corner_bank"] = {"cattails": cat_xf.size(), "plants": plant_n, "corners_px": corners, "plant_tops_px": [lo, hi]}
+	counts["corner_bank"] = {"cattails": cat_xf.size(), "plants": plant_n, "shore_kit": shore_kit, "corners_px": corners, "plant_tops_px": [lo, hi]}
 
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
@@ -3776,6 +3816,9 @@ func _add_vista_refuge() -> void:
 	var cattail_band: int = 0
 	var cattail_xf: Array[Transform3D] = []
 	var reed_xf: Array[Transform3D] = []
+	var rock_rng := RandomNumberGenerator.new()
+	rock_rng.seed = 20261037
+	var shore_rocks: Array[Vector3] = []
 	var bx: float = -0.3
 	while bx <= 1.0:
 		var by: float = -0.42
@@ -3803,6 +3846,8 @@ func _add_vista_refuge() -> void:
 					# Gaps only where the clump field is lowest (review 15: reeds on 29% of shoreline columns, target 50%).
 					if clump > -0.8 and not _shore_view_blocked(Vector2(shore.x, shore.z)) and _ribbon_gap(Vector2(shore.x, shore.z)) > 1.6:
 						shore_cols += 1
+						# Wet mossy rocks at the waterline among the reeds (shore-01 sheet), own generator.
+						if rock_rng.randf() < 0.16: shore_rocks.append(shore)
 						for k: int in grng.randi_range(1, 3) + (2 if clump > 0.6 else 0):
 							var q: Vector3 = shore + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
 							q.y = _mesh_ground(q.x, q.z)
@@ -3846,8 +3891,37 @@ func _add_vista_refuge() -> void:
 		bank_n += 1
 	counts["bank_stands"] = bank_n
 	counts["band_reeds"] = reed_xf.size()
-	_reed_multimesh(_cattail_clump_mesh(), cattail_xf, "RefugeShoreCattails")
-	_reed_multimesh(_reed_clump_mesh(), reed_xf, "RefugeShoreReeds")
+	if _shore_ready():
+		# The shore kit on the same spots: cattails as cattails; every fifth reed an iris, every fourth a rush
+		# tuft at 0.45 of the height, the rest plumed reeds.
+		var kit_rng := RandomNumberGenerator.new()
+		kit_rng.seed = 20261036
+		var kit: Dictionary = {"cattail": 0, "reed": 0, "iris": 0, "rush": 0}
+		for xf: Transform3D in cattail_xf:
+			_shore_put("shore_cattail.glb", xf)
+			kit["cattail"] += 1
+		for xf: Transform3D in reed_xf:
+			var roll: float = kit_rng.randf()
+			if roll < 0.2:
+				_shore_put("shore_iris.glb", Transform3D(xf.basis.scaled(Vector3.ONE * 0.6), xf.origin))
+				kit["iris"] += 1
+			elif roll < 0.45:
+				_shore_put("shore_rush.glb", Transform3D(xf.basis.scaled(Vector3.ONE * 0.45), xf.origin))
+				kit["rush"] += 1
+			else:
+				_shore_put("shore_reed.glb", xf)
+				kit["reed"] += 1
+		# Rocks 2.2-4.5 m tall (the reeds stand 2.5-4x true scale to read at 160-550 m), a third sunk.
+		var rocks: Array = ["shore_rock_a.glb", "shore_rock_c.glb", "shore_stone_sub_a.glb", "shore_rock_b.glb", "shore_stone_sub_b.glb"]
+		for q: Vector3 in shore_rocks:
+			var rh: float = rock_rng.randf_range(2.2, 4.5)
+			var rp := Vector3(q.x, minf(_mesh_ground(q.x, q.z), LAKE_Y + 0.6) - rh * 0.3, q.z)
+			_shore_put(rocks[rock_rng.randi() % rocks.size()], Transform3D(Basis(Vector3.UP, rock_rng.randf() * TAU).scaled(Vector3.ONE * rh), rp))
+		kit["rocks"] = shore_rocks.size()
+		counts["shore_kit"] = kit
+	else:
+		_reed_multimesh(_cattail_clump_mesh(), cattail_xf, "RefugeShoreCattails")
+		_reed_multimesh(_reed_clump_mesh(), reed_xf, "RefugeShoreReeds")
 	counts["band_cattails"] = cattail_xf.size()
 	# Tall cattails on the drop below the eye's right frame the lower-right corner, as the lilies frame
 	# the left (goal: cattails against the water at the lower right).
