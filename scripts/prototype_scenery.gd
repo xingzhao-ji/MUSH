@@ -2530,7 +2530,10 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 ## cap radius 7 m, cap rim underside 1.125 x 7 m above the base). Each giant gets one, scaled so its cap
 ## radius and underside height match GIANTS; the procedural caps, stems and tendrils are hidden (their
 ## nodes, shader state and reports stay). Visual only; the hero root collision band is unchanged.
-const GIANT_BLENDER := "res://assets/world/models/blender/giant.glb"
+## V2 (giant2.glb, ChatGPT sheet mush-sheet-giant-02, after review: V1 cap too flat, stem too thin and
+## straight, skirt an angular collar): domed cap with a rim curling under the gills, flowing skirt, a stem
+## tapering from a wide rooted base. Its rim's lowest point is at 1.125 R like V1.
+const GIANT_BLENDER := "res://assets/world/models/blender/giant2.glb"
 const GIANT_MODEL_R := 7.0
 const GIANT_MODEL_UNDERSIDE := 7.875
 ## The giants' camera-facing sides are shadow sides under the golden back light, lit only by the lavender
@@ -2552,14 +2555,16 @@ const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
 ## Capture pr06 (1.5 tall, tipped toward the left too): the dome read but rose off the frame's top right (goal:
 ## a near-level cap, right edge y 135-215): tipped toward the eye only, 3 degrees, 1.25 tall.
 const GIANT_HERO_TILT_DEG := 3.0
-const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.25, 1.0)
+## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
+const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
 const GIANT_HERO_HEIGHT_SCALE := 0.81
 const GIANT_HERO_TILT_LEFT := 0.0
 ## Cap tops rendered dark violet (pr06 dome #8a70b0, goal #b89cc8): beyond what an albedo can lift, so a warm
 ## pink daylight self-fill [emission colour, day energy] (apply_look: off at night, halved in rain).
 ## Pink-beige at 0.35 washed every cap near white with the spots lost (capture pr07): a lavender fill at 0.12.
 const GIANT_FILLS := {"cap": [Color("c8a0c0"), 0.12]}
-const GIANT_MODEL_PIVOT := 7.63
+## Stem top / gill plane (model y): 1.30 x 0.945 x 7 m.
+const GIANT_MODEL_PIVOT := 8.3
 var giant_blender_report: Dictionary = {"placed": 0}
 func _add_blender_giants() -> void:
 	if GIANT_BLENDER == "" or not ResourceLoader.exists(GIANT_BLENDER): return
@@ -2600,14 +2605,20 @@ func _add_blender_giants() -> void:
 ## the vista ray through PROM_SCREEN, PROM_DIST horizontal metres out. While the refuge is built, refuge
 ## props inside a tier use its top as ground (_mesh_ground). Visual only: no collider, no shadow.
 ## MUSH_NO_PROMONTORY=1 restores the terrace refuge for before/after captures.
-const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory.glb"
+## V2 (promontory2.glb, ChatGPT sheet mush-sheet-promontory-02, after review: V1 read as thin bright-green
+## shelves over pale round boulders with a straight stack of steps): two thick tiers of faceted rock columns
+## under hanging moss caps and an S-curve slab stair on a grassy rib down the right flank.
+const PROMONTORY_BLENDER := "res://assets/world/models/blender/promontory2.glb"
 const PROM_SCREEN := Vector2(-0.68, -0.36)
 const PROM_DIST := 95.0
-const PROM_SCALE := Vector3(2.6, 2.0, 2.6)
+## V2 at 2.0 tall showed the top tier as a 15 m pale flat-lit rock face below the moss (capture pr12; the
+## goal shows a short stone edge under the cottage terrace): 1.5 tall, and its colours a little darker.
+const PROM_SCALE := Vector3(2.6, 1.5, 2.6)
+const PROM_TINT := Color(0.82, 0.82, 0.78)
 ## 16 m read 180 x 122 px at 96 m (capture pr01; goal cottage 247 x 140 px with its porch posts).
 const PROM_COTTAGE_HEIGHT := 18.5
 ## Blender tiers: [centre x, centre y (Blender y = -glTF z), radius x, radius y, top].
-const PROM_TIERS: Array = [[1.0, -1.0, 12.0, 10.0, 4.0], [0.0, 0.2, 10.0, 8.4, 8.0], [-1.0, 1.2, 8.0, 6.6, 12.0]]
+const PROM_TIERS: Array = [[-1.0, -1.2, 10.5, 8.6, 6.0], [-1.6, 1.0, 7.6, 6.1, 11.7]]
 var _prom_xf := Transform3D.IDENTITY
 var _prom_active: bool = false
 var promontory_report: Dictionary = {"built": false}
@@ -2619,11 +2630,11 @@ func _promontory_home(eye: Vector3) -> Vector3:
 	return eye + ray * (PROM_DIST / maxf(Vector2(ray.x, ray.z).length(), 0.01))
 
 func _add_promontory(home: Vector3, yaw: float, eye: Vector3) -> void:
-	var top: Array = PROM_TIERS[2]
+	var top: Array = PROM_TIERS[PROM_TIERS.size() - 1]
 	var c := Vector3(float(top[0]), float(top[4]) + 0.1, -float(top[1]))
 	_prom_xf = Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(PROM_SCALE), home) * Transform3D(Basis.IDENTITY, -c)
 	var ground: float = _mesh_ground(home.x, home.z)
-	_blender_place(PROMONTORY_BLENDER, _prom_xf, "RefugePromontory")
+	_blender_place(PROMONTORY_BLENDER, _prom_xf, "RefugePromontory", PROM_TINT)
 	_prom_active = true
 	var base: Vector2 = _vista_screen(eye, home)
 	var foot: Vector3 = _prom_xf * Vector3(0.0, 0.0, 10.0)
@@ -2639,7 +2650,7 @@ func _prom_tier_e(x: float, z: float, i: int) -> float:
 
 ## Top of the highest promontory tier holding (x, z), NAN outside them (0.85 of each radius: the moss lip).
 func _prom_ground(x: float, z: float) -> float:
-	for i: int in [2, 1, 0]:
+	for i: int in range(PROM_TIERS.size() - 1, -1, -1):
 		if _prom_tier_e(x, z, i) < 0.72:
 			var m: Vector3 = _prom_xf.affine_inverse() * Vector3(x, 0.0, z)
 			return (_prom_xf * Vector3(m.x, float(PROM_TIERS[i][4]) + 0.15, m.z)).y
@@ -3102,7 +3113,7 @@ func _add_framing_trees(eye: Vector3, look_h: Vector3, batches: Dictionary, tree
 		var r: float = trng.randf_range(FRAME_TREE_RANGE.x, FRAME_TREE_RANGE.y)
 		var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
 		# Not on or against the promontory (its bottom tier plus ~40%): it carries the cottage there.
-		if _prom_active and _prom_tier_e(p.x, p.z, 0) < 1.96: continue
+		if _prom_active and _prom_tier_e(p.x, p.z, 0) < 2.6: continue
 		p.y = _mesh_ground(p.x, p.z)
 		var too_close: bool = false
 		for q: Vector3 in placed:
@@ -3529,8 +3540,8 @@ func _add_vista_refuge() -> void:
 	refuge_lanterns.append(path_end - side * 2.0)
 	if on_prom:
 		# Two lanterns at the top tier's front lip and one at the head of the stone steps (front right).
-		var front: float = float(PROM_TIERS[2][3]) * PROM_SCALE.z * 0.78
-		refuge_lanterns = [home + toward * front + side * 3.2 * PROM_SCALE.x, home + toward * front - side * 3.2 * PROM_SCALE.x, home + toward * 1.4 * PROM_SCALE.z - side * 6.0 * PROM_SCALE.x]
+		var front: float = float(PROM_TIERS[PROM_TIERS.size() - 1][3]) * PROM_SCALE.z * 0.78
+		refuge_lanterns = [home + toward * front + side * 3.2 * PROM_SCALE.x, home + toward * front - side * 3.2 * PROM_SCALE.x, home - toward * 2.4 * PROM_SCALE.z - side * 4.6 * PROM_SCALE.x]
 	for i: int in refuge_lanterns.size(): refuge_lanterns[i].y = _mesh_ground(refuge_lanterns[i].x, refuge_lanterns[i].z)
 	var fence_n: int = 0
 	for k: int in (0 if on_prom else edge.size() - 1):
