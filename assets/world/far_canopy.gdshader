@@ -206,7 +206,8 @@ void fragment() {
 					float plate = mix(0.5, 0.5 + 0.5 * sin(p_p), aa(p_p));
 					float gb = clamp(0.62 * bundle + 0.38 * plate, 0.0, 1.0);
 					float gk = gill_bold * smoothstep(0.02, 0.18, t) * (1.0 - 0.6 * smoothstep(0.8, 1.0, t));
-					gold_grad *= mix(1.0, 0.08 + 1.45 * pow(gb, 0.8), gk);
+					// Deep gaps, compact bright plates (review 11: striation 1.02 vs 1.5, 21% above L*80).
+					gold_grad *= mix(1.0, 1.25 * pow(gb, 1.4), gk);
 					albedo *= mix(1.0, 0.5 + 0.7 * gb, gk);
 				}
 				albedo = mix(albedo, albedo * vec3(0.35, 0.22, 0.14), dg);

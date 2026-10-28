@@ -8,6 +8,8 @@ uniform sampler2D rough_tex : hint_default_white, filter_linear_mipmap;
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap;
 uniform bool has_normal = false;
 uniform vec3 tint = vec3(1.0);
+uniform vec3 base_tint = vec3(1.0);
+uniform float desat = 0.0;
 uniform float glow = 1.0;
 uniform float glow_floor = 0.6;
 // Cool glow (luminous petals and cores): bright texels with blue over red emit; 0 = off.
@@ -15,7 +17,8 @@ uniform float cool_glow = 0.0;
 
 void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb;
-	ALBEDO = c * tint;
+	vec3 cc = mix(c, vec3(dot(c, vec3(0.3, 0.55, 0.15))), desat);
+	ALBEDO = cc * base_tint * tint;
 	ROUGHNESS = clamp(texture(rough_tex, UV).g, 0.35, 1.0);
 	METALLIC = 0.0;
 	if (has_normal) NORMAL_MAP = texture(normal_tex, UV).rgb;

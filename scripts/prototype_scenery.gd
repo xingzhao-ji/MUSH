@@ -144,6 +144,7 @@ var _refuge_fill: Array[StandardMaterial3D] = []
 var _refuge_mat_cache: Dictionary = {}
 var _refuge_lights: Array[OmniLight3D] = []
 var _refuge_lamp_material: StandardMaterial3D
+var _refuge_bead_material: StandardMaterial3D
 var _refuge_props: Array[ShaderMaterial] = []
 const TRIPO_SHADER := preload("res://assets/world/tripo_prop.gdshader")
 var refuge_home: Vector3 = Vector3.INF
@@ -2239,7 +2240,17 @@ func _refuge_material(source: Material) -> Material:
 	# green broadleaf card instead.
 	if "twistedtree" in label and "leaves" in label: m.albedo_texture = load(QN + "Leaves_NormalTree_C.png")
 	if "bark" in label: tint = Color(0.6, 0.48, 0.44)
-	elif "flower" in label: tint = Color(0.8, 0.68, 1.0)
+	elif "flower" in label:
+		# The kit's petal sheet is orange/yellow/red: desaturate it so the beds tint to the goal's
+		# lavender, pink and white (review 11: orange by day, tan at night).
+		var sheet: Image = base.albedo_texture.get_image() if base.albedo_texture != null else null
+		if sheet != null:
+			sheet = sheet.duplicate()
+			if sheet.is_compressed(): sheet.decompress()
+			sheet.adjust_bcs(1.12, 1.0, 0.22)
+			sheet.generate_mipmaps()
+			m.albedo_texture = ImageTexture.create_from_image(sheet)
+		tint = Color(0.92, 0.78, 0.98)
 	elif "grass" in label: tint = Color(0.68, 0.82, 0.48)
 	elif "leaves" in label: tint = Color(0.88, 0.9, 0.66)
 	m.set_meta("day_tint", base.albedo_color * tint)
@@ -2258,7 +2269,7 @@ func _refuge_material(source: Material) -> Material:
 		m.emission_enabled = true
 		m.emission = Color(1.0, 0.8, 1.0)
 		m.emission_texture = m.albedo_texture
-		m.emission_energy_multiplier = 0.22
+		m.emission_energy_multiplier = 0.08
 		_refuge_glow.append(m)
 	_refuge_mats.append(m)
 	return m
@@ -2475,14 +2486,125 @@ func _add_refuge_lanterns() -> int:
 	_refuge_mats.append(wood)
 	var lamp := BoxMesh.new()
 	lamp.size = Vector3(0.4, 0.5, 0.4)
+	var bead_mesh := SphereMesh.new()
+	bead_mesh.radius = 0.24
+	bead_mesh.height = 0.48
+	bead_mesh.radial_segments = 8
+	bead_mesh.rings = 4
+	_refuge_bead_material = StandardMaterial3D.new()
+	_refuge_bead_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_refuge_bead_material.albedo_color = Color("ffc070")
 	for at: Vector3 in refuge_lanterns:
 		var yaw: float = refuge_facing + 0.5 * float(placed)
 		if not (ResourceLoader.exists(LANTERN_MODEL) and _refuge_model(LANTERN_MODEL, at, yaw, LANTERN_HEIGHT, "RefugeLantern%d" % placed)):
 			_refuge_mesh(post, wood, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT * 0.5, 0)), "RefugeLanternPost%d" % placed)
 			_refuge_mesh(lamp, _refuge_lamp_material, Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, LANTERN_HEIGHT - 0.2, 0)), "RefugeLanternLamp%d" % placed)
 		_refuge_light(at + Vector3(0, LANTERN_HEIGHT - 0.3, 0), 8.0, "RefugeLanternLight%d" % placed)
+		# Lamp core seen from the vista (review 11: lantern cores never reached L*85 at 75 m): a small
+		# emissive bead in the lamp housing, drawn only beyond 38 m so close views keep the model's glass.
+		var bead := _refuge_mesh(bead_mesh, _refuge_bead_material, Transform3D(Basis.IDENTITY, at + Basis(Vector3.UP, yaw) * (Vector3(-0.17, 0.6, 0.0) * (LANTERN_HEIGHT / 0.98))), "RefugeLanternBead%d" % placed)
+		bead.visibility_range_begin = 38.0
 		placed += 1
 	return placed
+
+## Grassy ledges and stone steps on the escarpment face below the refuge terrace (review 10/11: the
+## face (200,480,470,620) read as one smooth slab; the goal has stepped grassy ledges and steps).
+## The face is found in screen space: for each column the vista rays that land 150-340 m out on steep
+## ground. Shelves follow the face at chosen heights: a lit moss top, a rock riser and an underside,
+## from vertex colour. Visual only: no collision, no shadows.
+func _add_face_ledges(eye: Vector3) -> Dictionary:
+	var columns: Array = []
+	var top: float = -INF
+	var bottom: float = INF
+	var sx: float = -0.72
+	while sx <= -0.26:
+		var hits: Array = []
+		var sy: float = -0.34
+		while sy >= -0.9:
+			var h: Vector3 = _vista_ray_ground(sx, sy, 400.0)
+			if h != Vector3.INF:
+				var d: float = h.distance_to(eye)
+				var gx: float = _mesh_ground(h.x + 1.0, h.z) - _mesh_ground(h.x - 1.0, h.z)
+				var gz: float = _mesh_ground(h.x, h.z + 1.0) - _mesh_ground(h.x, h.z - 1.0)
+				if d > 150.0 and d < 340.0 and Vector2(gx, gz).length() * 0.5 > 0.7:
+					hits.append(h)
+					top = maxf(top, h.y)
+					bottom = minf(bottom, h.y)
+			sy -= 0.006
+		columns.append(hits)
+		sx += 0.015
+	if top - bottom < 12.0: return {"built": false, "reason": "no face", "range_m": snappedf(top - bottom, 0.1)}
+	var vertices := PackedVector3Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	var shelves: int = 0
+	var noise := FastNoiseLite.new()
+	noise.seed = 4711
+	noise.frequency = 0.08
+	var levels: Array = []
+	for f: float in [0.28, 0.55, 0.8]: levels.append([top - (top - bottom) * f, 0, columns.size(), 9.0, 5.0])
+	# Steps: short shelves stacked 3.6 m apart, stepping one column right each, down from the top edge.
+	for i: int in 6: levels.append([top - 3.0 - 3.6 * float(i), 1 + i, 4 + i, 4.5, 3.4])
+	for level: Array in levels:
+		var y: float = level[0]
+		var strip: Array = []
+		for c: int in range(int(level[1]), mini(int(level[2]), columns.size())):
+			var best: Vector3 = Vector3.INF
+			for h: Vector3 in columns[c]:
+				if absf(h.y - y) < 2.5 and (best == Vector3.INF or absf(h.y - y) < absf(best.y - y)): best = h
+			if best == Vector3.INF:
+				if strip.size() >= 2: _ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices); shelves += 1
+				strip = []
+				continue
+			strip.append(best)
+		if strip.size() >= 2:
+			_ledge_strip(strip, float(level[3]), float(level[4]), noise, vertices, colors, indices)
+			shelves += 1
+	if indices.is_empty(): return {"built": false, "reason": "no strips"}
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var st := SurfaceTool.new()
+	st.create_from(mesh, 0)
+	st.generate_normals()
+	mesh = st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.set_meta("day_tint", Color.WHITE)
+	_refuge_mats.append(mat)
+	_refuge_mesh(mesh, mat, Transform3D.IDENTITY, "RefugeFaceLedges")
+	return {"built": true, "face_y": [snappedf(bottom, 0.1), snappedf(top, 0.1)], "shelves": shelves, "triangles": indices.size() / 3}
+
+func _ledge_strip(strip: Array, width: float, depth: float, noise: FastNoiseLite, vertices: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array) -> void:
+	var base: int = vertices.size()
+	for i: int in strip.size():
+		var p: Vector3 = strip[i]
+		# Mottled moss tops and weathered rock risers (a flat colour read as white plastic strips).
+		var m: float = noise.get_noise_2d(p.x * 3.1, p.z * 3.1) * 0.5 + 0.5
+		var moss := Color(0.1, 0.17, 0.04).lerp(Color(0.17, 0.24, 0.06), m)
+		var rock := Color(0.17, 0.15, 0.14).lerp(Color(0.24, 0.21, 0.19), 1.0 - m)
+		var under := Color(0.12, 0.11, 0.11)
+		var gx: float = _mesh_ground(p.x + 1.0, p.z) - _mesh_ground(p.x - 1.0, p.z)
+		var gz: float = _mesh_ground(p.x, p.z + 1.0) - _mesh_ground(p.x, p.z - 1.0)
+		var out := Vector3(-gx, 0.0, -gz).normalized()
+		var w: float = width * (0.75 + 0.5 * (noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5))
+		var lift: float = 0.4
+		vertices.append(p - out * 1.5 + Vector3(0, lift, 0)); colors.append(moss)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4, 0)); colors.append(moss * 1.08)
+		vertices.append(p + out * w + Vector3(0, lift - 0.4 - depth, 0)); colors.append(rock)
+		vertices.append(p - out * 1.5 + Vector3(0, -depth - 1.0, 0)); colors.append(under)
+	for i: int in strip.size() - 1:
+		var a: int = base + i * 4
+		var b: int = a + 4
+		for k: int in 3:
+			indices.append(a + k); indices.append(b + k); indices.append(a + k + 1)
+			indices.append(a + k + 1); indices.append(b + k); indices.append(b + k + 1)
 
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
@@ -2534,7 +2656,7 @@ func _add_vista_refuge() -> void:
 	for i: int in 16:
 		var off: Vector3 = -toward * rng.randf_range(6.0, 30.0) + side * rng.randf_range(-6.0, 26.0)
 		# Keep crowns off the cap (review 10: a tree read as growing out of the roof).
-		if off.dot(-toward) < 13.0 and absf(off.dot(side)) < 10.0: continue
+		if off.dot(-toward) < 25.0 and absf(off.dot(side)) < 7.0: continue
 		var p: Vector3 = home + off
 		p.y = _mesh_ground(p.x, p.z)
 		if p.y < home.y - 6.0: continue
@@ -2620,8 +2742,6 @@ func _add_vista_refuge() -> void:
 	counts["bushes"] = _refuge_cluster(batches, rng, bushes, home, toward, side, Vector2(2.0, 9.0), Vector2(-9.0, 9.0), 14, Vector2(1.0, 1.6), eye)
 	counts["flower_beds"] = _refuge_cluster(batches, rng, flowers, home, toward, side, Vector2(6.0, 34.0), Vector2(-10.0, 12.0), 70, Vector2(0.6, 1.1), eye)
 	counts["low_plants"] = _refuge_cluster(batches, rng, low, home, toward, side, Vector2(4.0, 34.0), Vector2(-12.0, 14.0), 50, Vector2(1.0, 1.8), eye)
-	# A meadow sward over the terrace (goal: lush lit grass, not bare ground).
-	counts["sward"] = _refuge_cluster(batches, rng, [QN + "Grass_Wispy_Short.gltf"], home, toward, side, Vector2(-4.0, 40.0), Vector2(-16.0, 18.0), 420, Vector2(0.6, 1.0), eye)
 	# Giant luminous flowers on the drop just below the eye, sized so their heads enter the frame's lower-left corner.
 	var giant_n: int = 0
 	# Own generator, so additions elsewhere in the refuge never reshuffle the framing flowers.
@@ -2631,7 +2751,7 @@ func _add_vista_refuge() -> void:
 	for i: int in 60:
 		if giant_n >= 8: break
 		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(grng.randf_range(30.0, 56.0)))
-		var p: Vector3 = eye + dir * grng.randf_range(12.0, 26.0)
+		var p: Vector3 = eye + dir * grng.randf_range(14.0, 28.0)
 		p.y = _mesh_ground(p.x, p.z)
 		var h: float = 0.0
 		var head: float = grng.randf_range(-0.92, -0.64)
@@ -2641,10 +2761,12 @@ func _add_vista_refuge() -> void:
 		var size: float = h / 2.3
 		# The eye's drop is ~55 degrees, so only tall clumps reach the frame from 12-26 m out: a grove of
 		# giant lilies (6-12.5 m) whose blossoms land at ~60-120 px (review 10: <= 120 px, no blobs).
-		if h > 12.5 or h < 6.0: continue
+		if h > 10.5 or h < 6.0: continue
 		var s: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
 		if s.x < -1.1 or s.x > -0.42: continue
-		if ResourceLoader.exists(FLOWER_MODEL) and _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.1, 0), grng.randf() * TAU, h * grng.randf_range(1.0, 1.12), "RefugeGlowFlowers%d" % giant_n, true):
+		if ResourceLoader.exists(FLOWER_MODEL) and _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.1, 0), grng.randf() * TAU, h * grng.randf_range(1.0, 1.08), "RefugeGlowFlowers%d" % giant_n, true):
+			# Every third clump blush-white, so the corner carries two flower hues (review 11).
+			if giant_n % 3 == 1: _refuge_props[_refuge_props.size() - 1].set_shader_parameter("base_tint", Vector3(1.12, 0.96, 1.0))
 			giant_n += 1
 			continue
 		_refuge_put(batches, flowers[grng.randi() % flowers.size()], p - Vector3(0, 0.1, 0), size * grng.randf_range(1.0, 1.15), grng.randf() * TAU, Vector2(grng.randf_range(-0.12, 0.12), grng.randf_range(-0.12, 0.12)))
@@ -2681,28 +2803,46 @@ func _add_vista_refuge() -> void:
 			for k: int in grng.randi_range(3, 5):
 				var q: Vector3 = hit + Vector3(grng.randf_range(-6.0, 6.0), 0.0, grng.randf_range(-6.0, 6.0))
 				q.y = _mesh_ground(q.x, q.z)
-				if q.y < LAKE_Y - 1.0 or q.y > LAKE_Y + 2.0: continue
-				if _refuge_model(CATTAIL_MODEL, q - Vector3(0, 0.2, 0), grng.randf() * TAU, grng.randf_range(3.5, 5.5), "RefugeCattails%d" % reed_n):
+				# On the dry rim only: stems standing in the water drew bright shore-contact halos (review 11).
+				if q.y < LAKE_Y + 0.25 or q.y > LAKE_Y + 2.2: continue
+				if _refuge_model(CATTAIL_MODEL, q - Vector3(0, 0.15, 0), grng.randf() * TAU, grng.randf_range(2.6, 5.4), "RefugeCattails%d" % reed_n):
 					reed_n += 1
-					# Brown cattail heads are not lamps: lift the warm-glow floor out of reach.
-					(_refuge_props[_refuge_props.size() - 1]).set_shader_parameter("glow_floor", 2.0)
+					# Brown cattail heads are not lamps, and are muted (head saturation <= 0.40).
+					var cat: ShaderMaterial = _refuge_props[_refuge_props.size() - 1]
+					cat.set_shader_parameter("glow_floor", 2.0)
+					cat.set_shader_parameter("desat", 0.35)
 		counts["cattail_stands"] = stands
 		vista_refuge_report["cattail_spots_x_z_px_py_m"] = cattail_spots
+	# A ragged reed band along the near shore in frame (review 11: 6-14 px at 340-550 m, true scale).
+	var band_n: int = 0
+	for i: int in 600:
+		if band_n >= 160: break
+		var hit: Vector3 = _vista_ray_ground(grng.randf_range(-0.3, 1.0), grng.randf_range(-0.99, -0.45), 800.0)
+		if hit == Vector3.INF or hit.y < LAKE_Y + 0.2 or hit.y > LAKE_Y + 2.0: continue
+		if _ribbon_gap(Vector2(hit.x, hit.z)) < 3.0: continue
+		_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if band_n % 3 != 0 else "Grass_Common_Tall.gltf"), hit - Vector3(0, 0.1, 0), grng.randf_range(1.6, 3.0), grng.randf() * TAU)
+		band_n += 1
+	counts["shore_reed_band"] = band_n
 	counts["cattails"] = reed_n
 	# Round broadleaf trees along the far lake shore (review 10: 3-5 in (640,390,1060,470)).
 	var shore_n: int = 0
+	var far_tree_px: Array = []
 	for i: int in 80:
 		if shore_n >= 7: break
 		var hit: Vector3 = _vista_ray_ground(grng.randf_range(0.02, 0.62), grng.randf_range(-0.3, -0.1), 1600.0)
 		if hit == Vector3.INF or hit.y < LAKE_Y + 1.0 or hit.y > LAKE_Y + 30.0: continue
 		if _ribbon_gap(Vector2(hit.x, hit.z)) < 8.0: continue
-		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.5, 0), grng.randf_range(2.8, 3.8), grng.randf() * TAU)
+		_refuge_put(batches, trees[grng.randi() % trees.size()], hit - Vector3(0, 0.5, 0), grng.randf_range(3.0, 3.8), grng.randf() * TAU)
+		var ts: Vector2 = _vista_screen(eye, hit)
+		far_tree_px.append([roundi((ts.x + 1.0) * 640.0), roundi((1.0 - ts.y) * 360.0), roundi(hit.distance_to(eye))])
 		shore_n += 1
 	counts["far_shore_trees"] = shore_n
+	counts["far_shore_tree_px_py_m"] = far_tree_px
 	var stats: Dictionary = _refuge_flush(batches)
+	var ledges: Dictionary = _add_face_ledges(eye)
 	var cottage: Dictionary = _add_refuge_cottage()
 	counts["lanterns"] = _add_refuge_lanterns()
-	vista_refuge_report = {"built": true, "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
+	vista_refuge_report = {"built": true, "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
 	vista_refuge_report.merge(stats)
 	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 
@@ -5139,7 +5279,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		material.set_shader_parameter("glow_dir", Vector3(sin(m_az), 0.0, cos(m_az)))
 		material.set_shader_parameter("day_sheen", Vector3(sheen_lin.r, sheen_lin.g, sheen_lin.b))
 	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
-	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - 0.5 * rain) if look_depth else 0.0
+	# Off in rain: the darkened gold underside sat 20 below the overcast (review 10/11).
+	var cap_day_glow: float = float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - rain) if look_depth else 0.0
 	var gill_bold: float = float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) * (1.0 - rain) if look_depth else 0.0
 	for material: ShaderMaterial in _art:
 		material.set_shader_parameter("day_glow", cap_day_glow)
@@ -5237,10 +5378,13 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
-	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.22, 0.015, night) * (1.0 - 0.4 * rain)
+	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.01, night) * (1.0 - 0.4 * rain)
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
+	# Luminous lilies keep a lavender night tone (review 11: they went ultramarine, sat 0.67).
+	var lily_tint: Color = Color(1.06, 1.06, 1.06).lerp(Color(0.4, 0.34, 0.5), night).lerp(Color(0.6, 0.58, 0.66), rain * (1.0 - night))
 	for prop: ShaderMaterial in _refuge_props:
-		prop.set_shader_parameter("tint", Vector3(refuge_tint.r, refuge_tint.g, refuge_tint.b))
+		var pt: Color = lily_tint if prop.get_meta("luminous", false) else refuge_tint
+		prop.set_shader_parameter("tint", Vector3(pt.r, pt.g, pt.b))
 		prop.set_shader_parameter("glow", lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
 		if prop.get_meta("luminous", false): prop.set_shader_parameter("cool_glow", lerpf(0.25, 0.7, night))
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
