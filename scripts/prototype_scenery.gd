@@ -2238,7 +2238,7 @@ func _refuge_material(source: Material) -> Material:
 	if "twistedtree" in label and "leaves" in label: m.albedo_texture = load(QN + "Leaves_NormalTree_C.png")
 	if "bark" in label: tint = Color(0.6, 0.48, 0.44)
 	elif "flower" in label: tint = Color(0.8, 0.68, 1.0)
-	elif "grass" in label: tint = Color(0.6, 0.64, 0.48)
+	elif "grass" in label: tint = Color(0.82, 0.9, 0.58)
 	elif "leaves" in label: tint = Color(0.84, 0.88, 0.76)
 	m.set_meta("day_tint", base.albedo_color * tint)
 	if "flower" in label:
@@ -2590,16 +2590,21 @@ func _add_vista_refuge() -> void:
 	counts["bushes"] = _refuge_cluster(batches, rng, bushes, home, toward, side, Vector2(2.0, 9.0), Vector2(-9.0, 9.0), 14, Vector2(1.0, 1.6), eye)
 	counts["flower_beds"] = _refuge_cluster(batches, rng, flowers, home, toward, side, Vector2(6.0, 34.0), Vector2(-10.0, 12.0), 70, Vector2(0.6, 1.1), eye)
 	counts["low_plants"] = _refuge_cluster(batches, rng, low, home, toward, side, Vector2(4.0, 34.0), Vector2(-12.0, 14.0), 50, Vector2(1.0, 1.8), eye)
+	# A meadow sward over the terrace (goal: lush lit grass, not bare ground).
+	counts["sward"] = _refuge_cluster(batches, rng, [QN + "Grass_Wispy_Short.gltf"], home, toward, side, Vector2(-4.0, 40.0), Vector2(-16.0, 18.0), 420, Vector2(0.6, 1.0), eye)
 	# Giant luminous flowers on the drop just below the eye, sized so their heads enter the frame's lower-left corner.
 	var giant_n: int = 0
+	# Own generator, so additions elsewhere in the refuge never reshuffle the framing flowers.
+	var grng := RandomNumberGenerator.new()
+	grng.seed = 20261028
 	var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
 	for i: int in 60:
 		if giant_n >= 6: break
-		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(rng.randf_range(30.0, 56.0)))
-		var p: Vector3 = eye + dir * rng.randf_range(6.0, 12.0)
+		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(grng.randf_range(30.0, 56.0)))
+		var p: Vector3 = eye + dir * grng.randf_range(6.0, 12.0)
 		p.y = _mesh_ground(p.x, p.z)
 		var h: float = 0.0
-		var head: float = rng.randf_range(-0.9, -0.74)
+		var head: float = grng.randf_range(-0.9, -0.74)
 		while h < 9.0:
 			h += 0.25
 			if _vista_screen(eye, p + Vector3(0, h, 0)).y > head: break
@@ -2607,10 +2612,10 @@ func _add_vista_refuge() -> void:
 		if size > 3.2 or size < 1.2: continue
 		var s: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
 		if s.x < -1.1 or s.x > -0.42: continue
-		if ResourceLoader.exists(FLOWER_MODEL) and _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.1, 0), rng.randf() * TAU, h * rng.randf_range(1.0, 1.12), "RefugeGlowFlowers%d" % giant_n, true):
+		if ResourceLoader.exists(FLOWER_MODEL) and _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.1, 0), grng.randf() * TAU, h * grng.randf_range(1.0, 1.12), "RefugeGlowFlowers%d" % giant_n, true):
 			giant_n += 1
 			continue
-		_refuge_put(batches, flowers[rng.randi() % flowers.size()], p - Vector3(0, 0.1, 0), size * rng.randf_range(1.0, 1.15), rng.randf() * TAU, Vector2(rng.randf_range(-0.12, 0.12), rng.randf_range(-0.12, 0.12)))
+		_refuge_put(batches, flowers[grng.randi() % flowers.size()], p - Vector3(0, 0.1, 0), size * grng.randf_range(1.0, 1.15), grng.randf() * TAU, Vector2(grng.randf_range(-0.12, 0.12), grng.randf_range(-0.12, 0.12)))
 		giant_n += 1
 	counts["giant_flowers"] = giant_n
 	var stats: Dictionary = _refuge_flush(batches)
