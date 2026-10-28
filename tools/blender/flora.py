@@ -1,4 +1,6 @@
-"""v7 (review 24: the bank L*36 at hue 110 against the goal's L*45): leaves lighter and warmer.
+"""v8 (review 25: the slope still L*39 at hue 108 against the goal's L*45 at 95): leaves lighter, more olive
+(albedo hue ~120: the warm light renders it ~15 degrees yellower).
+v7 (review 24: the bank L*36 at hue 110 against the goal's L*45): leaves lighter and warmer.
 v6 (capture pr18: shadows in the bank far darker than the goal's, p10 L* 5-9 vs 17-27): leaves lighter.
 v3 (capture pr14: a pale lime fern field with white-reading flowers): darker leaves, saturated petals,
 less self-light by day.
@@ -17,9 +19,9 @@ os.makedirs(out_dir, exist_ok=True)
 
 def mats():
     return {
-        "leaf": L.mat("leaf_deep", "#3f6a35", 0.85),
-        "leaf2": L.mat("leaf_olive", "#6a7a3e", 0.85),
-        "fern": L.mat("fern", "#66813a", 0.85),
+        "leaf": L.mat("leaf_deep", "#62783a", 0.85),
+        "leaf2": L.mat("leaf_olive", "#8a8a4a", 0.85),
+        "fern": L.mat("fern", "#7e8a42", 0.85),
         "stem": L.mat("stem", "#3c5426", 0.85),
         "bell": L.mat("petal_iceblue", "#7590ea", 0.6, "#6f9cff", 0.35),
         "star": L.mat("petal_cyan", "#4fb4e6", 0.6, "#52c4ff", 0.35),

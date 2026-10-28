@@ -1,4 +1,5 @@
-"""MUSH lake-shore kit from the ChatGPT sheet mush-sheet-shore-01: cattail (1.8 m), reed with plumes (1.4 m),
+"""MUSH lake-shore kit from the ChatGPT sheet mush-sheet-shore-01 (v2, review 25: cattail heads read dark maroon
+and the corner bank dark: tan heads, lighter reed and rush greens): cattail (1.8 m), reed with plumes (1.4 m),
 rush tuft (0.5 m), iris (0.8 m), three wet mossy rocks, two half-submerged stones and a lily-pad cluster.
 One glb per piece in <out_dir>/shore_<tag>.glb, plus an overview sheet render.
 Usage: blender -b -P shore.py -- <out_dir> <render_prefix.png>"""
@@ -15,11 +16,11 @@ F.PREFIX = "shore_"
 
 def mats():
     return {
-        "reed": L.mat("reed_green", "#5c7c32", 0.85),
+        "reed": L.mat("reed_green", "#6a8a38", 0.85),
         "olive": L.mat("reed_olive", "#8b8a3c", 0.85),
-        "rush": L.mat("rush_grass", "#8aac40", 0.85),
+        "rush": L.mat("rush_grass", "#96b646", 0.85),
         "stem": L.mat("reed_stem", "#6e7a3a", 0.85),
-        "cattail": L.mat("cattail_head", "#8f6a45", 0.9),
+        "cattail": L.mat("cattail_head", "#b08a5a", 0.9),
         "spike": L.mat("cattail_spike", "#b49a6a", 0.9),
         "plume": L.mat("reed_plume", "#c6a66c", 0.95),
         "iris_leaf": L.mat("iris_leaf", "#4f7a3a", 0.85),
