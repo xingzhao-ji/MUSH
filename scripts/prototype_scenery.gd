@@ -227,8 +227,8 @@ const DAY_SUN := Color("ffc07e")
 ## sky) -> 45 (40 below), lake hue 5 -> 245, mist hue 17 -> 246 (sweeps 123819, 123952).
 ## 2026-10-27 (Gemini goal frame): warm gold sky. Previous: sun ffcc94, fog b8958c, sky_top 3a3c86, sky_horizon c4a7bd;
 ## vista top-third hue 266 -> 30, warm-lit 10.7% -> 28% (goal 34.5%), highlight 2.7% -> 8.8% (goal 8.5%), sweep 200852.
-## Review 15 value pass: sky_top 504478 -> 3e3c8c, sky_horizon eaa87c -> e88c52 (see GOLDEN_CLOUD_GLOW).
-const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("3e3c8c"), "sky_horizon": Color("e88c52"), "lake_horizon": Color("f0b890")}
+## Review 15/16 value and hue passes: sky_top 504478 -> 48488e, sky_horizon eaa87c -> c4824c (see GOLDEN_CLOUD_GLOW).
+const DEPTH_LOOK := {"sun": Color("ffd09a"), "ambient": Color("9e94e0"), "fog": Color("c8987c"), "sky_top": Color("48488e"), "sky_horizon": Color("c4824c"), "lake_horizon": Color("f0b890")}
 const GOLDEN_SUN_AZ := 157.0
 const GOLDEN_SUN_ELEV := -13.0
 const GOLDEN_SUN_ENERGY := 1.6
@@ -2632,10 +2632,11 @@ func _cattail_clump_mesh() -> ArrayMesh:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 731
-	# sRGB picks taken to linear (the reed shader reads COLOR as linear albedo): olive stalks, brown heads
-	# (hue ~25, saturation ~0.4; review 15 wanted L*30-45 heads), deep green blades.
+	# sRGB picks taken to linear (the reed shader reads COLOR as linear albedo): olive stalks, tan-brown
+	# heads (hue ~29, saturation ~0.36; 5c4636 rendered as maroon dots, L*26 at saturation 0.50, review 16),
+	# deep green blades.
 	var stalk_c := Color("6c7c42").srgb_to_linear()
-	var head_c := Color("5c4636").srgb_to_linear()
+	var head_c := Color("85705a").srgb_to_linear()
 	var blade_c := Color("587436").srgb_to_linear()
 	var prism := func(a: Vector3, b: Vector3, r0: float, r1: float, c: Color) -> void:
 		for i: int in 5:
@@ -3015,9 +3016,10 @@ func _add_vista_refuge() -> void:
 	bank_rng.seed = 20261029
 	var bank_n: int = 0
 	# The bank is 350-450 m out, so single clumps were specks (capture fix28b): each spot is a dense stand
-	# of 3-6 clumps, which reads as one reed cluster.
-	for i: int in 260:
-		if bank_n >= 30: break
+	# of 3-6 clumps, which reads as one reed cluster. 60 stands (review 16: 30 covered 18% of the bank's
+	# columns, target 35%), heights 3.5-7.5 m (>= 1.5:1).
+	for i: int in 700:
+		if bank_n >= 60: break
 		var hit: Vector3 = _vista_ray_ground(bank_rng.randf_range(0.46, 1.0), bank_rng.randf_range(-0.99, -0.7), 800.0)
 		if hit == Vector3.INF or hit.y < LAKE_Y + 0.4 or hit.y > LAKE_Y + 3.5: continue
 		if _shore_view_blocked(Vector2(hit.x, hit.z)) or _ribbon_gap(Vector2(hit.x, hit.z)) < 1.6: continue
@@ -3026,7 +3028,7 @@ func _add_vista_refuge() -> void:
 			bq.y = _mesh_ground(bq.x, bq.z)
 			if bq.y < LAKE_Y + 0.4 or _shore_view_blocked(Vector2(bq.x, bq.z)): continue
 			var by_yaw: float = bank_rng.randf() * TAU
-			var bs: float = bank_rng.randf_range(4.5, 7.0)
+			var bs: float = bank_rng.randf_range(3.5, 7.5)
 			if j == 0 or bank_rng.randf() < 0.3: cattail_xf.append(Transform3D(Basis(Vector3.UP, by_yaw).scaled(Vector3(bs * 0.8, bs, bs * 0.8)), bq - Vector3(0, 0.05, 0)))
 			else: reed_xf.append(Transform3D(Basis(Vector3.UP, by_yaw).scaled(Vector3(bs * 0.65, bs, bs * 0.65)), bq - Vector3(0, 0.05, 0)))
 		bank_n += 1
@@ -5442,7 +5444,9 @@ func set_reduced_motion(value: bool) -> void:
 ## Capture-only look exploration (camera sweep): day endpoint colours by DEPTH_LOOK key plus
 ## sun_energy, sun_elev, ambient_energy. Empty in play.
 var look_override: Dictionary = {}
-const GOLDEN_GLOW := 0.18
+## Glow dome strength: 0.4 lifted the vista's saturated highlights only 3.9% -> 4.2% but clipped the sky
+## around the hero-day far giant again (7.2% above L*92, ckpt29 213045); 0.18 had none.
+const GOLDEN_GLOW := 0.25
 const GOLDEN_FILL_ENERGY := 0.5
 const GOLDEN_FILL_COLOR := "9499ff"
 const GOLDEN_FILL_AZ := 337.0
@@ -5463,25 +5467,32 @@ const GOLDEN_STEM_BARK := "786978"
 const GOLDEN_STEM_LIGHT := "a88f8a"
 ## Overcast lift on cap undersides in rain (review 10-12: far undersides sat ~20 below the rain sky).
 const RAIN_UNDER_LIFT := 0.3
-## Share of the hero cap's day glow lost in full rain (far caps lose all of it).
-const HERO_RAIN_GLOW_DROP := 0.45
-## Skylight on the escarpment shelf tops below the refuge (far_terrain ledge_fill).
-const LEDGE_FILL := 0.9
+## Share of the hero cap's day glow lost in full rain (far caps lose all of it), and the hero's own warm
+## overcast lift: 0.45 / 0.3 left the rain underside hue 346, saturation 0.20 (review 16, target 15-40,
+## >= 0.25); 0.15 / 0.85 gives hue 16, saturation 0.27 (sweep 211758).
+const HERO_RAIN_GLOW_DROP := 0.15
+const HERO_RAIN_LIFT := 0.85
+## Skylight on the escarpment shelf tops below the refuge (far_terrain ledge_fill). 0.9 left the tops
+## +8.7 above their risers (review 16, target >= 10).
+const LEDGE_FILL := 1.2
 const NEAR_FILL := 0.45
 ## Day sky endpoints before the warm gold pass; rain blends from these so the overcast is unchanged.
 const RAIN_SKY_TOP_BASE := Color("3a3c86")
 const RAIN_SKY_HORIZON_BASE := Color("c4a7bd")
-## Review 15: the warm sky read washed peach (mid L*81.9 vs the goal's 68.2) and lost the concepts'
-## lavender zenith. A deeper, more saturated amber glow held tighter to the horizon (cloud power 8,
-## horizon power 32), a weaker glow dome and a violet top: palette sweeps 203806-210422, variant R2:
-## mid L*69 hue 15, zenith L*63 hue ~330, top-200-row lavender 20% / amber 67%.
-const GOLDEN_CLOUD_GLOW := 1.5
-const GOLDEN_CLOUD_GLOW_POWER := 8.0
-const GOLDEN_CLOUD_GLOW_COLOR := "f07a34"
-const GOLDEN_HORIZON_GLOW := 2.0
-const GOLDEN_HORIZON_GLOW_POWER := 32.0
+## Review 15: the warm sky read washed peach (mid L*81.9 vs the goal's 68.2). Review 16: the darker
+## violet-topped sky that followed read pink-magenta (top-200 rows: 36% magenta, 23% amber; goal 6% / 76%).
+## Now a deeper amber glow that spreads wide across the azimuth (powers 3) but is held to a band above
+## the horizon (glow_band 8), over a darker amber horizon and a blue-violet top: sweeps 211758-212811,
+## variant Z8: magenta 11%, amber 45%, mid L*73.7 hue 18, zenith L*66.5, warm-lit 26.6%.
+## (Pulling the glow edge toward grey instead of magenta, tried in the sky shader, left the upper sky a
+## dull taupe: sweep 211758.)
+const GOLDEN_CLOUD_GLOW := 2.0
+const GOLDEN_CLOUD_GLOW_POWER := 3.0
+const GOLDEN_CLOUD_GLOW_COLOR := "dc8636"
+const GOLDEN_HORIZON_GLOW := 4.5
+const GOLDEN_HORIZON_GLOW_POWER := 3.0
 const GOLDEN_REFLECT_FLOOR := 0.5
-const GOLDEN_GLOW_BAND := 0.0
+const GOLDEN_GLOW_BAND := 8.0
 const GOLDEN_FAR_DOME := 0.5
 const GOLDEN_FAR_UNDER := 1.5
 const GOLDEN_MIST_WARM := "f4c09c"
@@ -5554,8 +5565,11 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	# The hero cap is near enough to keep part of its gold under the overcast (review 13/14: the rain
 	# underside went cold lavender, hue ~300, saturation 0.13-0.16).
 	if cap_material != null and look_depth:
-		cap_material.set_shader_parameter("day_glow", float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - HERO_RAIN_GLOW_DROP * rain))
-		cap_material.set_shader_parameter("gill_bold", float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) * (1.0 - HERO_RAIN_GLOW_DROP * rain))
+		var hero_drop: float = float(look_override.get("hero_rain_drop", HERO_RAIN_GLOW_DROP))
+		cap_material.set_shader_parameter("day_glow", float(look_override.get("cap_glow", GOLDEN_CAP_GLOW)) * (1.0 - hero_drop * rain))
+		cap_material.set_shader_parameter("gill_bold", float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) * (1.0 - hero_drop * rain))
+		# A stronger warm overcast lift on the near hero cap (review 14-16: rain underside hue 346, saturation 0.20).
+		cap_material.set_shader_parameter("rain_lift", float(look_override.get("hero_rain_lift", HERO_RAIN_LIFT)) * rain)
 	if cap_material != null and not cap_material in _art:
 		cap_material.set_shader_parameter("day_glow", cap_day_glow)
 		cap_material.set_shader_parameter("gill_bold", gill_bold)
