@@ -2266,7 +2266,7 @@ func _refuge_material(source: Material) -> Material:
 			m.albedo_texture = ImageTexture.create_from_image(sheet)
 		tint = Color(0.92, 0.78, 0.98)
 	elif "grass" in label: tint = Color(0.4, 0.44, 0.24)
-	elif "leaves" in label: tint = Color(0.88, 0.9, 0.66)
+	elif "leaves" in label: tint = KIT_TREE_LEAF_TINT if "tree" in label else KIT_PLANT_LEAF_TINT
 	m.set_meta("day_tint", base.albedo_color * tint)
 	# Leaf cards and bark: wrapped diffuse plus a dim self-fill from their own albedo, so crown
 	# interiors keep a value floor like the terrain's soft daylight (review 10: interiors p5 4).
@@ -2747,6 +2747,221 @@ func _shore_view_blocked(at: Vector2) -> bool:
 	if d.length() < 4.0: return true
 	return d.length() < 30.0 and d.normalized().dot(SHORE_VIEW) > 0.35
 
+## Largest extent of a kit model at unit scale (its parts' AABB), cached. The kit's flower groups are
+## much wider than tall, so sizing by height alone blew them up to 2-3 m petal discs (capture 232525).
+var _model_size_cache: Dictionary = {}
+func _model_size(path: String) -> float:
+	if _model_size_cache.has(path): return _model_size_cache[path]
+	var box: AABB = AABB()
+	var first: bool = true
+	for part: Array in _model_parts(path):
+		var b: AABB = (part[1] as Transform3D) * (part[0] as Mesh).get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	var s: float = maxf(box.size.x, maxf(box.size.y, box.size.z)) if not first else 1.0
+	_model_size_cache[path] = s
+	return s
+
+## Unit-scale AABB of a kit model (all parts).
+func _model_box(path: String) -> AABB:
+	var box: AABB = AABB()
+	var first: bool = true
+	for part: Array in _model_parts(path):
+		var b: AABB = (part[1] as Transform3D) * (part[0] as Mesh).get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	return box
+
+## Tree mass behind the cottage over the rock slab (consult fable-01 B, placement revised): the goal hides
+## the blue-violet slab behind the cottage under a tall broadleaf canopy, with the cottage in front of it.
+## Trees 20-40 m out (the consult's placement) stood in front of the cottage and missed the slab (capture
+## 233346), so they stand behind the terrace instead: 85-135 m out at bearing 26-43 degrees left of the
+## view axis (px x ~60-340), each sized so its crown top lands at px y 170-240.
+const FRAME_TREES := 10
+const FRAME_TREE_BEARING := Vector2(28.0, 46.0)
+const FRAME_TREE_RANGE := Vector2(85.0, 140.0)
+const FRAME_TREE_TOP_PX := Vector2(165.0, 235.0)
+func _add_framing_trees(eye: Vector3, look_h: Vector3, batches: Dictionary, trees: Array, counts: Dictionary) -> void:
+	var trng := RandomNumberGenerator.new()
+	trng.seed = 20261031
+	var placed: Array = []
+	var tops: Array = []
+	var n: int = 0
+	for i: int in 400:
+		if n >= FRAME_TREES: break
+		var b: float = trng.randf_range(FRAME_TREE_BEARING.x, FRAME_TREE_BEARING.y)
+		var r: float = trng.randf_range(FRAME_TREE_RANGE.x, FRAME_TREE_RANGE.y)
+		var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+		p.y = _mesh_ground(p.x, p.z)
+		var too_close: bool = false
+		for q: Vector3 in placed:
+			if Vector2(q.x - p.x, q.z - p.z).length() < 10.0: too_close = true
+		if too_close: continue
+		var want_px: float = trng.randf_range(FRAME_TREE_TOP_PX.x, FRAME_TREE_TOP_PX.y)
+		var h: float = 8.0
+		while h < 70.0 and (1.0 - _vista_screen(eye, p + Vector3(0, h, 0)).y) * 360.0 > want_px: h += 0.5
+		if h < 14.0 or h > 58.0: continue
+		var path: String = trees[trng.randi() % trees.size()]
+		var box: AABB = _model_box(path)
+		_refuge_put(batches, path, p - Vector3(0, 0.8, 0), h / maxf(box.size.y, 0.1), trng.randf() * TAU, Vector2(trng.randf_range(-0.03, 0.03), trng.randf_range(-0.03, 0.03)))
+		placed.append(p)
+		var ts: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
+		tops.append([roundi((ts.x + 1.0) * 640.0), roundi((1.0 - ts.y) * 360.0), roundi(h), roundi(r)])
+		n += 1
+	counts["framing_trees"] = n
+	counts["framing_tree_tops_px_h_r"] = tops
+
+## Foreground ledge below the vista eye (consult fable-01 A). The eye stands on a ~55 degree drop, so
+## no ground 3-15 m away was in frame and the giant 6-12 m lilies stood in for a foreground (they read
+## as one blob). A low rock-and-grass ledge 4-15 m out on the left (bearing 14-60 degrees from the view
+## axis), 3.2-5.5 m below the eye, puts real ground into the frame's lower-left, where true-scale kit
+## plants (1-2 m) read at the goal's 50-150 px. Terrain material (vertex colour 0 = plain ground), skirt
+## edges down 25 m so it never floats, no collider, no shadow.
+const LEDGE_BEARING := Vector2(14.0, 60.0)
+const LEDGE_RANGE := Vector2(4.0, 15.0)
+## Kit leaf tints (previous 0.88/0.9/0.66 for all): they read lime against the goal's olive (consult
+## fable-01: near chroma 18 vs 11, hue 96 vs 79). Ground plants (ferns, clover, flower stems) darker, so
+## the foreground bank reads as a dark leafy mass (goal bank L*42) with blooms in it.
+const KIT_TREE_LEAF_TINT := Color(0.74, 0.7, 0.44)
+const KIT_PLANT_LEAF_TINT := Color(0.46, 0.45, 0.3)
+const LEDGE_LEAVES := 80
+const LEDGE_BLOOMS := 26
+## Luminous image-to-3D lilies in the bank, small and spread out (six at 1.6-2.8 m clumped into one lavender
+## mass, capture 233955).
+const LEDGE_LILIES := 3
+## The giant lily grove and giant framing leaves the ledge replaces (previous: 8 and 8).
+const VISTA_GIANT_LILIES := 1
+const VISTA_FRAMING_LEAVES := 0
+func _ledge_height(eye: Vector3, look_h: Vector3, bearing: float, r: float, noise: FastNoiseLite) -> float:
+	var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(bearing))
+	var p: Vector3 = eye + dir * r
+	var t: float = clampf((r - LEDGE_RANGE.x) / (LEDGE_RANGE.y - LEDGE_RANGE.x), 0.0, 1.0)
+	var y: float = eye.y - lerpf(3.2, 5.5, t) + noise.get_noise_2d(p.x * 0.35, p.z * 0.35) * 0.6
+	return maxf(y, _mesh_ground(p.x, p.z) + 0.05)
+
+func _ledge_outer(bearing: float, noise: FastNoiseLite) -> float:
+	# Noisy outline: the far edge wanders 11-15 m out.
+	return lerpf(11.0, LEDGE_RANGE.y, noise.get_noise_1d(bearing * 3.0) * 0.5 + 0.5)
+
+func _add_foreground_ledge(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: Dictionary) -> void:
+	var noise := FastNoiseLite.new()
+	noise.seed = 4127
+	noise.frequency = 0.08
+	var nb: int = 18
+	var nr: int = 10
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var grid: Array = []
+	for i: int in nb + 1:
+		var b: float = lerpf(LEDGE_BEARING.x, LEDGE_BEARING.y, float(i) / nb)
+		var outer: float = _ledge_outer(b, noise)
+		var row: Array = []
+		for j: int in nr + 1:
+			var r: float = lerpf(LEDGE_RANGE.x, outer, float(j) / nr)
+			var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(b))
+			var p: Vector3 = eye + dir * r
+			p.y = _ledge_height(eye, look_h, b, r, noise)
+			row.append(p)
+		grid.append(row)
+	var quad := func(a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
+		for v: Vector3 in [a, b, c, a, c, d]:
+			st.set_color(Color(0, 0, 0))
+			st.add_vertex(v)
+	for i: int in nb:
+		for j: int in nr:
+			# Wound so the top faces up (seen from the eye above).
+			quad.call(grid[i][j], grid[i][j + 1], grid[i + 1][j + 1], grid[i + 1][j])
+	# Skirts: the far edge and both side edges drop 25 m (the far one flaring 1.5 m outward).
+	var drop := Vector3(0, -25.0, 0)
+	for i: int in nb:
+		var a: Vector3 = grid[i][nr]
+		var b: Vector3 = grid[i + 1][nr]
+		quad.call(a, b, b + drop + (b - eye).normalized() * 1.5, a + drop + (a - eye).normalized() * 1.5)
+	for side_i: int in [0, nb]:
+		for j: int in nr:
+			var a: Vector3 = grid[side_i][j]
+			var b: Vector3 = grid[side_i][j + 1]
+			if side_i == 0: quad.call(b, a, a + drop, b + drop)
+			else: quad.call(a, b, b + drop, a + drop)
+	st.generate_normals()
+	var mesh: ArrayMesh = st.commit()
+	var node := MeshInstance3D.new()
+	node.name = "VistaForegroundLedge"
+	node.mesh = mesh
+	node.material_override = _terrain_material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	# True-scale plant bank: dark leafy mass with blooms among it (goal: ~47% green, ~19% bloom, blooms
+	# 30-110 px). Own generator so the rest of the refuge keeps its seeds.
+	var prng := RandomNumberGenerator.new()
+	prng.seed = 20261030
+	# No clover: its round leaves read as lime lily pads at this range (capture 233711).
+	var leafy: Array = [QN + "Fern_1.gltf", QN + "Plant_1_Big.gltf", QN + "Plant_7_Big.gltf", QN + "Bush_Common.gltf", QN + "Fern_1.gltf"]
+	var blooms: Array = [QN + "Flower_3_Group.gltf", QN + "Flower_4_Group.gltf"]
+	var leaf_n: int = 0
+	var bloom_n: int = 0
+	var lily_n: int = 0
+	var lily_spots: Array = []
+	var screen_lo: Vector2 = Vector2(INF, INF)
+	var screen_hi: Vector2 = Vector2(-INF, -INF)
+	for i: int in 900:
+		if leaf_n >= LEDGE_LEAVES and bloom_n >= LEDGE_BLOOMS: break
+		var b: float = prng.randf_range(LEDGE_BEARING.x + 2.0, LEDGE_BEARING.y - 2.0)
+		var r: float = prng.randf_range(LEDGE_RANGE.x + 1.5, _ledge_outer(b, noise) - 0.6)
+		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(b))
+		var p: Vector3 = eye + dir * r
+		p.y = _ledge_height(eye, look_h, b, r, noise)
+		var base_s: Vector2 = _vista_screen(eye, p)
+		if base_s.x < -1.15 or base_s.x > -0.25 or base_s.y < -1.0 - 0.6: continue
+		var bloom: bool = bloom_n < LEDGE_BLOOMS and (leaf_n >= LEDGE_LEAVES or prng.randf() < 0.4)
+		var path: String = blooms[prng.randi() % blooms.size()] if bloom else leafy[prng.randi() % leafy.size()]
+		# Target size (largest extent) in metres: leaves 0.9-1.8 m, bloom clusters 0.5-0.9 m.
+		var want: float = prng.randf_range(0.5, 0.9) if bloom else prng.randf_range(0.9, 1.8)
+		var s: float = want / _model_size(path)
+		# Keep tops under the cottage's foot (px y >= 590 for px x < 230), so the bank never covers the door.
+		var top: Vector2 = _vista_screen(eye, p + Vector3(0, want, 0))
+		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
+		if px.x < 230.0 and px.y < 590.0: continue
+		_refuge_put(batches, path, p - Vector3(0, 0.08, 0), s, prng.randf() * TAU, Vector2(prng.randf_range(-0.08, 0.08), prng.randf_range(-0.08, 0.08)))
+		if bloom: bloom_n += 1
+		else: leaf_n += 1
+		screen_lo = screen_lo.min(px)
+		screen_hi = screen_hi.max(px)
+	# A few small luminous lilies among them, so the foreground keeps a soft glow at night.
+	if ResourceLoader.exists(FLOWER_MODEL):
+		for i: int in 200:
+			if lily_n >= LEDGE_LILIES: break
+			var b: float = prng.randf_range(LEDGE_BEARING.x + 6.0, LEDGE_BEARING.y - 10.0)
+			var r: float = prng.randf_range(LEDGE_RANGE.x + 3.0, _ledge_outer(b, noise) - 1.5)
+			var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(b))
+			var p: Vector3 = eye + dir * r
+			p.y = _ledge_height(eye, look_h, b, r, noise)
+			var h: float = prng.randf_range(1.1, 1.7)
+			var top: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
+			var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
+			if px.x < 230.0 and px.y < 590.0: continue
+			if px.x < 0.0 or px.x > 420.0 or px.y > 700.0: continue
+			var crowded: bool = false
+			for q: Vector3 in lily_spots:
+				if q.distance_to(p) < 4.0: crowded = true
+			if crowded: continue
+			lily_spots.append(p)
+			if _refuge_model(FLOWER_MODEL, p - Vector3(0, 0.05, 0), prng.randf() * TAU, h, "LedgeLilies%d" % lily_n, true):
+				if lily_n % 2 == 1: _refuge_props[_refuge_props.size() - 1].set_shader_parameter("base_tint", Vector3(1.12, 0.96, 1.0))
+				lily_n += 1
+	counts["ledge_leaves"] = leaf_n
+	counts["ledge_blooms"] = bloom_n
+	counts["ledge_lilies"] = lily_n
+	var corners: Array = []
+	for c: Vector3 in [grid[0][0], grid[0][nr], grid[nb][0], grid[nb][nr], grid[nb / 2][nr]]:
+		var s: Vector2 = _vista_screen(eye, c)
+		corners.append([roundi((s.x + 1.0) * 640.0), roundi((1.0 - s.y) * 360.0)])
+	var sizes: Dictionary = {}
+	for path: String in leafy + blooms: sizes[path.get_file()] = snappedf(_model_size(path), 0.01)
+	vista_refuge_report["foreground_ledge"] = {"corners_px": corners, "plant_tops_px": [screen_lo, screen_hi], "triangles": nb * nr * 2 + nb * 2 + nr * 4, "unit_sizes_m": sizes}
+
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
 	var eye: Vector3 = _vista_eye()
@@ -2895,7 +3110,7 @@ func _add_vista_refuge() -> void:
 	grng.seed = 20261028
 	var look_h: Vector3 = Vector3(VISTA_AIM.x - eye.x, 0.0, VISTA_AIM.y - eye.z).normalized()
 	for i: int in 60:
-		if giant_n >= 8: break
+		if giant_n >= VISTA_GIANT_LILIES: break
 		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(grng.randf_range(30.0, 56.0)))
 		var p: Vector3 = eye + dir * grng.randf_range(14.0, 28.0)
 		p.y = _mesh_ground(p.x, p.z)
@@ -2921,7 +3136,7 @@ func _add_vista_refuge() -> void:
 	# Leaves between the framing flowers: big ferns and broad plants on the same drop.
 	var under_n: int = 0
 	for i: int in 60:
-		if under_n >= 8: break
+		if under_n >= VISTA_FRAMING_LEAVES: break
 		var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(grng.randf_range(28.0, 58.0)))
 		var p: Vector3 = eye + dir * grng.randf_range(10.0, 24.0)
 		p.y = _mesh_ground(p.x, p.z)
@@ -2932,6 +3147,8 @@ func _add_vista_refuge() -> void:
 		_refuge_put(batches, QN + ("Fern_1.gltf" if under_n % 2 == 0 else "Plant_1_Big.gltf"), p - Vector3(0, 0.1, 0), k, grng.randf() * TAU)
 		under_n += 1
 	counts["framing_leaves"] = under_n
+	_add_foreground_ledge(eye, look_h, batches, counts)
+	_add_framing_trees(eye, look_h, batches, trees, counts)
 	# Cattail stands on the lake's near shore in the frame's lower right (goal: cattails against the
 	# water). The eye's drop puts that shore 290-550 m out, so the clumps are tall (3.5-5.5 m) and
 	# clustered; each stand is found by a vista ray landing within 1.5 m above the lake level.
@@ -3085,7 +3302,7 @@ func _add_vista_refuge() -> void:
 	var ledges: Dictionary = _add_face_ledges(eye)
 	var cottage: Dictionary = _add_refuge_cottage()
 	counts["lanterns"] = _add_refuge_lanterns()
-	vista_refuge_report = {"built": true, "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
+	vista_refuge_report = {"built": true, "foreground_ledge": vista_refuge_report.get("foreground_ledge", {}), "cattail_spots_x_z_px_py_m": vista_refuge_report.get("cattail_spots_x_z_px_py_m", []), "eye": _v3(eye), "home": _v3(home), "cottage": cottage, "face_ledges": ledges, "counts": counts, "lights": _refuge_lights.size(), "colliders": 0, "shadow_casters": 0}
 	vista_refuge_report.merge(stats)
 	print("VISTA_REFUGE ", JSON.stringify(vista_refuge_report))
 
