@@ -2957,11 +2957,19 @@ func _add_foreground_ledge(eye: Vector3, look_h: Vector3, batches: Dictionary, c
 	noise.frequency = 0.08
 	var nb: int = 18
 	var nr: int = 10
+	var grid: Array = _ledge_mesh(eye, look_h, LEDGE_BEARING, noise, "VistaForegroundLedge", nb, nr)
+	# True-scale plant bank: dark leafy mass with blooms among it (goal: ~47% green, ~19% bloom, blooms
+	# 30-110 px). Own generator so the rest of the refuge keeps its seeds.
+	_ledge_plants(eye, look_h, batches, counts, noise, grid, nb, nr)
+
+## Polar ground patch under the vista eye between two bearings (LEDGE_RANGE out, _ledge_height high),
+## on the terrain material, skirts dropping 25 m; visual only. Returns the [bearing][range] grid.
+func _ledge_mesh(eye: Vector3, look_h: Vector3, bearing: Vector2, noise: FastNoiseLite, label: String, nb: int, nr: int) -> Array:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var grid: Array = []
 	for i: int in nb + 1:
-		var b: float = lerpf(LEDGE_BEARING.x, LEDGE_BEARING.y, float(i) / nb)
+		var b: float = lerpf(bearing.x, bearing.y, float(i) / nb)
 		var outer: float = _ledge_outer(b, noise)
 		var row: Array = []
 		for j: int in nr + 1:
@@ -2994,15 +3002,16 @@ func _add_foreground_ledge(eye: Vector3, look_h: Vector3, batches: Dictionary, c
 	st.generate_normals()
 	var mesh: ArrayMesh = st.commit()
 	var node := MeshInstance3D.new()
-	node.name = "VistaForegroundLedge"
+	node.name = label
 	node.mesh = mesh
 	node.material_override = _terrain_material
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 	add_child(node)
 	_static.append(node)
-	# True-scale plant bank: dark leafy mass with blooms among it (goal: ~47% green, ~19% bloom, blooms
-	# 30-110 px). Own generator so the rest of the refuge keeps its seeds.
+	return grid
+
+func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: Dictionary, noise: FastNoiseLite, grid: Array, nb: int, nr: int) -> void:
 	var prng := RandomNumberGenerator.new()
 	prng.seed = 20261030
 	# No clover: its round leaves read as lime lily pads at this range (capture 233711).
@@ -3070,6 +3079,55 @@ func _add_foreground_ledge(eye: Vector3, look_h: Vector3, batches: Dictionary, c
 	for path: String in leafy + blooms: sizes[path.get_file()] = snappedf(_model_size(path), 0.01)
 	vista_refuge_report["foreground_ledge"] = {"corners_px": corners, "plant_tops_px": [screen_lo, screen_hi], "triangles": nb * nr * 2 + nb * 2 + nr * 4, "unit_sizes_m": sizes}
 
+## Lower-right corner bank (consult fable-01 E; reviews 19-20 right-bank coverage): the goal's lower right
+## is a near bank of cattails, grass and flowering bushes against the water, ours showed the far bank
+## 350-450 m out where true-scale reeds are specks. A small ground patch under the eye's right with
+## ferns, flowering bushes and grass 0.6-1.5 m; tops kept right of px 980 and below px 555 so the lake
+## stays open. Visual only. The vertex-colour cattail clumps at 1.4-2.4 m read as a row of tan posts
+## this close (capture 002848), so none here.
+const BANK_CORNER_BEARING := Vector2(-53.0, -27.0)
+const BANK_CORNER_CATTAILS := 0
+const BANK_CORNER_PLANTS := 70
+func _add_corner_bank(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: Dictionary) -> void:
+	var noise := FastNoiseLite.new()
+	noise.seed = 5129
+	noise.frequency = 0.08
+	var grid: Array = _ledge_mesh(eye, look_h, BANK_CORNER_BEARING, noise, "VistaCornerBank", 12, 10)
+	var crng := RandomNumberGenerator.new()
+	crng.seed = 20261033
+	# Broad leaves and flowering bushes; wispy grass read as near-black spikes against the water (corner box
+	# L*32.7 against the goal's 38.6, capture 003321).
+	var plants: Array = [QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf", QN + "Plant_7_Big.gltf", QN + "Grass_Common_Tall.gltf", QN + "Flower_4_Group.gltf", QN + "Bush_Common.gltf", QN + "Fern_1.gltf", QN + "Bush_Common_Flowers.gltf"]
+	var cat_xf: Array[Transform3D] = []
+	var plant_n: int = 0
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for i: int in 800:
+		if cat_xf.size() >= BANK_CORNER_CATTAILS and plant_n >= BANK_CORNER_PLANTS: break
+		var b: float = crng.randf_range(BANK_CORNER_BEARING.x + 1.0, BANK_CORNER_BEARING.y - 1.5)
+		var r: float = crng.randf_range(LEDGE_RANGE.x + 1.5, _ledge_outer(b, noise) - 0.5)
+		var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+		p.y = _ledge_height(eye, look_h, b, r, noise)
+		var cat: bool = cat_xf.size() < BANK_CORNER_CATTAILS and (plant_n >= BANK_CORNER_PLANTS or crng.randf() < 0.4)
+		var h: float = crng.randf_range(1.4, 2.4) if cat else crng.randf_range(0.6, 1.5)
+		var top: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
+		var px := Vector2((top.x + 1.0) * 640.0, (1.0 - top.y) * 360.0)
+		if px.x < 980.0 or px.y < 555.0: continue
+		if cat:
+			cat_xf.append(Transform3D(Basis(Vector3.UP, crng.randf() * TAU).scaled(Vector3(h * 0.8, h, h * 0.8)), p - Vector3(0, 0.05, 0)))
+		else:
+			var path: String = plants[crng.randi() % plants.size()]
+			_refuge_put(batches, path, p - Vector3(0, 0.08, 0), h / _model_size(path), crng.randf() * TAU)
+			plant_n += 1
+		lo = lo.min(px)
+		hi = hi.max(px)
+	if not cat_xf.is_empty(): _reed_multimesh(_cattail_clump_mesh(), cat_xf, "VistaCornerCattails")
+	var corners: Array = []
+	for c: Vector3 in [grid[0][0], grid[0][10], grid[12][0], grid[12][10], grid[6][10]]:
+		var s: Vector2 = _vista_screen(eye, c)
+		corners.append([roundi((s.x + 1.0) * 640.0), roundi((1.0 - s.y) * 360.0)])
+	counts["corner_bank"] = {"cattails": cat_xf.size(), "plants": plant_n, "corners_px": corners, "plant_tops_px": [lo, hi]}
+
 func _add_vista_refuge() -> void:
 	vista_refuge_report = {"built": false}
 	var eye: Vector3 = _vista_eye()
@@ -3121,6 +3179,7 @@ func _add_vista_refuge() -> void:
 	_terrain_material.set_shader_parameter("ledge_fleck", LEDGE_FLECK)
 	_terrain_material.set_shader_parameter("ledge_riser_dim", LEDGE_RISER_DIM)
 	_terrain_material.set_shader_parameter("ledge_riser_tint", LEDGE_RISER_TINT)
+	_terrain_material.set_shader_parameter("shore_wet", SHORE_WET)
 	# The slope between the eye and the terrace faces away from the low back sun (review 14: the
 	# vista's bottom-left quarter is ~35% below L*28 against ~27% in the goal).
 	var near: Vector3 = _vista_ray_ground(-0.25, -0.92, 300.0)
@@ -3261,6 +3320,7 @@ func _add_vista_refuge() -> void:
 		under_n += 1
 	counts["framing_leaves"] = under_n
 	_add_foreground_ledge(eye, look_h, batches, counts)
+	_add_corner_bank(eye, look_h, batches, counts)
 	_add_framing_trees(eye, look_h, batches, trees, counts)
 	# Cattail stands on the lake's near shore in the frame's lower right (goal: cattails against the
 	# water). The eye's drop puts that shore 290-550 m out, so the clumps are tall (3.5-5.5 m) and
@@ -5826,6 +5886,10 @@ const LEDGE_FLECK := 0.5
 const LEDGE_RISER_DIM := 0.8
 ## Warm tan risers (goal riser L*46, hue 68; ours read grey-violet).
 const LEDGE_RISER_TINT := Vector3(1.15, 0.97, 0.8)
+## Lake shore (far_terrain shore_wet: wet band height m, gravel strip strength; previous 0.5 / 0.9).
+## Consult fable-01 E: the grey gravel strip read as a pale outline round the vista lake; the goal's
+## banks go dark and wet into the water.
+const SHORE_WET := Vector2(1.6, 0.25)
 const NEAR_FILL := 0.45
 ## Environment adjustment by day (prototype apply_look only); 1 / 1 = off. Vista frame dE 15.4 -> 15.3 at
 ## 0.92 / 1.05 and 14.9 at 0.85 / 1.05 (upper sky 10.8 -> 10.1), capture 001733.
@@ -5923,6 +5987,9 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 			if look_override.has(key):
 				var lg: Array = look_override[key]
 				_terrain_material.set_shader_parameter(key, Vector3(float(lg[0]), float(lg[1]), float(lg[2])))
+		if look_override.has("shore_wet"):
+			var sw: Array = look_override["shore_wet"]
+			_terrain_material.set_shader_parameter("shore_wet", Vector2(float(sw[0]), float(sw[1])))
 		if look_override.has("face_grass"):
 			var fd: Vector4 = _terrain_material.get_shader_parameter("face_grass_disc")
 			_terrain_material.set_shader_parameter("face_grass_disc", Vector4(fd.x, fd.y, fd.z, float(look_override["face_grass"])))

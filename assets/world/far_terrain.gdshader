@@ -58,6 +58,8 @@ uniform vec3 ledge_riser_tint = vec3(1.0);
 // Grass over the steep face between the shelves (x, z, radius m, strength; 0 = off): the goal's hillside
 // below the cottage is grass with rock steps, not rock with grass trims.
 uniform vec4 face_grass_disc = vec4(0.0);
+// Lake shore: height of the dark wet band above the water (m) and the strength of the grey gravel strip.
+uniform vec2 shore_wet = vec2(0.5, 0.9);
 // Skylight on the back-lit near slopes in front of a review camera (x, z, radius m, strength; 0 = off).
 uniform vec4 near_fill_disc = vec4(0.0);
 varying vec3 v_world;
@@ -125,8 +127,8 @@ void fragment() {
 	float pebble = fbm(v_world.xz * 0.7 + 3.3);
 	float gravel_m = smoothstep(1.4, 0.7, lake_h) * smoothstep(-0.1, 0.25, lake_h) * smoothstep(0.38, 0.55, shore_n);
 	vec3 gravel_c = mix(vec3(0.14, 0.14, 0.13), vec3(0.23, 0.22, 0.21), smoothstep(0.35, 0.7, pebble));
-	moss = mix(moss, gravel_c, gravel_m * 0.9);
-	float wet = smoothstep(0.5, 0.0, lake_h);
+	moss = mix(moss, gravel_c, gravel_m * shore_wet.y);
+	float wet = smoothstep(shore_wet.x, 0.0, lake_h);
 	moss *= mix(1.0, 0.5, wet);
 	vec3 bed = mix(vec3(0.15, 0.14, 0.10), vec3(0.08, 0.09, 0.07), smoothstep(-0.2, -1.6, lake_h));
 	moss = mix(moss, bed, smoothstep(0.0, -0.4, lake_h));
