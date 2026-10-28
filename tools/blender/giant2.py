@@ -61,6 +61,26 @@ def stem_deform(x, y, z, th, i):
     lean = 0.05 * R * max(0.0, zr - 0.2) ** 1.5
     return x * k + lean, y * k, z
 L.lathe("stem", S(STEM), 96, M["stem"], deform=stem_deform)
+# v8 (review 25: the daytime stem still reads flat, L* std 5 against the goal's 10): vertex colours shade the
+# flutes (grooves darker, ridges lighter), darken the root bell and warm the top under the gills; the stem
+# material takes them as its base colour (glTF COLOR_0).
+_st = bpy.data.objects["stem"]
+_nt = M["stem"].node_tree
+_vc = _nt.nodes.new("ShaderNodeVertexColor"); _vc.layer_name = "Col"
+_nt.links.new(_vc.outputs["Color"], _nt.nodes.get("Principled BSDF").inputs["Base Color"])
+_col = _st.data.color_attributes.new(name="Col", type="BYTE_COLOR", domain="POINT")
+_base = (0xb4 / 255, 0x8c / 255, 0x93 / 255)
+for _i, _v in enumerate(_st.data.vertices):
+    _zr = _v.co.z / (K * R)
+    _th = math.atan2(_v.co.y, _v.co.x)
+    _fl = math.cos(14 * _th + 0.6 * _zr * 10)
+    _k = 1.0 - 0.2 * (0.5 - 0.5 * _fl) + 0.06 * (0.5 + 0.5 * _fl)
+    _k *= 0.78 + 0.22 * min(1.0, max(0.0, _zr / 0.3))
+    _warm = max(0.0, (_zr - 0.95) / 0.2)
+    _c = [min(1.0, _base[j] * _k) for j in range(3)]
+    _c = [_c[0] + (0.86 - _c[0]) * 0.25 * _warm, _c[1] + (0.66 - _c[1]) * 0.25 * _warm, _c[2] + (0.62 - _c[2]) * 0.25 * _warm]
+    _col.data[_i].color_srgb = (_c[0], _c[1], _c[2], 1.0)
+_st.data.color_attributes.active_color = _col
 
 # flowing frilly skirt: hangs from just under the cap (z 1.10) to ~0.83, 8 soft frills on the hem
 segs = 128

@@ -2516,6 +2516,13 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 func _blender_mat(src: StandardMaterial3D, tint: Color = Color.WHITE, fills: Dictionary = {}) -> StandardMaterial3D:
 	if _blender_mat_cache.has(src): return _blender_mat_cache[src]
 	var m: StandardMaterial3D = src.duplicate()
+	# Hero plants carry their petal and leaf gradients as vertex colours (glTF COLOR_0, linear) and the giant's
+	# stem its flute shading (giant2.py v8); the import left them unused, so the plants rendered white (capture
+	# pr49). Meshes without colours read white vertex colour, so other "stem" materials are unchanged.
+	var src_name: String = src.resource_name.to_lower()
+	if src_name.begins_with("hero_") or src_name == "stem": m.vertex_color_use_as_albedo = true
+	# At full night glow the cup and lilies flattened into uniform pale discs (capture pr51).
+	if src_name.begins_with("hero_"): m.set_meta("night_scale", 0.35)
 	m.set_meta("day_tint", src.albedo_color * tint)
 	_refuge_mats.append(m)
 	if fills.has(src.resource_name.to_lower()) and not m.emission_enabled:
@@ -3289,6 +3296,22 @@ const LEDGE_LILIES := 1
 ## Review 22: lily A sat ~80 px low (wanted in y540-640) and lily B was 43 px and half hidden.
 ## ChatGPT checkpoint 2 (Blender round): the foreground blooms too large and exposed: tops 40 px lower.
 const LEDGE_HERO_LILIES: Array = [[42.0, 585.0, 640.0], [372.0, 625.0, 720.0]]
+## ChatGPT checkpoint 3: the goal's lower-left is a few large silhouette anchors (a glowing ice-blue cup, a pink
+## daisy cluster, white star lilies, a mossy boulder, broad dark leaves at the frame's bottom) with gaps between
+## the bright accents, where ours was an even field of fine leaves and small blooms. Hero plants from the ChatGPT
+## sheet mush-sheet-heroflora-01 (heroflora.py: thick petals with vertex-colour gradients) at the goal's screen
+## spots: [model, centre px x, top px y, base px y]. A first pass with flat-colour models (flora2.py) read as a
+## white blob, sticks, a pale block and a dark hole (captures pr38-pr40, pr46).
+const HERO_DIR := "res://assets/world/models/blender/hero/"
+## Review 26 (pr52): keep the white lilies, daisies and leaf clump; the cup read as a flat pale disc, much bigger
+## than any other bloom (v2 below: dark throat, glowing rim, turned aside, 80 px); the boulder a smooth olive
+## pillow in front of the stair (dropped). A second leaf clump at x 268 covered the daisy spot (capture pr50).
+const FLORA_HEROES: Array = [
+	["hero_cup.glb", 112.0, 610.0, 690.0],
+	["hero_daisy.glb", 196.0, 612.0, 686.0],
+	["hero_whitelily.glb", 242.0, 520.0, 600.0],
+	["hero_broadleaf.glb", 70.0, 648.0, 735.0],
+]
 ## Desat 0.6 / glow 0.35 clipped the petals to white (capture 010151); 0.4 / 0.18 still read near-white
 ## (C*13-21). The goal's lilies are glowing lavender, C*30-36 at h_ab 300-305, L*74 (review 22): full
 ## colour, a magenta-leaning tint and only a little self-light.
@@ -3410,6 +3433,31 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 			var half: float = 0.45 * (float(spec[2]) - float(spec[1]))
 			hero.append([best, h, Rect2(float(spec[0]) - half, float(spec[1]), half * 2.0, float(spec[2]) - float(spec[1]))])
 			lily_spots.append(best)
+	# Hero plants (FLORA_HEROES), found the same way and kept clear of the bank like the lilies.
+	var flora_heroes: Array = []
+	if _flora_ready() and ResourceLoader.exists(HERO_DIR + FLORA_HEROES[0][0]):
+		var frng := RandomNumberGenerator.new()
+		frng.seed = 20261038
+		for spec: Array in FLORA_HEROES:
+			var best: Vector3 = Vector3.INF
+			var best_d: float = INF
+			for k: int in 3000:
+				var b: float = frng.randf_range(LEDGE_BEARING.x + 1.0, LEDGE_BEARING.y - 1.0)
+				var r: float = frng.randf_range(LEDGE_RANGE.x + 0.5, _ledge_outer(b, noise) - 1.0)
+				var p: Vector3 = eye + look_h.rotated(Vector3.UP, deg_to_rad(b)) * r
+				p.y = _ledge_height(eye, look_h, b, r, noise)
+				var s: Vector2 = _vista_screen(eye, p)
+				var d: float = Vector2((s.x + 1.0) * 640.0, (1.0 - s.y) * 360.0).distance_to(Vector2(float(spec[1]), float(spec[3])))
+				if d < best_d:
+					best_d = d
+					best = p
+			if best == Vector3.INF: continue
+			var h: float = 0.3
+			while h < 4.0 and (1.0 - _vista_screen(eye, best + Vector3(0, h, 0)).y) * 360.0 > float(spec[2]): h += 0.05
+			var half: float = 0.45 * (float(spec[3]) - float(spec[2]))
+			var rect := Rect2(float(spec[1]) - half, float(spec[2]), half * 2.0, float(spec[3]) - float(spec[2]))
+			flora_heroes.append([best, h, rect, HERO_DIR + String(spec[0])])
+			hero.append([best, h, rect])
 	# Blender flora (ChatGPT sheet mush-sheet-flora-01) when present, denser (review: kit flowers too large,
 	# uniform and sparse); the kit plants otherwise.
 	var use_flora: bool = _flora_ready()
@@ -3472,6 +3520,20 @@ func _ledge_plants(eye: Vector3, look_h: Vector3, batches: Dictionary, counts: D
 			_flora_put(f, p - Vector3(0, 0.06, 0), prng.randf_range(0.6, 0.95) if bloom else prng.randf_range(1.4, 2.4) * (0.62 if f == "flora_sword.glb" else 1.0), prng.randf() * TAU)
 			band_n += 1
 		counts["ledge_band_flora"] = band_n
+	# Blooms face the model's front (Blender -Y, glTF +Z): turned toward the eye.
+	var fh_px: Array = []
+	for fh: Array in flora_heroes:
+		var fpath: String = fh[3]
+		var fbox: AABB = _model_box(fpath)
+		var fk: float = float(fh[1]) / maxf(fbox.size.y, 0.01)
+		var to_eye: Vector3 = eye - (fh[0] as Vector3)
+		var fbasis := Basis(Vector3.UP, atan2(to_eye.x, to_eye.z)) * Basis.from_scale(Vector3.ONE * fk)
+		if not _flora_batches.has(fpath): _flora_batches[fpath] = []
+		_flora_batches[fpath].append(Transform3D(fbasis, (fh[0] as Vector3) - Vector3(0, 0.06, 0) - fbasis * Vector3(0, fbox.position.y, 0)))
+		var fr: Rect2 = fh[2]
+		fh_px.append([fpath.get_file(), roundi(fr.get_center().x), roundi(fr.position.y), roundi(fr.end.y), snappedf(float(fh[1]), 0.05)])
+	counts["ledge_flora_heroes"] = fh_px
+	if not flora_heroes.is_empty(): hero = hero.slice(0, hero.size() - flora_heroes.size())
 	var hero_px: Array = []
 	for hl: Array in hero:
 		if _refuge_model(FLOWER_MODEL, (hl[0] as Vector3) - Vector3(0, 0.05, 0), _hero_lily_yaw(hero_px.size()), float(hl[1]), "LedgeHeroLily%d" % hero_px.size(), true):
