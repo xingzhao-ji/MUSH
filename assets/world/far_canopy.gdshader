@@ -53,6 +53,9 @@ uniform float day_glow = 0.0;
 // Mode 0 dome value and day underside gain (1, 1 = previous look); set only on the horizon giants,
 // whose lit lavender domes sat 2 L* below the sky and read as glass discs (review 07).
 uniform float dome_value = 1.0;
+// Cap dome sheen (1 = previous: specular 0.2, roughness 0.6). The dome faces the violet zenith, so its
+// sky reflection outweighed the albedo (flesh set to pure red still read violet, capture 231236).
+uniform float dome_sheen = 1.0;
 uniform float under_gain = 1.0;
 // Bold gill plates (mode 0 underside, day glow only; 0 = previous look): ~72 wandering radial plates
 // with dark gaps in the gold, so the gills read at vista distance (the 180 fine gills average out).
@@ -144,6 +147,8 @@ void fragment() {
 			if (day_glow > 0.0) emit += flesh_rim * smoothstep(0.86, 1.0, s) * 0.25 * day_glow * (1.0 - night);
 			emit += flesh * rain_lift * 0.5;
 			float dv = mix(1.0, dome_value, 1.0 - night);
+			spec *= dome_sheen;
+			rough = mix(0.95, rough, dome_sheen);
 			albedo *= dv;
 			emit *= dv;
 		} else {

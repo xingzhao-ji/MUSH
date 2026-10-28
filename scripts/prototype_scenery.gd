@@ -291,6 +291,7 @@ var _understory_sync: Array = []
 const STEM_FOCUS_RADIUS := 200.0
 const STEM_ORGANIC := 1.0
 var cap_material: ShaderMaterial
+var _luminous_cap_material: ShaderMaterial
 ## Hero cap margin lobes (angle rad, angular width rad, radial amplitude): two broad bulges and
 ## two broad recessions at uneven spacing. Each is made zero-mean, so the mean plan radius is kept.
 const HERO_CAP_LOBES: Array[Vector3] = [Vector3(0.6, 0.55, 0.07), Vector3(2.3, 0.45, -0.05), Vector3(3.7, 0.65, 0.05), Vector3(5.1, 0.4, -0.04)]
@@ -1122,6 +1123,7 @@ func _add_giants(rng: RandomNumberGenerator) -> void:
 	cap_material = _art[_art.size() - 1]
 	set_cap_craft(true)
 	_add(cap, caps, tints, 0, "LuminousCanopies")
+	_luminous_cap_material = _art[_art.size() - 1]
 	var all_caps: Array[Transform3D] = []
 	all_caps.append_array(hero_caps)
 	all_caps.append_array(caps)
@@ -5460,11 +5462,20 @@ const GOLDEN_CAP_GLOW := 1.0
 ## Bold gill plates on the lit cap undersides (Gemini goal frame: gold radial gills with dark gaps
 ## readable at vista distance; review 09 asked for gills >= 2 px). 0 = previous underside.
 const GOLDEN_GILL_BOLD := 1.0
+## Hero cap by day (consult fable-01: its top read ultramarine-violet, chroma ~37 vs the goal's dusty mauve
+## ~21, and the stem 18 L* too dark). Seen from the vista the dome shows mostly its rim (flesh_rim), and its
+## sky sheen reflected the violet zenith. Shader defaults: flesh a880cc, flesh_rim d1ade0, sheen 1.
+## Sweep 232022 (I2): cap top rgb 154/117/178 -> 169/137/165 (goal 176/133/155), stem L* 25 -> 42 (goal 43);
+## the two cap blocks' colour distance to the goal 22.7/28.2 -> 16.4/19.8. Night and rain keep the old values.
+const GOLDEN_HERO_FLESH := "d0a89c"
+const GOLDEN_DOME_SHEEN := 0.3
+const GOLDEN_LUM_FLESH := "a880cc"
+const GOLDEN_HERO_FLESH_RIM := "f0d8c8"
 # Refuge petal albedo by day (see apply_look).
 const PETAL_DAY_VALUE := 0.82
 ## Giant stem tones in the golden look (previous: bark 0.47/0.41/0.47, light 0.66/0.56/0.54, as the shader defaults).
-const GOLDEN_STEM_BARK := "786978"
-const GOLDEN_STEM_LIGHT := "a88f8a"
+const GOLDEN_STEM_BARK := "bca4a0"
+const GOLDEN_STEM_LIGHT := "dcc0b0"
 ## Overcast lift on cap undersides in rain (review 10-12: far undersides sat ~20 below the rain sky).
 const RAIN_UNDER_LIFT := 0.3
 ## Share of the hero cap's day glow lost in full rain (far caps lose all of it), and the hero's own warm
@@ -5549,8 +5560,9 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		for key: String in day.keys():
 			if look_override.has("day_" + key): day = day.merged({key: Color(str(look_override["day_" + key]))}, true)
 	if stem_material != null:
-		stem_material.set_shader_parameter("stem_bark", Color(str(look_override.get("stem_bark", GOLDEN_STEM_BARK))) if look_depth else Color(0.47, 0.41, 0.47))
-		stem_material.set_shader_parameter("stem_light", Color(str(look_override.get("stem_light", GOLDEN_STEM_LIGHT))) if look_depth else Color(0.66, 0.56, 0.54))
+		# Night keeps the previous golden stem tones (786978 / a88f8a); the day tones are lighter (consult fable-01).
+		stem_material.set_shader_parameter("stem_bark", Color(str(look_override.get("stem_bark", GOLDEN_STEM_BARK))).lerp(Color("786978"), night) if look_depth else Color(0.47, 0.41, 0.47))
+		stem_material.set_shader_parameter("stem_light", Color(str(look_override.get("stem_light", GOLDEN_STEM_LIGHT))).lerp(Color("a88f8a"), night) if look_depth else Color(0.66, 0.56, 0.54))
 	if not look_override.is_empty():
 		day = day.duplicate()
 		for key: String in look_override:
@@ -5599,6 +5611,22 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 		cap_material.set_shader_parameter("gill_bold", float(look_override.get("gill_bold", GOLDEN_GILL_BOLD)) * (1.0 - hero_drop * rain))
 		# A stronger warm overcast lift on the near hero cap (review 14-16: rain underside hue 346, saturation 0.20).
 		cap_material.set_shader_parameter("rain_lift", float(look_override.get("hero_rain_lift", HERO_RAIN_LIFT)) * rain)
+	# Hero cap flesh by day (consult fable-01: the cap top read ultramarine-violet, chroma 40 vs the goal's
+	# dusty mauve at 22); night and rain keep the shader's previous flesh.
+	if look_depth:
+		var flesh_day: Color = Color(str(look_override.get("hero_flesh", GOLDEN_HERO_FLESH)))
+		var lum_flesh: Color = Color(str(look_override.get("lum_flesh", GOLDEN_LUM_FLESH)))
+		var dome_sheen: float = lerpf(float(look_override.get("dome_sheen", GOLDEN_DOME_SHEEN)), 1.0, maxf(night, rain))
+		if cap_material != null:
+			cap_material.set_shader_parameter("flesh", flesh_day.lerp(Color(0.66, 0.50, 0.80), maxf(night, rain)))
+			# From the vista the dome is seen at its rim, where flesh_rim sets both the albedo and a lit
+			# emission (flesh set to pure red moved the cap hue only 255 -> 271, capture 231236).
+			var rim_day: Color = Color(str(look_override.get("hero_flesh_rim", GOLDEN_HERO_FLESH_RIM)))
+			cap_material.set_shader_parameter("flesh_rim", rim_day.lerp(Color(0.82, 0.68, 0.88), maxf(night, rain)))
+			cap_material.set_shader_parameter("dome_sheen", dome_sheen)
+		if _luminous_cap_material != null:
+			_luminous_cap_material.set_shader_parameter("flesh", lum_flesh.lerp(Color(0.66, 0.50, 0.80), maxf(night, rain)))
+			_luminous_cap_material.set_shader_parameter("dome_sheen", dome_sheen)
 	if cap_material != null and not cap_material in _art:
 		cap_material.set_shader_parameter("day_glow", cap_day_glow)
 		cap_material.set_shader_parameter("gill_bold", gill_bold)
