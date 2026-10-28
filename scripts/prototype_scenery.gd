@@ -2606,7 +2606,9 @@ const GIANT_SHADE_COMP := Color(1.27, 1.25, 0.89)
 ## dome rises ~0.55 R over the rim: 1.5 tall (1.2 of the sheet's squashed dome after the 0.81 height scale).
 ## Capture pr06 (1.5 tall, tipped toward the left too): the dome read but rose off the frame's top right (goal:
 ## a near-level cap, right edge y 135-215): tipped toward the eye only, 3 degrees, 1.25 tall.
-const GIANT_HERO_TILT_DEG := 3.0
+## Milestone compare (pr20 vs goal): the goal shows a broad glowing gill band (y 195-265) under the dome, ours
+## a thin one: tipped 4 degrees away from the eye instead, so more of the underside shows.
+const GIANT_HERO_TILT_DEG := -4.0
 ## V2 model (capture pr11): its dome is already ~0.55 R tall, so 1.1 after the 0.81 height scale.
 const GIANT_HERO_CAP_SCALE := Vector3(1.0, 1.1, 1.0)
 const GIANT_HERO_HEIGHT_SCALE := 0.81
@@ -2634,7 +2636,7 @@ func _add_blender_giants() -> void:
 		var yaw: float = 0.9 + 1.7 * float(placed)
 		var cap_xf := Transform3D.IDENTITY
 		if placed == 0: s.y *= GIANT_HERO_HEIGHT_SCALE
-		if placed == 0 and GIANT_HERO_TILT_DEG > 0.0:
+		if placed == 0 and GIANT_HERO_TILT_DEG != 0.0:
 			# Hero cap tipped toward the vista and the frame's left about the stem top, as the procedural
 			# hero's bent stem did: the goal shows its dome over a thin band of gills (capture pr01: a level
 			# cap seen from below filled the frame's top right with gills).

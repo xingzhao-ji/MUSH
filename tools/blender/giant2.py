@@ -54,7 +54,8 @@ def stem_deform(x, y, z, th, i):
         lobe = max(lobe, reach * math.exp(-(d / 0.45) ** 2))
     k = 0.6 + 0.4 * lobe
     k = 1.0 + (k - 1.0) * base_w
-    k *= 1.0 + 0.045 * math.cos(14 * th + 0.6 * zr * 10) * (1.0 - 0.5 * base_w)
+    # v6: deeper flutes so the stem shades in vertical ridges (the goal's stem is fluted, ours read flat)
+    k *= 1.0 + 0.085 * math.cos(14 * th + 0.6 * zr * 10) * (1.0 - 0.5 * base_w)
     lean = 0.05 * R * max(0.0, zr - 0.2) ** 1.5
     return x * k + lean, y * k, z
 L.lathe("stem", S(STEM), 96, M["stem"], deform=stem_deform)
@@ -70,8 +71,10 @@ for layer, off in ((0, 0.0), (1, -0.01)):
             t = t_i / (rows - 1)
             fr = math.sin(8 * th + 0.6 * math.sin(3 * th))
             # v5 (ChatGPT checkpoint 2: the skirt read as angular flaps): hangs close to the stem in deep folds
-            rr = (0.165 + 0.045 * t ** 1.5 + 0.03 * t * fr + off) * R
-            zz = (1.17 - 0.3 * t - 0.05 * t * fr) * K * R
+            # v6 (milestone compare: the skirt read as a draped dress over a third of the stem; the goal's is a
+            # short ring under the cap): shorter and tighter
+            rr = (0.165 + 0.035 * t ** 1.5 + 0.022 * t * fr + off) * R
+            zz = (1.17 - 0.17 * t - 0.03 * t * fr) * K * R
             verts.append((rr * math.cos(th), rr * math.sin(th), zz))
     for j in range(segs):
         j2 = (j + 1) % segs
