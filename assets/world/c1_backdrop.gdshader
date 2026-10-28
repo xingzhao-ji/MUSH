@@ -36,12 +36,14 @@ float skyline(float u, float scale, float seed) {
 	float h = 0.0;
 	for (int k = -1; k <= 1; k++) {
 		float c = i + float(k);
+		// ChatGPT checkpoint 2: the spires read as tall, narrow, evenly spaced cones; broader irregular massifs
+		// with an occasional pinnacle instead.
 		float r = hash11(c * 1.7 + seed);
-		float w = 0.18 + 0.25 * hash11(c * 3.1 + seed);
-		float d = abs(f - float(k) - 0.5) / w;
-		float spire = (1.0 - smoothstep(0.0, 1.0, d)) * (0.05 + 0.12 * r * r);
-		float cap = (r > 0.82) ? (1.0 - smoothstep(0.7, 1.6, d)) * 0.03 : 0.0;
-		h = max(h, spire + cap);
+		float w = 0.35 + 0.45 * hash11(c * 3.1 + seed);
+		float d = abs(f - float(k) - 0.5 + 0.3 * (hash11(c * 5.3 + seed) - 0.5)) / w;
+		float massif = (1.0 - smoothstep(0.0, 1.0, d * d)) * (0.025 + 0.06 * r) * (0.8 + 0.4 * vnoise(vec2(x * 3.0, seed)));
+		float pin = (r > 0.86) ? (1.0 - smoothstep(0.0, 0.25, d)) * 0.05 : 0.0;
+		h = max(h, massif + pin);
 	}
 	return h;
 }

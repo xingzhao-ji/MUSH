@@ -129,7 +129,7 @@ M = {
     "plank": L.mat("terrace_plank", "#8a6440", 0.85),
     "plaster": L.mat("terrace_plaster", "#8e6c4c", 0.9),
     # v3 (cell analysis c1v11: the concept's house cell is warm orange, L34 a17 b30; ours read pale yellow-white)
-    "window": L.mat("terrace_window_glow", "#f6b66d", 0.5, "#ff9038", 3.6),
+    "window": L.mat("terrace_window_glow", "#e89a50", 0.5, "#ff7a28", 2.3),   # v6: amber, not pale yellow (cell L51 vs 34)
     "interior": L.mat("terrace_interior_glow", "#b86020", 0.7, "#e07028", 2.2),
     "canvas": L.mat("terrace_canvas", "#cdb494", 0.9, "#e0a060", 0.25),
     "sofa": L.mat("terrace_sofa", "#cdb090", 0.9),
@@ -381,14 +381,15 @@ for j in range(len(ZS) - 1):
 L.obj_from("front_wall", wall_verts, wall_faces, M["plaster"])
 
 # main window: 3.6 x 2.8 m round-arched, warm glow with mullions; interior glow plane set back
-win, wpts = arch_hole_panel("window", -2.2, 2.2, 3.3, 0.02, M["window"])
-inside, _ = arch_hole_panel("window_back", -2.2, 2.2, 3.3, -0.5, M["interior"])
+# v6: unobstructed, 5 m read 215 px wide against the concept's 135 px (capture c1v29): 3.6 m
+win, wpts = arch_hole_panel("window", -1.8, 1.8, 3.2, 0.02, M["window"])
+inside, _ = arch_hole_panel("window_back", -1.8, 1.8, 3.2, -0.5, M["interior"])
 frame_tube("window_frame", wpts, 0.08, 0.16, M["timber"])
-for u in (-0.95, 0.0, 0.95):
-    a = wall_pt(u, 0.35, 0.1); b = wall_pt(u, 0.35 + 2.8 - (1.9 - math.sqrt(max(0.0, 1.9 ** 2 - u * u))), 0.1)
+for u in (-0.9, 0.0, 0.9):
+    a = wall_pt(u, 0.35, 0.1); b = wall_pt(u, 0.35 + 3.2 - (1.8 - math.sqrt(max(0.0, 1.8 ** 2 - u * u))), 0.1)
     ob = L.cyl("mullion", 0.05, (b - a).length, (a + b) / 2, M["timber_dark"], verts=6)
-for z in (1.1, 2.0):
-    a = wall_pt(-1.85, z + 0.35, 0.1); b = wall_pt(1.85, z + 0.35, 0.1)
+for z in (1.1, 2.1):
+    a = wall_pt(-1.75, z + 0.35, 0.1); b = wall_pt(1.75, z + 0.35, 0.1)
     ob = L.cyl("transom", 0.045, (b - a).length, (a + b) / 2, M["timber_dark"], verts=6); ob.rotation_euler = (b - a).to_track_quat("Z", "Y").to_euler()
 # shelves and a warm lamp silhouette inside
 for k, z in enumerate((0.6, 1.3, 2.0)):
@@ -541,39 +542,57 @@ for i in range(len(wall_line) - 1):
 
 # ---- steps and flagstone path ----------------------------------------------------------------------------
 for k in range(len(PATH_C) - 1):
-    if k % 2: continue
+    if k % (3 if k > 18 else 2): continue   # v5 (ChatGPT checkpoint 2: ~30% fewer, larger slabs)
     a, b = PATH_C[k], PATH_C[k + 1]
     d = (b - a); d.z = 0
     yaw = math.atan2(d.y, d.x)
     # v4 (ChatGPT: path narrow and fragmented; concept ~2-3 m of large overlapping flagstones)
     for j in range(3 if k > 18 else 1):
-        off = Vector((-d.y, d.x, 0)).normalized() * ((j - 1) * 0.85 + rnd.uniform(-0.2, 0.2) if k > 18 else 0.0)
+        off = Vector((-d.y, d.x, 0)).normalized() * ((j - 1) * 1.15 + rnd.uniform(-0.2, 0.2) if k > 18 else 0.0)
         p = a + off
-        s = rnd.uniform(0.6, 0.95) if k > 18 else 1.05
-        z = p.z + (0.05 if k > 18 else 0.0)
+        s = rnd.uniform(0.85, 1.25) if k > 18 else 1.05
+        z = p.z + (0.0 if k > 18 else 0.0)
         st = L.lathe("pstone%d_%d" % (k, j), [(s, z - 0.15), (s * 0.97, z + 0.06), (0.0, z + 0.08)], 10, M["flag"], close_top=True, smooth=False,
                      deform=lambda x, y, zz, th, i_, p=p, s=s, k=k, yaw=yaw: (p.x + (x * 1.5 * math.cos(yaw) - y * math.sin(yaw)) * (1 + 0.15 * math.sin(3 * th + k)),
                                                                               p.y + (x * 1.5 * math.sin(yaw) + y * math.cos(yaw)) * (1 + 0.15 * math.sin(3 * th + k)), zz))
         tone = rnd.uniform(0, 1)
-        paint(st, lambda co, i_, tone=tone: mix(srgb("#968878"), srgb("#6c6258"), tone))   # v5: darker (capture c1v21: the lit path out-shone the concept's)
+        paint(st, lambda co, i_, tone=tone: mix(srgb("#746a68"), srgb("#4e4850"), tone))   # v5: darker (capture c1v21: the lit path out-shone the concept's)
 # risers under the steps between the patio and the path
 for k in range(4):
     p = PATH_C[min(k * 2, len(PATH_C) - 1)]
     rock("riser%d" % k, (p.x, p.y, p.z - 0.45), (1.9, 1.0, 0.8), 700 + k)
 
 # fence on the path's right, lantern posts along it
+def bush(name, p, s, seed):
+    r2 = random.Random(seed)
+    for j in range(5):
+        q = p + Vector((r2.uniform(-0.6, 0.6) * s, r2.uniform(-0.6, 0.6) * s, r2.uniform(0.2, 0.7) * s))
+        bblob(M["leaf"], s * r2.uniform(0.45, 0.7), tuple(q), squash=(1, 1, 0.85), sub=2, seed=seed + j, jitter=0.2,
+              col=lambda co, q=q, s=s: mix(srgb("#16242a"), srgb("#3a5848"), 0.5 + (co.z - q.z) / (s * 0.9)))   # v5: bluer, the concept's violet-dark foreground
+
 def side(k, off):
     a, b = PATH_C[k], PATH_C[min(k + 1, len(PATH_C) - 1)]
     d = b - a; d.z = 0; nrm = Vector((d.y, -d.x, 0)).normalized()
     return a + nrm * off
-fence_pts = [side(k, 1.6) for k in range(22, len(PATH_C) - 6, 6)]
-rail_line("fence", fence_pts, lambda p: ground_h(p.x, p.y) - 0.05, posts_every=2.0, h=0.95)
+# v5 (ChatGPT checkpoint 2: the rails drew a strong grid): a lower fence, sparser posts, bushes along it
+fence_pts = [side(k, 2.1) for k in range(22, len(PATH_C) - 6, 6)]
+rail_line("fence", fence_pts, lambda p: ground_h(p.x, p.y) - 0.15, posts_every=3.2, h=0.7)
+for k in range(22, len(PATH_C) - 6, 3):
+    q = side(k, 2.6); q.z = ground_h(q.x, q.y)
+    bush("fencebush%d" % k, q, rnd.uniform(0.6, 1.0), 1700 + k)
 for k, (x, y, z) in enumerate([(125, 468, 0.3), (350, 512, -0.9), (565, 520, -1.0), (450, 588, -1.9), (680, 650, -3.0)]):
     g = px(x, y, z); g.z = ground_h(g.x, g.y)
     lantern_post("path_lp%d" % k, g)
 
 # ---- flower beds -----------------------------------------------------------------------------------------
 LEAF_COL = lambda q: srgb("#3e6428")
+def near_facade(x, y):
+    """True in front of the house front (v5, preview t12: bed bushes and a lily hid the window)."""
+    q = Vector((x, y, 0.0)) - Vector((FRONT_BASE.x, FRONT_BASE.y, 0.0))
+    u = q.dot(HOUSE_TANGENT); d = q.dot(HOUSE_NORMAL)
+    # only near the facade's own level: beds lower down the slope sit below the window line
+    return -6.0 < u < 8.0 and -1.0 < d < 5.5 and ground_h(x, y) > PATIO_Z - 1.2
+
 def flower(name, p, mat_, size, petals=6):
     for j in range(petals):
         a = 2 * math.pi * j / petals
@@ -593,13 +612,6 @@ def lily(name, p, size):
         a = rnd.uniform(0, 6.28)
         bblob(M["leaf"], size * 0.5, (p.x + math.cos(a) * size * 0.5, p.y + math.sin(a) * size * 0.5, g + size * 0.3), squash=(1.2, 0.4, 0.35), sub=1, col=LEAF_COL)
 
-def bush(name, p, s, seed):
-    r2 = random.Random(seed)
-    for j in range(5):
-        q = p + Vector((r2.uniform(-0.6, 0.6) * s, r2.uniform(-0.6, 0.6) * s, r2.uniform(0.2, 0.7) * s))
-        bblob(M["leaf"], s * r2.uniform(0.45, 0.7), tuple(q), squash=(1, 1, 0.85), sub=2, seed=seed + j, jitter=0.2,
-              col=lambda co, q=q, s=s: mix(srgb("#16242a"), srgb("#3a5848"), 0.5 + (co.z - q.z) / (s * 0.9)))   # v5: bluer, the concept's violet-dark foreground
-
 beds = [  # (px, py, z guess, count, spread m)
     (90, 600, -2.0, 220, 4.5), (260, 640, -2.6, 150, 3.5), (380, 690, -3.2, 90, 2.5), (150, 500, -0.6, 110, 3.0), (30, 680, -3.4, 120, 3.0),
     (430, 560, -1.6, 50, 1.8), (330, 470, 0.4, 40, 2.0), (40, 470, -0.2, 60, 2.5), (520, 470, 0.0, 30, 1.6), (200, 700, -3.4, 90, 2.5)]
@@ -610,9 +622,10 @@ for (x, y, z, cnt, spread) in beds:
         p = c + Vector((rnd.uniform(-spread, spread), rnd.uniform(-spread, spread), 0))
         pd, _ = path_info(p.x, p.y)
         if pd < 1.9 or in_poly(p.x, p.y, PATIO_PTS) or poly_dist(p.x, p.y, EDGE) > -0.5: continue
+        if near_facade(p.x, p.y): continue
         g = ground_h(p.x, p.y)
         r = rnd.random()
-        if r < 0.55:
+        if r < 0.62:
             flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.3, 0.8))), M["lav"], rnd.uniform(0.22, 0.42))
         elif r < 0.55:
             flower("fl%d" % fk, Vector((p.x, p.y, g + rnd.uniform(0.3, 0.7))), M["pink"], rnd.uniform(0.2, 0.36))

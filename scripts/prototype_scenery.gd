@@ -2654,7 +2654,7 @@ const HERO_TREE_UNDERSIDE := 7.72
 ## Capture c1v07: at 1.35 x 1.0 the cap ran off the frame's top and right with only its underside showing; concept
 ## cap at x 720-1210, dome from the frame top, rim near y 90.
 const HERO_TREE_WIDEN := 0.9
-const HERO_TREE_TALL := 0.8
+const HERO_TREE_TALL := 0.72
 const HERO_TREE_SINK := 12.0
 ## Lavender self-fill on the bark (capture c1v03: the backlit trunk read as a saturated navy mass).
 const HERO_TREE_FILLS := {"hero_tree_bark": [Color("9a8fb8"), 0.16, Color("6a6aa0"), 0.3, 0.2]}
@@ -4220,7 +4220,8 @@ const C1_TERRACE := "res://assets/world/models/blender/c1/terrace.glb"
 const C1_TERRACE_CAM_H := 7.0
 ## Cell analysis c1v19: the concept's house cell is warm orange (L34 a17 b30), ours L31 a6 b12: larger warm pools at
 ## the window and over the patio, and a day self-fill on the dark canopy and turf (C1_TERRACE_FILLS).
-const C1_TERRACE_LIGHTS: Array = [[-13.7, 3.1, -16.4, 14.0], [-7.4, 3.5, -15.5, 14.0], [-12.8, 2.3, -14.3, 8.0], [-7.4, 1.1, -14.3, 7.0], [-1.9, 1.0, -14.0, 7.0], [-4.4, 0.1, -12.5, 7.0], [-11.0, 4.5, -13.5, 12.0]]
+## Path lanterns 5 m (capture c1v28: the lit path read L39 a14 b14 against the concept's L31 a8 b4).
+const C1_TERRACE_LIGHTS: Array = [[-13.7, 3.1, -16.4, 14.0], [-7.4, 3.5, -15.5, 14.0], [-12.8, 2.3, -14.3, 6.0], [-7.4, 1.1, -14.3, 5.0], [-1.9, 1.0, -14.0, 5.0], [-4.4, 0.1, -12.5, 5.0], [-11.0, 4.5, -13.5, 12.0]]
 ## The fill is on the tree canopy only (capture c1v20: on all leaves it lifted the concept's dark violet foreground).
 const C1_TERRACE_FILLS := {"hero_terrace_canopy": [Color("4a5a3c"), 0.18, Color("1c2430"), 0.05, 0.1], "hero_terrace_turf": [Color("3c4a30"), 0.1, Color("1c2430"), 0.05, 0.08]}
 ## The terrace lights' own energy (day, night): stronger warm pools than the refuge lights' 0.9 by day.
@@ -4246,16 +4247,19 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 ## [height, width]: pillar 100 x 44, island 60 x 200, bridge deck 90 over 312 m, spire 26.6.
 const C1_KIT := "res://assets/world/models/blender/c1/"
 const C1_KIT_DIMS := {"pillar": [100.0, 44.0], "island": [60.0, 200.0], "bridge": [90.0, 312.0], "spire": [26.6, 10.0],
-	"mesa_wide": [70.0, 220.0], "mesa_round": [95.0, 130.0], "rock_tall": [170.0, 70.0], "mesa_lobed": [120.0, 180.0], "viaduct": [80.0, 312.0], "arch": [70.0, 152.0]}
+	"mesa_wide": [70.0, 220.0], "mesa_round": [95.0, 130.0], "rock_tall": [170.0, 70.0], "mesa_lobed": [120.0, 180.0], "viaduct": [80.0, 312.0], "arch": [70.0, 152.0],
+	"tower": [350.0, 100.0], "massif": [220.0, 300.0], "needle": [250.0, 50.0], "lowisle": [100.0, 200.0], "risebridge": [120.0, 440.0]}
 const C1_SINK := 14.0
-## V2 (valley2.py; ChatGPT checkpoint after milestone 1: V1 read as rows of rectangular towers with evenly spaced
-## arches): irregular mesas and rocks in three overlapping depth layers at very different heights.
+## V3 (cliffs.py, ChatGPT sheet mush-c1-sheet-cliffs-01; checkpoint 2: the V2 mesas still read as horizontal
+## shelves, the viaducts as conventional): clustered fissured rock columns of very different heights (towers, a
+## two-crowned massif, leaning needles, low pooled isles) in three overlapping layers, tops from below the eye to
+## above the horizon, and curved rising bridges (risebridge: its own end ledges, deck 72 -> 120 m).
 const C1_ISLANDS: Array = [
-	["rock_tall", 560.0, 1250.0, 210.0, 70.0], ["mesa_lobed", 700.0, 1150.0, 150.0, 220.0], ["rock_tall", 1010.0, 1200.0, 230.0, 80.0], ["mesa_round", 380.0, 1100.0, 160.0, 140.0],
-	["mesa_round", 480.0, 820.0, 120.0, 150.0], ["rock_tall", 615.0, 760.0, 150.0, 60.0], ["mesa_lobed", 880.0, 650.0, 110.0, 200.0], ["mesa_round", 1180.0, 600.0, 95.0, 120.0],
-	["mesa_wide", 760.0, 450.0, 55.0, 240.0], ["mesa_round", 1080.0, 420.0, 70.0, 110.0], ["rock_tall", 560.0, 520.0, 95.0, 50.0]]
-## [model, px, m, px, m, deck height above LAKE_Y]
-const C1_BRIDGES: Array = [["viaduct", 480.0, 820.0, 880.0, 650.0, 112.0], ["arch", 560.0, 520.0, 760.0, 450.0, 78.0], ["viaduct", 380.0, 1100.0, 700.0, 1150.0, 150.0], ["arch", 1080.0, 420.0, 1180.0, 600.0, 88.0]]
+	["tower", 470.0, 1150.0, 260.0, 90.0], ["massif", 700.0, 1200.0, 200.0, 300.0], ["needle", 1020.0, 1100.0, 230.0, 50.0], ["needle", 330.0, 1250.0, 240.0, 55.0],
+	["tower", 610.0, 820.0, 180.0, 70.0], ["massif", 880.0, 690.0, 140.0, 260.0], ["needle", 520.0, 760.0, 160.0, 40.0], ["tower", 1190.0, 620.0, 150.0, 70.0],
+	["lowisle", 930.0, 480.0, 62.0, 180.0], ["needle", 1130.0, 470.0, 125.0, 42.0], ["risebridge", 700.0, 600.0, 120.0, 380.0], ["risebridge", 560.0, 1000.0, 170.0, 420.0]]
+## [model, px, m, px, m, deck height above LAKE_Y] (V2 straight viaducts; none in V3)
+const C1_BRIDGES: Array = []
 var _c1_bases: Array = []
 ## Height fraction for the mid-cliff mist bank in front of island i (varied, deterministic).
 func rng_mid(i: int) -> float:

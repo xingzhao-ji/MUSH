@@ -66,8 +66,8 @@ def tube(name, pts, radii, mat, colf, sides=7):
     return ob
 
 M = {
-    "cap": vmat("hero_tree_cap", 0.6, "#5a4ad8", 0.25),
-    "vein": vmat("hero_tree_vein", 0.4, "#c79bff", 2.2),
+    "cap": vmat("hero_tree_cap", 0.6, "#5a4ad8", 0.5),
+    "vein": vmat("hero_tree_vein", 0.4, "#a070ff", 1.8),
     "rim": vmat("hero_tree_rim", 0.4, "#d58cff", 2.6),
     "under": vmat("hero_tree_under", 0.6, "#ffb048", 1.6),
     "bark": vmat("hero_tree_bark", 0.8),
@@ -79,7 +79,8 @@ M = {
 
 # ---- cap top: broad dome with a rolled rim ------------------------------------------------------------------
 # v5 (ChatGPT checkpoint after milestone 1: a flat roof-like canopy; the concept's cap is a deep dome): taller dome.
-TOP = [(6.95, 7.72), (7.1, 7.9), (7.18, 8.2), (7.1, 8.55), (6.7, 9.1), (5.9, 9.75), (4.7, 10.3), (3.3, 10.72), (1.7, 10.98), (0.0, 11.06)]
+# v6 (ChatGPT checkpoint 2: still too flat): dome ~30% taller.
+TOP = [(6.95, 7.72), (7.1, 7.92), (7.2, 8.28), (7.12, 8.75), (6.75, 9.45), (5.95, 10.25), (4.75, 10.95), (3.3, 11.5), (1.7, 11.85), (0.0, 11.95)]
 cap = L.lathe("cap", TOP, 120, M["cap"], close_top=True)
 # v4 (capture c1v09: the dome read saturated ultramarine; concept dome is a lighter lavender-blue)
 paint(cap, lambda co, i: mix(ramp([(0.0, "#5c5aa6"), (0.55, "#7a76c8"), (0.85, "#9a94e0"), (1.0, "#b4aaee")], math.hypot(co.x, co.y) / R),
@@ -108,19 +109,19 @@ def vein(p_r, p_a, length, ang, depth):
         x += math.cos(ang) * length / 5; y += math.sin(ang) * length / 5
         if math.hypot(x, y) > 6.95: break
     if len(pts) >= 2:
-        w = 0.05 * (1.0 - 0.25 * depth)
-        tube("vein%d" % vk, pts, [w] * len(pts), M["vein"], lambda t, co: srgb("#d9b8ff"), sides=4); vk += 1
+        w = 0.12 * (1.0 - 0.25 * depth)   # v6: veins wide enough to read from 700 m
+        tube("vein%d" % vk, pts, [w] * len(pts), M["vein"], lambda t, co: srgb("#b48aff"), sides=4); vk += 1
         if depth < 2:
             for _ in range(2):
                 vein(math.hypot(x, y) * rnd.uniform(0.6, 0.95), math.atan2(y, x), length * 0.6, ang + rnd.uniform(-0.7, 0.7), depth + 1)
-for k in range(14):
-    a = 2 * math.pi * k / 14 + rnd.uniform(-0.1, 0.1)
-    vein(rnd.uniform(0.3, 1.2), a, rnd.uniform(2.2, 3.2), a + rnd.uniform(-0.3, 0.3), 0)
+for k in range(24):
+    a = 2 * math.pi * k / 24 + rnd.uniform(-0.1, 0.1)
+    vein(rnd.uniform(0.3, 1.2), a, rnd.uniform(2.4, 3.6), a + rnd.uniform(-0.3, 0.3), 0)
 # sparkles: small glowing dots scattered on the cap
 for k in range(90):
     r = math.sqrt(rnd.uniform(0.02, 0.97)) * 6.9; a = rnd.uniform(0, 2 * math.pi)
     p = onsurf(r * math.cos(a), r * math.sin(a), 0.06)
-    b = L.blob("spark%d" % k, rnd.uniform(0.04, 0.09), tuple(p), M["vein"], sub=1, jitter=0.05)
+    b = L.blob("spark%d" % k, rnd.uniform(0.08, 0.16), tuple(p), M["vein"], sub=1, jitter=0.05)
     paint(b, lambda co, i: srgb("#f2e0ff"))
 
 # ---- underside: glowing gold, brighter toward the centre -----------------------------------------------------
@@ -191,20 +192,21 @@ def limb(a, r0, z0, w0, n, depth, seed):
         t = i / n
         pts.append(Vector((r * math.cos(a), r * math.sin(a), z)))
         rad.append(max(0.035, w0 * (1.0 - 0.75 * t)))
-        a += rr.uniform(-0.12, 0.12)
+        a += rr.uniform(-0.12, 0.12) + 0.05 * math.sin(i * 1.3 + seed)
         r += (6.75 - r0) / n
         z = z + (under_z(r) - 0.08 - z) * (0.45 + 0.4 * t)
     tube("limb_%d_%d" % (depth, seed), pts, rad, M["bark"], branch_col, sides=6 if depth == 0 else 4)
-    if depth < 2:
+    if depth < 3:
         for f in (0.32, 0.58):
             i = int(n * f)
             q = pts[i]
             for sgn in (-1, 1):
                 if rr.random() < 0.75:
                     limb(math.atan2(q.y, q.x) + sgn * rr.uniform(0.18, 0.4), math.hypot(q.x, q.y), q.z, rad[i] * 0.6, max(3, n - i), depth + 1, seed * 7 + i * 3 + (sgn > 0))
-for k in range(16):
-    a = 2 * math.pi * k / 16 + rnd.uniform(-0.08, 0.08)
-    limb(a, 1.4, 6.6, 0.42, 9, 0, 300 + k)
+# v6 (ChatGPT checkpoint 2: 2-3x the branching, twisted limbs): 28 limbs, forks down to depth 3, a helical wander.
+for k in range(28):
+    a = 2 * math.pi * k / 28 + rnd.uniform(-0.06, 0.06)
+    limb(a, 1.3, 6.4 + 0.25 * (k % 3), 0.36, 10, 0, 300 + k)
 
 # buttress roots spreading on the ground
 for k in range(16):
@@ -215,10 +217,10 @@ for k in range(16):
     tube("root%d" % k, pts, [0.45, 0.3, 0.12], M["bark"], lambda t, co: bark_col(0.1, co), sides=6)
 
 # ---- glowing drips from the rim -----------------------------------------------------------------------------
-for k in range(70):
-    a = 2 * math.pi * k / 70 + rnd.uniform(-0.03, 0.03)
-    r = rnd.uniform(6.6, 7.0)
-    ln = rnd.uniform(0.2, 0.85) * (1.5 if k % 9 == 0 else 1.0)
+for k in range(140):
+    a = 2 * math.pi * k / 140 + rnd.uniform(-0.02, 0.02)
+    r = rnd.uniform(6.5, 7.0)
+    ln = rnd.uniform(0.25, 1.1) * (2.2 if k % 7 == 0 else 1.0)
     p0 = Vector((r * math.cos(a), r * math.sin(a), 7.72))
     tube("drip%d" % k, [p0, p0 + Vector((0, 0, -ln * 0.5)), p0 + Vector((0, 0, -ln))], [0.035, 0.025, 0.015], M["drip"],
          lambda t, co: mix(srgb("#ffd0a8"), srgb("#a080ff"), t), sides=4)
