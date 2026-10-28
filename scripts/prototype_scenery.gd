@@ -157,6 +157,7 @@ const FLOWER_MODEL := "res://assets/world/models/tripo/glow_flowers.glb"
 const CATTAIL_MODEL := "res://assets/world/models/tripo/cattails.glb"
 ## Shore review camera (stream_view_pose ground point): shore plants keep 30 m clear of it.
 const SHORE_CAMERA := Vector2(387.12, -300.14)
+const CORNER_CATTAILS := 0
 const COTTAGE_HEIGHT := 11.0
 const LANTERN_HEIGHT := 2.6
 var far_falls_report: Dictionary = {}
@@ -2224,9 +2225,9 @@ func _model_parts(path: String) -> Array:
 	_model_cache[path] = parts
 	return parts
 
-func _refuge_put(batches: Dictionary, path: String, at: Vector3, size: float, yaw: float, lean: Vector2 = Vector2.ZERO) -> void:
+func _refuge_put(batches: Dictionary, path: String, at: Vector3, size: float, yaw: float, lean: Vector2 = Vector2.ZERO, stretch: Vector3 = Vector3.ONE) -> void:
 	if not batches.has(path): batches[path] = []
-	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3(1, 0, 0), lean.x) * Basis(Vector3(0, 0, 1), lean.y) * Basis.from_scale(Vector3.ONE * size)
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3(1, 0, 0), lean.x) * Basis(Vector3(0, 0, 1), lean.y) * Basis.from_scale(stretch * size)
 	(batches[path] as Array).append(Transform3D(basis, at))
 
 ## Scene copy of a kit material: a day tint toward the valley palette (darker bark, softer greens,
@@ -2253,14 +2254,14 @@ func _refuge_material(source: Material) -> Material:
 			sheet.generate_mipmaps()
 			m.albedo_texture = ImageTexture.create_from_image(sheet)
 		tint = Color(0.92, 0.78, 0.98)
-	elif "grass" in label: tint = Color(0.5, 0.56, 0.3)
+	elif "grass" in label: tint = Color(0.4, 0.44, 0.24)
 	elif "leaves" in label: tint = Color(0.88, 0.9, 0.66)
 	m.set_meta("day_tint", base.albedo_color * tint)
 	# Leaf cards and bark: wrapped diffuse plus a dim self-fill from their own albedo, so crown
 	# interiors keep a value floor like the terrain's soft daylight (review 10: interiors p5 4).
 	# Kit flower petals glow faintly by day only (their own albedo reads orange under the golden key)
 	# and go dark at night (review 10: unlit petals outshone the giants at night).
-	if "leaves" in label or "bark" in label or "grass" in label:
+	if "leaves" in label or "bark" in label:
 		m.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
 		m.emission_enabled = true
 		m.emission = Color(0.62, 0.6, 0.52)
@@ -2270,6 +2271,10 @@ func _refuge_material(source: Material) -> Material:
 	elif "flower" in label:
 		m.emission_enabled = true
 		m.emission = Color(0.82, 0.6, 1.0)
+		# Rim light gives petals an edge falloff under the lanterns (review 13/14: flat cutouts at night).
+		m.rim_enabled = true
+		m.rim = 0.7
+		m.rim_tint = 0.4
 		m.emission_texture = m.albedo_texture
 		m.emission_energy_multiplier = 0.08
 		_refuge_glow.append(m)
@@ -2823,6 +2828,7 @@ func _add_vista_refuge() -> void:
 	# scale): each screen column is marched down to where the rays leave the lake bed for dry ground.
 	var band_n: int = 0
 	var shore_cols: int = 0
+	var cattail_band: int = 0
 	var bx: float = -0.3
 	while bx <= 1.0:
 		var by: float = -0.42
@@ -2847,19 +2853,46 @@ func _add_vista_refuge() -> void:
 							shore = mh
 					# Ragged: clumps and gaps along the shore (a continuous strip read as a hedge).
 					var clump: float = sin(shore.x * 0.11 + shore.z * 0.07) + 0.6 * sin(shore.x * 0.37 - shore.z * 0.23)
-					if clump > -0.35 and Vector2(shore.x, shore.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(shore.x, shore.z)) > 3.0:
+					if clump > -0.35 and Vector2(shore.x, shore.z).distance_to(SHORE_CAMERA) > 30.0 and _ribbon_gap(Vector2(shore.x, shore.z)) > 1.6:
 						shore_cols += 1
 						for k: int in grng.randi_range(1, 3) + (2 if clump > 0.8 else 0):
 							var q: Vector3 = shore + Vector3(grng.randf_range(-3.0, 3.0), 0.0, grng.randf_range(-3.0, 3.0))
 							q.y = _mesh_ground(q.x, q.z)
 							if q.y < LAKE_Y + 0.4: continue
 							# 2.3-6 m reed clumps; the near shore is 160-550 m out, so 10-30 px; dark olive.
-							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if k % 2 == 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.4, 3.0) * (1.25 if k % 2 == 1 else 1.0), grng.randf() * TAU)
+							# Slender and tall (reeds, not lawn tufts): narrowed 0.55 across, stretched 1.5 up.
+							_refuge_put(batches, QN + ("Grass_Wispy_Tall.gltf" if k % 2 == 0 else "Grass_Common_Tall.gltf"), q, grng.randf_range(1.2, 2.4) * (1.25 if k % 2 == 1 else 1.0), grng.randf() * TAU, Vector2.ZERO, Vector3(0.55, 1.5, 0.55))
 							band_n += 1
 					break
 			by -= 0.006
 		bx += 0.005
 	counts["shore_columns"] = shore_cols
+	counts["band_cattails"] = cattail_band
+	# Tall cattails on the drop below the eye's right frame the lower-right corner, as the lilies frame
+	# the left (goal: cattails against the water at the lower right).
+	var corner_n: int = 0
+	if ResourceLoader.exists(CATTAIL_MODEL):
+		for i: int in 120:
+			# Off: seen from above at 4-11 m the cattail heads read as dark blobs, not reeds (capture 182834).
+			if corner_n >= CORNER_CATTAILS: break
+			var dir: Vector3 = look_h.rotated(Vector3.UP, deg_to_rad(-grng.randf_range(30.0, 52.0)))
+			# The ground right of the eye falls away fast, so the corner stands sit 4-11 m out.
+			var p: Vector3 = eye + dir * grng.randf_range(4.0, 11.0)
+			p.y = _mesh_ground(p.x, p.z)
+			var h: float = 0.0
+			var tip: float = grng.randf_range(-0.82, -0.62)
+			while h < 14.0:
+				h += 0.25
+				if _vista_screen(eye, p + Vector3(0, h, 0)).y > tip: break
+			if h > 11.0 or h < 5.0: continue
+			var at: Vector2 = _vista_screen(eye, p + Vector3(0, h, 0))
+			if at.x < 0.62 or at.x > 1.05: continue
+			if _refuge_model(CATTAIL_MODEL, p - Vector3(0, 0.2, 0), grng.randf() * TAU, h, "RefugeCornerCattails%d" % corner_n):
+				var cc: ShaderMaterial = _refuge_props[_refuge_props.size() - 1]
+				cc.set_shader_parameter("glow_floor", 2.0)
+				cc.set_shader_parameter("desat", 0.35)
+				corner_n += 1
+	counts["corner_cattails"] = corner_n
 	counts["shore_reed_band"] = band_n
 	counts["cattails"] = reed_n
 	# Round broadleaf trees along the far lake shore (review 10: 3-5 in (640,390,1060,470)).
@@ -5421,7 +5454,7 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	for m: StandardMaterial3D in _refuge_mats: m.albedo_color = (m.get_meta("day_tint", Color.WHITE) as Color) * refuge_tint
 	for leaf_fill: StandardMaterial3D in _refuge_fill: leaf_fill.emission_energy_multiplier = 0.12 * (1.0 - night) * (1.0 - 0.5 * rain)
 	# Kit petals: faint by day, a soft bioluminescence at night (review 12: blooms readable at night).
-	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.07, night) * (1.0 - 0.4 * rain)
+	for petal: StandardMaterial3D in _refuge_glow: petal.emission_energy_multiplier = lerpf(0.08, 0.16, night) * (1.0 - 0.4 * rain)
 	if _refuge_lamp_material != null: _refuge_lamp_material.emission_energy_multiplier = lerpf(2.0, 4.0, night)
 	# Luminous lilies keep a lavender night tone (review 11: they went ultramarine, sat 0.67).
 	var lily_tint: Color = Color(1.12, 1.1, 1.1).lerp(Color(0.64, 0.44, 0.5), night).lerp(Color(0.62, 0.58, 0.64), rain * (1.0 - night))

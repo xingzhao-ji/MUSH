@@ -196,9 +196,10 @@ void fragment() {
 	float ledge_riser = smoothstep(0.25, 0.5, COLOR.g) * (1.0 - ledge_top);
 	rockiness = mix(rockiness, 0.0, ledge_top);
 	rockiness = mix(rockiness, 1.0, ledge_riser);
-	moss = mix(moss, moss_mean * vec3(2.15, 2.2, 1.3) * (0.88 + 0.24 * fleck), ledge_top);
+	// Light, sun-bleached grass on the shelf tops (review 14: tops sat darker than risers at sat 0.75).
+	moss = mix(moss, mix(moss_mean, vec3(dot(moss_mean, vec3(0.33))), 0.45) * vec3(2.7, 2.75, 2.1) * (0.9 + 0.2 * fleck), ledge_top);
 	vec3 albedo = mix(moss, rock, rockiness);
-	albedo *= mix(1.0, 0.8, ledge_riser);
+	albedo *= mix(1.0, 0.62, ledge_riser);
 	albedo *= 0.88 + 0.24 * macro;
 	vec3 fill = vec3(0.0);
 	float targeted = focus * rockiness;
