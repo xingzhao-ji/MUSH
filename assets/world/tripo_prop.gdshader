@@ -19,6 +19,10 @@ uniform float cool_glow = 0.0;
 // Pale self-light over the whole bloom (hero lilies by day: the goal's lilies are the brightest, palest
 // things in the lower frame); 0 = off.
 uniform float pale_glow = 0.0;
+// M15d: backlit foliage (concept-1's old-tree canopy glows gold-rose against the sunset; ours read near-black):
+// green texels emit leaf_color, scaled by texel value; 0 = off.
+uniform vec3 leaf_color = vec3(1.0, 0.6, 0.32);
+uniform float leaf_glow = 0.0;
 // Warm underside branches: down faces above under_min_y, masked by peach texels.
 // Red-over-blue catches the model's pink-peach veins; violet gaps stay unlit. 0 = off.
 uniform vec3 under_color = vec3(1.0, 0.62, 0.3);
@@ -41,6 +45,8 @@ uniform vec3 vein_cool = vec3(0.342, 0.192, 0.807);
 uniform float vein_cool_glow = 0.0;
 uniform float sparkle = 0.0;
 uniform float sparkle_cell = 12.0;
+// Colour of the cap-top specks (warm by default; the concept-1 hero takes lilac, as its cap is dusted violet).
+uniform vec3 sparkle_top_color = vec3(1.0, 0.70, 0.62);
 // Darkens the branch geometry between trunk and cap (side faces), so the glowing gills read between
 // darker limbs as in the concept rather than pale lavender limbs over a pale membrane.
 uniform float branch_dark = 0.0;
@@ -121,6 +127,10 @@ void fragment() {
 	EMISSION += c * cool * cool_glow;
 	// Petals only (bright texels), lifted toward white so they read pale, not lavender.
 	EMISSION += mix(cc, vec3(1.0), 0.45) * smoothstep(0.3, 0.6, mx) * pale_glow * base_tint * tint;
+	if (leaf_glow > 0.0) {
+		float leaf = smoothstep(0.0, 0.06, c.g - c.r) * smoothstep(-0.02, 0.04, c.g - c.b);
+		EMISSION += leaf_color * leaf_glow * leaf * (0.35 + mx);
+	}
 	if (tree_palette > 0.0) {
 		float palette = clamp(tree_palette, 0.0, 1.0);
 		float night = clamp(tree_night, 0.0, 1.0);
@@ -192,7 +202,7 @@ void fragment() {
 			// Denser toward the rim, as the concept's cap lights gather at its edge.
 			float s_top = c1_speck(wp, sparkle_cell, 0.18 + 0.30 * smoothstep(0.45, 0.95, radius_fraction)) * cap_top * on_cap;
 			float s_under = c1_speck(wp + 3.7, sparkle_cell * 0.8, 0.5) * under_surface;
-			tree_emission += vec3(1.0, 0.70, 0.62) * s_top * sparkle * mix(0.6, 1.6, night);
+			tree_emission += sparkle_top_color * s_top * sparkle * mix(0.6, 1.6, night);
 			tree_emission += mix(vein_cool, vec3(0.85, 0.9, 1.0), 0.45) * s_under * sparkle * 1.3 * mix(1.0, 1.6, night);
 		}
 		// Keep the imported bright flecks, without the old broad warm emission washing the cap out.

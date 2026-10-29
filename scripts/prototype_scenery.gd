@@ -2279,6 +2279,7 @@ static func prefetch_models() -> int:
 	return n
 
 var _model_load_ms: float = 0.0
+var _model_load_detail: Dictionary = {}
 func _model_parts(path: String) -> Array:
 	if _model_cache.has(path): return _model_cache[path]
 	var parts: Array = []
@@ -2288,6 +2289,7 @@ func _model_parts(path: String) -> Array:
 		scene = ResourceLoader.load_threaded_get(path) as PackedScene
 	if scene == null: scene = load(path) as PackedScene
 	_model_load_ms += float(Time.get_ticks_usec() - load_us) / 1000.0
+	_model_load_detail[path.get_file()] = snappedf(float(Time.get_ticks_usec() - load_us) / 1000.0, 0.1)
 	if scene != null:
 		var root: Node = scene.instantiate()
 		for node: Node in root.find_children("*", "MeshInstance3D", true, false):
@@ -2767,7 +2769,7 @@ const C1_TREE_ON_TOWN := true
 const C1_TREE_UNDER := Vector2(1.35, 1.2)
 const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 ## M10 (Fable review; concept samples cap #916C97, rim #BD9DAC, trunk #DFB1B7): no outer darkening, no limb darkening.
-const C1_TREE_M9 := [0.8, 0.6, 1.35, 1.3, 1.2, 0.0]
+const C1_TREE_M9 := [0.8, 0.6, 1.35, 1.3, 0.55, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 ## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
 ## (M13, Fable eighth look: trunk and branches deep blue-violet, concept #55588B / #736DB0, so the gold pops between them)
@@ -2778,12 +2780,17 @@ const C1_TREE_M10 := [Vector3(0.40, 0.17, 0.20), Vector3(0.13, 0.12, 0.38), 0.75
 const C1_HERO_ROUGH_MIN := 0.85
 ## (albedo only: the gold underside is emission and keeps its strength)
 const C1_HERO_BASE_TINT := Vector3(0.82, 0.8, 0.86)
+## (M14c, sweep capx: zeroing the cap's sun terms and its specks turned the crown violet; the dense warm specks, not
+## the albedo, washed it beige. Fewer, lilac specks, as concept-1's cap is dusted violet.)
+const C1_HERO_SPARKLE_TOP := Vector3(0.62, 0.48, 1.0)
 const C1_HERO_CAP_RIM_COLOR := Vector3(0.90, 0.55, 0.27)
 ## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
 const C1_HERO_RIM := Vector3(0.86, 0.44, 0.26)
 ## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
 ## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
-const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.5)
+## (M14c, sweeps rim01/rim00: the view-rim term lit the whole crown, which this low angle sees at grazing; off, the
+## cap median lands on concept-1's (157,108,149 vs 157,114,153); the gold edge stays on the radius rim)
+const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.0)
 const C1_HERO_CAP_SUN_COLOR := Vector3(0.56, 0.2, 0.14)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.09, 0.09)
@@ -4600,6 +4607,7 @@ func _c1_tree_mats(n0: int, at: Vector3, height: float, radius: float, hero: boo
 			m.set_shader_parameter("cap_rim_color", C1_HERO_CAP_RIM_COLOR)
 			m.set_shader_parameter("rough_min", C1_HERO_ROUGH_MIN)
 			m.set_shader_parameter("base_tint", C1_HERO_BASE_TINT)
+			m.set_shader_parameter("sparkle_top_color", C1_HERO_SPARKLE_TOP)
 
 func _add_c1_far(eye: Vector3) -> Dictionary:
 	var out: Dictionary = {}
@@ -4792,6 +4800,7 @@ func _add_concept_vista() -> void:
 	concept_vista_report["principal_viaduct"] = _add_c1_principal_viaduct(eye)
 	sec["viaducts"] = (Time.get_ticks_usec() - t0) / 1000; t0 = Time.get_ticks_usec()
 	concept_vista_report["glow_points"] = _add_c1_glow(eye)
+	concept_vista_report["dream_lights"] = _add_c1_dream_lights(eye)
 	concept_vista_report["giants"] = _add_c1_giants(eye)
 	concept_vista_report["near_clusters"] = _add_c1_near_clusters(eye)
 	sec["glow_giants"] = (Time.get_ticks_usec() - t0) / 1000; t0 = Time.get_ticks_usec()
@@ -4808,7 +4817,7 @@ func _add_concept_vista() -> void:
 	_c1_balloons.set_reduced_motion(_reduced_motion)
 	concept_vista_report["mist_decks"] = 0
 	concept_vista_report["backdrop"] = _add_c1_backdrop(eye) if C1_BACKDROP else false
-	concept_vista_report["build_ms"] = {"total": float(Time.get_ticks_usec() - vista_us) / 1000.0, "model_waits_total": _model_load_ms, "sections": sec, "valley_parts": _c1_valley_ms}
+	concept_vista_report["build_ms"] = {"total": float(Time.get_ticks_usec() - vista_us) / 1000.0, "model_waits_total": _model_load_ms, "sections": sec, "valley_parts": _c1_valley_ms, "model_loads": _model_load_detail}
 	print("CONCEPT_VISTA ", JSON.stringify(concept_vista_report))
 
 ## Original accepted eleven-arch stone viaduct, placed only in C1's right distance.
@@ -4900,6 +4909,19 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	# (ChatGPT checkpoint 22: halve the centre lamps so the middle recedes; the ends keep theirs)
 	for t: float in [-0.46, -0.42, -0.35, -0.27, 0.18, 0.37, 0.41]:
 		_c1_glow.append(deck + right * t * float(spec[3]) + Vector3(0.0, 4.0 - drop.call(t), 0.0))
+	# M15b: a string of small warm lights along the near parapet, following the deck's fall to the abutments.
+	var to_eye := Vector3(eye.x - deck.x, 0.0, eye.z - deck.z)
+	var near: Vector3 = (to_eye - right * to_eye.dot(right)).normalized()
+	var half_w: float = minf(box.size.z * model_scale * xz * 0.5, 6.0)
+	var srng := RandomNumberGenerator.new()
+	srng.seed = 15002
+	_c1_dream_string.clear()
+	var t: float = -0.48
+	while t <= 0.48:
+		var p: Vector3 = deck + right * t * float(spec[3]) + near * half_w + Vector3(0.0, 2.4 - drop.call(t), 0.0)
+		var c: Color = [Color(1.0, 0.5, 0.15), Color(1.0, 0.58, 0.24), Color(1.0, 0.44, 0.12)][srng.randi() % 3]
+		_c1_dream_string.append([p, C1_STRING.y * srng.randf_range(0.85, 1.15), c])
+		t += C1_STRING.x * srng.randf_range(1.0 - C1_STRING.z, 1.0 + C1_STRING.z) / float(spec[3])
 	return {"built": true, "model": model.get_file(), "deck": _v3(deck), "height_m": snappedf(height, 0.1), "span_m": spec[3], "horizontal_scale": snappedf(xz, 0.001), "colliders": 0}
 
 func _add_c1_distance_viaduct(eye: Vector3) -> Dictionary:
@@ -5607,6 +5629,9 @@ const C1_ANC_TREE_H := 29.0
 ## sweeps 60/90/120/-60: 60 swings that limb back and opens the sky beside the trunk, frame 16.3 -> 16.0).
 const C1_ANC_TREE_TURN := 60.0
 const C1_ANC_TREE_TINT := Vector3(1.4, 1.25, 1.05)
+## M15d (cells: x 160-320, y 0-90 read L 9-10 against the concept's 32-34, its canopy lit gold by the sunset and its
+## lanterns): backlit leaves on the old tree, [day, night] leaf_glow.
+const C1_ANC_TREE_LEAF := Vector2(1.1, 0.3)
 ## Capture s33 cells: the lily corner read L 39 against the concept's 25 (its glowing blooms sit in dark foliage).
 ## M10d (cells: lower-left L 37-46 vs the concept's 21-29): dimmer.
 const C1_LILY_TINT := Vector3(0.5, 0.5, 0.66)
@@ -5660,7 +5685,10 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 			var an0: int = _refuge_props.size()
 			_refuge_model(at_path, tl, atan2(eye.x - tl.x, eye.z - tl.z) + C1_TRIPO_FRONT + deg_to_rad(C1_ANC_TREE_TURN), C1_ANC_TREE_H, "C1AncientTree")
 			# capture s33 cells: the corner read L 15 against the concept's warm lit canopy (L 24, a 10, b 8)
-			for ai: int in range(an0, _refuge_props.size()): _refuge_props[ai].set_shader_parameter("base_tint", C1_ANC_TREE_TINT)
+			for ai: int in range(an0, _refuge_props.size()):
+				_refuge_props[ai].set_shader_parameter("base_tint", C1_ANC_TREE_TINT)
+				_refuge_props[ai].set_shader_parameter("leaf_glow", C1_ANC_TREE_LEAF.x)
+				_c1_leaf_mats.append(_refuge_props[ai])
 	# foreground props last, so the ground grid sees the home's patio and stairs as well as the scripted ground
 	if base_glb == C1_TERRACE_PROPS:
 		_c1_build_tgrid()
@@ -5762,6 +5790,7 @@ var _c1_spires: Array = []
 ## Height-fraction bands of each model's crown ground and upper ledges (upward faces there take glow points and houses).
 const C1_CROWN_BAND := {"lowisle": Vector2(0.55, 0.9), "massif": Vector2(0.5, 0.95), "tower": Vector2(0.6, 0.97), "needle": Vector2(0.7, 0.97)}
 ## M9: the concept's valley is pricked with warm lights by day too (48 per mass, brighter by day).
+## (M15, the user: "more lights will make it more dreamy": 48 -> 72)
 const C1_GLOW_PER_ISLAND := 48
 const C1_GLOW_SHADER := preload("res://assets/world/c1_glow_point.gdshader")
 ## Glow point energy (day, night) and colours: warm lanterns and windows, some violet and cyan glowing mushrooms.
@@ -5770,6 +5799,111 @@ const C1_GLOW_ENERGY := Vector2(1.7, 3.4)
 const C1_GLOW_COLORS: Array = [Color(1.0, 0.42, 0.1), Color(1.0, 0.52, 0.16), Color(1.0, 0.36, 0.08), Color(1.0, 0.46, 0.12), Color(0.6, 0.3, 1.0), Color(0.3, 0.7, 1.0)]
 var _c1_glow: PackedVector3Array = PackedVector3Array()
 var _c1_glow_mat: ShaderMaterial = null
+## M15 (the user, 2026-10-29: "more lights will make it more dreamy"; concept-1's air is full of drifting glowing
+## spores and its old tree hung with small lanterns): floating spore lights over the valley (cool cyan, violet,
+## rose and pale gold, above the ground and mist, smaller than the lanterns) and small warm fairy lights in the old
+## tree's crown. [count, pixel x range, pixel y range, horizontal distance range m]
+## (M15b, the user: "too dense will trigger trypophobia, not too dense": fewer, spaced at least C1_DREAM_GAP px apart on
+## screen, no clusters; the M15 extra valley glow points are reverted)
+const C1_SPORES := [95, Vector2(300.0, 1280.0), Vector2(110.0, 640.0), Vector2(260.0, 1700.0)]
+const C1_SPORE_COLORS: Array = [Color(0.3, 0.85, 1.0), Color(0.35, 0.75, 1.0), Color(0.62, 0.4, 1.0), Color(0.75, 0.45, 1.0), Color(1.0, 0.5, 0.78), Color(1.0, 0.72, 0.32)]
+## (M15c, Fable: the crown lights at x 409-455 bunched with the tree's lanterns, 17-34 px apart; kept left of x 400)
+const C1_FAIRY := [20, Vector2(0.0, 400.0), Vector2(0.0, 215.0), Vector2(16.0, 34.0)]
+## minimum screen spacing (px) between spores, and between fairy lights
+const C1_DREAM_GAP := Vector2(62.0, 42.0)
+## (M15b: lower by day, the bridge string read cream-white against the pale mist at 1.5; M15c, Fable: 60% by day)
+const C1_DREAM_ENERGY := Vector2(0.9, 3.2)
+var _c1_dream_mat: ShaderMaterial = null
+## M15b (m15a review: at 0.0065 x distance the spores were sub-pixel pin pricks): larger spores on a softer, wider
+## halo (core_k, halo_amt, halo_k on c1_glow_point) with their own day/night energy, so they read as glowing motes.
+const C1_SPORE_SIZE := Vector3(0.012, 3.0, 20.0)
+const C1_SPORE_SOFT := Vector3(7.0, 0.6, 2.4)
+## (M15c, Fable: by day the spores read as white lint on the lens; faint by day, full at night)
+const C1_SPORE_ENERGY := Vector2(0.55, 3.0)
+var _c1_spore_mat: ShaderMaterial = null
+var _c1_leaf_mats: Array = []
+## M15b: concept-1's bridges carry a fine line of small warm lights. String lights along the principal viaduct's near
+## parapet, filled by _add_c1_principal_viaduct as [position, size, colour]: [spacing m, size per m of distance,
+## spacing jitter]. (M15c, Fable: 58 points at a 7-8 px pitch were the frame's one dense, regular row, a trypophobia
+## risk and LED-like; about 20 hung lanterns at 22-25 m with an uneven pitch)
+const C1_STRING := Vector3(23.0, 0.0072, 0.25)
+var _c1_dream_string: Array = []
+
+func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
+	if not _c1_on(): return {"built": false}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261029
+	var soft: Array = []
+	var points: Array = []
+	var spores: int = 0
+	var tries: int = 0
+	var taken: Array = []
+	while spores < int(C1_SPORES[0]) and tries < int(C1_SPORES[0]) * 12:
+		tries += 1
+		var px: float = rng.randf_range(C1_SPORES[1].x, C1_SPORES[1].y)
+		var py: float = rng.randf_range(C1_SPORES[2].x, C1_SPORES[2].y)
+		var crowded: bool = false
+		for o: Vector2 in taken:
+			if o.distance_to(Vector2(px, py)) < C1_DREAM_GAP.x: crowded = true
+		if crowded: continue
+		var ray: Vector3 = _c1_pixel_ray(eye, px, py)
+		var hd: float = rng.randf_range(C1_SPORES[3].x, C1_SPORES[3].y)
+		var q: Vector3 = eye + ray * (hd / maxf(Vector2(ray.x, ray.z).length(), 0.001))
+		# floating: clear of the ground below, under the cloud ceiling
+		if q.y < terrain_height(q.x, q.z) + 25.0 or q.y < LAKE_Y + 40.0 or q.y > 520.0: continue
+		var size: float = clampf(q.distance_to(eye) * C1_SPORE_SIZE.x, C1_SPORE_SIZE.y, C1_SPORE_SIZE.z) * rng.randf_range(0.6, 1.25)
+		soft.append([q, size, C1_SPORE_COLORS[rng.randi() % C1_SPORE_COLORS.size()]])
+		taken.append(Vector2(px, py))
+		spores += 1
+	var fairy: int = 0
+	var fairy_px: Array = []
+	for i: int in int(C1_FAIRY[0]) * 12:
+		if fairy >= int(C1_FAIRY[0]): break
+		var fp := Vector2(rng.randf_range(C1_FAIRY[1].x, C1_FAIRY[1].y), rng.randf_range(C1_FAIRY[2].x, C1_FAIRY[2].y))
+		var close: bool = false
+		for o: Vector2 in fairy_px:
+			if o.distance_to(fp) < C1_DREAM_GAP.y: close = true
+		if close: continue
+		fairy_px.append(fp)
+		var ray: Vector3 = _c1_pixel_ray(eye, fp.x, fp.y)
+		var q: Vector3 = eye + ray * rng.randf_range(C1_FAIRY[3].x, C1_FAIRY[3].y)
+		points.append([q, rng.randf_range(0.16, 0.3), [Color(1.0, 0.55, 0.16), Color(1.0, 0.62, 0.22), Color(1.0, 0.48, 0.12)][rng.randi() % 3]])
+		fairy += 1
+	for item: Array in _c1_dream_string:
+		points.append([item[0], float(item[1]) * eye.distance_to(item[0]), item[2]])
+	if soft.is_empty() and points.is_empty(): return {"built": false}
+	_c1_dream_mat = ShaderMaterial.new()
+	_c1_dream_mat.shader = C1_GLOW_SHADER
+	_c1_dream_mat.set_shader_parameter("energy", C1_DREAM_ENERGY.x)
+	_c1_spore_mat = ShaderMaterial.new()
+	_c1_spore_mat.shader = C1_GLOW_SHADER
+	_c1_spore_mat.set_shader_parameter("energy", C1_SPORE_ENERGY.x)
+	_c1_spore_mat.set_shader_parameter("core_k", C1_SPORE_SOFT.x)
+	_c1_spore_mat.set_shader_parameter("halo_amt", C1_SPORE_SOFT.y)
+	_c1_spore_mat.set_shader_parameter("halo_k", C1_SPORE_SOFT.z)
+	for pass_i: int in 2:
+		var items: Array = soft if pass_i == 0 else points
+		if items.is_empty(): continue
+		var quad := QuadMesh.new()
+		quad.size = Vector2(1.0, 1.0)
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.use_colors = true
+		multi.mesh = quad
+		multi.instance_count = items.size()
+		for i: int in items.size():
+			var s: float = float(items[i][1])
+			multi.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3(s, s, 1.0)), items[i][0]))
+			multi.set_instance_color(i, items[i][2])
+		var node := MultiMeshInstance3D.new()
+		node.name = "ConceptDreamSpores" if pass_i == 0 else "ConceptDreamLights"
+		node.multimesh = multi
+		node.material_override = _c1_spore_mat if pass_i == 0 else _c1_dream_mat
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		add_child(node)
+		_static.append(node)
+	return {"built": true, "spores": spores, "fairy_lights": fairy, "string_lights": _c1_dream_string.size(), "colliders": 0, "new_lights": 0}
 func _add_c1_glow(eye: Vector3) -> int:
 	if _c1_glow.is_empty(): return 0
 	var quad := QuadMesh.new()
@@ -5929,15 +6063,30 @@ func _add_c1_river(eye: Vector3) -> Dictionary:
 	if not _c1_on(): return {"built": false}
 	var centres: Array = []
 	var px_m: float = 2.0 * tan(deg_to_rad(30.0)) / 720.0
-	for i: int in C1_RIVER_PX.size() - 1:
-		var a: Vector3 = C1_RIVER_PX[i]
-		var b: Vector3 = C1_RIVER_PX[i + 1]
-		var steps: int = maxi(1, int(Vector2(b.x - a.x, b.y - a.y).length() / 4.0))
-		for k: int in steps + (1 if i == C1_RIVER_PX.size() - 2 else 0):
-			var q: Vector3 = a.lerp(b, float(k) / float(steps))
+	# (M14c, Fable thirteenth look: straight segments and terrain-following edges read as stepped polygons; a
+	# Catmull-Rom centre line, a level cross-section and a smoothed water line read as one ribbon)
+	var cp: Array = C1_RIVER_PX
+	for i: int in cp.size() - 1:
+		var p0: Vector3 = cp[maxi(i - 1, 0)]
+		var p1: Vector3 = cp[i]
+		var p2: Vector3 = cp[i + 1]
+		var p3: Vector3 = cp[mini(i + 2, cp.size() - 1)]
+		var steps: int = maxi(1, int(Vector2(p2.x - p1.x, p2.y - p1.y).length() / 4.0))
+		for k: int in steps + (1 if i == cp.size() - 2 else 0):
+			var t: float = float(k) / float(steps)
+			var q: Vector3 = 0.5 * ((2.0 * p1) + (p2 - p0) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t * t + (3.0 * p1 - p0 - 3.0 * p2 + p3) * t * t * t)
 			var hit: Vector3 = _c1_ray_ground(eye, q.x, q.y)
 			if hit == Vector3.INF or hit.y < LAKE_Y + 1.0: continue
 			centres.append([hit, q.z * hit.distance_to(eye) * px_m])
+	# smoothed water line: a running mean of the ground under the centre, never far below it
+	var level: PackedFloat32Array = PackedFloat32Array()
+	for j: int in centres.size():
+		var sum: float = 0.0
+		var cnt: int = 0
+		for o: int in range(maxi(j - 4, 0), mini(j + 5, centres.size())):
+			sum += (centres[o][0] as Vector3).y
+			cnt += 1
+		level.append(maxf(sum / float(cnt), (centres[j][0] as Vector3).y - 2.0) + 2.0)
 	if centres.size() < 3: return {"built": false, "samples": centres.size()}
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -5953,9 +6102,7 @@ func _add_c1_river(eye: Vector3) -> Dictionary:
 		var hw: float = float(centres[j][1]) * 0.5
 		if j > 0: along += p.distance_to(centres[j - 1][0])
 		for e: float in [-1.0, 0.0, 1.0]:
-			var v := Vector3(p.x + side.x * hw * e, 0.0, p.z + side.y * hw * e)
-			v.y = terrain_height(v.x, v.z) + 3.0
-			verts.append(v)
+			verts.append(Vector3(p.x + side.x * hw * e, level[j], p.z + side.y * hw * e))
 			normals.append(Vector3.UP)
 			uvs.append(Vector2(e * 0.5 + 0.5, along / 40.0))
 	for j: int in centres.size() - 1:
@@ -6022,7 +6169,7 @@ func _c1_near_canopy_points(eye: Vector3) -> int:
 			var jx: float = rng.randf_range(-4.0, 4.0)
 			var jy: float = rng.randf_range(-3.0, 3.0)
 			# (M14: the river's band stays clear of canopy trees)
-			if _c1_river_dist_px(px + jx, py + jy) < 26.0:
+			if _c1_river_dist_px(px + jx, py + jy) < 10.0:
 				px += C1_CANOPY_STEP.x
 				col += 1
 				continue
@@ -6097,6 +6244,7 @@ func _add_c1_ledge_forest(eye: Vector3) -> Dictionary:
 			for hc: Vector3 in hamlets:
 				if q.distance_to(hc) < 85.0: near_hamlet = true
 		# (M10e: concept-1's cliffs are dotted with warm lights; ledge lights 20% -> 35%)
+		# (M15, the user: more lights: ledges 35% -> 50%, the near forest 3% -> 7%)
 		if rng.randf() < (0.8 if near_hamlet else (0.03 if canopy else 0.35)): _c1_glow.append(q + Vector3(rng.randf_range(-4.0, 4.0), 3.0, rng.randf_range(-4.0, 4.0)))
 	var total: int = 0
 	for si: int in 2:
@@ -6164,7 +6312,10 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			continue
 		var base: float = maxf(terrain_height(p.x, p.y), LAKE_Y) - C1_SINK
 		var top: float = maxf(LAKE_Y + float(spec[3]), base + float(spec[3]) * 0.6)
-		var xz: float = {0: 1.20, 2: 1.02, 4: 1.35, 8: 1.4, 11: 1.08}.get(island_index, 1.0)
+		# M16 (ChatGPT checkpoint 24: one broad dominant mass under the viaduct with 1-2 falls, not scattered pieces):
+		# the central fall mass 1.2 -> 1.75 wide, which also brings its second fall into the frame. (Tried: 70 crest
+		# trees above the ledge band, 2.2x; at 950 m they hazed to a pale grey cloud of crowns, frame 15.8 -> 15.9.)
+		var xz: float = {0: 1.75, 2: 1.02, 4: 1.35, 8: 1.4, 11: 1.08}.get(island_index, 1.0)
 		var k: float = float(spec[4]) / float(dims[1])
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
 		# M10e (ChatGPT checkpoints 14-15: a few major masses with longer faces and more falls, not many small platforms;
@@ -9182,6 +9333,8 @@ func apply_look(environment: Environment, sun: DirectionalLight3D, night: float,
 	_apply_look_impl(environment, sun, night, rain, sunset)
 	look_override = own
 
+var _look_cache_key: Array = []
+var _look_cache_age: int = 0
 func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: float, rain: float, sunset: float) -> void:
 	var toward_sun: Vector3 = sun.global_basis.z.normalized()
 	for pair: Array in _crown_sync:
@@ -9401,6 +9554,16 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", sky_top_now)
 	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)
+	# M14c (performance): everything below depends only on night, rain and the look overrides, yet ran every frame
+	# (~10^4 material parameter writes over the vista's props, far masses and glow materials). Skip it while those
+	# inputs and the registries are unchanged; a full pass still runs every 60 calls.
+	var cache_key: Array = [snappedf(night, 0.0001), snappedf(rain, 0.0001), look_override.hash(), _refuge_props.size(),
+		_c1_far_mats.size(), _blender_glow.size(), _refuge_mats.size(), _refuge_fill.size(), _refuge_petals.size(),
+		_refuge_lights.size(), _c1_lights.size(), _c1_night_fill.size()]
+	_look_cache_age += 1
+	if cache_key == _look_cache_key and _look_cache_age < 60: return
+	_look_cache_key = cache_key
+	_look_cache_age = 0
 	# Vista refuge: flower petals and lanterns glow softly by day and carry the night.
 	var refuge_tint: Color = Color(1, 1, 1).lerp(Color(0.3, 0.32, 0.52), night).lerp(Color(0.5, 0.53, 0.62), rain * (1.0 - night))
 	# Tree leaves: the crown shading only darkens (vertex colour is unorm), so their albedo is lifted to keep
@@ -9447,6 +9610,9 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	for light: OmniLight3D in _c1_lights: light.light_energy = lerpf(C1_LIGHT_ENERGY.x, C1_LIGHT_ENERGY.y, maxf(night, rain * 0.6))
 	for light: OmniLight3D in _c1_night_fill: light.light_energy = 1.25 * night * (1.0 - rain * 0.3)
 	if _c1_glow_mat != null: _c1_glow_mat.set_shader_parameter("energy", lerpf(C1_GLOW_ENERGY.x, C1_GLOW_ENERGY.y, maxf(night, rain * 0.6)))
+	if _c1_dream_mat != null: _c1_dream_mat.set_shader_parameter("energy", lerpf(C1_DREAM_ENERGY.x, C1_DREAM_ENERGY.y, maxf(night, rain * 0.6)))
+	if _c1_spore_mat != null: _c1_spore_mat.set_shader_parameter("energy", lerpf(C1_SPORE_ENERGY.x, C1_SPORE_ENERGY.y, maxf(night, rain * 0.6)))
+	for lm: Variant in _c1_leaf_mats: if lm != null: lm.set_shader_parameter("leaf_glow", lerpf(C1_ANC_TREE_LEAF.x, C1_ANC_TREE_LEAF.y, maxf(night, rain * 0.6)))
 	# Concept-1 mushroom undersides (milestone 7): [day, night] golden glow on down faces.
 	for prop: ShaderMaterial in _refuge_props:
 		if prop.has_meta("under"):
