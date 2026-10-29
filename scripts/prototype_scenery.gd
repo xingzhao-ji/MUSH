@@ -5132,7 +5132,8 @@ const C1_FG_PROPS: Array = [
 	# capture s10: at 2-2.6 m the lilies filled a third of the frame, white-hot; concept blooms are ~100 px
 	# capture s23 (fronts to the eye): the blooms faced the camera and the lower-left cell read L 42 against the
 	# concept's 25; a quarter smaller. The outcrops' dark crowns filled the lower right (L 23 vs 43): smaller, lower.
-	["lily", 90.0, 655.0, 6.0, 1.05, 0.0, 0.62, 0.5], ["lily", 15.0, 575.0, 7.5, 1.0, 70.0, 0.6, 0.5], ["lily", 250.0, 695.0, 6.5, 0.85, 150.0, 0.6, 0.5],
+	# (M12, cells: the lower-left corner read L 38-46 against the concept's 14-21; the two corner lilies smaller, less glow)
+	["lily", 90.0, 655.0, 6.0, 0.8, 0.0, 0.35, 0.5], ["lily", 15.0, 575.0, 7.5, 0.8, 70.0, 0.35, 0.5], ["lily", 250.0, 695.0, 6.5, 0.85, 150.0, 0.45, 0.5],
 	["lily", 200.0, 712.0, 7.5, 0.7, 220.0, 0.6, 0.5], ["lily", 175.0, 600.0, 9.0, 0.8, 300.0, 0.6, 0.5],
 	["rock", 915.0, 690.0, 26.0, 6.0, 0.0, 0.85, 0.0], ["rock", 1210.0, 715.0, 34.0, 8.0, 60.0, 0.85, 0.0],
 	["shrub", 710.0, 700.0, 15.0, 1.25, 0.0, 0.25, 0.0], ["shrub", 760.0, 640.0, 18.0, 2.6, 90.0, 0.25, 0.0], ["shrub", 660.0, 640.0, 13.0, 1.0, 200.0, 0.25, 0.0],
@@ -5678,6 +5679,19 @@ const C1_FAR_SPIRES: Array = [["needle", 440.0, 2050.0, 470.0, 30.0], ["tower", 
 const C1_RIDGES: Array = [["needle", 545.0, 1500.0, 135.0, 20.0, 0.8, 0.36], ["tower", 612.0, 1620.0, 100.0, 70.0, 0.7, 0.40],
 	["needle", 700.0, 1560.0, 120.0, 150.0, 0.75, 0.38], ["tower", 772.0, 1680.0, 110.0, 230.0, 0.6, 0.44],
 	["needle", 1230.0, 1600.0, 120.0, 40.0, 0.8, 0.40]]
+## M12 (ChatGPT checkpoints 14-18: a few dominant dark cliff masses; 16x8 cell analysis: frame x 960-1280, y 270-450
+## reads L 43-56 where concept-1 has dark forested cliff faces at L 25-43): one broad near mass at the right edge on light
+## haze, its crown under the right glowing cluster's level. Same fields as C1_RIDGES.
+## (m12a: a massif at 720 m showed its whole broad crown from the high eye and filled the lower right; narrow towers
+## behind the right glowing cluster instead, their faces covering the pale plateaus beyond)
+## (m12b: towers at 1.4-1.5 km stood behind massif 4, unseen; the pale right-middle plateaus are massif 4 itself. Empty;
+## massif 4 takes its own lighter haze instead, C1_ISLAND_HAZE.)
+const C1_NEAR_MASSES: Array = []
+## Per-island constant haze overriding the valley's distance haze (massif 4, 1.25 km: ~0.33 there made the right middle
+## pale where concept-1's cliffs are dark).
+## Tower 2 (frame x 400-640, y 180-360) the other way: concept-1 has bright misty falls and spires there (L 43-61), ours
+## read L 24-45.
+const C1_ISLAND_HAZE := {4: 0.13, 1: 0.12, 2: 0.45}
 ## Image-to-3D fronts: tripo_prep's turntable shows the sheet's view at its 0 degree frame (camera on Blender -Y, glTF
 ## and Godot +Z), so the front faces the eye with no turn. (Milestone 4 turned -90 degrees, from a misread of the
 ## preview angles, showing the masses' sides.)
@@ -6003,8 +6017,13 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 				var v0: int = _refuge_props.size()
 				_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()], false, C1_FAR_SHADER, xz)
 				for vi: int in range(v0, _refuge_props.size()):
-					_refuge_props[vi].set_meta("haze_amount", C1_VALLEY_HAZE)
-					_refuge_props[vi].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+					if C1_ISLAND_HAZE.has(island_index):
+						var ih: float = float(C1_ISLAND_HAZE[island_index])
+						_refuge_props[vi].set_meta("haze_amount", Vector2(ih, ih))
+						_refuge_props[vi].set_meta("haze_range", Vector2(0.0, 1.0))
+					else:
+						_refuge_props[vi].set_meta("haze_amount", C1_VALLEY_HAZE)
+						_refuge_props[vi].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
 					_c1_far_mats.append(_refuge_props[vi])
 			if C1_PRINCIPAL.has(island_index):
 				principals.append({"index": island_index, "raise_m": top - maxf(LAKE_Y + float(spec[3]) - float(C1_PRINCIPAL[island_index]), base + (float(spec[3]) - float(C1_PRINCIPAL[island_index])) * 0.6), "at": _v3(Vector3(p.x, base, p.y)), "top_y": top, "height": top - base, "xz": xz, "model": tpath.get_file()})
@@ -6071,10 +6090,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 	_c1_valley_ms["islands"] = (Time.get_ticks_usec() - valley_us) / 1000
 	var vt: int = Time.get_ticks_usec()
 	var canopy_n: int = _c1_near_canopy_points(eye)
-	_c1_valley_ms["canopy_march"] = (Time.get_ticks_usec() - vt) / 1000; vt = Time.get_ticks_usec()
-	var ledge_forest: Dictionary = _add_c1_ledge_forest(eye)
-	_c1_valley_ms["ledge_forest"] = (Time.get_ticks_usec() - vt) / 1000
-	ledge_forest["near_canopy_points"] = canopy_n
+	_c1_valley_ms["canopy_march"] = (Time.get_ticks_usec() - vt) / 1000
 	var ridges: Array = _add_c1_valley_ridges(landforms)
 	# far rock spires on the basin's rim and walls (concept-1: distant spires layer the horizon left of the tree; capture
 	# s28: that band was a flat pale wall), standing on whatever ground is there
@@ -6103,6 +6119,32 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			_refuge_props[rpi].set_meta("haze_range", Vector2(0.0, 1.0))
 			_c1_far_mats.append(_refuge_props[rpi])
 		placed.append(["ridge " + str(rs[0]), snappedf(rtop.x, 1.0), snappedf(rtop.z, 1.0), snappedf(rbase, 1.0)])
+	for ni: int in C1_NEAR_MASSES.size():
+		var ns: Array = C1_NEAR_MASSES[ni]
+		var npath: String = str(C1_TRIPO_KIT.get(ns[0], ""))
+		if not ResourceLoader.exists(npath): continue
+		var nray: Vector3 = _c1_pixel_ray(eye, float(ns[1]), float(ns[3]))
+		var ntop: Vector3 = eye + nray * (float(ns[2]) / maxf(Vector2(nray.x, nray.z).length(), 0.001))
+		var nbase: float = maxf(terrain_height(ntop.x, ntop.z), LAKE_Y) - C1_SINK
+		if ntop.y - nbase < 80.0: continue
+		var nto := Vector2(eye.x - ntop.x, eye.z - ntop.z)
+		var n_yaw: float = atan2(nto.x, nto.y) + C1_TRIPO_FRONT + deg_to_rad(float(ns[4]))
+		var nn0: int = _refuge_props.size()
+		_refuge_model(npath, Vector3(ntop.x, nbase, ntop.z), n_yaw, ntop.y - nbase, "C1NearMass%d" % ni, false, C1_FAR_SHADER, float(ns[5]))
+		for npi: int in range(nn0, _refuge_props.size()):
+			_refuge_props[npi].set_meta("haze_amount", Vector2(float(ns[6]), float(ns[6])))
+			_refuge_props[npi].set_meta("haze_range", Vector2(0.0, 1.0))
+			_c1_far_mats.append(_refuge_props[npi])
+		# its own forested ledges and warm lights, as the valley masses have
+		var nroot: Transform3D = _model_root(npath, Vector3(ntop.x, nbase, ntop.z), n_yaw, ntop.y - nbase, float(ns[5]))
+		for lp: Vector3 in _model_crown_points(npath, C1_LEDGE_BAND.x, C1_LEDGE_BAND.y, C1_LEDGE_TREES_PRINCIPAL, 9300 + ni, 6):
+			_c1_ledge_pts.append(nroot * lp)
+		placed.append(["near " + str(ns[0]), snappedf(ntop.x, 1.0), snappedf(ntop.z, 1.0), snappedf(nbase, 1.0)])
+	# (built after the near masses, so their ledges are forested too)
+	var vt2: int = Time.get_ticks_usec()
+	var ledge_forest: Dictionary = _add_c1_ledge_forest(eye)
+	_c1_valley_ms["ledge_forest"] = (Time.get_ticks_usec() - vt2) / 1000
+	ledge_forest["near_canopy_points"] = canopy_n
 	var bridges: Array = []
 	var bpath_t: String = str(C1_TRIPO_KIT["risebridge"])
 	if C1_HIGH and ResourceLoader.exists(bpath_t):
