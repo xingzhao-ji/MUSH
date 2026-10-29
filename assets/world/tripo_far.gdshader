@@ -71,6 +71,7 @@ uniform float soffit_dark = 0.0;
 // cornice = (deck top y in world metres, band depth); off while its depth is 0.
 uniform float stone_fill = 0.0;
 uniform vec2 cornice = vec2(0.0, 0.0);
+uniform vec3 cornice_color = vec3(0.1, 0.095, 0.14);
 // Own haze: fog colour (linear) and amount lerped from haze.x at range.x to haze.y at range.y (m from the eye).
 uniform vec3 haze_color = vec3(0.6, 0.55, 0.75);
 uniform vec2 haze = vec2(0.4, 0.8);
@@ -228,8 +229,14 @@ void fragment() {
 		EMISSION += ledge_color * ledge_glow * smoothstep(0.55, 0.9, n_world.y);
 		EMISSION += ALBEDO * stone_fill * (1.0 - smoothstep(0.35, 0.8, -n_world.y));
 		if (cornice.y > 0.0) {
-			EMISSION += ledge_color * ledge_glow * smoothstep(cornice.x - cornice.y, cornice.x - cornice.y * 0.3, world_y)
-				* (1.0 - smoothstep(cornice.x + 0.5, cornice.x + 2.0, world_y)) * (1.0 - 0.6 * joint);
+			// The deck's lit stone face, capped by a thin dark parapet line (Fable: not a cream plank).
+			float lit_band = smoothstep(cornice.x - cornice.y, cornice.x - cornice.y * 0.6, world_y)
+				* (1.0 - smoothstep(cornice.x - cornice.y * 0.3, cornice.x - cornice.y * 0.15, world_y));
+			float parapet = smoothstep(cornice.x - cornice.y * 0.25, cornice.x - cornice.y * 0.1, world_y)
+				* (1.0 - smoothstep(cornice.x + 1.5, cornice.x + 3.0, world_y));
+			EMISSION += cornice_color * lit_band * (1.0 - 0.6 * joint);
+			ALBEDO *= 1.0 - 0.55 * parapet;
+			EMISSION *= 1.0 - 0.55 * parapet;
 		}
 	}
 	FOG = vec4(haze_color, mix(haze.x, haze.y, smoothstep(haze_range.x, haze_range.y, length(VERTEX))));

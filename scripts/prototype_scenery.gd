@@ -2771,13 +2771,14 @@ const C1_TREE_M9 := [0.95, 0.6, 1.35, 1.3, 1.2, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 ## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
 ## (M13, Fable eighth look: trunk and branches deep blue-violet, concept #55588B / #736DB0, so the gold pops between them)
-const C1_TREE_M10 := [Vector3(0.50, 0.25, 0.32), Vector3(0.13, 0.12, 0.38), 0.75, 1.1]
+## (M13c, Fable tenth look runner-up: cap top #cc99b7 against the concept's #e39392, gold leaking near the rim)
+const C1_TREE_M10 := [Vector3(0.56, 0.24, 0.25), Vector3(0.13, 0.12, 0.38), 0.75, 1.1]
 ## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
-const C1_HERO_RIM := Vector3(0.78, 0.33, 0.36)
+const C1_HERO_RIM := Vector3(0.86, 0.44, 0.26)
 ## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
 ## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
 const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.25)
-const C1_HERO_CAP_SUN_COLOR := Vector3(0.68, 0.27, 0.22)
+const C1_HERO_CAP_SUN_COLOR := Vector3(0.75, 0.28, 0.18)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.09, 0.09)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
@@ -4823,8 +4824,13 @@ const C1_PRINCIPAL_VIADUCT_BASE := 12.0
 ## procedural viaduct (MUSH-exchange/codex-assets/work/stone_viaduct_open.py): five unequal spans (84/58/92/66/108 m),
 ## open spandrels on posts, tapered piers; same 420 x 80 m envelope and deck height.
 ## M13 (Fable: the viaduct read as a flat cutout): masonry courses, a warm lit deck edge, dark arch soffits.
-const C1_VIADUCT_STONE := {"stone_relief": 1.0, "stone_block": Vector2(7.0, 3.2), "ledge_color": Vector3(0.95, 0.66, 0.36), "ledge_glow": 0.6, "soffit_dark": 0.6, "stone_fill": 0.55}
-const C1_PRINCIPAL_VIADUCT_MODEL := "res://assets/world/models/c1-procedural/stone_viaduct_open.glb"
+const C1_VIADUCT_STONE := {"stone_relief": 1.0, "stone_block": Vector2(7.0, 3.2), "ledge_color": Vector3(0.95, 0.66, 0.36), "ledge_glow": 0.3, "soffit_dark": 0.6, "stone_fill": 1.0}
+const C1_VIADUCT_CORNICE := Vector3(0.1, 0.095, 0.14)
+## M13d (ChatGPT checkpoint 20: the stretched open viaduct still read as an aqueduct wall; one slender, gently
+## arcing crossing, the middle raised, about half the masonry gone): built at its placed proportions, the deck
+## 20 m (model) lower at the abutments than in the middle (C1_VIADUCT_SAG), slender piers falling into the mist.
+const C1_PRINCIPAL_VIADUCT_MODEL := "res://assets/world/models/c1-procedural/stone_viaduct_sweep.glb"
+const C1_VIADUCT_SAG := Vector2(20.0, 270.0)
 func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	var model: String = C1_PRINCIPAL_VIADUCT_MODEL if ResourceLoader.exists(C1_PRINCIPAL_VIADUCT_MODEL) else C1_DISTANCE_VIADUCT
 	if not _c1_on() or not ResourceLoader.exists(model): return {"built": false}
@@ -4847,16 +4853,29 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 		# 1.35x it read as a flat paper cutout; ChatGPT checkpoint 19: darker stone #625E79, shadow #47445C): darker stone,
 		# 1.1x haze so its lit and shaded faces return.
 		_refuge_props[index].set_meta("haze_k", 0.85)
-		_refuge_props[index].set_shader_parameter("base_tint", Vector3(0.5, 0.47, 0.62))
+		# (M13c, Fable tenth look: the sweep read as a thin dark wire, piers #67648a against the concept's sky-lit
+		# #9390bd; lit faces toward #9a94c0, soffits stay dark)
+		_refuge_props[index].set_shader_parameter("base_tint", Vector3(0.6, 0.57, 0.74) if model.ends_with("_sweep.glb") else Vector3(0.5, 0.47, 0.62))
 		for k: String in C1_VIADUCT_STONE: _refuge_props[index].set_shader_parameter(k, C1_VIADUCT_STONE[k])
-		_refuge_props[index].set_shader_parameter("cornice", Vector2(deck.y + 1.0, 7.0))
+		# (M13b, Fable ninth look: the deck band read as a cream plank, a glowing beam at night) a lit-stone band at 60%
+		# height under a dark parapet line, its light off at night; lamps carry the deck instead.
+		_refuge_props[index].set_shader_parameter("cornice", Vector2(deck.y + 1.0, 4.2) if not model.ends_with("_sweep.glb") else Vector2.ZERO)
+		_refuge_props[index].set_meta("stone_day", Vector3(C1_VIADUCT_STONE["ledge_glow"], C1_VIADUCT_STONE["stone_fill"], 1.0))
 		_c1_far_mats.append(_refuge_props[index])
+	# The sweep's deck falls toward the abutments: world drop at a fraction t (-0.5..0.5) of the span.
+	var model_scale: float = height / maxf(box.size.y, 0.001)
+	var sweep: bool = model.ends_with("_sweep.glb")
+	var drop := func(t: float) -> float:
+		if not sweep: return 0.0
+		var mx: float = minf(absf(t) * box.size.x, C1_VIADUCT_SAG.y)
+		return C1_VIADUCT_SAG.x * pow(mx / C1_VIADUCT_SAG.y, 2.0) * model_scale
 	# M10c (Fable): a lit spire house at each end of the deck
 	var sh_path: String = C1_TRIPO_FG + "spirehouse2.glb"
 	if ResourceLoader.exists(sh_path):
 		for end: float in [-0.5, 0.5]:
 			var e: Vector3 = deck + (Basis(Vector3.UP, yaw) * Vector3.RIGHT) * end * float(spec[3]) * 0.97
 			var h0: int = _refuge_props.size()
+			e.y -= drop.call(end * 0.97)
 			_refuge_model(sh_path, e - Vector3(0.0, 2.0, 0.0), yaw + PI * 0.5 * end, 34.0, "C1ViaductHouse%d" % int(end + 1.0), false, C1_FAR_SHADER)
 			for hi: int in range(h0, _refuge_props.size()):
 				_refuge_props[hi].set_meta("haze_amount", C1_CLUSTER_HAZE)
@@ -4865,9 +4884,11 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 			_c1_glow.append(e + Vector3(0.0, 14.0, 0.0))
 	# a few warm lamps in irregular clusters on the deck (Fable: an even row read as fairy lights)
 	var right: Vector3 = Basis(Vector3.UP, yaw) * Vector3.RIGHT
-	# (M13, ChatGPT checkpoint 19: fewer lamps through the centre)
-	for t: float in [-0.46, -0.42, 0.41]:
-		_c1_glow.append(deck + right * t * float(spec[3]) + Vector3(0.0, 4.0, 0.0))
+	# (M13, ChatGPT checkpoint 19: fewer lamps through the centre; M13b, Fable: 6-8 warm points carry the deck line)
+	# (M13c, Fable tenth look: 8-12 small warm points along the deck)
+	# (ChatGPT checkpoint 22: halve the centre lamps so the middle recedes; the ends keep theirs)
+	for t: float in [-0.46, -0.42, -0.35, -0.27, 0.18, 0.37, 0.41]:
+		_c1_glow.append(deck + right * t * float(spec[3]) + Vector3(0.0, 4.0 - drop.call(t), 0.0))
 	return {"built": true, "model": model.get_file(), "deck": _v3(deck), "height_m": snappedf(height, 0.1), "span_m": spec[3], "horizontal_scale": snappedf(xz, 0.001), "colliders": 0}
 
 func _add_c1_distance_viaduct(eye: Vector3) -> Dictionary:
@@ -5163,6 +5184,18 @@ const C1_FG_PROPS: Array = [
 	["shrub", 360.0, 432.0, 30.0, 1.15, 40.0, 0.2, 0.0, "ground"], ["shrub", 452.0, 420.0, 30.0, 1.35, 160.0, 0.2, 0.0, "ground"],
 	["shrub", 535.0, 405.0, 30.0, 1.05, 280.0, 0.2, 0.0, "ground"], ["fern", 405.0, 440.0, 30.0, 0.9, 60.0, 0.1, 0.6, "ground"],
 	["fern", 300.0, 420.0, 30.0, 0.8, 200.0, 0.1, 0.6, "ground"], ["lily", 110.0, 455.0, 30.0, 0.9, 30.0, 0.6, 0.5, "ground"],
+	# M13c (ChatGPT checkpoint 21: the home still sat on a carved block; bury 25-35% of the deck base and the hard
+	# patio edge below the sofa and window in darker shrubs, ferns and hanging growth)
+	# M13d (cells: the bottom centre read L 8-17 against the concept's 30-35, one flat unlit grass slope under the path;
+	# concept-1 has flowerbeds, ferns and lanterns there): low beds, two glowing lilies and a lantern.
+	["shrub", 380.0, 690.0, 30.0, 1.2, 40.0, 0.25, 0.0, "ground"], ["fern", 455.0, 705.0, 30.0, 1.3, 110.0, 0.1, 0.6, "ground"],
+	["lily", 525.0, 700.0, 30.0, 0.8, 200.0, 0.6, 0.5, "ground"], ["shrub", 590.0, 688.0, 30.0, 1.1, 260.0, 0.25, 0.0, "ground"],
+	["lantern", 425.0, 652.0, 30.0, 2.4, 30.0, 0.12, 0.0, "ground"], ["fern", 345.0, 650.0, 30.0, 1.0, 300.0, 0.1, 0.6, "ground"],
+	["lily", 335.0, 712.0, 30.0, 0.7, 60.0, 0.6, 0.5, "ground"],
+	["shrub", 560.0, 600.0, 30.0, 1.1, 120.0, 0.25, 0.0, "ground"], ["fern", 612.0, 628.0, 30.0, 1.2, 30.0, 0.1, 0.6, "ground"],
+	# (sweep m13l: two wisteria curtains here hid the hearth and lantern in one dark mass; low growth only)
+	["shrub", 70.0, 440.0, 30.0, 1.05, 70.0, 0.18, 0.0, "ground"], ["fern", 160.0, 445.0, 30.0, 1.1, 150.0, 0.1, 0.6, "ground"],
+	["shrub", 235.0, 452.0, 30.0, 0.95, 210.0, 0.18, 0.0, "ground"], ["fern", 20.0, 410.0, 30.0, 1.2, 20.0, 0.1, 0.6, "ground"],
 	# (capture s31: at 2.6-2.8 m the posts read as twigs; concept-1's path lanterns are bold warm points)
 	["lantern", 320.0, 545.0, 30.0, 2.55, 0.0, 0.12, 0.0, "ground"], ["lantern", 520.0, 620.0, 30.0, 2.55, 40.0, 0.12, 0.0, "ground"],
 	["lantern", 180.0, 505.0, 30.0, 2.40, -30.0, 0.12, 0.0, "ground"], ["lantern", 395.0, 580.0, 30.0, 2.40, 20.0, 0.12, 0.0, "ground"],
@@ -9282,6 +9315,11 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 		var haze_amount: Vector2 = fm.get_meta("haze_amount", far_amt)
 		fm.set_shader_parameter("haze", haze_amount * (fm.get_meta("haze_k", 1.0) as float))
 		fm.set_shader_parameter("haze_range", fm.get_meta("haze_range", C1_FAR_HAZE_RANGE))
+		if fm.has_meta("stone_day"):
+			var sd: Vector3 = fm.get_meta("stone_day")
+			fm.set_shader_parameter("ledge_glow", sd.x * (1.0 - night))
+			fm.set_shader_parameter("stone_fill", sd.y * lerpf(1.0, 0.35, night))
+			fm.set_shader_parameter("cornice_color", C1_VIADUCT_CORNICE * (1.0 - night))
 	# Blender models: window glass, gills and lanterns brighter at night and in rain.
 	for glow_m: StandardMaterial3D in _blender_glow:
 		if glow_m.has_meta("day_fill"):

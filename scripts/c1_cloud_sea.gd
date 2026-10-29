@@ -60,6 +60,8 @@ const BANKS: Array = [
 	[700.0, 760.0, 22.0, 105.0, 70.0, 95.0, 0.011, 1.0],  # M10e: softer (a hard top edge at frame y ~430)
 	[1230.0, 1080.0, 40.0, 130.0, 62.0, 110.0, 0.017, 1.0],
 	[830.0, 1660.0, 50.0, 180.0, 90.0, 160.0, 0.018, 1.0],
+	# M13c (ChatGPT checkpoint 22: mist breaking the high bridge's middle so its centre recedes; last, keeping seeds)
+	[790.0, 880.0, 222.0, 120.0, 30.0, 85.0, 0.007, 1.0],
 ]
 var _materials: Array[ShaderMaterial] = []
 var _configured: bool = false
@@ -90,13 +92,22 @@ func configure(scene: Node3D, eye: Vector3) -> Dictionary:
 		material.set_shader_parameter("density", float(spec[6]))
 		material.set_shader_parameter("lobe_strength", float(spec[7]))
 		material.set_shader_parameter("march_steps", _march_steps())
-		var warm_bank: bool = spec.size() > 8 and bool(spec[8])
+		var warm_bank: bool = spec.size() > 8 and spec[8] is bool and bool(spec[8])
+		# M13c (Fable tenth look: the sky between the banks read #f6d8e3, a pale wash the banks could not sit against;
+		# concept-1 puts its banks on a deeper mauve, ~#c0a0b8): a thin mauve veil far behind the sunset banks.
+		var veil: bool = spec.size() > 8 and spec[8] is String and str(spec[8]) == "veil"
+		# M13c (Fable ninth look: the low sky read violet-mauve, concept-1's sunset gap is peach #e2afba): the low banks
+		# left of the hero (the sunset gap) take deeper peach-salmon; the high cumulus and right-side banks keep the
+		# rose of m11b, since the frame top in concept-1 is blue-violet. (M13c, Fable eleventh look: the sky between the
+		# banks read a pale #f6d9e4 wash; a veil and a scrim behind them changed nothing, the wash is these high banks
+		# themselves, lit near white: mauve #c8a8c0 / #a88aa8, so the peach gap banks sit on a deeper sky.)
+		var gap_bank: bool = warm_bank and float(spec[0]) < 1000.0 and float(spec[2]) < 600.0
 		# (m11b: lit #F3CDD0 rendered near white after tonemapping; concept-1's banks read #F0BDBD)
-		material.set_shader_parameter("cloud_lit", Color("eeb0b8") if warm_bank else Color("b4adcf"))
+		material.set_shader_parameter("cloud_lit", Color("e9a29a") if gap_bank else (Color("c8a8c0") if warm_bank else (Color("c8a8c0") if veil else Color("b4adcf"))))
 		# (M11c, Fable: the shade won over the banks' bodies, #C8BDE0; shade raised toward #B9A0C0)
-		material.set_shader_parameter("cloud_shade", Color("d0a4bc") if warm_bank else Color("736e98"))
-		material.set_shader_parameter("cloud_warm", Color("f0a890") if warm_bank else Color("cbbcc6"))
-		material.set_shader_parameter("sky_bank", warm_bank)
+		material.set_shader_parameter("cloud_shade", Color("c893ad") if gap_bank else (Color("a88aa8") if warm_bank else (Color("a88aa8") if veil else Color("736e98"))))
+		material.set_shader_parameter("cloud_warm", Color("ee9a7e") if gap_bank else (Color("d0a8b0") if warm_bank else (Color("c4a0ae") if veil else Color("cbbcc6"))))
+		material.set_shader_parameter("sky_bank", warm_bank or veil)
 		material.set_shader_parameter("cloud_night_lit", Color("666c96"))
 		material.set_shader_parameter("cloud_night_shade", Color("2c2d4c"))
 		_materials.append(material)
