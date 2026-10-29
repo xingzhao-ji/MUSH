@@ -4514,7 +4514,8 @@ const C1_FAR_LAYERS: Array = [
 const C1_FAR_CONE := 60.0
 const C1_FAR_HAZE := Vector2(0.45, 0.82)
 const C1_FAR_HAZE_RANGE := Vector2(2500.0, 8500.0)
-const C1_FAR_HAZE_DAY := Color("a1a6cf")
+## (M11f, Fable seventh look: a more saturated, bluer distance; valley saturation 63 vs the concept's 80)
+const C1_FAR_HAZE_DAY := Color("9a9fd4")
 const C1_FAR_HAZE_NIGHT := Color("26244e")
 const C1_FAR_SHADER := preload("res://assets/world/tripo_far.gdshader")
 var _c1_far_mats: Array[ShaderMaterial] = []
@@ -4839,6 +4840,8 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	for index: int in range(n0, _refuge_props.size()):
 		_refuge_props[index].set_meta("haze_amount", C1_VALLEY_HAZE)
 		_refuge_props[index].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+		# M11f (ChatGPT checkpoint 18: keep the viaduct but haze it so the cliffs dominate the engineering)
+		_refuge_props[index].set_meta("haze_k", 1.35)
 		_c1_far_mats.append(_refuge_props[index])
 	# M10c (Fable): a lit spire house at each end of the deck
 	var sh_path: String = C1_TRIPO_FG + "spirehouse2.glb"
@@ -5740,7 +5743,7 @@ const C1_FAR_CURLED_TREE := "res://assets/world/models/c1-procedural/far_mushroo
 const C1_PRINCIPAL := {0: 180.0, 2: 170.0, 4: 170.0, 11: 190.0}
 ## M10d (ChatGPT checkpoint 14: many small platforms instead of a few major masses): two more minor isles under the banks.
 ## (M11e: two small needles at frame x 1190 and 1000 also go, fewer separate pieces in the middle valley)
-const C1_SUBMERGED := [3, 7, 12, 13, 14, 15, 16, 18, 19, 20]
+const C1_SUBMERGED := [3, 7, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 ## (M10e tried 5 and 8 as well: both stand behind the home and tree from the vista eye, so no visible gain)
 const C1_FALL_MASSES := [0, 11]
 var _c1_bases: Array = []
@@ -8913,9 +8916,9 @@ const C1_LAKE_SHALLOW := Color("6aa8b8")
 const C1_LAKE_DEEP := Color("3f8a9a")
 ## (M10d, Fable: the lake still read grey-lilac #7A84A1 through the fog)
 const C1_LAKE_GLOW := Vector2(1.5, 0.4)
-const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "a2a6cc", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
+const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "9ea3d0", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
-	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "303f8e", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
+	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "34488e", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
 	# walls 1.5-2 km out still read (capture s06: at density 1.0, far 0.8 they washed out to the sky).
 	"cloud_glow_color": "f3b677", "glow_color": "f0a070", "mist_warm": "a79dce", "grade_sat": 0.9, "sun_energy": 1.05, "fog_density": 0.95,
