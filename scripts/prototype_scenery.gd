@@ -2773,6 +2773,10 @@ const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 1.2, 0.0]
 const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.75, 1.1]
 ## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
 const C1_HERO_RIM := Vector3(0.78, 0.33, 0.36)
+## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
+## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
+const C1_HERO_CAP_SUN := Vector3(0.5, 0.1, 0.25)
+const C1_HERO_CAP_SUN_COLOR := Vector3(0.552, 0.2, 0.29)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.13, 0.13)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
@@ -4578,6 +4582,10 @@ func _c1_tree_mats(n0: int, at: Vector3, height: float, radius: float, hero: boo
 			m.set_shader_parameter("rim_glow", C1_TREE_M10[2])
 			m.set_shader_parameter("trunk_glow", C1_TREE_M10[3])
 			m.set_shader_parameter("rim_color", C1_HERO_RIM)
+			m.set_shader_parameter("cap_sun_mix", C1_HERO_CAP_SUN.x)
+			m.set_shader_parameter("cap_sun_color", C1_HERO_CAP_SUN_COLOR)
+			m.set_shader_parameter("cap_sun_glow", C1_HERO_CAP_SUN.y)
+			m.set_shader_parameter("cap_rim_glow", C1_HERO_CAP_SUN.z)
 
 func _add_c1_far(eye: Vector3) -> Dictionary:
 	var out: Dictionary = {}
@@ -5631,7 +5639,8 @@ const C1_ISLANDS: Array = [
 	# capture s13: the right isle's dark crown filled the lower right (L 21 vs 43): further out
 	# An optional seventh field stands a Tripo mushroom spire house (lit) that many m tall on the crown ground nearest
 	# the mass's centre (captures s16-s18: a fixed fraction or surface median sank them into saddles).
-	["massif", 690.0, 950.0, 400.0, 0.0, 10.0, 44.0], ["lowisle", 1080.0, 840.0, 150.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 510.0, 0.0, 0.0, 40.0],
+	# M11d (ChatGPT checkpoints 14-17: a few major masses, not many platforms): the right-middle isle becomes a broad massif
+	["massif", 690.0, 950.0, 400.0, 0.0, 10.0, 44.0], ["massif", 1060.0, 860.0, 250.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 510.0, 0.0, 0.0, 40.0],
 	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 470.0, 0.0, -20.0, 50.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
 	["tower", 880.0, 1300.0, 360.0, 0.0, 90.0], ["lowisle", 770.0, 520.0, 90.0, 0.0, 0.0], ["massif", 430.0, 1500.0, 280.0, 0.0, 0.0],
 	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0, 36.0], ["massif", 845.0, 1500.0, 450.0, 0.0, 160.0],
@@ -5730,7 +5739,7 @@ const C1_FAR_CURLED_TREE := "res://assets/world/models/c1-procedural/far_mushroo
 ## Principal masses: raise over the M7 crowns (m). M9 (checkpoint 10 gap 1): a further 60 m and ~35% wider.
 const C1_PRINCIPAL := {0: 180.0, 2: 170.0, 4: 170.0, 11: 190.0}
 ## M10d (ChatGPT checkpoint 14: many small platforms instead of a few major masses): two more minor isles under the banks.
-const C1_SUBMERGED := [12, 13, 14, 15, 16, 18, 20]
+const C1_SUBMERGED := [7, 12, 13, 14, 15, 16, 18, 20]
 ## (M10e tried 5 and 8 as well: both stand behind the home and tree from the vista eye, so no visible gain)
 const C1_FALL_MASSES := [0, 11]
 var _c1_bases: Array = []
@@ -8905,7 +8914,7 @@ const C1_LAKE_DEEP := Color("3f8a9a")
 const C1_LAKE_GLOW := Vector2(1.5, 0.4)
 const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "a2a6cc", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
-	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "3a3a86", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
+	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "303f8e", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
 	# walls 1.5-2 km out still read (capture s06: at density 1.0, far 0.8 they washed out to the sky).
 	"cloud_glow_color": "f3b677", "glow_color": "f0a070", "mist_warm": "a79dce", "grade_sat": 0.9, "sun_energy": 1.05, "fog_density": 0.95,

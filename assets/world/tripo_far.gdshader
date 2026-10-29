@@ -52,6 +52,13 @@ uniform vec3 bark_tone = vec3(0.48, 0.36, 0.62);
 uniform vec3 rim_color = vec3(0.807, 0.392, 0.578);
 uniform float rim_glow = 0.0;
 uniform float trunk_glow = 0.0;
+// M11c (Fable: concept-1's cap top reads sunset pink #E39392, rim #F1BBD5; ours cool lavender): upward cap faces mix
+// toward cap_sun_color, a view-rim glow in cap_rim_color, and a little sunset emission on the cap top. 0 = off.
+uniform vec3 cap_sun_color = vec3(0.693, 0.352, 0.434);
+uniform float cap_sun_mix = 0.0;
+uniform float cap_sun_glow = 0.0;
+uniform vec3 cap_rim_color = vec3(0.880, 0.497, 0.665);
+uniform float cap_rim_glow = 0.0;
 // Own haze: fog colour (linear) and amount lerped from haze.x at range.x to haze.y at range.y (m from the eye).
 uniform vec3 haze_color = vec3(0.6, 0.55, 0.75);
 uniform vec2 haze = vec2(0.4, 0.8);
@@ -141,6 +148,8 @@ void fragment() {
 		gills = max(gills, branch * 0.85);
 		float gold_mask = clamp(vein * core + gills * (0.24 + 0.56 * core) + (0.10 + 0.16 * gold_spread) * core, 0.0, 1.0);
 		vec3 underside = mix(violet, under_color * clamp(mx, 0.45, 1.0), gold_mask);
+		float sun_face = smoothstep(0.15, 0.85, normal_y) * cap_top;
+		cap = mix(cap, cap_sun_color * clamp(detail, 0.7, 1.25), sun_face * cap_sun_mix);
 		vec3 tree_color = mix(bark, cap, cap_top);
 		tree_color = mix(tree_color, mix(c, underside, 0.85), under_surface);
 		float branch_zone = smoothstep(0.30, 0.44, height_fraction) * (1.0 - smoothstep(0.60, 0.67, height_fraction))
@@ -157,6 +166,9 @@ void fragment() {
 		float warm_energy = vein * mx * (0.06 + 1.00 * core)
 			+ gills * (0.10 + 0.58 * core) + (0.045 + 0.035 * gold_spread) * core * clamp(detail, 0.6, 1.2);
 		tree_emission += under_color * under_glow * under_surface * warm_energy;
+		float view_rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.5) * cap_top;
+		tree_emission += cap_rim_color * cap_rim_glow * view_rim * (1.0 - night * 0.5);
+		tree_emission += cap_sun_color * cap_sun_glow * sun_face * (1.0 - night);
 		// Rose rim: the cap's outer band and edge (top and underside) glow, as concept-1's membrane edge does.
 		float rim = smoothstep(0.93, 0.995, radius_fraction) * smoothstep(0.50, 0.58, height_fraction);
 		tree_emission += rim_color * rim_glow * rim * (0.55 + 0.45 * mx);
