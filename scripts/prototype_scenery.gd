@@ -5889,9 +5889,12 @@ func _c1_shade_by_height(mesh: ArrayMesh) -> ArrayMesh:
 ## M14 (concept-1's lower right: a glowing turquoise river winds through the lit forest below the falls; ours read as
 ## one dark canopy under mist): a river ribbon on the ground the frame sees, its band kept clear of canopy trees.
 ## Control points [pixel x, pixel y, width px].
-const C1_RIVER_PX: Array = [Vector3(772.0, 514.0, 12.0), Vector3(850.0, 532.0, 16.0), Vector3(950.0, 524.0, 19.0),
-	Vector3(1045.0, 548.0, 23.0), Vector3(1135.0, 584.0, 28.0), Vector3(1215.0, 600.0, 31.0)]
+## (M14b, ChatGPT checkpoint 23: one continuous luminous S-curve through the basin, core #79C6D6, not broken pockets:
+## wider, brighter, a wider clear band, more bank lights.)
+const C1_RIVER_PX: Array = [Vector3(765.0, 516.0, 18.0), Vector3(850.0, 533.0, 24.0), Vector3(950.0, 524.0, 28.0),
+	Vector3(1045.0, 548.0, 34.0), Vector3(1135.0, 584.0, 40.0), Vector3(1215.0, 600.0, 44.0)]
 var _c1_river_report: Dictionary = {}
+const C1_RIVER_LAKE_SHADER := true
 
 ## Pixel distance from the river's centre line minus its half width (negative inside the band).
 func _c1_river_dist_px(px: float, py: float) -> float:
@@ -5968,26 +5971,28 @@ func _add_c1_river(eye: Vector3) -> Dictionary:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color("2f8597")
+	mat.albedo_color = Color("3f9fb0")
 	mat.roughness = 0.08
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.emission_enabled = true
-	mat.emission = Color("5cc4d4")
+	mat.emission = Color("79c6d6")
 	# day/night fill through the Blender-glow registry (the turquoise glows a little more at night)
-	mat.set_meta("day_fill", 0.4)
-	mat.set_meta("day_fill_col", Color("5cc4d4"))
+	mat.set_meta("day_fill", 0.7)
+	mat.set_meta("day_fill_col", Color("79c6d6"))
 	mat.set_meta("night_fill", 0.75)
 	mat.set_meta("night_fill_col", Color("5aa8d0"))
 	_blender_glow.append(mat)
 	var node := MeshInstance3D.new()
 	node.name = "C1River"
 	node.mesh = mesh
-	node.material_override = mat
+	# (sweep m14l: an emissive StandardMaterial read as flat pale cut-outs; the lake's own water shader, with its sky
+	# reflection, body glow and shimmer, reads as water)
+	node.material_override = _lake_material if C1_RIVER_LAKE_SHADER and _lake_material != null else mat
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(node)
 	_static.append(node)
 	# warm lights along the banks (concept-1's riverside hamlets)
-	for j: int in range(2, centres.size(), 8):
+	for j: int in range(2, centres.size(), 4):
 		var p: Vector3 = centres[j][0]
 		if p.distance_to(eye) < 520.0: continue
 		var nxt: Vector3 = centres[mini(j + 1, centres.size() - 1)][0]
@@ -6017,7 +6022,7 @@ func _c1_near_canopy_points(eye: Vector3) -> int:
 			var jx: float = rng.randf_range(-4.0, 4.0)
 			var jy: float = rng.randf_range(-3.0, 3.0)
 			# (M14: the river's band stays clear of canopy trees)
-			if _c1_river_dist_px(px + jx, py + jy) < 16.0:
+			if _c1_river_dist_px(px + jx, py + jy) < 26.0:
 				px += C1_CANOPY_STEP.x
 				col += 1
 				continue
