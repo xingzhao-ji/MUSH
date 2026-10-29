@@ -5733,7 +5733,7 @@ const C1_ISLANDS: Array = [
 	# An optional seventh field stands a Tripo mushroom spire house (lit) that many m tall on the crown ground nearest
 	# the mass's centre (captures s16-s18: a fixed fraction or surface median sank them into saddles).
 	# M11d (ChatGPT checkpoints 14-17: a few major masses, not many platforms): the right-middle isle becomes a broad massif
-	["massif", 690.0, 950.0, 400.0, 0.0, 10.0, 44.0], ["massif", 1060.0, 860.0, 250.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 510.0, 0.0, 0.0, 40.0],
+	["massif", 690.0, 950.0, 400.0, 0.0, 10.0], ["massif", 1060.0, 860.0, 250.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 510.0, 0.0, 0.0, 40.0],
 	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 470.0, 0.0, -20.0, 50.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
 	["tower", 880.0, 1300.0, 360.0, 0.0, 90.0], ["lowisle", 770.0, 520.0, 90.0, 0.0, 0.0], ["massif", 430.0, 1500.0, 280.0, 0.0, 0.0],
 	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0, 36.0], ["massif", 845.0, 1500.0, 450.0, 0.0, 160.0],
@@ -6004,6 +6004,13 @@ const C1_PRINCIPAL := {0: 180.0, 2: 170.0, 4: 170.0, 11: 190.0}
 const C1_SUBMERGED := [3, 7, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 ## (M10e tried 5 and 8 as well: both stand behind the home and tree from the vista eye, so no visible gain)
 const C1_FALL_MASSES := [0, 11]
+## M19: original mushroom cottage on these masses' front crest (index: height m)
+const C1_MUSHROOM_COTTAGE := "res://assets/world/models/c1-procedural/mushroom_cottage.glb"
+const C1_MOUND_HOUSE := {0: 64.0}
+const C1_MOUND_HOUSE_FORWARD := 45.0
+## cap self-fill energy (day, night)
+const C1_MOUND_CAP_FILL := Vector2(0.28, 0.22)
+var _c1_mound_houses: Array = []
 var _c1_bases: Array = []
 ## Ledge forest (M9): low-poly broadleaf clumps and firs on the masses' upward faces (ChatGPT checkpoint 10: basalt
 ## #504B69 with forested ledges, foliage #293D38), one MultiMesh per shape, instance-coloured, no shadows or collision.
@@ -6345,6 +6352,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 	_c1_ledge_pts.clear()
 	_c1_canopy_pts.clear()
 	_c1_glow.clear()
+	_c1_mound_houses.clear()
 	_c1_right_cluster_anchor = Vector3.INF
 	for island_index: int in C1_ISLANDS.size():
 		var spec: Array = C1_ISLANDS[island_index]
@@ -6445,6 +6453,25 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 						closest = separation
 						_c1_right_cluster_anchor = wp
 
+			# M19 (ChatGPT checkpoints 24-26: one dominant inhabited mound; concept-1's central hill carries a squat
+			# cottage under a broad lilac mushroom cap with lit windows): an original Blender mushroom cottage
+			# (MUSH-exchange/codex-assets/work/mushroom_cottage_geometry.py) on the crown point nearest the eye.
+			if C1_MOUND_HOUSE.has(island_index) and ResourceLoader.exists(C1_MUSHROOM_COTTAGE):
+				# on the summit, a little toward the eye (it replaces the mass's spire house; m19k: the crown point
+				# nearest the eye put it half hidden at the fall's lip)
+				var front := Vector3.INF
+				var aim: Vector2 = p + to_eye.normalized() * C1_MOUND_HOUSE_FORWARD
+				for cp: Vector3 in _model_crown_points(tpath, 0.8, 1.0, 120, 9800 + island_index, 3):
+					var wp: Vector3 = root_i * cp
+					if not front.is_finite() or Vector2(wp.x, wp.z).distance_to(aim) < Vector2(front.x, front.z).distance_to(aim): front = wp
+				if front.is_finite():
+					var hh: float = float(C1_MOUND_HOUSE[island_index])
+					var c_to_eye := Vector2(eye.x - front.x, eye.z - front.z)
+					# a lilac day fill on the cap (concept-1's caps read light lilac, the m19k cap near-black purple)
+					_blender_place(C1_MUSHROOM_COTTAGE, _model_root(C1_MUSHROOM_COTTAGE, front - Vector3(0.0, hh * 0.04, 0.0), atan2(c_to_eye.x, c_to_eye.y), hh, 1.0), "C1MoundCottage%d" % island_index, Color.WHITE, Transform3D.IDENTITY, {
+						"mushroom_cottage_cap": [Color("b49ad8"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y],
+						"mushroom_cottage_cap_light": [Color("c8b4e4"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y]})
+					_c1_mound_houses.append({"index": island_index, "at": _v3(front), "height_m": hh, "pixel": _c1_viaduct_pixel(eye, front + Vector3(0.0, hh * 0.5, 0.0)).round()})
 			if island_index in [0, 1, 4, 7, 10, 12, 14, 16] and not gpts.is_empty():
 				var cluster_at: Vector3 = root_i * gpts[mini(4, gpts.size() - 1)]
 				_add_c1_cluster(cluster_at, 18.0 + float(island_index % 4) * 6.0, eye, "C1CrownCluster%d" % island_index, float(island_index % 3) * 0.12)
@@ -6590,7 +6617,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
 		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
 		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
-	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest, "river": _c1_river_report}
+	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest, "river": _c1_river_report, "mound_houses": _c1_mound_houses}
 
 ## Low, overlapping shoulders join selected cliff feet; the open central water corridor remains.
 ## Reuse the irregular massif silhouette and place its bottom beneath the actual basin ground.
