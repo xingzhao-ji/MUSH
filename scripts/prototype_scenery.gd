@@ -3121,6 +3121,39 @@ func _model_crown_points(path: String, lo: float, hi: float, n: int, seed_: int,
 	_crown_cache[key] = out
 	return out
 
+## M20: model-space surface points and outward normals (faces with normal y >= min_ny, centre height fraction
+## lo..hi), skipping surfaces whose material name contains any of `skip`; every `stride`-th triangle.
+func _model_shell_points(path: String, lo: float, hi: float, min_ny: float, skip: PackedStringArray, stride: int = 1) -> Array:
+	var box: AABB = _model_box(path)
+	var out: Array = []
+	for part: Array in _model_parts(path):
+		var mesh: Mesh = part[0]
+		var xf: Transform3D = part[1]
+		if mesh == null: continue
+		for si: int in mesh.get_surface_count():
+			var mat: Material = mesh.surface_get_material(si)
+			var mname: String = mat.resource_name.to_lower() if mat != null else ""
+			var skipped: bool = false
+			for k: String in skip:
+				if k in mname: skipped = true
+			if skipped: continue
+			var arr: Array = mesh.surface_get_arrays(si)
+			var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+			var count: int = idx.size() if idx.size() > 0 else verts.size()
+			for i: int in range(0, count - 2, 3 * stride):
+				var a: Vector3 = xf * verts[idx[i] if idx.size() > 0 else i]
+				var b: Vector3 = xf * verts[idx[i + 1] if idx.size() > 0 else i + 1]
+				var c: Vector3 = xf * verts[idx[i + 2] if idx.size() > 0 else i + 2]
+				var nrm: Vector3 = (c - a).cross(b - a)
+				if nrm.length() < 1e-9: continue
+				nrm = nrm.normalized()
+				if nrm.y < min_ny: continue
+				var ctr: Vector3 = (a + b + c) / 3.0
+				var f: float = (ctr.y - box.position.y) / maxf(box.size.y, 0.001)
+				if f >= lo and f <= hi: out.append([ctr, nrm])
+	return out
+
 ## Places an imported model (all its mesh parts) scaled to `height` m on its base, yaw about Y.
 ## Optional: another shader with tripo_prop's uniforms (tripo_far), and a horizontal scale factor (xz) over the
 ## uniform one (tall-stemmed far mushroom trees).
@@ -6006,10 +6039,77 @@ const C1_SUBMERGED := [3, 7, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 const C1_FALL_MASSES := [0, 11]
 ## M19: original mushroom cottage on these masses' front crest (index: height m)
 const C1_MUSHROOM_COTTAGE := "res://assets/world/models/c1-procedural/mushroom_cottage.glb"
-const C1_MOUND_HOUSE := {0: 64.0}
-const C1_MOUND_HOUSE_FORWARD := 45.0
+const C1_MOUND_HOUSE := {0: 50.0}
+const C1_MOUND_HOUSE_FORWARD := 25.0
 ## cap self-fill energy (day, night)
-const C1_MOUND_CAP_FILL := Vector2(0.28, 0.22)
+const C1_MOUND_CAP_FILL := Vector2(0.15, 0.2)
+## M20: mound canopy (index: clump count); clump height range m, world spacing m, haze (near, far)
+const C1_MOUND_CANOPY := {0: 110}
+## (Tried, ChatGPT checkpoint 28: a warm path ribbon threaded down the faces; on this cliff it read as a straight
+## glowing crack beside the fall, white at night: m20g.)
+const C1_MOUND_CLUMP_H := Vector2(38.0, 72.0)
+const C1_MOUND_CLUMP_GAP := 22.0
+const C1_MOUND_HAZE := Vector2(0.05, 0.4)
+## (m20b: the linear #22352C family read slate blue under the lavender ambient; greener)
+const C1_MOUND_COLORS: Array = [Color(0.02, 0.058, 0.03), Color(0.012, 0.032, 0.016), Color(0.06, 0.12, 0.07), Color(0.026, 0.07, 0.036)]
+var _c1_mound_canopy_report: Dictionary = {}
+func _c1_mound_canopy_build(tpath: String, root_i: Transform3D, eye: Vector3, count: int, island_index: int) -> void:
+	# (m20b: faces with normal y >= 0.2 left the dome's steep front bare; down to -0.25, clumps pushed out along the face)
+	var shell: Array = _model_shell_points(tpath, 0.18, 1.0, -0.25, PackedStringArray(["river_sheet", "soft_foam"]), 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261030 + island_index
+	var cands: Array = []
+	for sp: Array in shell:
+		var wp: Vector3 = root_i * (sp[0] as Vector3)
+		var wn: Vector3 = (root_i.basis * (sp[1] as Vector3)).normalized()
+		var to_e: Vector3 = (eye - wp).normalized()
+		# (ChatGPT checkpoint 28 ranked this rule first: m20c. Flipping inward-wound faces and keeping the fall's lip
+		# clear (m20d, m20e) bared the summit or buried the fall.)
+		if wn.dot(to_e) < 0.05: continue
+		cands.append([wp, wn])
+	var picked: Array = []
+	var tries: int = 0
+	while picked.size() < count and tries < count * 40 and not cands.is_empty():
+		tries += 1
+		var cand: Array = cands[rng.randi() % cands.size()]
+		var q: Vector3 = cand[0]
+		var close: bool = false
+		for o: Array in picked:
+			if (o[0] as Vector3).distance_to(q) < C1_MOUND_CLUMP_GAP: close = true
+		if not close: picked.append(cand)
+	if picked.is_empty():
+		_c1_mound_canopy_report = {"index": island_index, "clumps": 0, "candidates": cands.size(), "shell_faces": shell.size()}
+		return
+	var meshes: Array = _c1_ledge_meshes()
+	var mat := ShaderMaterial.new()
+	mat.shader = C1_LEDGE_SHADER
+	mat.set_meta("haze_amount", C1_MOUND_HAZE)
+	mat.set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+	_c1_far_mats.append(mat)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.use_colors = true
+	multi.mesh = meshes[0]
+	multi.instance_count = picked.size()
+	for i: int in picked.size():
+		var h: float = rng.randf_range(C1_MOUND_CLUMP_H.x, C1_MOUND_CLUMP_H.y)
+		var w: float = h * rng.randf_range(1.05, 1.45)
+		var q: Vector3 = picked[i][0]
+		var wn: Vector3 = picked[i][1]
+		# on steep faces the clump stands out from the face (its centre ~0.35 w off the rock), on flat ground it sinks
+		var out_k: float = 1.0 - clampf(wn.y, 0.0, 1.0)
+		var at: Vector3 = q + Vector3(wn.x, 0.0, wn.z).normalized() * w * 0.35 * out_k - Vector3(0.0, h * lerpf(0.3, 0.55, out_k), 0.0)
+		multi.set_instance_transform(i, Transform3D(Basis(Vector3.UP, rng.randf() * TAU) * Basis.from_scale(Vector3(w, h, w)), at))
+		multi.set_instance_color(i, C1_MOUND_COLORS[rng.randi() % C1_MOUND_COLORS.size()] * rng.randf_range(0.85, 1.2))
+	var node := MultiMeshInstance3D.new()
+	node.name = "C1MoundCanopy%d" % island_index
+	node.multimesh = multi
+	node.material_override = mat
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	_c1_mound_canopy_report = {"index": island_index, "clumps": picked.size(), "candidates": cands.size(), "shell_faces": shell.size()}
 var _c1_mound_houses: Array = []
 var _c1_bases: Array = []
 ## Ledge forest (M9): low-poly broadleaf clumps and firs on the masses' upward faces (ChatGPT checkpoint 10: basalt
@@ -6453,6 +6553,11 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 						closest = separation
 						_c1_right_cluster_anchor = wp
 
+			# M20 (ChatGPT checkpoint 27: the concept's central hill is one continuous dark wooded mound, ours a bare
+			# rock dome; the lone cottage read wrong): large overlapping canopy clumps wrapping the faces that look at
+			# the eye, dark green (#22352C / #17211C / #4A5C4E) on their own lighter haze.
+			if C1_MOUND_CANOPY.has(island_index):
+				_c1_mound_canopy_build(tpath, root_i, eye, int(C1_MOUND_CANOPY[island_index]), island_index)
 			# M19 (ChatGPT checkpoints 24-26: one dominant inhabited mound; concept-1's central hill carries a squat
 			# cottage under a broad lilac mushroom cap with lit windows): an original Blender mushroom cottage
 			# (MUSH-exchange/codex-assets/work/mushroom_cottage_geometry.py) on the crown point nearest the eye.
@@ -6469,8 +6574,8 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 					var c_to_eye := Vector2(eye.x - front.x, eye.z - front.z)
 					# a lilac day fill on the cap (concept-1's caps read light lilac, the m19k cap near-black purple)
 					_blender_place(C1_MUSHROOM_COTTAGE, _model_root(C1_MUSHROOM_COTTAGE, front - Vector3(0.0, hh * 0.04, 0.0), atan2(c_to_eye.x, c_to_eye.y), hh, 1.0), "C1MoundCottage%d" % island_index, Color.WHITE, Transform3D.IDENTITY, {
-						"mushroom_cottage_cap": [Color("b49ad8"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y],
-						"mushroom_cottage_cap_light": [Color("c8b4e4"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y]})
+						"mushroom_cottage_cap": [Color("8c79a6"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y],
+						"mushroom_cottage_cap_light": [Color("a08cb8"), C1_MOUND_CAP_FILL.x, Color("8a74c4"), C1_MOUND_CAP_FILL.y]})
 					_c1_mound_houses.append({"index": island_index, "at": _v3(front), "height_m": hh, "pixel": _c1_viaduct_pixel(eye, front + Vector3(0.0, hh * 0.5, 0.0)).round()})
 			if island_index in [0, 1, 4, 7, 10, 12, 14, 16] and not gpts.is_empty():
 				var cluster_at: Vector3 = root_i * gpts[mini(4, gpts.size() - 1)]
@@ -6617,7 +6722,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
 		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
 		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
-	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest, "river": _c1_river_report, "mound_houses": _c1_mound_houses}
+	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest, "river": _c1_river_report, "mound_houses": _c1_mound_houses, "mound_canopy": _c1_mound_canopy_report}
 
 ## Low, overlapping shoulders join selected cliff feet; the open central water corridor remains.
 ## Reuse the irregular massif silhouette and place its bottom beneath the actual basin ground.
