@@ -5833,7 +5833,8 @@ var _c1_leaf_mats: Array = []
 ## spacing jitter]. (M15c, Fable: 58 points at a 7-8 px pitch were the frame's one dense, regular row, a trypophobia
 ## risk and LED-like; about 20 hung lanterns at 22-25 m with an uneven pitch)
 ## (M16b, ChatGPT checkpoint 25: 23 still read as a dotted chain at x 600-1020; about 11 irregular singles)
-const C1_STRING := Vector3(46.0, 0.0072, 0.35)
+## (M18, ChatGPT checkpoint 26: the 12 still read as a dotted string at x 690-1030; about 7)
+const C1_STRING := Vector3(72.0, 0.0072, 0.3)
 var _c1_dream_string: Array = []
 
 func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
@@ -5929,8 +5930,10 @@ func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
 ## M17 (Fable, M16b look: rows of 7-12 warm points at 14-20 px on the right ledge rim, the hero plateau lip and the near
 ## arch read as beads; the owner: lights never dense or clustered): screen-space thinning in the vista frame, no two
 ## valley lights closer than C1_GLOW_GAP px (points off the frame are kept).
-const C1_GLOW_GAP := 22.0
-const C1_BRIDGE_GLOW_KEEP := 0.4
+## (M18, ChatGPT checkpoint 26: the hero-base lights at x 860-1180, y 170-320 still a clustered constellation; 22 -> 30 px)
+const C1_GLOW_GAP := 30.0
+## (M18, ChatGPT checkpoint 26: the low bridge and its ledge lights still bunched at x 620-900, y 380-470)
+const C1_BRIDGE_GLOW_KEEP := 0.25
 var c1_glow_thinned: int = 0
 func _add_c1_glow(eye: Vector3) -> int:
 	if _c1_glow.is_empty(): return 0
