@@ -20,6 +20,26 @@ ob = bpy.context.view_layer.objects.active
 # unparent and apply the import's axis transform
 bpy.ops.object.parent_clear(type="CLEAR_KEEP_TRANSFORM")
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+# TRIPO_PRUNE=1: drop small loose pieces in the bottom 30% of the model (background patches the input cut-out filled
+# between roots come back as stray blobs), keeping thin drips and leaves higher up
+if os.environ.get("TRIPO_PRUNE"):
+    zs = [v.co.z for v in ob.data.vertices]
+    z0, z1, total = min(zs), max(zs), len(zs)
+    bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT"); bpy.ops.mesh.separate(type="LOOSE"); bpy.ops.object.mode_set(mode="OBJECT")
+    parts = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    dropped = 0
+    for o in parts:
+        n = len(o.data.vertices)
+        top = max(v.co.z for v in o.data.vertices)
+        if n < 0.01 * total and (top - z0) < 0.3 * (z1 - z0):
+            bpy.data.objects.remove(o, do_unlink=True); dropped += 1
+    keep = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    for o in bpy.context.scene.objects: o.select_set(False)
+    for o in keep: o.select_set(True)
+    bpy.context.view_layer.objects.active = keep[0]
+    if len(keep) > 1: bpy.ops.object.join()
+    ob = bpy.context.view_layer.objects.active
+    print("TRIPO_PRUNE parts", len(parts), "dropped", dropped)
 tris0 = sum(len(p.vertices) - 2 for p in ob.data.polygons)
 if tris0 > target:
     md = ob.modifiers.new("dec", "DECIMATE")

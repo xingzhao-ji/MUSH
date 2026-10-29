@@ -2679,19 +2679,29 @@ const C1_TRIPO_TREE := "res://assets/world/models/tripo/c1/mushtree.glb"
 ## High eye (C1_HIGH): 700 m tall, 1550 m out on concept-1's bearing (pixel x 930), so its cap (~1 km across) spans
 ## ~37 degrees with the dome near the frame top and its foot behind the valley's plateaus (capture s08: at the GIANTS
 ## hero spot, 1.1 km out, the whole trunk and roots stood in the open lake and the cap filled 55% of the frame).
-const C1_TRIPO_TREE_H := 640.0
+## Tree v2: the cap spans ~1.09x the height (v1 1.49x), so 720 m tall 1250 m out keeps concept-1's ~35 degree cap.
+const C1_TRIPO_TREE_H := 720.0
 const C1_TREE_PX := 930.0
-const C1_TREE_DIST := 1550.0
+const C1_TREE_DIST := 1250.0
 ## Capture s10: the dome ran off the frame top and the roots stood clear on a bare mesa: sunk 110 m, so the foot sits in
 ## the plateaus' mist and the dome comes into frame (concept-1's tree rises from behind its cliffs).
 const C1_TREE_SINK := 110.0
+## Tree v2 (ChatGPT checkpoint 5: the v1 cap read as an umbrella): Tripo model of ChatGPT's isolated concept tree
+## (deep dome, glowing branching underside, rim drips), faced to the eye, its dome top C1_TREE_TOP_DEG above the
+## horizon (0 keeps the sink placement).
+const C1_TRIPO_TREE2 := "res://assets/world/models/tripo/c1/mushtree2.glb"
+const C1_TREE2_TURN := 0.0
+const C1_TREE_TOP_DEG := 14.0
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
 ## The Tripo texture's cap is saturated blue-violet; concept-1's cap is pale lilac-pink (L ~65, a +15, b -18): part
 ## desaturated and warmed.
 ## Capture s12b cells: warmed to pink the cap read peach in the haze; the concept's top right is violet-blue (b -27).
+## Capture s22: tree v2's cap and trunk read deep navy-violet against concept-1's pale lilac cap and lavender trunk.
+## Capture s23: at 1.25 x and pale glow 0.3 it went ghost-white (top right L 80 vs the concept's violet L 52).
 const C1_TREE_DESAT := 0.0
-const C1_TREE_TINT := Vector3(1.0, 0.92, 1.05)
+const C1_TREE_TINT := Vector3(1.08, 0.96, 1.08)
+const C1_TREE2_PALE_GLOW := 0.12
 const C1_TREE_GLOW := 3.0
 const C1_TRIPO_TREE_YAW := 0.0
 ## Lavender self-fill on the bark (capture c1v03: the backlit trunk read as a saturated navy mass).
@@ -2772,11 +2782,23 @@ func _add_blender_giants() -> void:
 			var tree_at := Vector3(x, ground, z)
 			if _c1_on() and C1_HIGH:
 				# far up the basin on concept-1's bearing, its foot behind the valley's plateaus (giants are visual only)
-				var tp: Vector2 = _c1_point(_vista_eye(), C1_TREE_PX, C1_TREE_DIST)
-				tree_at = Vector3(tp.x, maxf(terrain_height(tp.x, tp.y), LAKE_Y) - C1_TREE_SINK, tp.y)
+				var ev: Vector3 = _vista_eye()
+				var tp: Vector2 = _c1_point(ev, C1_TREE_PX, C1_TREE_DIST)
+				var foot: float = maxf(terrain_height(tp.x, tp.y), LAKE_Y)
+				tree_at = Vector3(tp.x, foot - C1_TREE_SINK, tp.y)
+				if C1_TREE_TOP_DEG > 0.0:
+					# dome top C1_TREE_TOP_DEG above the eye's horizon (concept-1: the frame top), its foot sunk at least 20 m
+					var top_y: float = ev.y + Vector2(tp.x - ev.x, tp.y - ev.z).length() * tan(deg_to_rad(C1_TREE_TOP_DEG))
+					tree_at.y = minf(top_y - C1_TRIPO_TREE_H, foot - 20.0)
 				ground = tree_at.y
 			var props_before: int = _refuge_props.size()
-			if not (_c1_on() and ResourceLoader.exists(C1_TRIPO_TREE) and _refuge_model(C1_TRIPO_TREE, tree_at, yaw + C1_TRIPO_TREE_YAW, C1_TRIPO_TREE_H, "BlenderGiant0")):
+			var tree_path: String = C1_TRIPO_TREE2 if C1_HIGH and ResourceLoader.exists(C1_TRIPO_TREE2) else C1_TRIPO_TREE
+			var tree_yaw: float = yaw + C1_TRIPO_TREE_YAW
+			if tree_path == C1_TRIPO_TREE2:
+				# the sheet's view (model +X) toward the eye
+				var ev2: Vector3 = _vista_eye()
+				tree_yaw = atan2(ev2.x - tree_at.x, ev2.z - tree_at.z) + C1_TRIPO_FRONT + deg_to_rad(C1_TREE2_TURN)
+			if not (_c1_on() and ResourceLoader.exists(tree_path) and _refuge_model(tree_path, tree_at, tree_yaw, C1_TRIPO_TREE_H, "BlenderGiant0")):
 				_blender_place(HERO_TREE_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant0", Color.WHITE, Transform3D.IDENTITY, HERO_TREE_FILLS)
 			for pi: int in range(props_before, _refuge_props.size()):
 				_refuge_props[pi].set_shader_parameter("desat", C1_TREE_DESAT)
@@ -2784,6 +2806,8 @@ func _add_blender_giants() -> void:
 				# ChatGPT checkpoint 4: a warm golden-orange interior under the cap (the texture's lit gills and veins)
 				_refuge_props[pi].set_shader_parameter("glow", C1_TREE_GLOW)
 				_refuge_props[pi].set_shader_parameter("glow_floor", 0.45)
+				# v2's underside is pale peach (too unsaturated for the warm glow): a pale self-light on bright texels
+				if tree_path == C1_TRIPO_TREE2: _refuge_props[pi].set_shader_parameter("pale_glow", C1_TREE2_PALE_GLOW)
 			hero_ground = ground
 			placed += 1
 			continue
@@ -2942,6 +2966,43 @@ func _model_top_at(path: String, at: Vector3, yaw: float, height: float, q: Vect
 			var y: float = (xf * (a * w0 + b * w1 + c * w2)).y
 			best = maxf(best, y)
 	return best
+
+## The transform _refuge_model gives a model placed at `at` (base centre), turned `yaw`, `height` m tall.
+func _model_root(path: String, at: Vector3, yaw: float, height: float) -> Transform3D:
+	var box: AABB = _model_box(path)
+	var k: float = height / maxf(box.size.y, 0.001)
+	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
+	return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre)
+
+## Upward-facing surface points of a model (model space) whose height lies between fractions lo and hi of the model:
+## the crown ground under its trees and huts (face normal y > 0.85, Godot's clockwise front faces). `n` picks, seeded;
+## cached per model and arguments.
+var _crown_cache: Dictionary = {}
+func _model_crown_points(path: String, lo: float, hi: float, n: int, seed_: int) -> PackedVector3Array:
+	var key: String = "%s|%.3f|%.3f|%d|%d" % [path, lo, hi, n, seed_]
+	if _crown_cache.has(key): return _crown_cache[key]
+	var box: AABB = _model_box(path)
+	var cands := PackedVector3Array()
+	for part: Array in _model_parts(path):
+		var xf: Transform3D = part[1]
+		var faces: PackedVector3Array = (part[0] as Mesh).get_faces()
+		for i: int in range(0, faces.size(), 3):
+			var a: Vector3 = xf * faces[i]
+			var b: Vector3 = xf * faces[i + 1]
+			var c: Vector3 = xf * faces[i + 2]
+			var nrm: Vector3 = (c - a).cross(b - a)
+			var nlen: float = nrm.length()
+			if nlen < 1e-9 or nrm.y / nlen < 0.85: continue
+			var ctr: Vector3 = (a + b + c) / 3.0
+			var f: float = (ctr.y - box.position.y) / maxf(box.size.y, 0.001)
+			if f >= lo and f <= hi: cands.append(ctr)
+	var out := PackedVector3Array()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	if not cands.is_empty():
+		for k: int in n: out.append(cands[rng.randi() % cands.size()])
+	_crown_cache[key] = out
+	return out
 
 ## Places an imported model (all its mesh parts) scaled to `height` m on its base, yaw about Y.
 func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String, luminous: bool = false) -> bool:
@@ -4281,11 +4342,28 @@ func _add_vista_refuge() -> void:
 const C1_MIST_TOP := -20.0
 const C1_MIST_STRENGTH := 0.4
 var concept_vista_report: Dictionary = {}
+## Extra lilac giants on the slopes below the perch (concept-1: a large glowing mushroom cap in the lower right, more
+## along the valley's near side): [concept pixel x, distance m, cap radius m, underside height m], on the GIANTS'
+## Blender model and lilac tint. Capture s24 cells: the lower right read L 23 against the concept's 43.
+const C1_EXTRA_GIANTS: Array = [[1215.0, 420.0, 52.0, 62.0], [1060.0, 560.0, 30.0, 44.0]]
+func _add_c1_giants(eye: Vector3) -> Array:
+	var out: Array = []
+	if not (C1_HIGH and GIANT_BLENDER != "" and ResourceLoader.exists(GIANT_BLENDER)): return out
+	for i: int in C1_EXTRA_GIANTS.size():
+		var g: Array = C1_EXTRA_GIANTS[i]
+		var p: Vector2 = _c1_point(eye, float(g[0]), float(g[1]))
+		var ground: float = maxf(terrain_height(p.x, p.y), LAKE_Y)
+		var s := Vector3(float(g[2]) / GIANT_MODEL_R, float(g[3]) / GIANT_MODEL_UNDERSIDE, float(g[2]) / GIANT_MODEL_R)
+		_blender_place(GIANT_BLENDER, Transform3D(Basis(Vector3.UP, 1.3 + 2.1 * i) * Basis.from_scale(s), Vector3(p.x, ground - 2.0, p.y)), "C1Giant%d" % i, GIANT_SHADE_COMP * C1_GIANT_TINT, Transform3D.IDENTITY, GIANT_FILLS)
+		out.append([snappedf(p.x, 1.0), snappedf(ground, 1.0), snappedf(p.y, 1.0)])
+	return out
 func _add_concept_vista() -> void:
 	var eye: Vector3 = _vista_eye()
 	concept_vista_report = {"eye": _v3(eye), "target": _v3(_vista_target())}
 	concept_vista_report["terrace"] = _add_c1_terrace(eye)
 	concept_vista_report["valley"] = _add_c1_valley(eye)
+	concept_vista_report["glow_points"] = _add_c1_glow(eye)
+	concept_vista_report["giants"] = _add_c1_giants(eye)
 	concept_vista_report["mist"] = _add_c1_mist(eye)
 	concept_vista_report["mist_decks"] = _add_c1_decks(eye)
 	concept_vista_report["backdrop"] = _add_c1_backdrop(eye) if C1_BACKDROP else false
@@ -4312,10 +4390,17 @@ const C1_TERRACE_PROPS := "res://assets/world/models/blender/c1/terrace_props.gl
 const C1_TRIPO_FG := "res://assets/world/models/tripo/c1/"
 const C1_FG_PROPS: Array = [
 	# capture s10: at 2-2.6 m the lilies filled a third of the frame, white-hot; concept blooms are ~100 px
-	["lily", 90.0, 650.0, 6.0, 1.4, 0.0, 0.62, 0.7], ["lily", 15.0, 570.0, 7.5, 1.3, 70.0, 0.6, 0.7], ["lily", 250.0, 690.0, 6.5, 1.1, 150.0, 0.6, 0.7],
-	["lily", 380.0, 700.0, 7.5, 0.9, 220.0, 0.6, 0.7], ["lily", 175.0, 595.0, 9.0, 1.0, 300.0, 0.6, 0.7],
-	["rock", 905.0, 660.0, 26.0, 8.0, 0.0, 0.85, 0.0], ["rock", 1190.0, 690.0, 34.0, 11.0, 60.0, 0.85, 0.0],
-	["shrub", 610.0, 690.0, 15.0, 2.2, 0.0, 0.25, 0.0], ["shrub", 760.0, 640.0, 18.0, 2.6, 90.0, 0.25, 0.0], ["shrub", 470.0, 650.0, 13.0, 1.8, 200.0, 0.25, 0.0]]
+	# capture s23 (fronts to the eye): the blooms faced the camera and the lower-left cell read L 42 against the
+	# concept's 25; a quarter smaller. The outcrops' dark crowns filled the lower right (L 23 vs 43): smaller, lower.
+	["lily", 90.0, 655.0, 6.0, 1.05, 0.0, 0.62, 0.5], ["lily", 15.0, 575.0, 7.5, 1.0, 70.0, 0.6, 0.5], ["lily", 250.0, 695.0, 6.5, 0.85, 150.0, 0.6, 0.5],
+	["lily", 380.0, 705.0, 7.5, 0.7, 220.0, 0.6, 0.5], ["lily", 175.0, 600.0, 9.0, 0.8, 300.0, 0.6, 0.5],
+	["rock", 915.0, 690.0, 26.0, 6.0, 0.0, 0.85, 0.0], ["rock", 1210.0, 715.0, 34.0, 8.0, 60.0, 0.85, 0.0],
+	["shrub", 610.0, 690.0, 15.0, 2.2, 0.0, 0.25, 0.0], ["shrub", 760.0, 640.0, 18.0, 2.6, 90.0, 0.25, 0.0], ["shrub", 470.0, 650.0, 13.0, 1.8, 200.0, 0.25, 0.0],
+	# ChatGPT checkpoint 5: the home's rock base under the patio read chunky and geometric; flowering shrubs and lilies
+	# in front of it (the concept's patio edge sinks into flowers and wisteria)
+	# (capture s21: at 2.4-3.2 m they buried the path; smaller, the lily off the path)
+	["shrub", 430.0, 515.0, 13.0, 2.3, 30.0, 0.35, 0.0], ["shrub", 545.0, 495.0, 14.0, 2.5, 120.0, 0.35, 0.0], ["shrub", 595.0, 455.0, 16.0, 2.3, 250.0, 0.35, 0.0],
+	["lily", 330.0, 640.0, 9.0, 1.1, 90.0, 0.6, 0.7], ["shrub", 350.0, 555.0, 11.0, 1.9, 310.0, 0.35, 0.0]]
 func _add_c1_fg_props(eye: Vector3) -> Array:
 	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
@@ -4338,7 +4423,10 @@ func _add_c1_fg_props(eye: Vector3) -> Array:
 			placed.append([spec[0], _v3(base)])
 	return placed
 const C1_TRIPO_TERRACE := "res://assets/world/models/tripo/c1/terrace.glb"
-const C1_TRIPO_TERRACE_H := 18.0
+## ChatGPT checkpoint 5: the home still dominated the frame and read chunky: 11% smaller about its window (which stays
+## on the concept's), the timber and patio darker toward #5A4337.
+const C1_TRIPO_TERRACE_H := 16.0
+const C1_TERRACE_TINT := Vector3(0.8, 0.74, 0.76)
 ## Tripo ancient tree (lanterns on its lower limbs): terrace-local base (x right, y up, z toward the eye), height m,
 ## turn degrees. Canopy underside ~y 110 of the frame, its crown off the top-left as in concept-1.
 const C1_ANC_TREE_AT := Vector3(-20.0, -2.0, -32.0)
@@ -4385,7 +4473,9 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 		var yaw_l: float = atan2(face.x, face.z) + deg_to_rad(C1_TRIPO_TERRACE_TURN)
 		var right_l: Vector3 = Basis(Vector3.UP, yaw_l) * Vector3.RIGHT
 		var base_l: Vector3 = C1_TERRACE_WINDOW - Vector3(0.0, C1_TRIPO_TERRACE_WINDOW.y, 0.0) - right_l * C1_TRIPO_TERRACE_WINDOW.x
+		var tn0: int = _refuge_props.size()
 		_refuge_model(C1_TRIPO_TERRACE, xf * base_l, atan2(-look.x, -look.z) + yaw_l, C1_TRIPO_TERRACE_H, "C1TripoTerrace")
+		for ti: int in range(tn0, _refuge_props.size()): _refuge_props[ti].set_shader_parameter("base_tint", C1_TERRACE_TINT)
 		# the ancient lantern tree behind the home, its canopy across the frame's top-left (ChatGPT checkpoint 4)
 		var at_path: String = C1_TRIPO_FG + "anctree.glb"
 		if ResourceLoader.exists(at_path):
@@ -4426,20 +4516,64 @@ const C1_ISLANDS: Array = [
 	# capture s12b cells: the centre and lower right read dark (L 20-34) where the concept is bright misty water and
 	# falls (L 43-53): the central massif steps back and left, the near isle smaller and further in.
 	# capture s13: the right isle's dark crown filled the lower right (L 21 vs 43): further out
-	# An optional seventh field stands a Tripo mushroom spire house (lit) that many m tall on the crown. None for now
-	# (captures s16-s18: on the masses' centres they sank into saddles or met the pink giant; the isles' own huts stay).
-	["massif", 690.0, 950.0, 220.0, 0.0, 10.0], ["lowisle", 1080.0, 840.0, 150.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 340.0, 0.0, 0.0],
-	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 300.0, 0.0, -20.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
+	# An optional seventh field stands a Tripo mushroom spire house (lit) that many m tall on the crown ground nearest
+	# the mass's centre (captures s16-s18: a fixed fraction or surface median sank them into saddles).
+	["massif", 690.0, 950.0, 220.0, 0.0, 10.0, 44.0], ["lowisle", 1080.0, 840.0, 150.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 340.0, 0.0, 0.0, 40.0],
+	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 300.0, 0.0, -20.0, 50.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
 	["tower", 880.0, 1300.0, 360.0, 0.0, 90.0], ["lowisle", 770.0, 520.0, 90.0, 0.0, 0.0], ["massif", 430.0, 1500.0, 280.0, 0.0, 0.0],
-	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0], ["massif", 960.0, 1500.0, 260.0, 0.0, 160.0]]
+	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0, 36.0], ["massif", 960.0, 1500.0, 260.0, 0.0, 160.0],
+	# ChatGPT checkpoint 5 (milestone 4): empty gaps between and beneath the bridges; smaller isles (each with its own
+	# hut, trees and falls) fill them at the middle distance.
+	["lowisle", 830.0, 1060.0, 120.0, 0.0, 120.0], ["lowisle", 600.0, 660.0, 70.0, 0.0, -60.0], ["lowisle", 960.0, 1150.0, 150.0, 0.0, 200.0],
+	["lowisle", 1240.0, 1080.0, 170.0, 0.0, 40.0], ["lowisle", 720.0, 1200.0, 140.0, 0.0, -100.0]]
 ## Image-to-3D curved bridges (risebridge: a stone arch rising left to right on its own end ledges), spanning
 ## between masses: [concept pixel x, distance m of the span centre, deck height above LAKE_Y, span m, turn degrees].
 const C1_TRIPO_BRIDGES: Array = [[880.0, 700.0, 230.0, 380.0, 0.0], [700.0, 1180.0, 260.0, 440.0, 15.0]]
-## Image-to-3D fronts face model +X (the sheet's view): turn -90 degrees from +Z-facing.
-const C1_TRIPO_FRONT := -PI * 0.5
+## Image-to-3D fronts: tripo_prep's turntable shows the sheet's view at its 0 degree frame (camera on Blender -Y, glTF
+## and Godot +Z), so the front faces the eye with no turn. (Milestone 4 turned -90 degrees, from a misread of the
+## preview angles, showing the masses' sides.)
+const C1_TRIPO_FRONT := 0.0
 ## Crown ground height as a fraction of each model's height (its trees and huts stand above it).
 const C1_CROWN_FRAC := {"lowisle": 0.8, "massif": 0.84}
 var _c1_spires: Array = []
+## Height-fraction bands of each model's crown ground and upper ledges (upward faces there take glow points and houses).
+const C1_CROWN_BAND := {"lowisle": Vector2(0.55, 0.9), "massif": Vector2(0.5, 0.95), "tower": Vector2(0.6, 0.97), "needle": Vector2(0.7, 0.97)}
+const C1_GLOW_PER_ISLAND := 26
+const C1_GLOW_SHADER := preload("res://assets/world/c1_glow_point.gdshader")
+## Glow point energy (day, night) and colours: warm lanterns and windows, some violet and cyan glowing mushrooms.
+const C1_GLOW_ENERGY := Vector2(0.9, 3.2)
+const C1_GLOW_COLORS: Array = [Color(1.0, 0.62, 0.3), Color(1.0, 0.7, 0.4), Color(1.0, 0.55, 0.25), Color(0.78, 0.5, 1.0), Color(0.5, 0.85, 1.0)]
+var _c1_glow: PackedVector3Array = PackedVector3Array()
+var _c1_glow_mat: ShaderMaterial = null
+func _add_c1_glow(eye: Vector3) -> int:
+	if _c1_glow.is_empty(): return 0
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.0, 1.0)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.use_colors = true
+	multi.mesh = quad
+	multi.instance_count = _c1_glow.size()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261028
+	for i: int in _c1_glow.size():
+		var q: Vector3 = _c1_glow[i]
+		# about 0.3 degrees across at any distance (a few pixels, the concept's pin lights)
+		var s: float = clampf(q.distance_to(eye) * 0.0055, 2.5, 12.0) * rng.randf_range(0.7, 1.3)
+		multi.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3(s, s, 1.0)), q))
+		multi.set_instance_color(i, C1_GLOW_COLORS[rng.randi() % C1_GLOW_COLORS.size()])
+	_c1_glow_mat = ShaderMaterial.new()
+	_c1_glow_mat.shader = C1_GLOW_SHADER
+	_c1_glow_mat.set_shader_parameter("energy", C1_GLOW_ENERGY.x)
+	var node := MultiMeshInstance3D.new()
+	node.name = "ConceptGlowPoints"
+	node.multimesh = multi
+	node.material_override = _c1_glow_mat
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(node)
+	_static.append(node)
+	return _c1_glow.size()
 ## Ground an island may stand on (high eye: forested valley hills as well as the lake).
 const C1_ISLAND_MAX_GROUND := 140.0
 ## Scripted kit pieces are left out where no Tripo version exists (they read generic beside them).
@@ -4466,6 +4600,7 @@ func _c1_point(eye: Vector3, px: float, dist: float) -> Vector2:
 func _add_c1_valley(eye: Vector3) -> Dictionary:
 	var placed: Array = []
 	_c1_bases.clear()
+	_c1_glow.clear()
 	for spec: Array in C1_ISLANDS:
 		var path: String = C1_KIT + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(path): continue
@@ -4492,28 +4627,27 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		if tpath != "" and ResourceLoader.exists(tpath):
 			var turn: float = C1_TRIPO_FRONT + deg_to_rad(float(spec[5]) if spec.size() > 5 else 0.0)
 			_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()])
+			var root_i: Transform3D = _model_root(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base)
+			var band: Vector2 = C1_CROWN_BAND.get(spec[0], Vector2(0.65, 0.92))
+			# ChatGPT checkpoint 5: fine-scale richness between the big forms; lantern, window and mushroom glow points on
+			# each mass's crown ground and ledges (upward faces in its crown band)
+			var gpts: PackedVector3Array = _model_crown_points(tpath, band.x, band.y, C1_GLOW_PER_ISLAND, 7000 + placed.size())
+			for gi: int in gpts.size():
+				_c1_glow.append(root_i * gpts[gi] + Vector3(0.0, 2.0, 0.0))
 			var spire_path: String = C1_TRIPO_FG + "spire.glb"
 			if spec.size() > 6 and ResourceLoader.exists(spire_path):
 				var sh: float = float(spec[6])
-				# crown ground: the model's surface over a 3x3 grid near its centre; trees and huts are the high outliers,
-				# so the spire stands where the surface is nearest the median (capture s16: at a fixed fraction they sank)
-				var island_yaw: float = atan2(to_eye.x, to_eye.y) + turn
-				var w_c: float = float(dims[1]) * (top - base) / float(dims[0])
-				var cands: Array = []
-				for gx: int in 3:
-					for gz: int in 3:
-						var q := Vector2(p.x + (gx - 1) * w_c * 0.12, p.y + (gz - 1) * w_c * 0.12)
-						var ty: float = _model_top_at(tpath, Vector3(p.x, base, p.y), island_yaw, top - base, q)
-						if ty > -INF: cands.append([ty, q])
+				# crown ground (upward faces in the crown band) nearest the mass's centre in plan (captures s16-s18: a fixed
+				# fraction and a surface median both sank the house into saddles)
+				var cps: PackedVector3Array = _model_crown_points(tpath, band.x + (band.y - band.x) * 0.4, band.y, 60, 9000 + placed.size())
 				var sp := Vector3(p.x, base + (top - base) * float(C1_CROWN_FRAC.get(spec[0], 0.85)), p.y)
-				if not cands.is_empty():
-					var ys: Array = cands.map(func(e: Array) -> float: return float(e[0]))
-					ys.sort()
-					var med: float = float(ys[ys.size() / 2])
-					var pick: Array = cands[0]
-					for e: Array in cands:
-						if absf(float(e[0]) - med) < absf(float(pick[0]) - med): pick = e
-					sp = Vector3((pick[1] as Vector2).x, float(pick[0]) - 2.0, (pick[1] as Vector2).y)
+				var best_d: float = INF
+				for cp: Vector3 in cps:
+					var wp: Vector3 = root_i * cp
+					var dd: float = Vector2(wp.x - p.x, wp.z - p.y).length()
+					if dd < best_d:
+						best_d = dd
+						sp = wp - Vector3(0.0, 1.5, 0.0)
 				var spire_ok: bool = _refuge_model(spire_path, sp, atan2(to_eye.x, to_eye.y) + C1_TRIPO_FRONT, sh, "C1Spire%d" % placed.size())
 				_c1_spires.append([spire_ok, _v3(sp), snappedf(top, 1.0)])
 				_refuge_light(sp + Vector3(0.0, sh * 0.35, 0.0) + Vector3(to_eye.x, 0.0, to_eye.y).normalized() * sh * 0.15, sh * 0.9, "C1SpireLight%d" % placed.size())
@@ -4536,7 +4670,8 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			var long_m: float = maxf(bbox.size.x, bbox.size.z)
 			var h: float = float(spec[3]) * bbox.size.y / maxf(long_m, 0.001)
 			var to_eye := Vector2(eye.x - c.x, eye.z - c.y)
-			var turn: float = (C1_TRIPO_FRONT if bbox.size.z >= bbox.size.x else 0.0) + deg_to_rad(float(spec[4]))
+			# span across the view: a span on the model's z turns a quarter (independent of C1_TRIPO_FRONT)
+			var turn: float = (-PI * 0.5 if bbox.size.z >= bbox.size.x else 0.0) + deg_to_rad(float(spec[4]))
 			var base_y: float = LAKE_Y + float(spec[2]) - h
 			_refuge_model(bpath_t, Vector3(c.x, base_y, c.y), atan2(to_eye.x, to_eye.y) + turn, h, "C1TripoBridge%d" % bridges.size())
 			bridges.append(["risebridge", snappedf(c.x, 1.0), snappedf(c.y, 1.0), snappedf(h, 1.0)])
@@ -7233,7 +7368,9 @@ const C1_LOOK := {"day_sky_top": "3c40a0", "day_sky_horizon": "d0a0c4", "day_fog
 	"fog_begin": 350.0,
 	# High eye: the frame top is only ~15 degrees above the horizon, below the golden zenith band (0.40-0.56), so the
 	# whole sky read as the warm horizon glow; the violet zenith starts low and the glow narrows to the far gap.
-	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 6.0}
+	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 6.0,
+	# Milestone 4 review: the horizon giants hazed to cream; concept-1's far caps are lilac.
+	"far_cap_color": "a090d4"}
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints. With C1_VISTA on, C1_LOOK supplies
 ## the defaults under look_override for this call.
@@ -7416,6 +7553,9 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	# (review 09); the sky there measures ~L*60, so rain blends toward 968eaa at 0.93 (0.85 left the underside 16 below the sky, geology 144833).
 	var cap_fog: Color = environment.fog_light_color.lerp(horizon_now, environment.fog_aerial_perspective).lerp(Color("b4abc6"), rain).srgb_to_linear()
 	var cap_amount: float = lerpf(lerpf(float(look_override.get("far_fog", GOLDEN_FAR_FOG)) if look_depth else 0.9, 0.55, night), 0.93, rain)
+	# Optional haze colour for the horizon giants (concept-1: lilac far caps, not the warm horizon's cream).
+	if look_override.has("far_cap_color"):
+		cap_fog = Color(str(look_override["far_cap_color"])).lerp(Color("b4abc6"), rain).srgb_to_linear().lerp(cap_fog, night)
 	for material: ShaderMaterial in [_horizon_cap_material, _horizon_stem_material]:
 		if material != null: material.set_shader_parameter("fog_cap", Color(cap_fog.r, cap_fog.g, cap_fog.b, cap_amount))
 	var sky: ShaderMaterial = _world.get("_cloud_sky_material")
@@ -7494,6 +7634,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 	for light: OmniLight3D in _c1_lights: light.light_energy = lerpf(C1_LIGHT_ENERGY.x, C1_LIGHT_ENERGY.y, maxf(night, rain * 0.6))
+	if _c1_glow_mat != null: _c1_glow_mat.set_shader_parameter("energy", lerpf(C1_GLOW_ENERGY.x, C1_GLOW_ENERGY.y, maxf(night, rain * 0.6)))
 	# Blender models: window glass, gills and lanterns brighter at night and in rain.
 	for glow_m: StandardMaterial3D in _blender_glow:
 		if glow_m.has_meta("day_fill"):
