@@ -45,6 +45,13 @@ uniform float sparkle_cell = 12.0;
 // Darkens the branch geometry between trunk and cap (side faces), so the glowing gills read between
 // darker limbs as in the concept rather than pale lavender limbs over a pale membrane.
 uniform float branch_dark = 0.0;
+// M10 (Fable review, concept-1 samples: cap #916C97 mauve, rim #BD9DAC rose, trunk #DFB1B7 glowing): palette tones,
+// a rose rim glow and warm light along the trunk's veins. Defaults keep the M9 look.
+uniform vec3 cap_tone = vec3(0.48, 0.35, 0.69);
+uniform vec3 bark_tone = vec3(0.48, 0.36, 0.62);
+uniform vec3 rim_color = vec3(0.807, 0.392, 0.578);
+uniform float rim_glow = 0.0;
+uniform float trunk_glow = 0.0;
 // Own haze: fog colour (linear) and amount lerped from haze.x at range.x to haze.y at range.y (m from the eye).
 uniform vec3 haze_color = vec3(0.6, 0.55, 0.75);
 uniform vec2 haze = vec2(0.4, 0.8);
@@ -113,8 +120,8 @@ void fragment() {
 		float core = 1.0 - smoothstep(0.18 + 0.10 * gold_spread, 0.90 + 0.12 * gold_spread, radius_fraction);
 		float detail = clamp(dot(c, vec3(0.3, 0.55, 0.15)) / 0.28, 0.45, 1.45);
 		// Linear lilac palettes retain the texture's relief and a share of its original colour.
-		vec3 bark = mix(c, vec3(0.48, 0.36, 0.62) * detail, 0.78);
-		vec3 cap = mix(c, vec3(0.48, 0.35, 0.69) * detail, 0.76);
+		vec3 bark = mix(c, bark_tone * detail, 0.78);
+		vec3 cap = mix(c, cap_tone * detail, 0.76);
 		float outer_cap = mix(1.0, cap_shade, smoothstep(0.30, 0.95, radius_fraction));
 		cap *= outer_cap;
 		vec3 violet = vec3(0.270, 0.147, 0.807) * clamp(mx / 0.7, 0.45, 1.2);
@@ -150,6 +157,12 @@ void fragment() {
 		float warm_energy = vein * mx * (0.06 + 1.00 * core)
 			+ gills * (0.10 + 0.58 * core) + (0.045 + 0.035 * gold_spread) * core * clamp(detail, 0.6, 1.2);
 		tree_emission += under_color * under_glow * under_surface * warm_energy;
+		// Rose rim: the cap's outer band and edge (top and underside) glow, as concept-1's membrane edge does.
+		float rim = smoothstep(0.93, 0.995, radius_fraction) * smoothstep(0.50, 0.58, height_fraction);
+		tree_emission += rim_color * rim_glow * rim * (0.55 + 0.45 * mx);
+		// Warm light along the trunk's texture veins below the cap.
+		float trunk_zone = (1.0 - smoothstep(0.50, 0.60, height_fraction)) * (1.0 - under_surface) * (1.0 - cap_top);
+		tree_emission += under_color * trunk_glow * trunk_zone * (0.25 * vein + 0.12 * smoothstep(0.35, 0.8, mx));
 		// Violet-blue highlights on the outer fine gills, where the gold thins toward the rim.
 		tree_emission += vein_cool * vein_cool_glow * under_surface * fine_gill * (1.0 - 0.75 * core)
 			* (1.0 - smoothstep(0.88, 1.01, radius_fraction));
