@@ -5190,8 +5190,11 @@ const C1_FG_PROPS: Array = [
 	# concept-1 has flowerbeds, ferns and lanterns there): low beds, two glowing lilies and a lantern.
 	["shrub", 380.0, 690.0, 30.0, 1.2, 40.0, 0.25, 0.0, "ground"], ["fern", 455.0, 705.0, 30.0, 1.3, 110.0, 0.1, 0.6, "ground"],
 	["lily", 525.0, 700.0, 30.0, 0.8, 200.0, 0.6, 0.5, "ground"], ["shrub", 590.0, 688.0, 30.0, 1.1, 260.0, 0.25, 0.0, "ground"],
-	["lantern", 425.0, 652.0, 30.0, 2.4, 30.0, 0.12, 0.0, "ground"], ["fern", 345.0, 650.0, 30.0, 1.0, 300.0, 0.1, 0.6, "ground"],
-	["lily", 335.0, 712.0, 30.0, 0.7, 60.0, 0.6, 0.5, "ground"],
+	["fern", 345.0, 650.0, 30.0, 1.0, 300.0, 0.1, 0.6, "ground"],
+	# M13e (cells: x 320-400, y 630-720 read L 8 against 35; concept-1's big glowing violet bloom sits there; the path
+	# lantern this close read as a black post): one large violet bloom, its own tint and glow (eleventh, twelfth fields).
+	# (sweep m13x: at 1.9 m the bloom read pale pink-white and the frame distance rose; kept small)
+	["lily", 372.0, 700.0, 30.0, 1.15, 120.0, 0.25, 0.0, "ground", 1.0, Vector3(0.66, 0.42, 1.0), 0.75],
 	["shrub", 560.0, 600.0, 30.0, 1.1, 120.0, 0.25, 0.0, "ground"], ["fern", 612.0, 628.0, 30.0, 1.2, 30.0, 0.1, 0.6, "ground"],
 	# (sweep m13l: two wisteria curtains here hid the hearth and lantern in one dark mass; low growth only)
 	["shrub", 70.0, 440.0, 30.0, 1.05, 70.0, 0.18, 0.0, "ground"], ["fern", 160.0, 445.0, 30.0, 1.1, 150.0, 0.1, 0.6, "ground"],
@@ -5565,6 +5568,8 @@ func _add_c1_fg_props(eye: Vector3) -> Array:
 			for pi: int in range(n0, _refuge_props.size()):
 				_refuge_props[pi].set_shader_parameter("cool_glow", float(spec[7]))
 				if str(spec[0]) == "lily": _refuge_props[pi].set_shader_parameter("base_tint", C1_LILY_TINT)
+				if spec.size() > 10: _refuge_props[pi].set_shader_parameter("base_tint", spec[10])
+				if spec.size() > 11: _refuge_props[pi].set_shader_parameter("pale_glow", float(spec[11]))
 			if str(spec[0]) == "mushcluster": _c1_cluster_mats(n0, base, h)
 			if str(spec[0]) == "lantern":
 				# its glass hangs at ~0.72 of the post's height
@@ -5587,7 +5592,9 @@ const C1_TERRACE_TINT := Vector3(0.8, 0.74, 0.76)
 ## distant caps at L 32-48): further left and a little smaller.
 const C1_ANC_TREE_AT := Vector3(-25.0, -2.0, -32.0)
 const C1_ANC_TREE_H := 29.0
-const C1_ANC_TREE_TURN := 0.0
+## M13e (cells: x 160-480, y 0-180 still L 7-21 against the concept's 32-48 under the long right-hand limb; turn
+## sweeps 60/90/120/-60: 60 swings that limb back and opens the sky beside the trunk, frame 16.3 -> 16.0).
+const C1_ANC_TREE_TURN := 60.0
 const C1_ANC_TREE_TINT := Vector3(1.4, 1.25, 1.05)
 ## Capture s33 cells: the lily corner read L 39 against the concept's 25 (its glowing blooms sit in dark foliage).
 ## M10d (cells: lower-left L 37-46 vs the concept's 21-29): dimmer.
