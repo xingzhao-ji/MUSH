@@ -5806,27 +5806,33 @@ var _c1_glow_mat: ShaderMaterial = null
 ## (M15b, the user: "too dense will trigger trypophobia, not too dense": fewer, spaced at least C1_DREAM_GAP px apart on
 ## screen, no clusters; the M15 extra valley glow points are reverted)
 const C1_SPORES := [95, Vector2(300.0, 1280.0), Vector2(110.0, 640.0), Vector2(260.0, 1700.0)]
-const C1_SPORE_COLORS: Array = [Color(0.3, 0.85, 1.0), Color(0.35, 0.75, 1.0), Color(0.62, 0.4, 1.0), Color(0.75, 0.45, 1.0), Color(1.0, 0.5, 0.78), Color(1.0, 0.72, 0.32)]
+## (M16b, ChatGPT checkpoint 25: several spores read as white-hot beads; muted amber #F2B36C, cyan #8CCBD4, lilac #A58DD1
+## on lower-intensity soft halos, linear values)
+const C1_SPORE_COLORS: Array = [Color(0.888, 0.451, 0.15), Color(0.262, 0.597, 0.658), Color(0.376, 0.266, 0.638), Color(0.262, 0.597, 0.658), Color(0.376, 0.266, 0.638)]
 ## (M15c, Fable: the crown lights at x 409-455 bunched with the tree's lanterns, 17-34 px apart; kept left of x 400)
-const C1_FAIRY := [20, Vector2(0.0, 400.0), Vector2(0.0, 215.0), Vector2(16.0, 34.0)]
+## (M16b, ChatGPT checkpoint 25: the crown lights at x 40-240, y 10-150 flirted with clustering; fewer, wider apart)
+const C1_FAIRY := [14, Vector2(0.0, 400.0), Vector2(0.0, 215.0), Vector2(16.0, 34.0)]
 ## minimum screen spacing (px) between spores, and between fairy lights
-const C1_DREAM_GAP := Vector2(62.0, 42.0)
+## M16b (ChatGPT checkpoint 25: spores overlapped the settlement lights at x 900-1250, y 170-310; the combined pattern,
+## not each system alone, must stay sparse): a spore also keeps C1_DREAM_GAP.z px from every valley glow point.
+const C1_DREAM_GAP := Vector3(62.0, 55.0, 30.0)
 ## (M15b: lower by day, the bridge string read cream-white against the pale mist at 1.5; M15c, Fable: 60% by day)
 const C1_DREAM_ENERGY := Vector2(0.9, 3.2)
 var _c1_dream_mat: ShaderMaterial = null
 ## M15b (m15a review: at 0.0065 x distance the spores were sub-pixel pin pricks): larger spores on a softer, wider
 ## halo (core_k, halo_amt, halo_k on c1_glow_point) with their own day/night energy, so they read as glowing motes.
 const C1_SPORE_SIZE := Vector3(0.012, 3.0, 20.0)
-const C1_SPORE_SOFT := Vector3(7.0, 0.6, 2.4)
+const C1_SPORE_SOFT := Vector3(5.0, 0.7, 2.4)
 ## (M15c, Fable: by day the spores read as white lint on the lens; faint by day, full at night)
-const C1_SPORE_ENERGY := Vector2(0.55, 3.0)
+const C1_SPORE_ENERGY := Vector2(0.55, 1.4)
 var _c1_spore_mat: ShaderMaterial = null
 var _c1_leaf_mats: Array = []
 ## M15b: concept-1's bridges carry a fine line of small warm lights. String lights along the principal viaduct's near
 ## parapet, filled by _add_c1_principal_viaduct as [position, size, colour]: [spacing m, size per m of distance,
 ## spacing jitter]. (M15c, Fable: 58 points at a 7-8 px pitch were the frame's one dense, regular row, a trypophobia
 ## risk and LED-like; about 20 hung lanterns at 22-25 m with an uneven pitch)
-const C1_STRING := Vector3(23.0, 0.0072, 0.25)
+## (M16b, ChatGPT checkpoint 25: 23 still read as a dotted chain at x 600-1020; about 11 irregular singles)
+const C1_STRING := Vector3(46.0, 0.0072, 0.35)
 var _c1_dream_string: Array = []
 
 func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
@@ -5838,6 +5844,16 @@ func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
 	var spores: int = 0
 	var tries: int = 0
 	var taken: Array = []
+	# screen cells of the valley glow points and the bridge lanterns (C1_DREAM_GAP.z px cells)
+	var lit_cells: Dictionary = {}
+	var lit: Array = Array(_c1_glow)
+	for item: Array in _c1_dream_string: lit.append(item[0])
+	for g: Vector3 in lit:
+		var gp: Vector2 = _c1_viaduct_pixel(eye, g)
+		if not gp.is_finite(): continue
+		var gc := Vector2i(floori(gp.x / C1_DREAM_GAP.z), floori(gp.y / C1_DREAM_GAP.z))
+		if not lit_cells.has(gc): lit_cells[gc] = []
+		(lit_cells[gc] as Array).append(gp)
 	while spores < int(C1_SPORES[0]) and tries < int(C1_SPORES[0]) * 12:
 		tries += 1
 		var px: float = rng.randf_range(C1_SPORES[1].x, C1_SPORES[1].y)
@@ -5845,6 +5861,11 @@ func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
 		var crowded: bool = false
 		for o: Vector2 in taken:
 			if o.distance_to(Vector2(px, py)) < C1_DREAM_GAP.x: crowded = true
+		var cell := Vector2i(floori(px / C1_DREAM_GAP.z), floori(py / C1_DREAM_GAP.z))
+		for dy: int in range(-1, 2):
+			for dx: int in range(-1, 2):
+				for o: Vector2 in lit_cells.get(cell + Vector2i(dx, dy), []):
+					if o.distance_to(Vector2(px, py)) < C1_DREAM_GAP.z: crowded = true
 		if crowded: continue
 		var ray: Vector3 = _c1_pixel_ray(eye, px, py)
 		var hd: float = rng.randf_range(C1_SPORES[3].x, C1_SPORES[3].y)
