@@ -2767,18 +2767,24 @@ const C1_TREE_ON_TOWN := true
 const C1_TREE_UNDER := Vector2(1.35, 1.2)
 const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 ## M10 (Fable review; concept samples cap #916C97, rim #BD9DAC, trunk #DFB1B7): no outer darkening, no limb darkening.
-const C1_TREE_M9 := [0.95, 0.6, 1.35, 1.3, 1.2, 0.0]
+const C1_TREE_M9 := [0.8, 0.6, 1.35, 1.3, 1.2, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 ## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
 ## (M13, Fable eighth look: trunk and branches deep blue-violet, concept #55588B / #736DB0, so the gold pops between them)
 ## (M13c, Fable tenth look runner-up: cap top #cc99b7 against the concept's #e39392, gold leaking near the rim)
-const C1_TREE_M10 := [Vector3(0.56, 0.24, 0.25), Vector3(0.13, 0.12, 0.38), 0.75, 1.1]
+## (M14, Fable twelfth look: right hue but too light, cap top median #d19eb1 against #c9909f; a broad near-white
+## crown sheen p90 #f2cdd2 read as a glossy dome: rougher cap, 10% darker, gold at the rim as the underside leaks)
+const C1_TREE_M10 := [Vector3(0.40, 0.17, 0.20), Vector3(0.13, 0.12, 0.38), 0.75, 1.1]
+const C1_HERO_ROUGH_MIN := 0.85
+## (albedo only: the gold underside is emission and keeps its strength)
+const C1_HERO_BASE_TINT := Vector3(0.82, 0.8, 0.86)
+const C1_HERO_CAP_RIM_COLOR := Vector3(0.90, 0.55, 0.27)
 ## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
 const C1_HERO_RIM := Vector3(0.86, 0.44, 0.26)
 ## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
 ## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
-const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.25)
-const C1_HERO_CAP_SUN_COLOR := Vector3(0.75, 0.28, 0.18)
+const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.5)
+const C1_HERO_CAP_SUN_COLOR := Vector3(0.56, 0.2, 0.14)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.09, 0.09)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
@@ -4533,6 +4539,8 @@ var _c1_outer_material: ShaderMaterial
 const C1_FAR_TREES: Array = [["curled", 700.0, 155.0, 1680.0, 135.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
 	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0],
 	["mushtree2", 535.0, 140.0, 1480.0, 170.0, 35.0], ["mushtree", 800.0, 225.0, 1900.0, 45.0, 115.0]]
+## (sweep m14a: concept-1's big glowing cap in the right foreground cannot be matched from this eye: anything below
+## frame y ~193 is under eye level, so a cap there shows its pale top, not its gold underside; frame 16.0 -> 16.8)
 ## M10e (Fable: a far cap at frame 440-535 x 85-125 read as a flat purple saucer, no underside glow): brighter.
 const C1_FAR_TREE_UNDER := Vector2(1.15, 1.2)
 # Mushrooms keep their lit surface at middle distance; the rock ring retains its denser haze.
@@ -4589,6 +4597,9 @@ func _c1_tree_mats(n0: int, at: Vector3, height: float, radius: float, hero: boo
 			m.set_shader_parameter("cap_sun_color", C1_HERO_CAP_SUN_COLOR)
 			m.set_shader_parameter("cap_sun_glow", C1_HERO_CAP_SUN.y)
 			m.set_shader_parameter("cap_rim_glow", C1_HERO_CAP_SUN.z)
+			m.set_shader_parameter("cap_rim_color", C1_HERO_CAP_RIM_COLOR)
+			m.set_shader_parameter("rough_min", C1_HERO_ROUGH_MIN)
+			m.set_shader_parameter("base_tint", C1_HERO_BASE_TINT)
 
 func _add_c1_far(eye: Vector3) -> Dictionary:
 	var out: Dictionary = {}
@@ -5875,6 +5886,118 @@ func _c1_shade_by_height(mesh: ArrayMesh) -> ArrayMesh:
 	out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 	return out
 
+## M14 (concept-1's lower right: a glowing turquoise river winds through the lit forest below the falls; ours read as
+## one dark canopy under mist): a river ribbon on the ground the frame sees, its band kept clear of canopy trees.
+## Control points [pixel x, pixel y, width px].
+const C1_RIVER_PX: Array = [Vector3(772.0, 514.0, 12.0), Vector3(850.0, 532.0, 16.0), Vector3(950.0, 524.0, 19.0),
+	Vector3(1045.0, 548.0, 23.0), Vector3(1135.0, 584.0, 28.0), Vector3(1215.0, 600.0, 31.0)]
+var _c1_river_report: Dictionary = {}
+
+## Pixel distance from the river's centre line minus its half width (negative inside the band).
+func _c1_river_dist_px(px: float, py: float) -> float:
+	var best: float = INF
+	for i: int in C1_RIVER_PX.size() - 1:
+		var a: Vector3 = C1_RIVER_PX[i]
+		var b: Vector3 = C1_RIVER_PX[i + 1]
+		var ab := Vector2(b.x - a.x, b.y - a.y)
+		var t: float = clampf(Vector2(px - a.x, py - a.y).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+		best = minf(best, Vector2(px, py).distance_to(Vector2(a.x, a.y) + ab * t) - lerpf(a.z, b.z, t) * 0.5)
+	return best
+
+func _c1_ray_ground(eye: Vector3, px: float, py: float) -> Vector3:
+	var ray: Vector3 = _c1_pixel_ray(eye, px, py)
+	var t: float = 200.0
+	while t < 1600.0:
+		var q: Vector3 = eye + ray * t
+		if q.y <= terrain_height(q.x, q.z):
+			var lo: float = t - 16.0
+			var hi: float = t
+			for _k: int in 4:
+				var mid: float = (lo + hi) * 0.5
+				var qm: Vector3 = eye + ray * mid
+				if qm.y <= terrain_height(qm.x, qm.z): hi = mid
+				else: lo = mid
+			var hit: Vector3 = eye + ray * hi
+			return Vector3(hit.x, terrain_height(hit.x, hit.z), hit.z)
+		t += 16.0
+	return Vector3.INF
+
+func _add_c1_river(eye: Vector3) -> Dictionary:
+	if not _c1_on(): return {"built": false}
+	var centres: Array = []
+	var px_m: float = 2.0 * tan(deg_to_rad(30.0)) / 720.0
+	for i: int in C1_RIVER_PX.size() - 1:
+		var a: Vector3 = C1_RIVER_PX[i]
+		var b: Vector3 = C1_RIVER_PX[i + 1]
+		var steps: int = maxi(1, int(Vector2(b.x - a.x, b.y - a.y).length() / 4.0))
+		for k: int in steps + (1 if i == C1_RIVER_PX.size() - 2 else 0):
+			var q: Vector3 = a.lerp(b, float(k) / float(steps))
+			var hit: Vector3 = _c1_ray_ground(eye, q.x, q.y)
+			if hit == Vector3.INF or hit.y < LAKE_Y + 1.0: continue
+			centres.append([hit, q.z * hit.distance_to(eye) * px_m])
+	if centres.size() < 3: return {"built": false, "samples": centres.size()}
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var idx := PackedInt32Array()
+	var along: float = 0.0
+	for j: int in centres.size():
+		var p: Vector3 = centres[j][0]
+		var nxt: Vector3 = centres[mini(j + 1, centres.size() - 1)][0]
+		var prv: Vector3 = centres[maxi(j - 1, 0)][0]
+		var dir := Vector2(nxt.x - prv.x, nxt.z - prv.z).normalized()
+		var side := Vector2(-dir.y, dir.x)
+		var hw: float = float(centres[j][1]) * 0.5
+		if j > 0: along += p.distance_to(centres[j - 1][0])
+		for e: float in [-1.0, 0.0, 1.0]:
+			var v := Vector3(p.x + side.x * hw * e, 0.0, p.z + side.y * hw * e)
+			v.y = terrain_height(v.x, v.z) + 3.0
+			verts.append(v)
+			normals.append(Vector3.UP)
+			uvs.append(Vector2(e * 0.5 + 0.5, along / 40.0))
+	for j: int in centres.size() - 1:
+		for c: int in 2:
+			var a0: int = j * 3 + c
+			idx.append_array([a0, a0 + 3, a0 + 1, a0 + 1, a0 + 3, a0 + 4])
+	var arr: Array = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = normals
+	arr[Mesh.ARRAY_TEX_UV] = uvs
+	arr[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color("2f8597")
+	mat.roughness = 0.08
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.emission_enabled = true
+	mat.emission = Color("5cc4d4")
+	# day/night fill through the Blender-glow registry (the turquoise glows a little more at night)
+	mat.set_meta("day_fill", 0.4)
+	mat.set_meta("day_fill_col", Color("5cc4d4"))
+	mat.set_meta("night_fill", 0.75)
+	mat.set_meta("night_fill_col", Color("5aa8d0"))
+	_blender_glow.append(mat)
+	var node := MeshInstance3D.new()
+	node.name = "C1River"
+	node.mesh = mesh
+	node.material_override = mat
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(node)
+	_static.append(node)
+	# warm lights along the banks (concept-1's riverside hamlets)
+	for j: int in range(2, centres.size(), 8):
+		var p: Vector3 = centres[j][0]
+		if p.distance_to(eye) < 520.0: continue
+		var nxt: Vector3 = centres[mini(j + 1, centres.size() - 1)][0]
+		var dir := Vector2(nxt.x - p.x, nxt.z - p.z).normalized()
+		var off: float = float(centres[j][1]) * (0.9 if j % 2 == 0 else -0.9)
+		var g := Vector3(p.x - dir.y * off, 0.0, p.z + dir.x * off)
+		_c1_glow.append(Vector3(g.x, terrain_height(g.x, g.z) + 3.0, g.z))
+	return {"built": true, "samples": centres.size(), "triangles": idx.size() / 3, "colliders": 0,
+		"width_m": [snappedf(float(centres[0][1]), 0.1), snappedf(float(centres[centres.size() - 1][1]), 0.1)]}
+
 ## M10 (Fable review: an untextured near-black hump at frame 880-1100 x 540-700, the valley hills below the eye):
 ## forest canopy on the terrain the frame sees there, through the ledge forest's instancing and haze.
 const C1_CANOPY_PX := Vector4(760.0, 1290.0, 500.0, 730.0)
@@ -5891,7 +6014,14 @@ func _c1_near_canopy_points(eye: Vector3) -> int:
 		var px: float = C1_CANOPY_PX.x
 		var col: int = 0
 		while px <= C1_CANOPY_PX.y:
-			var ray: Vector3 = _c1_pixel_ray(eye, px + rng.randf_range(-4.0, 4.0), py + rng.randf_range(-3.0, 3.0))
+			var jx: float = rng.randf_range(-4.0, 4.0)
+			var jy: float = rng.randf_range(-3.0, 3.0)
+			# (M14: the river's band stays clear of canopy trees)
+			if _c1_river_dist_px(px + jx, py + jy) < 16.0:
+				px += C1_CANOPY_STEP.x
+				col += 1
+				continue
+			var ray: Vector3 = _c1_pixel_ray(eye, px + jx, py + jy)
 			# 16 m march, then three bisections (the 8 m march alone cost ~1 s of startup)
 			var t: float = maxf(260.0, float(prev_t.get(col, 276.0)) - 48.0)
 			var back: Vector3 = eye + ray * t
@@ -5937,7 +6067,9 @@ func _add_c1_ledge_forest(eye: Vector3) -> Dictionary:
 	# M10d: lit hamlets in the near forest (concept-1's lower right): warm lights gathered around a few centres
 	var hamlets: PackedVector3Array = PackedVector3Array()
 	for hi: int in [37, 211, 433, 640, 902, 1190, 1377]:
-		if hi < _c1_canopy_pts.size(): hamlets.append(_c1_canopy_pts[hi])
+		# (M14: the river's clear band renumbers the canopy points; a hamlet landing near the frame's edge read as
+		# one white bloom at night, so the near forest edge gets none)
+		if hi < _c1_canopy_pts.size() and _c1_canopy_pts[hi].distance_to(eye) > 650.0: hamlets.append(_c1_canopy_pts[hi])
 	for qi: int in all_pts.size():
 		var q: Vector3 = all_pts[qi]
 		var canopy: bool = qi >= _c1_ledge_pts.size()
@@ -6140,6 +6272,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 	var vt: int = Time.get_ticks_usec()
 	var canopy_n: int = _c1_near_canopy_points(eye)
 	_c1_valley_ms["canopy_march"] = (Time.get_ticks_usec() - vt) / 1000
+	_c1_river_report = _add_c1_river(eye)
 	var ridges: Array = _add_c1_valley_ridges(landforms)
 	# far rock spires on the basin's rim and walls (concept-1: distant spires layer the horizon left of the tree; capture
 	# s28: that band was a flat pale wall), standing on whatever ground is there
@@ -6244,7 +6377,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
 		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
 		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
-	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest}
+	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED, "ledge_forest": ledge_forest, "river": _c1_river_report}
 
 ## Low, overlapping shoulders join selected cliff feet; the open central water corridor remains.
 ## Reuse the irregular massif silhouette and place its bottom beneath the actual basin ground.

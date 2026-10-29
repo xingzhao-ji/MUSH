@@ -7,6 +7,8 @@ uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic;
 uniform sampler2D rough_tex : hint_default_white, filter_linear_mipmap;
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap;
 uniform bool has_normal = false;
+// Roughness floor (0.35 as before); the concept-1 hero cap raises it so its crown loses the glossy sheen.
+uniform float rough_min = 0.35;
 uniform vec3 tint = vec3(1.0);
 uniform vec3 base_tint = vec3(1.0);
 uniform float desat = 0.0;
@@ -106,7 +108,7 @@ void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb;
 	vec3 cc = mix(c, vec3(dot(c, vec3(0.3, 0.55, 0.15))), desat);
 	ALBEDO = cc * base_tint * tint;
-	ROUGHNESS = clamp(texture(rough_tex, UV).g, 0.35, 1.0);
+	ROUGHNESS = clamp(texture(rough_tex, UV).g, rough_min, 1.0);
 	METALLIC = 0.0;
 	if (has_normal) NORMAL_MAP = texture(normal_tex, UV).rgb;
 	float mx = max(c.r, max(c.g, c.b));
