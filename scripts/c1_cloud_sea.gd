@@ -29,6 +29,8 @@ const BANKS: Array = [
 	[920.0, 2200.0, 53.0, 430.0, 100.0, 350.0, 0.011, 0.55],
 	# M10 (ChatGPT checkpoint 12: the viaduct's even arch cadence read as a wall): mist around its middle piers
 	[800.0, 900.0, 70.0, 150.0, 75.0, 110.0, 0.011, 0.8],
+	# M13 (ChatGPT checkpoint 19: mist breaking the viaduct's centre so it recedes)
+	[790.0, 880.0, 150.0, 120.0, 55.0, 95.0, 0.008, 1.0],
 	# M10b (ChatGPT checkpoint 13: the smooth basin-wall domes at frame 440-900 x 60-310 enclose the scene; Fable: lit
 	# cloud puffs): sunset cloud masses in front of the domes, so the backdrop reads as clouds and staggered crests.
 	# (M10e, ChatGPT checkpoint 15 / Fable: sunset cloud #F2C1A6, lit tops #F3CDD0, bases #9A8FC8; a ninth field marks

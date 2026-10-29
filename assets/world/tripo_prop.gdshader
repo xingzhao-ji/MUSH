@@ -56,6 +56,18 @@ uniform float cap_sun_mix = 0.0;
 uniform float cap_sun_glow = 0.0;
 uniform vec3 cap_rim_color = vec3(0.880, 0.497, 0.665);
 uniform float cap_rim_glow = 0.0;
+// Built stone (concept-1's viaducts): world-metre courses and joints with a per-block tone, warm light on
+// up-facing ledges (deck, pier caps) and darker arch soffits, so a distant span keeps its masonry read
+// instead of one flat shaded face. Off at the defaults.
+uniform float stone_relief = 0.0;
+uniform vec2 stone_block = vec2(6.0, 2.8);
+uniform vec3 ledge_color = vec3(0.95, 0.62, 0.32);
+uniform float ledge_glow = 0.0;
+uniform float soffit_dark = 0.0;
+// Sky bounce on the masonry (backlit faces otherwise fall to the haze colour) and a lit deck band:
+// cornice = (deck top y in world metres, band depth); off while its depth is 0.
+uniform float stone_fill = 0.0;
+uniform vec2 cornice = vec2(0.0, 0.0);
 varying float world_y;
 varying vec2 world_xz;
 
@@ -191,5 +203,26 @@ void fragment() {
 		// Retain texture value variation while shifting peach branches toward amber.
 		ALBEDO = mix(ALBEDO, under_color * mx * tint, underside * 0.65);
 		EMISSION += under_color * under_glow * underside * mx;
+	}
+	if (stone_relief > 0.0 || ledge_glow > 0.0 || soffit_dark > 0.0 || stone_fill > 0.0) {
+		vec3 n_world = (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz;
+		float along = abs(n_world.x) > abs(n_world.z) ? world_xz.y : world_xz.x;
+		float course = world_y / stone_block.y;
+		float row = floor(course);
+		float run = along / stone_block.x + 0.5 * mod(row, 2.0);
+		vec2 cell = vec2(fract(run), fract(course));
+		vec2 foot = fwidth(vec2(run, course));
+		float joint = max(1.0 - smoothstep(0.0, max(foot.x * 1.5, 0.05), min(cell.x, 1.0 - cell.x)),
+			1.0 - smoothstep(0.0, max(foot.y * 1.5, 0.07), min(cell.y, 1.0 - cell.y)));
+		joint *= 1.0 - smoothstep(0.35, 0.9, max(foot.x, foot.y));
+		float block = fract(sin(dot(vec2(floor(run), row), vec2(12.9898, 78.233))) * 43758.5453);
+		ALBEDO *= mix(1.0, mix(0.84, 1.12, block) * (1.0 - 0.5 * joint), stone_relief);
+		ALBEDO *= 1.0 - soffit_dark * smoothstep(0.35, 0.8, -n_world.y);
+		EMISSION += ledge_color * ledge_glow * smoothstep(0.55, 0.9, n_world.y);
+		EMISSION += ALBEDO * stone_fill * (1.0 - smoothstep(0.35, 0.8, -n_world.y));
+		if (cornice.y > 0.0) {
+			EMISSION += ledge_color * ledge_glow * smoothstep(cornice.x - cornice.y, cornice.x - cornice.y * 0.3, world_y)
+				* (1.0 - smoothstep(cornice.x + 0.5, cornice.x + 2.0, world_y)) * (1.0 - 0.6 * joint);
+		}
 	}
 }

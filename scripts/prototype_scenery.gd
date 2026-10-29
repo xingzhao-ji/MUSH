@@ -2767,18 +2767,19 @@ const C1_TREE_ON_TOWN := true
 const C1_TREE_UNDER := Vector2(1.35, 1.2)
 const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 ## M10 (Fable review; concept samples cap #916C97, rim #BD9DAC, trunk #DFB1B7): no outer darkening, no limb darkening.
-const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 1.2, 0.0]
+const C1_TREE_M9 := [0.95, 0.6, 1.35, 1.3, 1.2, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 ## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
-const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.75, 1.1]
+## (M13, Fable eighth look: trunk and branches deep blue-violet, concept #55588B / #736DB0, so the gold pops between them)
+const C1_TREE_M10 := [Vector3(0.50, 0.25, 0.32), Vector3(0.13, 0.12, 0.38), 0.75, 1.1]
 ## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
 const C1_HERO_RIM := Vector3(0.78, 0.33, 0.36)
 ## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
 ## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
 const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.25)
-const C1_HERO_CAP_SUN_COLOR := Vector3(0.62, 0.22, 0.28)
+const C1_HERO_CAP_SUN_COLOR := Vector3(0.68, 0.27, 0.22)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
-const C1_HERO_HAZE := Vector2(0.13, 0.13)
+const C1_HERO_HAZE := Vector2(0.09, 0.09)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
@@ -4821,6 +4822,8 @@ const C1_PRINCIPAL_VIADUCT_BASE := 12.0
 ## M10b (ChatGPT checkpoint 13: the eleven equal bays still read as an aqueduct wall): an open variant of the same
 ## procedural viaduct (MUSH-exchange/codex-assets/work/stone_viaduct_open.py): five unequal spans (84/58/92/66/108 m),
 ## open spandrels on posts, tapered piers; same 420 x 80 m envelope and deck height.
+## M13 (Fable: the viaduct read as a flat cutout): masonry courses, a warm lit deck edge, dark arch soffits.
+const C1_VIADUCT_STONE := {"stone_relief": 1.0, "stone_block": Vector2(7.0, 3.2), "ledge_color": Vector3(0.95, 0.66, 0.36), "ledge_glow": 0.6, "soffit_dark": 0.6, "stone_fill": 0.55}
 const C1_PRINCIPAL_VIADUCT_MODEL := "res://assets/world/models/c1-procedural/stone_viaduct_open.glb"
 func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	var model: String = C1_PRINCIPAL_VIADUCT_MODEL if ResourceLoader.exists(C1_PRINCIPAL_VIADUCT_MODEL) else C1_DISTANCE_VIADUCT
@@ -4840,8 +4843,13 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	for index: int in range(n0, _refuge_props.size()):
 		_refuge_props[index].set_meta("haze_amount", C1_VALLEY_HAZE)
 		_refuge_props[index].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
-		# M11f (ChatGPT checkpoint 18: keep the viaduct but haze it so the cliffs dominate the engineering)
-		_refuge_props[index].set_meta("haze_k", 1.35)
+		# M11f (ChatGPT checkpoint 18: keep the viaduct but haze it so the cliffs dominate the engineering); M13 (Fable: at
+		# 1.35x it read as a flat paper cutout; ChatGPT checkpoint 19: darker stone #625E79, shadow #47445C): darker stone,
+		# 1.1x haze so its lit and shaded faces return.
+		_refuge_props[index].set_meta("haze_k", 0.85)
+		_refuge_props[index].set_shader_parameter("base_tint", Vector3(0.5, 0.47, 0.62))
+		for k: String in C1_VIADUCT_STONE: _refuge_props[index].set_shader_parameter(k, C1_VIADUCT_STONE[k])
+		_refuge_props[index].set_shader_parameter("cornice", Vector2(deck.y + 1.0, 7.0))
 		_c1_far_mats.append(_refuge_props[index])
 	# M10c (Fable): a lit spire house at each end of the deck
 	var sh_path: String = C1_TRIPO_FG + "spirehouse2.glb"
@@ -4857,7 +4865,8 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 			_c1_glow.append(e + Vector3(0.0, 14.0, 0.0))
 	# a few warm lamps in irregular clusters on the deck (Fable: an even row read as fairy lights)
 	var right: Vector3 = Basis(Vector3.UP, yaw) * Vector3.RIGHT
-	for t: float in [-0.46, -0.42, -0.12, 0.05, 0.09, 0.41]:
+	# (M13, ChatGPT checkpoint 19: fewer lamps through the centre)
+	for t: float in [-0.46, -0.42, 0.41]:
 		_c1_glow.append(deck + right * t * float(spec[3]) + Vector3(0.0, 4.0, 0.0))
 	return {"built": true, "model": model.get_file(), "deck": _v3(deck), "height_m": snappedf(height, 0.1), "span_m": spec[3], "horizontal_scale": snappedf(xz, 0.001), "colliders": 0}
 
