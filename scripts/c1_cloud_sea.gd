@@ -33,10 +33,16 @@ const BANKS: Array = [
 	# cloud puffs): sunset cloud masses in front of the domes, so the backdrop reads as clouds and staggered crests.
 	# (M10e, ChatGPT checkpoint 15 / Fable: sunset cloud #F2C1A6, lit tops #F3CDD0, bases #9A8FC8; a ninth field marks
 	# a warm sunset bank)
-	[600.0, 1650.0, 330.0, 330.0, 150.0, 260.0, 0.010, 1.0, true],
-	[790.0, 1800.0, 380.0, 300.0, 140.0, 240.0, 0.010, 1.0, true],
-	[480.0, 1900.0, 250.0, 260.0, 110.0, 220.0, 0.010, 1.0, true],
-	[1215.0, 1750.0, 340.0, 260.0, 120.0, 210.0, 0.009, 1.0, true],
+	# (M11, ChatGPT checkpoint 16 / Fable fifth look: at density 0.01 and centre y 330 they were invisible, #ABA5C3
+	# against a #B1AAC6 sky; frame y 100-220 at 1.6-1.9 km is world y ~290-560): denser, higher, staggered.
+	[585.0, 1650.0, 430.0, 300.0, 120.0, 230.0, 0.024, 1.0, true],
+	[700.0, 1820.0, 500.0, 260.0, 105.0, 210.0, 0.022, 1.0, true],
+	[790.0, 1700.0, 400.0, 230.0, 95.0, 190.0, 0.024, 1.0, true],
+	[480.0, 1900.0, 360.0, 260.0, 110.0, 220.0, 0.020, 1.0, true],
+	[1215.0, 1750.0, 420.0, 260.0, 110.0, 210.0, 0.020, 1.0, true],
+	# lower layer: the domes' lower arcs (frame y 150-230) behind a second, softer row
+	[640.0, 1560.0, 300.0, 300.0, 80.0, 230.0, 0.016, 1.0, true],
+	[860.0, 1650.0, 330.0, 260.0, 75.0, 200.0, 0.014, 1.0, true],
 	# M10b (Fable: the arch bridge's left end sat on a rock chunk hanging in the fog): mist wrapping that end's foot
 	[760.0, 700.0, 70.0, 70.0, 55.0, 60.0, 0.012, 1.0],
 	# M10d (cells: the near forest at frame 640-1280 x 540-720 read L 25-36 vs the concept's 31-44, where concept-1
@@ -78,9 +84,11 @@ func configure(scene: Node3D, eye: Vector3) -> Dictionary:
 		material.set_shader_parameter("lobe_strength", float(spec[7]))
 		material.set_shader_parameter("march_steps", _march_steps())
 		var warm_bank: bool = spec.size() > 8 and bool(spec[8])
-		material.set_shader_parameter("cloud_lit", Color("f3cdd0") if warm_bank else Color("b4adcf"))
+		# (m11b: lit #F3CDD0 rendered near white after tonemapping; concept-1's banks read #F0BDBD)
+		material.set_shader_parameter("cloud_lit", Color("eeb0b8") if warm_bank else Color("b4adcf"))
 		material.set_shader_parameter("cloud_shade", Color("9a8fc8") if warm_bank else Color("736e98"))
-		material.set_shader_parameter("cloud_warm", Color("f2c1a6") if warm_bank else Color("cbbcc6"))
+		material.set_shader_parameter("cloud_warm", Color("f0a890") if warm_bank else Color("cbbcc6"))
+		material.set_shader_parameter("sky_bank", warm_bank)
 		material.set_shader_parameter("cloud_night_lit", Color("666c96"))
 		material.set_shader_parameter("cloud_night_shade", Color("2c2d4c"))
 		_materials.append(material)

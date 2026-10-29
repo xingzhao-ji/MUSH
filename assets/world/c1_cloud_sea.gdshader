@@ -20,6 +20,9 @@ uniform vec3 cloud_warm : source_color = vec3(0.80, 0.76, 0.79);
 uniform vec3 cloud_night_lit : source_color = vec3(0.38, 0.40, 0.57);
 uniform vec3 cloud_night_shade : source_color = vec3(0.15, 0.16, 0.28);
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
+// Sky banks (sunset cloud masses seen at or above the eye): no low-camera fade. M11: the fade below made every bank
+// centred above the vista eye invisible.
+uniform bool sky_bank = false;
 varying vec3 world_surface;
 
 float hash31(vec3 p) {
@@ -119,7 +122,7 @@ void fragment() {
 	ALBEDO = integrated / max(opacity, 0.0001);
 	// Restrained height/distance fades reduce the cloud effect for low or nearby
 	// cameras. These controls do not establish visibility at every gameplay pose.
-	float high_view = smoothstep(bank_center.y - bank_radii.y * 0.6, bank_center.y + bank_radii.y * 0.15, CAMERA_POSITION_WORLD.y);
+	float high_view = sky_bank ? 1.0 : smoothstep(bank_center.y - bank_radii.y * 0.6, bank_center.y + bank_radii.y * 0.15, CAMERA_POSITION_WORLD.y);
 	float close_fade = smoothstep(100.0, 210.0, distance(CAMERA_POSITION_WORLD, bank_center));
 	ALPHA = min(opacity * high_view * close_fade, 0.985);
 	// The volume already supplies its own aerial colour. Engine endpoint fog would

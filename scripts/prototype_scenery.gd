@@ -2770,7 +2770,9 @@ const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 1.2, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 ## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
-const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.45, 1.1]
+const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.75, 1.1]
+## M11 (Fable fifth look: the concept's cap top reads sunset pink #E39392): the hero's rim light warmer.
+const C1_HERO_RIM := Vector3(0.78, 0.33, 0.36)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.13, 0.13)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
@@ -4573,6 +4575,7 @@ func _c1_tree_mats(n0: int, at: Vector3, height: float, radius: float, hero: boo
 			m.set_shader_parameter("bark_tone", C1_TREE_M10[1])
 			m.set_shader_parameter("rim_glow", C1_TREE_M10[2])
 			m.set_shader_parameter("trunk_glow", C1_TREE_M10[3])
+			m.set_shader_parameter("rim_color", C1_HERO_RIM)
 
 func _add_c1_far(eye: Vector3) -> Dictionary:
 	var out: Dictionary = {}
