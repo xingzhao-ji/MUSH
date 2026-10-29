@@ -36,6 +36,10 @@ const BANKS: Array = [
 	[1215.0, 1750.0, 340.0, 260.0, 120.0, 210.0, 0.006, 1.0],
 	# M10b (Fable: the arch bridge's left end sat on a rock chunk hanging in the fog): mist wrapping that end's foot
 	[760.0, 700.0, 70.0, 70.0, 55.0, 60.0, 0.012, 1.0],
+	# M10d (cells: the near forest at frame 640-1280 x 540-720 read L 25-36 vs the concept's 31-44, where concept-1
+	# has mist between the trees): low translucent banks over the near canopy
+	[1010.0, 640.0, -10.0, 220.0, 34.0, 170.0, 0.0055, 0.8],
+	[1210.0, 560.0, -20.0, 180.0, 30.0, 150.0, 0.0055, 0.8],
 	# taller crowns where the falls land
 	[700.0, 760.0, 18.0, 95.0, 52.0, 85.0, 0.018, 1.0],
 	[1230.0, 1080.0, 40.0, 130.0, 62.0, 110.0, 0.017, 1.0],
