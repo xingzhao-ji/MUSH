@@ -4534,7 +4534,9 @@ const C1_FAR_TREE_HAZE_RANGE := Vector2(1400.0, 6500.0)
 ## Hero base town (concept-1: the mushroom tree rises from a cliff plateau crowded with lit spire houses, small glowing
 ## mushroom trees and falls): massifs at the trunk's foot [concept pixel x, distance m, crown height above LAKE_Y m,
 ## turn deg, spire houses, small mushroom trees, glow points], the houses and trees on each crown's ground.
-const C1_TOWN: Array = [[930.0, 1250.0, 240.0, 0.0, 7, 3, 40], [1035.0, 1320.0, 285.0, 140.0, 5, 2, 30], [845.0, 1300.0, 270.0, 60.0, 4, 2, 24]]
+## M11 (Fable: the plateau under the hero read as one cream tone, a cardboard model town): lighter haze on the town, more
+## small glowing mushroom trees among the houses.
+const C1_TOWN: Array = [[930.0, 1250.0, 240.0, 0.0, 7, 6, 90], [1035.0, 1320.0, 285.0, 140.0, 5, 4, 70], [845.0, 1300.0, 270.0, 60.0, 4, 3, 55]]
 func _c1_pixel_ray(eye: Vector3, px: float, py: float) -> Vector3:
 	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
@@ -4697,7 +4699,12 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 				# At the model center the column fraction is invariant under uniform scale.
 				# Bury the root center 18 m into real crown geometry, with the base still in terrain.
 				top = base + clampf((top - base) * (_c1_hero_at.y + 18.0 - base) / (support - base), 120.0, 420.0)
-		_refuge_model(mpath, Vector3(p.x, base, p.y), yaw, top - base, "C1Town%d" % ci)
+		var tn0: int = _refuge_props.size()
+		_refuge_model(mpath, Vector3(p.x, base, p.y), yaw, top - base, "C1Town%d" % ci, false, C1_FAR_SHADER)
+		for tni: int in range(tn0, _refuge_props.size()):
+			_refuge_props[tni].set_meta("haze_amount", C1_CLUSTER_HAZE)
+			_refuge_props[tni].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+			_c1_far_mats.append(_refuge_props[tni])
 		if ci == 0:
 			out["hero_support"] = {"root": _v3(_c1_hero_at), "surface_y": _model_top_at(mpath, Vector3(p.x, base, p.y), yaw, top - base, p), "base_y": base, "top_y": top, "scope": "visual center-column support; no collision"}
 		var root: Transform3D = _model_root(mpath, Vector3(p.x, base, p.y), yaw, top - base)
@@ -4710,7 +4717,12 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 			if houses < int(tw[4]) and ResourceLoader.exists(spath):
 				var sh: float = trng.randf_range(38.0, 60.0)
 				var ste := Vector2(eye.x - wp.x, eye.z - wp.z)
-				if _refuge_model(spath, wp - Vector3(0.0, 1.5, 0.0), atan2(ste.x, ste.y) + C1_TRIPO_FRONT + trng.randf_range(-0.6, 0.6), sh, "C1TownHouse%d_%d" % [ci, houses]):
+				var th0: int = _refuge_props.size()
+				if _refuge_model(spath, wp - Vector3(0.0, 1.5, 0.0), atan2(ste.x, ste.y) + C1_TRIPO_FRONT + trng.randf_range(-0.6, 0.6), sh, "C1TownHouse%d_%d" % [ci, houses], false, C1_FAR_SHADER):
+					for thi: int in range(th0, _refuge_props.size()):
+						_refuge_props[thi].set_meta("haze_amount", C1_CLUSTER_HAZE)
+						_refuge_props[thi].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+						_c1_far_mats.append(_refuge_props[thi])
 					_refuge_light(wp + Vector3(0.0, sh * 0.4, 0.0) + Vector3(ste.x, 0.0, ste.y).normalized() * sh * 0.2, sh * 1.2, "C1TownLight%d_%d" % [ci, houses])
 					var tl: OmniLight3D = _refuge_lights.pop_back()
 					tl.light_color = Color("ff9f50")
