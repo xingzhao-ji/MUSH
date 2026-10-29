@@ -2775,8 +2775,8 @@ const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.75
 const C1_HERO_RIM := Vector3(0.78, 0.33, 0.36)
 ## M11c (Fable sixth look): [sunset mix on upward cap faces, their emission, view-rim glow].
 ## (m11g at [0.6, 0.3, 0.35] with #D9A0B0: the cap top went pale #D3AECF; deeper colour, less emission)
-const C1_HERO_CAP_SUN := Vector3(0.5, 0.1, 0.25)
-const C1_HERO_CAP_SUN_COLOR := Vector3(0.552, 0.2, 0.29)
+const C1_HERO_CAP_SUN := Vector3(0.75, 0.14, 0.25)
+const C1_HERO_CAP_SUN_COLOR := Vector3(0.62, 0.22, 0.28)
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.13, 0.13)
 const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
@@ -5739,7 +5739,8 @@ const C1_FAR_CURLED_TREE := "res://assets/world/models/c1-procedural/far_mushroo
 ## Principal masses: raise over the M7 crowns (m). M9 (checkpoint 10 gap 1): a further 60 m and ~35% wider.
 const C1_PRINCIPAL := {0: 180.0, 2: 170.0, 4: 170.0, 11: 190.0}
 ## M10d (ChatGPT checkpoint 14: many small platforms instead of a few major masses): two more minor isles under the banks.
-const C1_SUBMERGED := [7, 12, 13, 14, 15, 16, 18, 20]
+## (M11e: two small needles at frame x 1190 and 1000 also go, fewer separate pieces in the middle valley)
+const C1_SUBMERGED := [3, 7, 12, 13, 14, 15, 16, 18, 19, 20]
 ## (M10e tried 5 and 8 as well: both stand behind the home and tree from the vista eye, so no visible gain)
 const C1_FALL_MASSES := [0, 11]
 var _c1_bases: Array = []
