@@ -2773,7 +2773,7 @@ const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 1.2, 0.0]
 const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.45, 1.1]
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.13, 0.13)
-const C1_FAR_TREE_M9 := [0.86, 0.6, 0.0, 0.5, 0.0, 0.2]
+const C1_FAR_TREE_M9 := [0.86, 1.0, 0.0, 0.5, 0.0, 0.2]
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
 ## The Tripo texture's cap is saturated blue-violet; concept-1's cap is pale lilac-pink (L ~65, a +15, b -18): part
@@ -4524,7 +4524,8 @@ var _c1_outer_material: ShaderMaterial
 const C1_FAR_TREES: Array = [["curled", 700.0, 155.0, 1680.0, 135.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
 	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0],
 	["mushtree2", 535.0, 140.0, 1480.0, 170.0, 35.0], ["mushtree", 800.0, 225.0, 1900.0, 45.0, 115.0]]
-const C1_FAR_TREE_UNDER := Vector2(0.62, 1.0)
+## M10e (Fable: a far cap at frame 440-535 x 85-125 read as a flat purple saucer, no underside glow): brighter.
+const C1_FAR_TREE_UNDER := Vector2(1.15, 1.2)
 # Mushrooms keep their lit surface at middle distance; the rock ring retains its denser haze.
 const C1_FAR_TREE_HAZE := Vector2(0.14, 0.50)
 const C1_FAR_TREE_HAZE_RANGE := Vector2(1400.0, 6500.0)
@@ -5143,7 +5144,8 @@ const C1_FG_PROPS: Array = [
 	# (capture s30: at pixel 95, 120 the limb curtain hung across the roof and window; tucked into the corner)
 	["wisteria", 860.0, 645.0, 25.0, 5.0, -20.0, 0.95, 0.0], ["wisteria", 25.0, 70.0, 15.0, 3.0, 0.0, 0.95, 0.0],
 	# M10c (ChatGPT checkpoint 14: bury the patio base in hanging growth)
-	["wisteria", 412.0, 468.0, 12.5, 3.0, 140.0, 0.92, 0.0],
+	["wisteria", 412.0, 468.0, 12.5, 3.0, 140.0, 0.92, 0.0], ["wisteria", 490.0, 470.0, 12.5, 2.6, 250.0, 0.92, 0.0],
+	["shrub", 330.0, 470.0, 30.0, 1.2, 80.0, 0.2, 0.0, "ground"], ["fern", 455.0, 455.0, 30.0, 1.0, 300.0, 0.1, 0.6, "ground"],
 	["wisteria", 585.0, 440.0, 14.0, 3.0, 210.0, 0.92, 0.0]]
 ## Terrace ground grid: the highest surface of the home terrace's meshes (scripted ground, the Tripo home's patio and
 ## stairs) per C1_TGRID_CELL square, so foreground props can stand on the ground a pixel's ray meets.
@@ -5714,6 +5716,8 @@ const C1_FAR_CURLED_TREE := "res://assets/world/models/c1-procedural/far_mushroo
 const C1_PRINCIPAL := {0: 180.0, 2: 170.0, 4: 170.0, 11: 190.0}
 ## M10d (ChatGPT checkpoint 14: many small platforms instead of a few major masses): two more minor isles under the banks.
 const C1_SUBMERGED := [12, 13, 14, 15, 16, 18, 20]
+## (M10e tried 5 and 8 as well: both stand behind the home and tree from the vista eye, so no visible gain)
+const C1_FALL_MASSES := [0, 11]
 var _c1_bases: Array = []
 ## Ledge forest (M9): low-poly broadleaf clumps and firs on the masses' upward faces (ChatGPT checkpoint 10: basalt
 ## #504B69 with forested ledges, foliage #293D38), one MultiMesh per shape, instance-coloured, no shadows or collision.
@@ -5864,7 +5868,8 @@ func _add_c1_ledge_forest(eye: Vector3) -> Dictionary:
 		if canopy:
 			for hc: Vector3 in hamlets:
 				if q.distance_to(hc) < 85.0: near_hamlet = true
-		if rng.randf() < (0.8 if near_hamlet else (0.03 if canopy else 0.2)): _c1_glow.append(q + Vector3(rng.randf_range(-4.0, 4.0), 3.0, rng.randf_range(-4.0, 4.0)))
+		# (M10e: concept-1's cliffs are dotted with warm lights; ledge lights 20% -> 35%)
+		if rng.randf() < (0.8 if near_hamlet else (0.03 if canopy else 0.35)): _c1_glow.append(q + Vector3(rng.randf_range(-4.0, 4.0), 3.0, rng.randf_range(-4.0, 4.0)))
 	var total: int = 0
 	for si: int in 2:
 		var items: Array = sets[si]
@@ -5934,7 +5939,9 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var xz: float = {0: 1.20, 2: 1.02, 4: 1.35, 8: 1.4, 11: 1.08}.get(island_index, 1.0)
 		var k: float = float(spec[4]) / float(dims[1])
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
-		var tpath: String = C1_WATERFALL_CLIFF if island_index in [0, 11] else str(C1_TRIPO_KIT.get(spec[0], ""))
+		# M10e (ChatGPT checkpoints 14-15: a few major masses with longer faces and more falls, not many small platforms;
+		# concept-1's middle valley carries a dozen falls): two more mid masses become waterfall cliffs.
+		var tpath: String = C1_WATERFALL_CLIFF if island_index in C1_FALL_MASSES else str(C1_TRIPO_KIT.get(spec[0], ""))
 		if C1_TRIPO_ONLY and not (tpath != "" and ResourceLoader.exists(tpath)):
 			placed.append([spec[0], "skipped: no Tripo model yet"])
 			continue
@@ -6081,8 +6088,28 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			# span across the view: a span on the model's z turns a quarter (independent of C1_TRIPO_FRONT)
 			var turn: float = (-PI * 0.5 if bbox.size.z >= bbox.size.x else 0.0) + deg_to_rad(float(spec[4]))
 			var base_y: float = LAKE_Y + float(spec[2]) - h
-			_refuge_model(bpath_t, Vector3(c.x, base_y, c.y), atan2(to_eye.x, to_eye.y) + turn, h, "C1TripoBridge%d" % bridges.size())
+			var b_yaw: float = atan2(to_eye.x, to_eye.y) + turn
+			_refuge_model(bpath_t, Vector3(c.x, base_y, c.y), b_yaw, h, "C1TripoBridge%d" % bridges.size())
 			bridges.append(["risebridge", snappedf(c.x, 1.0), snappedf(c.y, 1.0), snappedf(h, 1.0)])
+			if bridges.size() == 1:
+				# M10e (Fable, checkpoints 13-15: the near bridge's left end ledge hung in the air above the mist): a rock
+				# column under that end, from the valley floor to just under its ledge.
+				var k_b: float = h / maxf(bbox.size.y, 0.001)
+				var half: float = long_m * 0.5 * k_b * 0.86
+				var axis_b: Vector3 = Basis(Vector3.UP, b_yaw) * (Vector3(0.0, 0.0, 1.0) if bbox.size.z >= bbox.size.x else Vector3(1.0, 0.0, 0.0))
+				var ends: Array = [Vector3(c.x, base_y, c.y) + axis_b * half, Vector3(c.x, base_y, c.y) - axis_b * half]
+				var left_end: Vector3 = ends[0] if _c1_viaduct_pixel(eye, ends[0]).x < _c1_viaduct_pixel(eye, ends[1]).x else ends[1]
+				var col_path: String = str(C1_TRIPO_KIT["tower"])
+				var col_base: float = maxf(terrain_height(left_end.x, left_end.z), LAKE_Y) - C1_SINK
+				var col_top: float = left_end.y + h * 0.18
+				if ResourceLoader.exists(col_path) and col_top - col_base > 40.0:
+					var cv0: int = _refuge_props.size()
+					_refuge_model(col_path, Vector3(left_end.x, col_base, left_end.z), b_yaw + 0.7, col_top - col_base, "C1BridgeColumn", false, C1_FAR_SHADER, 0.55)
+					for cvi: int in range(cv0, _refuge_props.size()):
+						_refuge_props[cvi].set_meta("haze_amount", C1_VALLEY_HAZE)
+						_refuge_props[cvi].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+						_c1_far_mats.append(_refuge_props[cvi])
+					bridges.append(["column", snappedf(left_end.x, 1.0), snappedf(left_end.z, 1.0), snappedf(col_top - col_base, 1.0)])
 	for spec: Array in C1_BRIDGES:
 		var bpath: String = C1_KIT + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(bpath): continue

@@ -31,9 +31,12 @@ const BANKS: Array = [
 	[800.0, 900.0, 70.0, 150.0, 75.0, 110.0, 0.011, 0.8],
 	# M10b (ChatGPT checkpoint 13: the smooth basin-wall domes at frame 440-900 x 60-310 enclose the scene; Fable: lit
 	# cloud puffs): sunset cloud masses in front of the domes, so the backdrop reads as clouds and staggered crests.
-	[600.0, 1650.0, 330.0, 330.0, 150.0, 260.0, 0.0065, 1.0],
-	[790.0, 1800.0, 380.0, 300.0, 140.0, 240.0, 0.006, 1.0],
-	[1215.0, 1750.0, 340.0, 260.0, 120.0, 210.0, 0.006, 1.0],
+	# (M10e, ChatGPT checkpoint 15 / Fable: sunset cloud #F2C1A6, lit tops #F3CDD0, bases #9A8FC8; a ninth field marks
+	# a warm sunset bank)
+	[600.0, 1650.0, 330.0, 330.0, 150.0, 260.0, 0.010, 1.0, true],
+	[790.0, 1800.0, 380.0, 300.0, 140.0, 240.0, 0.010, 1.0, true],
+	[480.0, 1900.0, 250.0, 260.0, 110.0, 220.0, 0.010, 1.0, true],
+	[1215.0, 1750.0, 340.0, 260.0, 120.0, 210.0, 0.009, 1.0, true],
 	# M10b (Fable: the arch bridge's left end sat on a rock chunk hanging in the fog): mist wrapping that end's foot
 	[760.0, 700.0, 70.0, 70.0, 55.0, 60.0, 0.012, 1.0],
 	# M10d (cells: the near forest at frame 640-1280 x 540-720 read L 25-36 vs the concept's 31-44, where concept-1
@@ -41,7 +44,7 @@ const BANKS: Array = [
 	[1010.0, 640.0, -10.0, 220.0, 34.0, 170.0, 0.0055, 0.8],
 	[1210.0, 560.0, -20.0, 180.0, 30.0, 150.0, 0.0055, 0.8],
 	# taller crowns where the falls land
-	[700.0, 760.0, 18.0, 95.0, 52.0, 85.0, 0.018, 1.0],
+	[700.0, 760.0, 22.0, 105.0, 70.0, 95.0, 0.011, 1.0],  # M10e: softer (a hard top edge at frame y ~430)
 	[1230.0, 1080.0, 40.0, 130.0, 62.0, 110.0, 0.017, 1.0],
 	[830.0, 1660.0, 50.0, 180.0, 90.0, 160.0, 0.018, 1.0],
 ]
@@ -74,9 +77,10 @@ func configure(scene: Node3D, eye: Vector3) -> Dictionary:
 		material.set_shader_parameter("density", float(spec[6]))
 		material.set_shader_parameter("lobe_strength", float(spec[7]))
 		material.set_shader_parameter("march_steps", _march_steps())
-		material.set_shader_parameter("cloud_lit", Color("b4adcf"))
-		material.set_shader_parameter("cloud_shade", Color("736e98"))
-		material.set_shader_parameter("cloud_warm", Color("cbbcc6"))
+		var warm_bank: bool = spec.size() > 8 and bool(spec[8])
+		material.set_shader_parameter("cloud_lit", Color("f3cdd0") if warm_bank else Color("b4adcf"))
+		material.set_shader_parameter("cloud_shade", Color("9a8fc8") if warm_bank else Color("736e98"))
+		material.set_shader_parameter("cloud_warm", Color("f2c1a6") if warm_bank else Color("cbbcc6"))
 		material.set_shader_parameter("cloud_night_lit", Color("666c96"))
 		material.set_shader_parameter("cloud_night_shade", Color("2c2d4c"))
 		_materials.append(material)
