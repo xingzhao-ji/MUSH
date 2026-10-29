@@ -1,0 +1,5 @@
+# Next priority: visible scenery
+
+The user has received the baseline images and wants the first revised actual scene. Keep capture tooling proportional: the existing capture suite already produces verified day/night PNGs. Do not spend the next milestone exclusively building test infrastructure. Implement the reversible distant canopy and depth/lighting layer next, then use the existing working captures to review actual visible differences. Add only the capture/test plumbing genuinely needed. Preserve all existing assertions and record failures. No broad placeholder systems. Capture tools are a means, not the deliverable.
+
+Report exact revised PNG paths immediately once a meaningful visual change exists. Review the pixels against both concepts: distinct near/mid/far, monumental organic luminous silhouettes, warm refuge, rich materials, legible path, cream creature retained. Correct obvious cheap primitive shapes or obscured homes before broadening scope. Coordinator is checking Gemini Argon 4 asset capabilities independently; do not wait for assets that are not yet demonstrated necessary.
