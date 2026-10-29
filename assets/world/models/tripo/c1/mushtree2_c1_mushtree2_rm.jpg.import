@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://biymmu41xlv5k"
-path="res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.ctex"
+path.s3tc="res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.s3tc.ctex"
+path.etc2="res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "64a252a4694c32c36167ab65f44a7104"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/mushtree2_c1_mushtree2_rm.jpg"
-dest_files=["res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.ctex"]
+dest_files=["res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.s3tc.ctex", "res://.godot/imported/mushtree2_c1_mushtree2_rm.jpg-74984e34e661bfdcc07e751e9de9bbc8.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

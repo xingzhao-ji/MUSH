@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ba555s118a2ab"
-path="res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.ctex"
+path.s3tc="res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.s3tc.ctex"
+path.etc2="res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "9c306d5e4aff00003f0db6b984249acb"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/fern_c1_fern_basecolor.jpg"
-dest_files=["res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.ctex"]
+dest_files=["res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.s3tc.ctex", "res://.godot/imported/fern_c1_fern_basecolor.jpg-3b11c382186e1c3495612b719d71d035.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

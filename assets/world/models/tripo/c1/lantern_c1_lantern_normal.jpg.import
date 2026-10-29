@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wjr8n4e8x2a1"
-path="res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.ctex"
+path.s3tc="res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.s3tc.ctex"
+path.etc2="res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "3636a5ddfd2fad97dccfdf6c0e62f91c"
@@ -14,17 +16,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/lantern_c1_lantern_normal.jpg"
-dest_files=["res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.ctex"]
+dest_files=["res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.s3tc.ctex", "res://.godot/imported/lantern_c1_lantern_normal.jpg-91b45b4dc40d2098696b812c95422221.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

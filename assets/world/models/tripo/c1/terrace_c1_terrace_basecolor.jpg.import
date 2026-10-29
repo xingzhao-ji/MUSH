@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddhl2326tvqe7"
-path="res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.ctex"
+path.s3tc="res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.s3tc.ctex"
+path.etc2="res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ac825f814922593cb3ff4a19a96c3307"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/terrace_c1_terrace_basecolor.jpg"
-dest_files=["res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.ctex"]
+dest_files=["res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.s3tc.ctex", "res://.godot/imported/terrace_c1_terrace_basecolor.jpg-d304fc51ae542e82b1e046d52adece17.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

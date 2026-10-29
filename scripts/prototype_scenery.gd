@@ -2255,10 +2255,33 @@ func _mesh_ground(x: float, z: float) -> float:
 	return h3 + (1.0 - u) * (h2 - h3) + (1.0 - v) * (h1 - h3)
 
 ## [[mesh, transform in the model's root], ...] for an imported glTF scene (cached).
+## Startup (acceptance crash children must be ready within 20 s; each image-to-3D model takes ~1 s to load): the C1
+## models are requested on loader threads before the baked world loads (playable.gd), so loading overlaps it.
+const C1_PREFETCH: Array[String] = ["res://assets/world/models/tripo/c1/mushtree2.glb", "res://assets/world/models/tripo/c1/tower.glb",
+	"res://assets/world/models/tripo/c1/terrace.glb", "res://assets/world/models/tripo/c1/anctree.glb", "res://assets/world/models/tripo/c1/lily.glb",
+	"res://assets/world/models/tripo/c1/rock.glb", "res://assets/world/models/tripo/c1/shrub.glb", "res://assets/world/models/tripo/c1/wisteria.glb",
+	"res://assets/world/models/tripo/c1/spirehouse2.glb", "res://assets/world/models/tripo/c1/lowisle.glb", "res://assets/world/models/tripo/c1/needle.glb",
+	"res://assets/world/models/tripo/c1/massif.glb", "res://assets/world/models/tripo/c1/risebridge.glb", "res://assets/world/models/tripo/c1/mushcluster.glb",
+	"res://assets/world/models/tripo/c1/stairs.glb",
+	"res://assets/world/models/c1-procedural/waterfall_cliff_block.glb", "res://assets/world/models/c1-procedural/stone_viaduct.glb",
+	"res://assets/world/models/c1-procedural/spore_silk_balloon.glb", "res://assets/world/models/c1-procedural/far_mushroom_tree.glb"]
+static func prefetch_models() -> int:
+	if not (C1_VISTA and OS.get_environment("MUSH_GOAL_VISTA") == ""): return 0
+	var n: int = 0
+	for path: String in C1_PREFETCH:
+		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path, "", true) == OK: n += 1
+	return n
+
+var _model_load_ms: float = 0.0
 func _model_parts(path: String) -> Array:
 	if _model_cache.has(path): return _model_cache[path]
 	var parts: Array = []
-	var scene: PackedScene = load(path) as PackedScene
+	var load_us: int = Time.get_ticks_usec()
+	var scene: PackedScene = null
+	if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		scene = ResourceLoader.load_threaded_get(path) as PackedScene
+	if scene == null: scene = load(path) as PackedScene
+	_model_load_ms += float(Time.get_ticks_usec() - load_us) / 1000.0
 	if scene != null:
 		var root: Node = scene.instantiate()
 		for node: Node in root.find_children("*", "MeshInstance3D", true, false):
@@ -2710,7 +2733,8 @@ const C1_TRIPO_TREE := "res://assets/world/models/tripo/c1/mushtree.glb"
 ## hero spot, 1.1 km out, the whole trunk and roots stood in the open lake and the cap filled 55% of the frame).
 ## Tree v2: the cap spans ~1.09x the height (v1 1.49x), so 720 m tall 1250 m out keeps concept-1's ~35 degree cap.
 const C1_TRIPO_TREE_H := 720.0
-const C1_TREE_PX := 930.0
+const C1_TREE_PX := 955.0
+const C1_TREE_XZ := 0.85
 const C1_TREE_DIST := 1250.0
 ## Capture s10: the dome ran off the frame top and the roots stood clear on a bare mesa: sunk 110 m, so the foot sits in
 ## the plateaus' mist and the dome comes into frame (concept-1's tree rises from behind its cliffs).
@@ -2723,12 +2747,13 @@ const C1_TREE2_TURN := 0.0
 ## Milestone 7 (concept-1 sees the cap from below: dome cut by the frame top, a broad golden underside over the trunk;
 ## ours showed the whole dome and a thin rim): raised so the dome top is C1_TREE_TOP_DEG up, its foot on the hero
 ## base town's plateau (C1_TREE_ON_TOWN: the foot may stand above the ground there, hidden by the plateau).
-const C1_TREE_TOP_DEG := 19.0
+## M8: 15% narrower and slightly right; lower top admits the dome and buries oversized roots.
+const C1_TREE_TOP_DEG := 16.5
 const C1_TREE_ON_TOWN := true
 ## Texture-masked amber branches on the down faces; violet gaps retain their material.
-## Colour is linear #F2B271. No broad pale fill: it erased the underside's texture in m7a.
+## Colour is linear #EFAF78. No broad pale fill: it erased the underside's texture in m7a.
 const C1_TREE_UNDER := Vector2(0.55, 1.0)
-const C1_UNDER_COLOR := Vector3(0.888, 0.445, 0.165)
+const C1_UNDER_COLOR := Vector3(0.86316, 0.42869, 0.18782)
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
 ## The Tripo texture's cap is saturated blue-violet; concept-1's cap is pale lilac-pink (L ~65, a +15, b -18): part
@@ -2740,6 +2765,7 @@ const C1_TREE_DESAT := 0.0
 const C1_TREE_TINT := Vector3.ONE
 var _c1_hero_at := Vector3.ZERO
 var _c1_balloons: Node3D = null
+var _c1_cloud_sea: Node3D = null
 const C1_TREE2_PALE_GLOW := 0.0
 const C1_TREE_GLOW := 3.0
 const C1_TRIPO_TREE_YAW := 0.0
@@ -2837,11 +2863,11 @@ func _add_blender_giants() -> void:
 				# the sheet's view (model +X) toward the eye
 				var ev2: Vector3 = _vista_eye()
 				tree_yaw = atan2(ev2.x - tree_at.x, ev2.z - tree_at.z) + C1_TRIPO_FRONT + deg_to_rad(C1_TREE2_TURN)
-			if not (_c1_on() and ResourceLoader.exists(tree_path) and _refuge_model(tree_path, tree_at, tree_yaw, C1_TRIPO_TREE_H, "BlenderGiant0")):
+			if not (_c1_on() and ResourceLoader.exists(tree_path) and _refuge_model(tree_path, tree_at, tree_yaw, C1_TRIPO_TREE_H, "BlenderGiant0", false, null, C1_TREE_XZ)):
 				_blender_place(HERO_TREE_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant0", Color.WHITE, Transform3D.IDENTITY, HERO_TREE_FILLS)
 			if _c1_on() and _refuge_props.size() > props_before:
 				_c1_hero_at = tree_at
-				_c1_tree_mats(props_before, tree_at, C1_TRIPO_TREE_H, _c1_tree_radius(tree_path, C1_TRIPO_TREE_H), true)
+				_c1_tree_mats(props_before, tree_at, C1_TRIPO_TREE_H, _c1_tree_radius(tree_path, C1_TRIPO_TREE_H, C1_TREE_XZ), true)
 			hero_ground = ground
 			placed += 1
 			continue
@@ -2868,12 +2894,17 @@ func _add_blender_giants() -> void:
 		placed += 1
 	for node: Node in _nodes:
 		if String(node.name) in ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"]: (node as Node3D).visible = false
+	# The old 120 m smooth pink cap competes with the new detailed right cluster.
+	# Hide only that visual copy in C1; giant specs and collision ownership remain.
+	if _c1_on():
+		for node: Node3D in _static:
+			if str(node.name).begins_with("BlenderGiant2_"): node.visible = false
 	for part: Array in _model_parts(GIANT_BLENDER) + (_model_parts(GIANT_HERO_BLENDER) if ResourceLoader.exists(GIANT_HERO_BLENDER) else []):
 		var gsrc := (part[0] as Mesh).surface_get_material(0) as StandardMaterial3D
 		if gsrc != null and gsrc.resource_name.to_lower() in ["gill", "gill_rib", "gill_frill"] and _blender_mat_cache.has(gsrc):
 			(_blender_mat_cache[gsrc] as StandardMaterial3D).set_meta("night_scale", GIANT_GILL_NIGHT_SCALE)
 	giant_blender_report = {"placed": placed, "model": GIANT_BLENDER.get_file(), "hidden": ["HeroCanopy", "LuminousCanopies", "CanopyStems", "CapTendrils"],
-		"hero_ground": snappedf(hero_ground, 0.1), "hero_tilt_deg": GIANT_HERO_TILT_DEG}
+		"hero_ground": snappedf(hero_ground, 0.1), "hero_tilt_deg": GIANT_HERO_TILT_DEG, "c1_hidden_legacy_copy": 2 if _c1_on() else -1}
 	print("BLENDER_GIANTS ", JSON.stringify(giant_blender_report))
 
 ## Raised mossy promontory under the cottage (consult chatgpt-01 gap 1: the goal's cottage stands on a raised
@@ -4378,7 +4409,7 @@ func _add_vista_refuge() -> void:
 const C1_MIST_TOP := -20.0
 const C1_MIST_STRENGTH := 0.4
 var concept_vista_report: Dictionary = {}
-## Right-side focal mushroom uses an actual crown point of valley massif 4.
+## Right-side focal mushroom uses an actual lower forward ledge of valley massif 4.
 var _c1_right_cluster_anchor: Vector3 = Vector3.INF
 func _c1_cluster_mats(n0: int, base: Vector3, height: float) -> void:
 	for pi: int in range(n0, _refuge_props.size()):
@@ -4386,7 +4417,8 @@ func _c1_cluster_mats(n0: int, base: Vector3, height: float) -> void:
 		mat.set_shader_parameter("glow_floor", 0.42)
 		mat.set_shader_parameter("under_min_y", base.y + height * 0.18)
 		mat.set_shader_parameter("under_color", C1_UNDER_COLOR)
-		mat.set_meta("under", Vector2(0.62, 1.0))
+		mat.set_meta("under", Vector2(0.36, 0.62))
+		mat.set_meta("c1_cluster", true)
 
 func _add_c1_cluster(at: Vector3, height: float, eye: Vector3, label: String, turn: float = 0.0) -> bool:
 	var base: Vector3 = at - Vector3.UP * height * 0.09
@@ -4397,11 +4429,11 @@ func _add_c1_cluster(at: Vector3, height: float, eye: Vector3, label: String, tu
 
 func _add_c1_giants(eye: Vector3) -> Array:
 	if not C1_HIGH or not _c1_right_cluster_anchor.is_finite(): return []
-	# A 145 m cluster on the existing right-hand crown, instead of a 377 m
-	# ground-level mushroom. Its curled gold underside reads across the valley.
-	var height: float = 145.0
+	# M8: intermediate scale between a03 (377 m) and a05 (145 m), anchored
+	# to the actual right crown so its gold gills frame the open valley.
+	var height: float = 225.0
 	if not _add_c1_cluster(_c1_right_cluster_anchor, height, eye, "C1RightGlowingCluster"): return []
-	return [{"at": _v3(_c1_right_cluster_anchor), "height": height, "model": "mushcluster", "support": "massif4 native upward crown point", "root_burial_m": height * 0.09}]
+	return [{"at": _v3(_c1_right_cluster_anchor), "height": height, "model": "mushcluster", "support": "massif4 native upward lower forward ledge", "root_burial_m": height * 0.09}]
 
 ## Distant ring (the user, 2026-10-28: "the back feels very empty"; capture fog-185012 without haze: past the basin the
 ## world was a flat plain to the horizon, and the depth fog's 95% cap past 1.9 km blanked whatever stood there).
@@ -4415,7 +4447,7 @@ const C1_FAR_LAYERS: Array = [
 const C1_FAR_CONE := 60.0
 const C1_FAR_HAZE := Vector2(0.45, 0.82)
 const C1_FAR_HAZE_RANGE := Vector2(2500.0, 8500.0)
-const C1_FAR_HAZE_DAY := Color("aea4d4")
+const C1_FAR_HAZE_DAY := Color("a09bcc")
 const C1_FAR_HAZE_NIGHT := Color("26244e")
 const C1_FAR_SHADER := preload("res://assets/world/tripo_far.gdshader")
 var _c1_far_mats: Array[ShaderMaterial] = []
@@ -4428,9 +4460,9 @@ var _c1_outer_material: ShaderMaterial
 ## models: [model, concept pixel x, pixel y of the cap top, distance m, cap width px, turn deg]; the stem runs down to
 ## the ground there (sunk 30 m) and the model is narrowed or widened (non-uniform) to that cap width, so the far
 ## ones stand tall-stemmed as concept-1's do.
-const C1_FAR_TREES: Array = [["mushtree", 700.0, 165.0, 1680.0, 100.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
+const C1_FAR_TREES: Array = [["curled", 700.0, 155.0, 1680.0, 135.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
 	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0], ["mushtree2", 1075.0, 175.0, 2600.0, 45.0, 200.0],
-	["mushtree2", 540.0, 130.0, 1480.0, 135.0, 0.0], ["mushtree2", 790.0, 205.0, 1900.0, 50.0, 80.0]]
+	["mushtree2", 535.0, 140.0, 1480.0, 170.0, 35.0], ["mushtree", 800.0, 225.0, 1900.0, 45.0, 115.0]]
 const C1_FAR_TREE_UNDER := Vector2(0.38, 0.8)
 # Mushrooms keep their lit surface at middle distance; the rock ring retains its denser haze.
 const C1_FAR_TREE_HAZE := Vector2(0.14, 0.50)
@@ -4513,7 +4545,7 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 	var trees: Array = []
 	for ti: int in C1_FAR_TREES.size():
 		var spec: Array = C1_FAR_TREES[ti]
-		var tpath: String = C1_TRIPO_FG + str(spec[0]) + ".glb"
+		var tpath: String = C1_FAR_CURLED_TREE if str(spec[0]) == "curled" else C1_TRIPO_FG + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(tpath): continue
 		var r: Vector3 = _c1_pixel_ray(eye, float(spec[1]), float(spec[2]))
 		var top: Vector3 = eye + r * (float(spec[3]) / maxf(Vector2(r.x, r.z).length(), 0.001))
@@ -4531,6 +4563,18 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 		var want_w: float = float(spec[4]) * float(spec[3]) / (640.0 / (tan(deg_to_rad(30.0)) * 16.0 / 9.0))
 		var xz: float = clampf(want_w / maxf(natural_w, 0.001), 0.35, 1.4)
 		var to_eye := Vector2(eye.x - top.x, eye.z - top.z)
+		if tpath == C1_FAR_CURLED_TREE:
+			_blender_place(tpath, _model_root(tpath, Vector3(top.x, base, top.z), atan2(to_eye.x, to_eye.y), h, xz), "C1FarCurledTree", Color.WHITE, Transform3D.IDENTITY, {
+				"far_mushroom_tree_cap_deep": [Color("9b83be"), 0.035, Color("8273b5"), 0.14],
+				"far_mushroom_tree_cap_light": [Color("9b83be"), 0.035, Color("8273b5"), 0.14],
+				"far_mushroom_tree_cap_spot": [Color("9b83be"), 0.02, Color("8273b5"), 0.08]})
+			for cap: StandardMaterial3D in _refuge_mats:
+				if cap.resource_name in ["far_mushroom_tree_cap_deep", "far_mushroom_tree_cap_light", "far_mushroom_tree_cap_spot"]:
+					cap.emission_texture = cap.albedo_texture
+					cap.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+					cap.set_meta("night_fill", 0.30)
+			trees.append([spec[0], _v3(Vector3(top.x, base, top.z)), snappedf(h, 1.0), snappedf(xz, 0.01)])
+			continue
 		var t0: int = _refuge_props.size()
 		if _refuge_model(tpath, Vector3(top.x, base, top.z), atan2(to_eye.x, to_eye.y) + C1_TRIPO_FRONT + deg_to_rad(float(spec[5])), h, "C1FarTree%d" % ti, false, C1_FAR_SHADER, xz):
 			_c1_tree_mats(t0, Vector3(top.x, base, top.z), h, natural_w * xz * 0.5)
@@ -4611,6 +4655,7 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 	return out
 
 func _add_concept_vista() -> void:
+	var vista_us: int = Time.get_ticks_usec()
 	var eye: Vector3 = _vista_eye()
 	concept_vista_report = {"eye": _v3(eye), "target": _v3(_vista_target()), "far_plane": get_view_distance()}
 	concept_vista_report["outer_ground"] = _add_c1_outer_ground()
@@ -4620,15 +4665,19 @@ func _add_concept_vista() -> void:
 	concept_vista_report["viaduct"] = _add_c1_distance_viaduct(eye)
 	concept_vista_report["glow_points"] = _add_c1_glow(eye)
 	concept_vista_report["giants"] = _add_c1_giants(eye)
-	concept_vista_report["mist"] = _add_c1_mist(eye)
+	_c1_cloud_sea = preload("res://scripts/c1_cloud_sea.gd").new()
+	add_child(_c1_cloud_sea)
+	concept_vista_report["cloud_sea"] = _c1_cloud_sea.configure(self, eye)
+	concept_vista_report["mist"] = {"sheets": 0, "replacement": "spatial cloud sea"}
 	concept_vista_report["sunset_banks"] = _add_c1_sunset_banks(eye)
 	concept_vista_report["night_fill"] = _add_c1_night_fill(eye)
 	_c1_balloons = preload("res://scripts/c1_valley_balloons.gd").new()
 	add_child(_c1_balloons)
 	concept_vista_report["balloons"] = _c1_balloons.configure(self, eye)
 	_c1_balloons.set_reduced_motion(_reduced_motion)
-	concept_vista_report["mist_decks"] = _add_c1_decks(eye)
+	concept_vista_report["mist_decks"] = 0
 	concept_vista_report["backdrop"] = _add_c1_backdrop(eye) if C1_BACKDROP else false
+	concept_vista_report["build_ms"] = {"total": float(Time.get_ticks_usec() - vista_us) / 1000.0, "model_waits_total": _model_load_ms}
 	print("CONCEPT_VISTA ", JSON.stringify(concept_vista_report))
 
 ## Original accepted eleven-arch stone viaduct, placed only in C1's right distance.
@@ -5034,6 +5083,12 @@ func _add_c1_flagstone_path(eye: Vector3) -> Dictionary:
 		if mat == null or mat.resource_name != "hero_terrace_ground": continue
 		for vertex: Vector3 in mi.mesh.get_faces(): ground.append(mi.transform * vertex)
 	if ground.is_empty(): return {"built": false, "reason": "terrace ground absent"}
+	# Startup (acceptance crash children must be ready within 20 s): the conformed path (~2 s to build) is reused from
+	# baked/ when every input matches (ground faces, terrace grid, eye, constants, stairs asset, builder source text);
+	# otherwise it is rebuilt exactly as below. MUSH_C1_BAKE=1 writes a fresh bake.
+	var fingerprint: String = _c1_path_fingerprint(eye, ground)
+	var baked: Dictionary = _c1_path_load_bake(fingerprint, path)
+	if not baked.is_empty(): return baked
 	var cells: Dictionary = {}
 	for fi: int in range(0, ground.size(), 3):
 		var low: Vector3 = ground[fi].min(ground[fi + 1]).min(ground[fi + 2])
@@ -5199,7 +5254,62 @@ func _add_c1_flagstone_path(eye: Vector3) -> Dictionary:
 	material.set_meta("luminous", false)
 	_refuge_props.append(material)
 	_refuge_mesh(mesh, material, Transform3D.IDENTITY, "C1FlagstonePath")
-	return {"built": true, "sections": sections, "triangles": triangles, "rejected_triangles": rejected, "support_rejected_triangles": support_rejected, "support_linear_triangles": support_linear, "width_m": C1_PATH_WIDTH, "length_m": snappedf(total, 0.01), "bounds_min": _v3(bounds.position), "bounds_max": _v3(bounds.end), "source": "stairs.glb varied upward faces + UV; legacy flag parts omitted", "collision": false}
+	var report: Dictionary = {"built": true, "sections": sections, "triangles": triangles, "rejected_triangles": rejected, "support_rejected_triangles": support_rejected, "support_linear_triangles": support_linear, "width_m": C1_PATH_WIDTH, "length_m": snappedf(total, 0.01), "bounds_min": _v3(bounds.position), "bounds_max": _v3(bounds.end), "source": "stairs.glb varied upward faces + UV; legacy flag parts omitted", "collision": false}
+	if OS.get_environment("MUSH_C1_BAKE") == "1":
+		var saved: int = ResourceSaver.save(mesh, C1_PATH_BAKE, ResourceSaver.FLAG_COMPRESS)
+		var meta := FileAccess.open(C1_PATH_BAKE_META, FileAccess.WRITE)
+		if saved == OK and meta != null:
+			meta.store_string(JSON.stringify({"fingerprint": fingerprint, "mesh_sha256": FileAccess.get_sha256(C1_PATH_BAKE), "report": report}, "\t"))
+			meta.close()
+		report["baked_now"] = saved == OK
+	report["from_bake"] = false
+	return report
+
+## Baked flagstone path (see _add_c1_flagstone_path): mesh plus a JSON with its input fingerprint and report.
+const C1_PATH_BAKE := "res://baked/c1_flagstone_path.res"
+const C1_PATH_BAKE_META := "res://baked/c1_flagstone_path.json"
+func _c1_path_fingerprint(eye: Vector3, ground: PackedVector3Array) -> String:
+	var ctx := HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA256)
+	ctx.update(var_to_bytes([eye, _vista_target(), C1_PATH_PIXELS, C1_PATH_WIDTH, C1_PATH_RELIEF, C1_TGRID_CELL]))
+	ctx.update(ground.to_byte_array())
+	ctx.update(var_to_bytes(_c1_tgrid))
+	for asset: String in [C1_TRIPO_FG + "stairs.glb", C1_TRIPO_FG + "stairs.glb.import"]:
+		ctx.update(FileAccess.get_sha256(asset).to_utf8_buffer())
+	# builder source: the path ground sampler, the path builder and the terrace ray hit
+	var text: String = FileAccess.get_file_as_string("res://scripts/prototype_scenery.gd")
+	for span: Array in [["func _c1_path_ground(", "func _add_c1_fg_props("], ["func _c1_ground_hit(", "func _add_c1_fg_props("]]:
+		var a: int = text.find(span[0])
+		var b: int = text.find(span[1], a + 1) if a >= 0 else -1
+		ctx.update((text.substr(a, b - a) if a >= 0 and b > a else "missing").to_utf8_buffer())
+	return ctx.finish().hex_encode()
+
+func _c1_path_load_bake(fingerprint: String, source_path: String) -> Dictionary:
+	if OS.get_environment("MUSH_C1_BAKE") == "1" or not FileAccess.file_exists(C1_PATH_BAKE_META) or not ResourceLoader.exists(C1_PATH_BAKE): return {}
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(C1_PATH_BAKE_META))
+	if not meta is Dictionary or str((meta as Dictionary).get("fingerprint", "")) != fingerprint: return {}
+	if FileAccess.get_sha256(C1_PATH_BAKE) != str((meta as Dictionary).get("mesh_sha256", "")): return {}
+	var mesh := load(C1_PATH_BAKE) as ArrayMesh
+	var parts: Array = _model_parts(source_path)
+	if mesh == null or parts.is_empty(): return {}
+	var source := (parts[0][0] as Mesh).surface_get_material(0) as StandardMaterial3D
+	var material := ShaderMaterial.new()
+	material.shader = TRIPO_SHADER
+	if source != null:
+		material.set_shader_parameter("albedo_tex", source.albedo_texture)
+		if source.roughness_texture != null: material.set_shader_parameter("rough_tex", source.roughness_texture)
+		if source.normal_texture != null:
+			material.set_shader_parameter("normal_tex", source.normal_texture)
+			material.set_shader_parameter("has_normal", true)
+	material.set_shader_parameter("base_tint", Vector3(0.72, 0.80, 0.75))
+	material.set_shader_parameter("desat", 0.18)
+	material.set_shader_parameter("glow_floor", 1.0)
+	material.set_meta("luminous", false)
+	_refuge_props.append(material)
+	_refuge_mesh(mesh, material, Transform3D.IDENTITY, "C1FlagstonePath")
+	var report: Dictionary = ((meta as Dictionary).get("report", {}) as Dictionary).duplicate(true)
+	report["from_bake"] = true
+	return report
 
 func _add_c1_fg_props(eye: Vector3) -> Array:
 	var look: Vector3 = (_vista_target() - eye).normalized()
@@ -5347,10 +5457,10 @@ const C1_ISLANDS: Array = [
 	# capture s13: the right isle's dark crown filled the lower right (L 21 vs 43): further out
 	# An optional seventh field stands a Tripo mushroom spire house (lit) that many m tall on the crown ground nearest
 	# the mass's centre (captures s16-s18: a fixed fraction or surface median sank them into saddles).
-	["massif", 690.0, 950.0, 220.0, 0.0, 10.0, 44.0], ["lowisle", 1080.0, 840.0, 150.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 340.0, 0.0, 0.0, 40.0],
-	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 300.0, 0.0, -20.0, 50.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
+	["massif", 690.0, 950.0, 340.0, 0.0, 10.0, 44.0], ["lowisle", 1080.0, 840.0, 150.0, 0.0, -30.0], ["tower", 560.0, 1000.0, 450.0, 0.0, 0.0, 40.0],
+	["needle", 1190.0, 820.0, 330.0, 0.0, 0.0], ["massif", 1140.0, 1250.0, 410.0, 0.0, -20.0, 50.0], ["lowisle", 640.0, 1350.0, 230.0, 0.0, 30.0],
 	["tower", 880.0, 1300.0, 360.0, 0.0, 90.0], ["lowisle", 770.0, 520.0, 90.0, 0.0, 0.0], ["massif", 430.0, 1500.0, 280.0, 0.0, 0.0],
-	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0, 36.0], ["massif", 960.0, 1500.0, 260.0, 0.0, 160.0],
+	["needle", 700.0, 1700.0, 380.0, 0.0, 45.0], ["lowisle", 470.0, 760.0, 150.0, 0.0, 70.0, 36.0], ["massif", 845.0, 1500.0, 390.0, 0.0, 160.0],
 	# ChatGPT checkpoint 5 (milestone 4): empty gaps between and beneath the bridges; smaller isles (each with its own
 	# hut, trees and falls) fill them at the middle distance.
 	["lowisle", 830.0, 1060.0, 120.0, 0.0, 120.0], ["lowisle", 600.0, 660.0, 70.0, 0.0, -60.0], ["lowisle", 960.0, 1150.0, 150.0, 0.0, 200.0],
@@ -5424,6 +5534,11 @@ const C1_TRIPO_KIT := {"tower": "res://assets/world/models/tripo/c1/tower.glb", 
 	"needle": "res://assets/world/models/tripo/c1/needle.glb", "lowisle": "res://assets/world/models/tripo/c1/lowisle.glb", "risebridge": "res://assets/world/models/tripo/c1/risebridge.glb"}
 ## [model, px, m, px, m, deck height above LAKE_Y] (V2 straight viaducts; none in V3)
 const C1_BRIDGES: Array = []
+# Original C kit: replace two broad, similarly crowned masses with eroded falls.
+const C1_WATERFALL_CLIFF := "res://assets/world/models/c1-procedural/waterfall_cliff_block.glb"
+const C1_FAR_CURLED_TREE := "res://assets/world/models/c1-procedural/far_mushroom_tree.glb"
+const C1_PRINCIPAL := {0: 120.0, 2: 110.0, 4: 110.0, 11: 130.0}
+const C1_SUBMERGED := [12, 14, 16, 18, 20]
 var _c1_bases: Array = []
 ## Height fraction for the mid-cliff mist bank in front of island i (varied, deterministic).
 func rng_mid(i: int) -> float:
@@ -5441,11 +5556,13 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 	var placed: Array = []
 	var landforms: Dictionary = {}
 	var widened: Array = []
+	var principals: Array = []
 	_c1_bases.clear()
 	_c1_glow.clear()
 	_c1_right_cluster_anchor = Vector3.INF
 	for island_index: int in C1_ISLANDS.size():
 		var spec: Array = C1_ISLANDS[island_index]
+		if island_index in C1_SUBMERGED: continue
 		var path: String = C1_KIT + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(path): continue
 		var dims: Array = C1_KIT_DIMS[spec[0]]
@@ -5462,17 +5579,39 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			continue
 		var base: float = maxf(terrain_height(p.x, p.y), LAKE_Y) - C1_SINK
 		var top: float = maxf(LAKE_Y + float(spec[3]), base + float(spec[3]) * 0.6)
-		var xz: float = 1.4 if island_index in [0, 4, 8, 11] else 1.0
+		var xz: float = {0: 0.90, 2: 0.76, 4: 1.03, 8: 1.4, 11: 0.80}.get(island_index, 1.0)
 		var k: float = float(spec[4]) / float(dims[1])
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
-		var tpath: String = str(C1_TRIPO_KIT.get(spec[0], ""))
+		var tpath: String = C1_WATERFALL_CLIFF if island_index in [0, 11] else str(C1_TRIPO_KIT.get(spec[0], ""))
 		if C1_TRIPO_ONLY and not (tpath != "" and ResourceLoader.exists(tpath)):
 			placed.append([spec[0], "skipped: no Tripo model yet"])
 			continue
 		if tpath != "" and ResourceLoader.exists(tpath):
-			var turn: float = C1_TRIPO_FRONT + deg_to_rad(float(spec[5]) if spec.size() > 5 else 0.0)
-			_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()], false, null, xz)
+			var turn: float = C1_TRIPO_FRONT + deg_to_rad(-16.0 if island_index == 11 else (float(spec[5]) if spec.size() > 5 else 0.0))
 			var root_i: Transform3D = _model_root(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, xz)
+			if tpath == C1_WATERFALL_CLIFF:
+				_blender_place(tpath, root_i, "C1WaterfallCliff%d" % island_index, Color.WHITE, Transform3D.IDENTITY, {
+					"waterfall_cliff_block_cliff_violet": [Color("777daa"), 0.0, Color("777daa"), 0.18],
+					"waterfall_cliff_block_cliff_facet": [Color("777daa"), 0.0, Color("777daa"), 0.18],
+					"waterfall_cliff_block_cliff_damp": [Color("777daa"), 0.0, Color("777daa"), 0.12]})
+				for rock: StandardMaterial3D in _refuge_mats:
+					if rock.resource_name not in ["waterfall_cliff_block_cliff_violet", "waterfall_cliff_block_cliff_facet", "waterfall_cliff_block_cliff_damp"]: continue
+					# Preserve the baked rock variation in the local night fill. A constant
+					# emissive colour flattened these planes in the second native sweep.
+					rock.emission_texture = rock.albedo_texture
+					rock.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+					rock.set_meta("night_fill", 0.55 if not rock.resource_name.ends_with("damp") else 0.35)
+					rock.set_meta("night_fill_col", Color("a2aadc"))
+				for water: StandardMaterial3D in _refuge_mats:
+					if water.resource_name not in ["waterfall_cliff_block_river_sheet", "waterfall_cliff_block_soft_foam"]: continue
+					water.set_meta("day_fill", 0.55)
+					water.set_meta("night_fill", 0.70)
+					water.set_meta("day_fill_col", Color("b9e8f5"))
+					water.set_meta("night_fill_col", Color("8bbbd9"))
+			else:
+				_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()], false, null, xz)
+			if C1_PRINCIPAL.has(island_index):
+				principals.append({"index": island_index, "raise_m": top - maxf(LAKE_Y + float(spec[3]) - float(C1_PRINCIPAL[island_index]), base + (float(spec[3]) - float(C1_PRINCIPAL[island_index])) * 0.6), "at": _v3(Vector3(p.x, base, p.y)), "top_y": top, "height": top - base, "xz": xz, "model": tpath.get_file()})
 			landforms[island_index] = {"at": Vector3(p.x, base, p.y), "height": top - base}
 			if xz > 1.0: widened.append({"index": island_index, "horizontal_scale": xz})
 			var band: Vector2 = C1_CROWN_BAND.get(spec[0], Vector2(0.65, 0.92))
@@ -5482,10 +5621,16 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			for gi: int in gpts.size():
 				_c1_glow.append(root_i * gpts[gi] + Vector3(0.0, 2.0, 0.0))
 			if island_index == 4:
+				# The principal crown rose 110 m in M8. Keep the large mushroom on
+				# a lower, forward, native ledge so its gold cap frames the valley.
+				var ledges: PackedVector3Array = _model_crown_points(tpath, 0.18, 0.62, 240, 8408)
+				var forward: Vector3 = Vector3(to_eye.x, 0.0, to_eye.y).normalized()
+				var desired := Vector3(p.x, LAKE_Y + 155.0, p.y) + forward * 90.0
 				var closest: float = INF
-				for cp: Vector3 in gpts:
+				for cp: Vector3 in ledges:
 					var wp: Vector3 = root_i * cp
-					var separation: float = Vector2(wp.x - p.x, wp.z - p.y).length_squared()
+					if (wp - Vector3(p.x, wp.y, p.y)).dot(forward) < 0.0: continue
+					var separation: float = Vector2(wp.x - desired.x, wp.z - desired.z).length_squared() + pow((wp.y - desired.y) * 2.5, 2.0)
 					if separation < closest:
 						closest = separation
 						_c1_right_cluster_anchor = wp
@@ -5564,7 +5709,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
 		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
 		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
-	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges}
+	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges, "principal_cliffs": principals, "subordinate_islands_omitted": C1_SUBMERGED}
 
 ## Low, overlapping shoulders join selected cliff feet; the open central water corridor remains.
 ## Reuse the irregular massif silhouette and place its bottom beneath the actual basin ground.
@@ -5592,15 +5737,15 @@ func _add_c1_valley_ridges(landforms: Dictionary) -> Array:
 		placed.append({"joins": pair, "at": _v3(p), "height": h, "span": span, "colliders": 0})
 	return placed
 
-## Three shadowless cool pools below the bridges. Day energy is zero; lanterns stay warm.
+## Four shadowless cool pools face the principal cliffs. Day energy is zero; lanterns stay warm.
 var _c1_night_fill: Array[OmniLight3D] = []
 func _add_c1_night_fill(eye: Vector3) -> int:
-	for spec: Array in [[740.0, 820.0, 380.0], [1030.0, 1080.0, 400.0], [650.0, 1250.0, 350.0]]:
+	for spec: Array in [[690.0, 760.0, 490.0, 210.0], [1120.0, 1000.0, 460.0, 240.0], [560.0, 840.0, 430.0, 270.0], [940.0, 1320.0, 460.0, 230.0]]:
 		var p: Vector2 = _c1_point(eye, spec[0], spec[1])
-		var at := Vector3(p.x, maxf(terrain_height(p.x, p.y), LAKE_Y) + 100.0, p.y)
+		var at := Vector3(p.x, LAKE_Y + float(spec[3]), p.y)
 		_refuge_light(at, spec[2], "C1NightFill%d" % _c1_night_fill.size())
 		var fill: OmniLight3D = _refuge_lights.pop_back()
-		fill.light_color = Color("4e507d")
+		fill.light_color = Color("787bb4")
 		fill.light_energy = 0.0
 		_c1_night_fill.append(fill)
 	return _c1_night_fill.size()
@@ -7224,7 +7369,9 @@ func _add_stream_water(pool_y: float) -> void:
 	water.set_shader_parameter("stream", true)
 	_geology_materials.append(water)
 	var ribbon_mesh: ArrayMesh = st.commit()
-	stream_report["clearance"] = _water_clearance(ribbon_mesh)
+	# Startup (acceptance crash children must be ready within 20 s): the 7 s clearance sweep below runs when the
+	# report is first requested (_finish_stream_report, from get_report), with the same samples and criteria.
+	_stream_ribbon_mesh = ribbon_mesh
 	var node := MeshInstance3D.new()
 	node.name = "WestFallsOutlet"
 	node.mesh = ribbon_mesh
@@ -7269,8 +7416,17 @@ func _add_stream_water(pool_y: float) -> void:
 	var mouth: Vector3 = _stream[_stream.size() - 1]
 	var joins: bool = Vector2(mouth.x, mouth.z).distance_to(LAKE_CENTER) < 290.0 and _coarse_height(mouth.x, mouth.z) < LAKE_Y
 	stream_report.merge({"built": true, "ribbon_triangles": (rows - 1) * (columns - 1) * 2, "sheet": {"rows": rows, "columns": columns, "spacing_m": spacing, "depth_over_rendered_bed_m": depth}, "water_depth_over_rendered_floor_max_m": floating, "water_above_banks_max_m": above_banks, "worst_bank_point_x_z_water_bank_floor_lakedist_index": worst, "joins_lake_water": joins, "steepest_reach": steep_max, "route_slice_min_distance_m": route_gap, "crag_base_carve_m": crag_carve, "shore_sightline_max_terrain_above_m": blocked, "pool_visible_from_shore_eye": blocked < 0.0, "mouth": _v3(mouth), "collision": "none (far layer)"}, true)
+	_stream_pass_core = route_gap > 60.0 and absf(crag_carve) < 5.0 and joins and bool(stream_report.get("reached_lake", false))
+	stream_report["passed"] = false
+
+var _stream_ribbon_mesh: ArrayMesh = null
+var _stream_pass_core: bool = false
+## Completes stream_report with the water-sheet clearance sweep (deferred from startup) and the final pass flag.
+func _finish_stream_report() -> void:
+	if _stream_ribbon_mesh == null or stream_report.has("clearance"): return
+	stream_report["clearance"] = _water_clearance(_stream_ribbon_mesh)
 	var clear: Dictionary = stream_report["clearance"]
-	stream_report["passed"] = route_gap > 60.0 and absf(crag_carve) < 5.0 and joins and bool(stream_report.get("reached_lake", false)) and int(clear.buried_samples) == 0 and float(clear.max_over_bed_m) < 1.0
+	stream_report["passed"] = _stream_pass_core and int(clear.buried_samples) == 0 and float(clear.max_over_bed_m) < 1.0
 
 ## Alpine ice behind the falls: a snow peak standing behind the notch and a steep, fractured
 ## ice tongue descending from its flank through the widened notch to an ice cliff just above
@@ -8022,7 +8178,9 @@ func _process(delta: float) -> void:
 		var camera: Camera3D = get_viewport().get_camera_3d()
 		if camera != null: _skyglow.global_position = camera.global_position
 	var controller: Node = get_parent().get("environment_controller") if is_instance_valid(_c1_balloons) else null
-	if is_instance_valid(controller): _c1_balloons.set_quality(controller.quality)
+	if is_instance_valid(controller):
+		_c1_balloons.set_quality(controller.quality)
+		if is_instance_valid(_c1_cloud_sea): _c1_cloud_sea.set_quality(controller.quality)
 	if frozen or _reduced_motion or (is_inside_tree() and get_tree().paused): return
 	if is_instance_valid(controller) and controller.foreground:
 		_c1_balloons.update_motion(delta, controller.wind_direction, controller._applied_wind_strength, controller.quality)
@@ -8310,7 +8468,7 @@ const SOFT_BOUNCE := 0.3
 ## lighter fog, softer key and 0.9 grade keep the amber horizon and turquoise water at 21.4.)
 ## (Sweep s33: a bluer lilac horizon b4a6d8, a deeper top and rosier cloud tint pulled the top right toward the
 ## concept's violet-blue, 21.4 -> 21.3.)
-const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "b4a6d8", "day_fog": "8a84c4", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
+const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "8a84c4", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
 	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
@@ -8326,7 +8484,8 @@ const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "b4a6d8", "day_fog
 	"fog_depth_end": 2300.0, "fog_depth_curve": 2.6,
 	# High eye: the frame top is only ~15 degrees above the horizon, below the golden zenith band (0.40-0.56), so the
 	# whole sky read as the warm horizon glow; the violet zenith starts low and the glow narrows to the far gap.
-	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 6.0,
+	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 10.0,
+	"cloud_glow_power": 6.0, "cloud_glow": 2.4, "cloud_warm_mix": 0.55, "glow": 0.18,
 	# Milestone 4 review: the horizon giants hazed to cream; concept-1's far caps are lilac.
 	"far_cap_color": "aea4d4"}
 
@@ -8586,7 +8745,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 		var pt: Color = lily_tint if prop.get_meta("luminous", false) else refuge_tint
 		prop.set_shader_parameter("tint", Vector3(pt.r, pt.g, pt.b))
 		if prop.get_meta("c1_tree", false): prop.set_shader_parameter("tree_night", night)
-		prop.set_shader_parameter("glow", lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
+		prop.set_shader_parameter("glow", lerpf(0.48, 1.10, maxf(night, rain * 0.5)) if prop.get_meta("c1_cluster", false) else lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
 		if prop.get_meta("luminous", false):
 			var pale: bool = prop.get_meta("pale", false)
 			prop.set_shader_parameter("cool_glow", lerpf(0.55 if pale else 0.25, 0.48, night))
@@ -8594,7 +8753,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 	for light: OmniLight3D in _c1_lights: light.light_energy = lerpf(C1_LIGHT_ENERGY.x, C1_LIGHT_ENERGY.y, maxf(night, rain * 0.6))
-	for light: OmniLight3D in _c1_night_fill: light.light_energy = 0.85 * night * (1.0 - rain * 0.3)
+	for light: OmniLight3D in _c1_night_fill: light.light_energy = 1.25 * night * (1.0 - rain * 0.3)
 	if _c1_glow_mat != null: _c1_glow_mat.set_shader_parameter("energy", lerpf(C1_GLOW_ENERGY.x, C1_GLOW_ENERGY.y, maxf(night, rain * 0.6)))
 	# Concept-1 mushroom undersides (milestone 7): [day, night] golden glow on down faces.
 	for prop: ShaderMaterial in _refuge_props:
@@ -8632,6 +8791,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 		_reed_material.set_shader_parameter("backlight", 0.32 * (1.0 - night) * (1.0 - 0.6 * rain))
 
 func get_report() -> Dictionary:
+	_finish_stream_report()
 	# Owned colliders: the two walking ribbons and the hero root; the far layer itself has none.
 	var owned: int = int(route_report.get("colliders", 0)) + int(slice_report.get("colliders", 0)) + (1 if is_instance_valid(root_body) else 0)
 	var colliders: int = find_children("*", "CollisionObject3D", true, false).size() - owned

@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbp3novhowcjp"
-path="res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.ctex"
+path.s3tc="res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.s3tc.ctex"
+path.etc2="res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "fc357bd00ba08f8e719c315492344eba"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/spire_c1_spire_basecolor.jpg"
-dest_files=["res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.ctex"]
+dest_files=["res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.s3tc.ctex", "res://.godot/imported/spire_c1_spire_basecolor.jpg-8a8c66a09f98260fefc7e1c4e3b4b23c.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=2048
 detect_3d/compress_to=1

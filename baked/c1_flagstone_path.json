@@ -1,0 +1,26 @@
+{
+	"fingerprint": "28d785efd2146ba38fc750af928ef57a0a058ef4f65481290f6d9f9a39754d5b",
+	"mesh_sha256": "9fbc359a094902fc5a6f271efb2725838d420591426729b2062bc5612bc01ed7",
+	"report": {
+		"bounds_max": [
+			519.0,
+			345.5,
+			454.7
+		],
+		"bounds_min": [
+			506.7,
+			338.7,
+			448.9
+		],
+		"built": true,
+		"collision": false,
+		"length_m": 11.42,
+		"rejected_triangles": 947,
+		"sections": 5,
+		"source": "stairs.glb varied upward faces + UV; legacy flag parts omitted",
+		"support_linear_triangles": 83639,
+		"support_rejected_triangles": 947,
+		"triangles": 97683,
+		"width_m": 3.1
+	}
+}

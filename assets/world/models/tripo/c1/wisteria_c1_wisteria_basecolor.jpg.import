@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://by0rvb41ko5wj"
-path="res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.ctex"
+path.s3tc="res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.s3tc.ctex"
+path.etc2="res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "199f789c94ae93bbfacb686835029924"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/wisteria_c1_wisteria_basecolor.jpg"
-dest_files=["res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.ctex"]
+dest_files=["res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.s3tc.ctex", "res://.godot/imported/wisteria_c1_wisteria_basecolor.jpg-35f59801b391bfd217ae30b65600985e.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

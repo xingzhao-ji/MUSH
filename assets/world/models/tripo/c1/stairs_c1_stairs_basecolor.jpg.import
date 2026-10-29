@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://o42u5d3en64j"
-path="res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.ctex"
+path.s3tc="res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.s3tc.ctex"
+path.etc2="res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b5c588d02659a7ef7496371efdb89447"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/stairs_c1_stairs_basecolor.jpg"
-dest_files=["res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.ctex"]
+dest_files=["res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.s3tc.ctex", "res://.godot/imported/stairs_c1_stairs_basecolor.jpg-12234c1196fce3d9abf9d2b2a4a73aac.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

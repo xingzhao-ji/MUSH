@@ -44,6 +44,15 @@ void vertex() {
 	world_xz = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
 }
 
+// Antialiased gills follow the installed cap radius, so scaling never changes their density.
+// Fine branches fade when their period becomes subpixel instead of flickering on distant trees.
+float c1_gill_line(float phase, float width) {
+	float footprint = fwidth(phase);
+	float aa = clamp(footprint * 0.55, 0.012, 0.40);
+	return (1.0 - smoothstep(width - aa, width + aa, abs(sin(phase))))
+		* (1.0 - smoothstep(0.9, 2.5, footprint));
+}
+
 void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb;
 	vec3 cc = mix(c, vec3(dot(c, vec3(0.3, 0.55, 0.15))), desat);
@@ -65,7 +74,8 @@ void fragment() {
 		float palette = clamp(tree_palette, 0.0, 1.0);
 		float night = clamp(tree_night, 0.0, 1.0);
 		float height_fraction = (world_y - tree_base_y) / max(tree_height, 0.001);
-		float radius_fraction = length(world_xz - tree_center) / max(tree_radius, 0.001);
+		vec2 cap_position = (world_xz - tree_center) / max(tree_radius, 0.001);
+		float radius_fraction = length(cap_position);
 		float normal_y = (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y;
 		float down = 1.0 - smoothstep(-0.6, -0.12, normal_y);
 		float under_surface = down * step(under_min_y, world_y) * smoothstep(0.40, 0.52, height_fraction);
@@ -77,15 +87,29 @@ void fragment() {
 		vec3 bark = mix(c, vec3(0.48, 0.36, 0.62) * detail, 0.78);
 		vec3 cap = mix(c, vec3(0.48, 0.35, 0.69) * detail, 0.76);
 		vec3 violet = vec3(0.270, 0.147, 0.807) * clamp(mx / 0.7, 0.45, 1.2);
-		vec3 underside = mix(violet, under_color * mx, vein * core);
+		// Two curved radial families split as they travel outward. The faint connective membrane
+		// softens the bare-branch reading; brightest filaments stay around the trunk, not the rim.
+		float angle = atan(cap_position.y, cap_position.x + 0.00001);
+		float warp = sin(angle * 7.0 + radius_fraction * 8.0) * 0.70
+			+ sin(angle * 13.0 - radius_fraction * 5.0) * 0.24;
+		float main_gill = c1_gill_line(angle * 31.0 + radius_fraction * 7.0 + warp, 0.105);
+		float fine_gill = c1_gill_line(angle * 59.0 - radius_fraction * 11.0 + warp * 1.6, 0.075)
+			* smoothstep(0.25, 0.65, radius_fraction);
+		float gills = max(main_gill * 0.78, fine_gill * 0.45)
+			* smoothstep(0.08, 0.20, radius_fraction) * (1.0 - smoothstep(0.88, 1.01, radius_fraction));
+		float gold_mask = clamp(vein * core + gills * (0.24 + 0.56 * core) + 0.10 * core, 0.0, 1.0);
+		vec3 underside = mix(violet, under_color * clamp(mx, 0.45, 1.0), gold_mask);
 		vec3 tree_color = mix(bark, cap, cap_top);
 		tree_color = mix(tree_color, mix(c, underside, 0.85), under_surface);
 		ALBEDO = mix(ALBEDO, clamp(tree_color, vec3(0.0), vec3(1.0)) * base_tint * tint, palette);
 		// Soft coloured fill keeps the bark legible under the blue night key; no white fill.
 		vec3 tree_emission = mix(bark, cap, cap_top) * mix(0.11, 0.075, night) * (1.0 - under_surface);
 		tree_emission += violet * mix(0.025, 0.04, night) * under_surface;
-		// The same texture veins glow near the trunk and yield to violet toward the cap rim.
-		tree_emission += under_color * under_glow * under_surface * vein * mx * (0.06 + 1.14 * core);
+		// Imported large veins and finer gills share one orange-gold source. The low membrane
+		// contribution is coloured and radius-limited, preserving violet gaps and texture relief.
+		float warm_energy = vein * mx * (0.06 + 1.00 * core)
+			+ gills * (0.10 + 0.58 * core) + 0.045 * core * clamp(detail, 0.6, 1.2);
+		tree_emission += under_color * under_glow * under_surface * warm_energy;
 		// Keep the imported bright flecks, without the old broad warm emission washing the cap out.
 		tree_emission += EMISSION * mix(0.15, 0.08, under_surface);
 		tree_emission += c * smoothstep(0.78, 0.95, mx) * smoothstep(0.05, 0.24, c.b - c.r) * cap_top * 0.045;

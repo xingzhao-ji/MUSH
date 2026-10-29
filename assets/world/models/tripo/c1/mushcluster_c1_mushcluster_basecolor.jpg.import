@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cveh4s0p3kgdn"
-path="res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.ctex"
+path.s3tc="res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.s3tc.ctex"
+path.etc2="res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "4c505291535137c186aedca25252a160"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/mushcluster_c1_mushcluster_basecolor.jpg"
-dest_files=["res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.ctex"]
+dest_files=["res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.s3tc.ctex", "res://.godot/imported/mushcluster_c1_mushcluster_basecolor.jpg-565915db6f5b3203ce369aa78cea8312.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -20,6 +20,8 @@ func _ready() -> void:
 		get_window().mouse_passthrough = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_input()
+	# Startup: the scenery's large models load on threads while the baked world loads.
+	if PrototypeScenery.is_enabled(): PrototypeScenery.prefetch_models()
 	world = BakedWorld.new()
 	world.name = "WorldGeometry"
 	add_child(world)

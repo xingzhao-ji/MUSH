@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5bb7agwwuk8v"
-path="res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.ctex"
+path.s3tc="res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.s3tc.ctex"
+path.etc2="res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "790ab3fe0b64501ad9cd5274e8360999"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/mushtree_c1_mushtree_basecolor.jpg"
-dest_files=["res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.ctex"]
+dest_files=["res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.s3tc.ctex", "res://.godot/imported/mushtree_c1_mushtree_basecolor.jpg-b647be2d1a6c72c5e821b680fd60cf22.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=2048
 detect_3d/compress_to=1

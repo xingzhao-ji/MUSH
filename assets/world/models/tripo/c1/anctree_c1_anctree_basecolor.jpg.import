@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsbg7hda8f2v6"
-path="res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.ctex"
+path.s3tc="res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.s3tc.ctex"
+path.etc2="res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ecf63a6e2fa5c3517608aba0cdcd736b"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/anctree_c1_anctree_basecolor.jpg"
-dest_files=["res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.ctex"]
+dest_files=["res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.s3tc.ctex", "res://.godot/imported/anctree_c1_anctree_basecolor.jpg-7b4af9c3ba6acdfdef57e53cb081e87a.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

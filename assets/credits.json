@@ -224,6 +224,30 @@
       "textures": "Ten embedded 1024px original procedural base-colour images; no external URIs or reference artwork in textures",
       "license_scope": "Original project asset under LICENSE.md; no new blanket license and no change to third-party notices",
       "status": "Accepted source asset staged for optional milestone 7 C1 placement; scenery patch not yet applied"
+    },
+    {
+      "id": "c1-m8-waterfall-cliff-block",
+      "source": "assets/world/models/c1-procedural/waterfall_cliff_block.glb",
+      "author": "Original workspace geometry and procedural painted textures by MUSH asset agent C",
+      "source_record": "MUSH-exchange/codex-assets/out/manifest.json; accepted waterfall_cliff_block iteration 2",
+      "source_sha256": "4578442540fc007c66caf4de64c1c540e91d79ae61e60cf44021c2b7501fad23",
+      "asset_sha256": "2df7007aeb5379b0265ef25bf99a092a5587d664dcda0e54317c716d4e4b69a9",
+      "geometry": "99350 triangles; [40.1149, 48.0, 35.6866] metres (X, Y, Z); visual-only original source asset with no collision or gameplay forces",
+      "textures": "Eighteen embedded 1024px original procedural maps; no external URIs or reference artwork in textures",
+      "license_scope": "Original project asset under LICENSE.md; no new blanket license and no change to third-party notices",
+      "status": "Accepted source asset staged for milestone 8 C1 visual placement; sculpted water is a static snapshot"
+    },
+    {
+      "id": "c1-m8-far-mushroom-tree",
+      "source": "assets/world/models/c1-procedural/far_mushroom_tree.glb",
+      "author": "Original workspace geometry and procedural painted textures by MUSH asset agent C",
+      "source_record": "MUSH-exchange/codex-assets/out/manifest.json; accepted far_mushroom_tree iteration 3",
+      "source_sha256": "86785d906688f80fec4f122c2a23cadb457a36caa0596a3ec579d16dbf907b55",
+      "asset_sha256": "dcdaf9c8fad54d5da811734e5479425b2d9c41a92273f6d4552f39761b97262b",
+      "geometry": "81532 triangles; [46.7581, 70.0, 42.8064] metres (X, Y, Z); visual-only original source asset with no collision or gameplay forces",
+      "textures": "Nine embedded 1024px original procedural maps; no external URIs or reference artwork in textures",
+      "license_scope": "Original project asset under LICENSE.md; no new blanket license and no change to third-party notices",
+      "status": "Accepted source asset staged for milestone 8 C1 visual placement; baked bark-to-gold emission gradient retained"
     }
   ],
   "reference": {

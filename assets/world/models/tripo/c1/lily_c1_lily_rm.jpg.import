@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blp6ar1xt0dnj"
-path="res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.ctex"
+path.s3tc="res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.s3tc.ctex"
+path.etc2="res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "68727323833ed5994833d6bccc3bfcab"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/lily_c1_lily_rm.jpg"
-dest_files=["res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.ctex"]
+dest_files=["res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.s3tc.ctex", "res://.godot/imported/lily_c1_lily_rm.jpg-889c398237b8c991504bd637ce2f5b48.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

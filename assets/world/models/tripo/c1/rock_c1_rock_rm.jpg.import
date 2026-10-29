@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cy6py4tjasnpk"
-path="res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.ctex"
+path.s3tc="res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.s3tc.ctex"
+path.etc2="res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "bcb6fd31da717e25bb3872d78db03acc"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/rock_c1_rock_rm.jpg"
-dest_files=["res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.ctex"]
+dest_files=["res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.s3tc.ctex", "res://.godot/imported/rock_c1_rock_rm.jpg-047b7f354e1635955bd24a168ae3de3a.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

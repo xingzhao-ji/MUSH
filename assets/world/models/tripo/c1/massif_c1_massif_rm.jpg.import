@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d4d0gwamfjw6q"
-path="res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.ctex"
+path.s3tc="res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.s3tc.ctex"
+path.etc2="res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "c8c107a4adc806ec8885dfd6235a83af"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/world/models/tripo/c1/massif_c1_massif_rm.jpg"
-dest_files=["res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.ctex"]
+dest_files=["res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.s3tc.ctex", "res://.godot/imported/massif_c1_massif_rm.jpg-b3ab2649f61e50ba6ca09f7550bcd796.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=2048
 detect_3d/compress_to=1
