@@ -10,7 +10,7 @@ const CLOUD_SHADER: Shader = preload("res://assets/world/c1_cloud_sea.gdshader")
 ## layers keep the distance soft; a few taller crowns where the falls land.
 const BANKS: Array = [
 	# near and middle valley: separated banks between the masses
-	[600.0, 640.0, -16.0, 115.0, 42.0, 95.0, 0.012, 0.7],
+	[600.0, 640.0, -22.0, 125.0, 58.0, 100.0, 0.009, 1.0],  # M10b: taller, softer top (a hard edge at frame y ~430)
 	[860.0, 780.0, -12.0, 150.0, 46.0, 115.0, 0.011, 0.7],
 	[1170.0, 880.0, -8.0, 140.0, 48.0, 115.0, 0.012, 0.7],
 	[470.0, 1080.0, 2.0, 165.0, 52.0, 130.0, 0.012, 0.7],
@@ -29,6 +29,13 @@ const BANKS: Array = [
 	[920.0, 2200.0, 53.0, 430.0, 100.0, 350.0, 0.011, 0.55],
 	# M10 (ChatGPT checkpoint 12: the viaduct's even arch cadence read as a wall): mist around its middle piers
 	[800.0, 900.0, 70.0, 150.0, 75.0, 110.0, 0.011, 0.8],
+	# M10b (ChatGPT checkpoint 13: the smooth basin-wall domes at frame 440-900 x 60-310 enclose the scene; Fable: lit
+	# cloud puffs): sunset cloud masses in front of the domes, so the backdrop reads as clouds and staggered crests.
+	[600.0, 1650.0, 330.0, 330.0, 150.0, 260.0, 0.0065, 1.0],
+	[790.0, 1800.0, 380.0, 300.0, 140.0, 240.0, 0.006, 1.0],
+	[1215.0, 1750.0, 340.0, 260.0, 120.0, 210.0, 0.006, 1.0],
+	# M10b (Fable: the arch bridge's left end sat on a rock chunk hanging in the fog): mist wrapping that end's foot
+	[760.0, 700.0, 70.0, 70.0, 55.0, 60.0, 0.012, 1.0],
 	# taller crowns where the falls land
 	[700.0, 760.0, 18.0, 95.0, 52.0, 85.0, 0.018, 1.0],
 	[1230.0, 1080.0, 40.0, 130.0, 62.0, 110.0, 0.017, 1.0],

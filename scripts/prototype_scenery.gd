@@ -2265,8 +2265,14 @@ const C1_PREFETCH: Array[String] = ["res://assets/world/models/tripo/c1/mushtree
 	"res://assets/world/models/tripo/c1/stairs.glb",
 	"res://assets/world/models/c1-procedural/waterfall_cliff_block.glb", "res://assets/world/models/c1-procedural/stone_viaduct.glb",
 	"res://assets/world/models/c1-procedural/spore_silk_balloon.glb", "res://assets/world/models/c1-procedural/far_mushroom_tree.glb"]
+## (acceptance-20261029-015432: prefetching stone_viaduct_open.glb as well raced the baked world's mesh RIDs in the
+## headless crash children's dummy renderer, "Attempting to initialize the wrong RID"; it loads on demand instead.)
 static func prefetch_models() -> int:
 	if not (C1_VISTA and OS.get_environment("MUSH_GOAL_VISTA") == ""): return 0
+	# Headless runs use the dummy renderer, whose resource RIDs are not thread-safe: loader threads raced the baked
+	# world's own mesh and texture creation there ("Attempting to initialize the wrong RID", "Parameter t is null" in
+	# the acceptance crash children, acceptance-20261029-015432 and -020144). Dummy textures load cheaply on demand.
+	if DisplayServer.get_name() == "headless": return 0
 	var n: int = 0
 	for path: String in C1_PREFETCH:
 		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path, "", true) == OK: n += 1
@@ -2764,7 +2770,8 @@ const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 2.0, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
 const C1_TREE_M10 := [Vector3(0.56, 0.31, 0.52), Vector3(0.66, 0.46, 0.60), 0.45, 1.1]
-const C1_HERO_HAZE := Vector2(0.2, 0.2)
+## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
+const C1_HERO_HAZE := Vector2(0.13, 0.13)
 const C1_FAR_TREE_M9 := [0.86, 0.6, 0.0, 0.5, 0.0, 0.2]
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
@@ -4474,7 +4481,7 @@ const C1_FAR_LAYERS: Array = [
 const C1_FAR_CONE := 60.0
 const C1_FAR_HAZE := Vector2(0.45, 0.82)
 const C1_FAR_HAZE_RANGE := Vector2(2500.0, 8500.0)
-const C1_FAR_HAZE_DAY := Color("a09bcc")
+const C1_FAR_HAZE_DAY := Color("a1a6cf")
 const C1_FAR_HAZE_NIGHT := Color("26244e")
 const C1_FAR_SHADER := preload("res://assets/world/tripo_far.gdshader")
 var _c1_far_mats: Array[ShaderMaterial] = []
@@ -4683,8 +4690,13 @@ func _add_c1_far(eye: Vector3) -> Dictionary:
 				if ResourceLoader.exists(mt):
 					var mh: float = trng.randf_range(55.0, 110.0)
 					var t0: int = _refuge_props.size()
-					if _refuge_model(mt, wp - Vector3(0.0, 2.0, 0.0), trng.randf() * TAU, mh, "C1TownTree%d_%d" % [ci, small]):
+					if _refuge_model(mt, wp - Vector3(0.0, 2.0, 0.0), trng.randf() * TAU, mh, "C1TownTree%d_%d" % [ci, small], false, C1_FAR_SHADER):
 						_c1_tree_mats(t0, wp - Vector3(0.0, 2.0, 0.0), mh, _c1_tree_radius(mt, mh))
+						# M10b (Fable: a fully fogged small cap read as a white saucer under the hero): the clusters' haze
+						for ti: int in range(t0, _refuge_props.size()):
+							_refuge_props[ti].set_meta("haze_amount", C1_CLUSTER_HAZE)
+							_refuge_props[ti].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+							_c1_far_mats.append(_refuge_props[ti])
 				small += 1
 			else:
 				break
@@ -4742,9 +4754,14 @@ func _c1_viaduct_pixel(eye: Vector3, at: Vector3) -> Vector2:
 ## toward the hero, ~40% shorter, further back; at 1.05 km the waterfall massif hid it): turned 40 deg, 540 m, 880 m out.
 const C1_PRINCIPAL_VIADUCT := [800.0, 305.0, 880.0, 540.0, 40.0]
 const C1_PRINCIPAL_VIADUCT_BASE := 12.0
+## M10b (ChatGPT checkpoint 13: the eleven equal bays still read as an aqueduct wall): an open variant of the same
+## procedural viaduct (MUSH-exchange/codex-assets/work/stone_viaduct_open.py): five unequal spans (84/58/92/66/108 m),
+## open spandrels on posts, tapered piers; same 420 x 80 m envelope and deck height.
+const C1_PRINCIPAL_VIADUCT_MODEL := "res://assets/world/models/c1-procedural/stone_viaduct_open.glb"
 func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
-	if not _c1_on() or not ResourceLoader.exists(C1_DISTANCE_VIADUCT): return {"built": false}
-	var box: AABB = _model_box(C1_DISTANCE_VIADUCT)
+	var model: String = C1_PRINCIPAL_VIADUCT_MODEL if ResourceLoader.exists(C1_PRINCIPAL_VIADUCT_MODEL) else C1_DISTANCE_VIADUCT
+	if not _c1_on() or not ResourceLoader.exists(model): return {"built": false}
+	var box: AABB = _model_box(model)
 	var spec: Array = C1_PRINCIPAL_VIADUCT
 	var ray: Vector3 = _c1_pixel_ray(eye, float(spec[0]), float(spec[1]))
 	var deck: Vector3 = eye + ray * (float(spec[2]) / maxf(Vector2(ray.x, ray.z).length(), 0.001))
@@ -4754,7 +4771,7 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	var xz: float = float(spec[3]) / (box.size.x * height / maxf(box.size.y, 0.001))
 	var yaw: float = atan2(eye.x - deck.x, eye.z - deck.z) + deg_to_rad(float(spec[4]))
 	var n0: int = _refuge_props.size()
-	if not _refuge_model(C1_DISTANCE_VIADUCT, Vector3(deck.x, base_y, deck.z), yaw, height, "C1PrincipalViaduct", false, C1_FAR_SHADER, xz):
+	if not _refuge_model(model, Vector3(deck.x, base_y, deck.z), yaw, height, "C1PrincipalViaduct", false, C1_FAR_SHADER, xz):
 		return {"built": false, "reason": "model placement failed"}
 	for index: int in range(n0, _refuge_props.size()):
 		_refuge_props[index].set_meta("haze_amount", C1_VALLEY_HAZE)
@@ -4764,7 +4781,7 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 	var right: Vector3 = Basis(Vector3.UP, yaw) * Vector3.RIGHT
 	for t: float in [-0.46, -0.42, -0.12, 0.05, 0.09, 0.41]:
 		_c1_glow.append(deck + right * t * float(spec[3]) + Vector3(0.0, 4.0, 0.0))
-	return {"built": true, "deck": _v3(deck), "height_m": snappedf(height, 0.1), "span_m": spec[3], "horizontal_scale": snappedf(xz, 0.001), "colliders": 0}
+	return {"built": true, "model": model.get_file(), "deck": _v3(deck), "height_m": snappedf(height, 0.1), "span_m": spec[3], "horizontal_scale": snappedf(xz, 0.001), "colliders": 0}
 
 func _add_c1_distance_viaduct(eye: Vector3) -> Dictionary:
 	if not _c1_on() or not ResourceLoader.exists(C1_DISTANCE_VIADUCT): return {"built": false, "reason": "C1 or imported asset unavailable"}
@@ -5639,7 +5656,7 @@ const C1_LEDGE_BAND := Vector2(0.10, 0.93)
 const C1_LEDGE_SHADER := preload("res://assets/world/c1_ledge_tree.gdshader")
 ## Valley masses' and ledge trees' own haze: amount at range.x .. range.y (m from the eye).
 ## M10: matched to the near-linear depth fog (450 m ~10%, 900 m ~24%, 1.4 km ~44%).
-const C1_VALLEY_HAZE := Vector2(0.05, 0.75)
+const C1_VALLEY_HAZE := Vector2(0.03, 0.66)
 const C1_VALLEY_HAZE_RANGE := Vector2(0.0, 2600.0)
 const C1_CLUSTER_HAZE := Vector2(0.04, 0.42)
 const C1_LEDGE_TREES_PRINCIPAL := 130
@@ -5650,7 +5667,8 @@ const C1_LEDGE_COLORS: Array = [Color(0.018, 0.042, 0.036), Color(0.014, 0.032, 
 var _c1_ledge_pts := PackedVector3Array()
 var _c1_canopy_pts := PackedVector3Array()
 ## Canopy trees: full size (no near-isle shrink), so the crowns overlap into a forest roof.
-const C1_CANOPY_TREE_H := Vector2(15.0, 27.0)
+## M10b (Fable: a uniform blob carpet; dark flakes of the base scenery poked through it): larger and in three scales.
+const C1_CANOPY_TREE_H := Vector2(19.0, 32.0)
 var _c1_ledge_mat: ShaderMaterial = null
 func _c1_ledge_meshes() -> Array:
 	# Broadleaf clump: three squashed low-poly spheres; fir: two stacked cones on a short trunk.
@@ -5754,7 +5772,7 @@ func _add_c1_ledge_forest(eye: Vector3) -> Dictionary:
 		if seen.has(cell): continue
 		seen[cell] = true
 		# smaller on the near isles (m9f: 34 m clumps at 520 m read as balloons); the canopy keeps full size
-		var h: float = rng.randf_range(C1_CANOPY_TREE_H.x, C1_CANOPY_TREE_H.y) if canopy else rng.randf_range(C1_LEDGE_TREE_H.x, C1_LEDGE_TREE_H.y) * clampf(q.distance_to(eye) / 1150.0, 0.4, 1.1)
+		var h: float = rng.randf_range(C1_CANOPY_TREE_H.x, C1_CANOPY_TREE_H.y) * [0.75, 1.0, 1.35][rng.randi() % 3] if canopy else rng.randf_range(C1_LEDGE_TREE_H.x, C1_LEDGE_TREE_H.y) * clampf(q.distance_to(eye) / 1150.0, 0.4, 1.1)
 		var w: float = h * rng.randf_range(0.8, 1.25)
 		var xf := Transform3D(Basis(Vector3.UP, rng.randf() * TAU) * Basis.from_scale(Vector3(w, h, w)), q - Vector3(0.0, h * 0.06, 0.0))
 		var col: Color = C1_LEDGE_COLORS[rng.randi() % C1_LEDGE_COLORS.size()] * rng.randf_range(0.85, 1.15)
@@ -8733,8 +8751,8 @@ const SOFT_BOUNCE := 0.3
 ## concept's violet-blue, 21.4 -> 21.3.)
 const C1_LAKE_SHALLOW := Color("6aa8b8")
 const C1_LAKE_DEEP := Color("3f8a9a")
-const C1_LAKE_GLOW := Vector2(0.55, 0.25)
-const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "a493c4", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
+const C1_LAKE_GLOW := Vector2(0.85, 0.3)
+const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "a2a6cc", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
 	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
@@ -8751,11 +8769,15 @@ const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog
 	# M10 (Fable review: concept-1 is a luminous mist basin, everything past ~200 m pale and lit from within; M9's
 	# valley averaged luminance 92 against the concept's 117-150): a near-linear curve from 150 m, so the middle
 	# distance hazes progressively (1 km ~30%, the hero ~45%) instead of all of it piling up past 2 km.
-	"fog_depth_end": 2600.0, "fog_depth_curve": 1.15,
+	"fog_depth_end": 2600.0, "fog_depth_curve": 1.5,
+	# M10b (ChatGPT checkpoint 13: the uniform pink veil collapsed the middle ground; Fable: the frame top read pale
+	# peach where concept-1's is lavender-blue): curve 1.5 (~30% less haze at 1 km, the far haze kept), a cooler
+	# blue-lilac fog, and the sunset glow held to a band just above the horizon.
+	"glow_elev": 3.0, "glow_band": 14.0, "horizon_glow": 2.0,
 	# High eye: the frame top is only ~15 degrees above the horizon, below the golden zenith band (0.40-0.56), so the
 	# whole sky read as the warm horizon glow; the violet zenith starts low and the glow narrows to the far gap.
-	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 10.0,
-	"cloud_glow_power": 6.0, "cloud_glow": 2.4, "cloud_warm_mix": 0.55, "glow": 0.18,
+	"zenith_lo": 0.0, "zenith_hi": 0.22, "horizon_glow_power": 10.0,
+	"cloud_glow_power": 6.0, "cloud_glow": 2.4, "cloud_warm_mix": 0.55, "glow": 0.1,
 	# Milestone 4 review: the horizon giants hazed to cream; concept-1's far caps are lilac.
 	"far_cap_color": "aea4d4"}
 

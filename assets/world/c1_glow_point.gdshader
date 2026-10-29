@@ -1,5 +1,7 @@
 shader_type spatial;
-render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
+// M10b: no engine fog (on an additive quad the fog colour is added over the whole square: with the near-linear C1 fog
+// the distant points read as white squares, Fable's "sugar cubes"); dimmed with distance here instead.
 // Concept-1 valley glow points (lanterns, lit windows, glowing mushrooms on the cliff crowns): camera-facing soft
 // discs per MultiMesh instance, coloured by the instance colour, brighter at night. Presentation only.
 uniform float energy = 1.5;
@@ -16,5 +18,5 @@ void fragment() {
 	float r = dot(d, d);
 	float core = exp(-r * 14.0);
 	float halo = exp(-r * 3.5) * 0.35;
-	ALBEDO = COLOR.rgb * (core + halo) * energy;
+	ALBEDO = COLOR.rgb * (core + halo) * energy * mix(1.0, 0.5, smoothstep(300.0, 2600.0, length(VERTEX)));
 }
