@@ -11,6 +11,8 @@ uniform float rain = 0.0;
 uniform float shimmer_time = 0.0;
 uniform float shimmer_amount = 1.0;
 uniform float strength = 0.55;
+// Free-floating C1 cloud banks need a soft lower edge; grounded mist keeps its existing profile.
+uniform float bottom_feather = 0.0;
 // Spray plume look (0 = valley mist): darker overall tone so it never clips above the sky, and
 // billow shading from the drifting noise so it is not a flat white card.
 uniform float billow = 0.0;
@@ -49,6 +51,7 @@ void fragment() {
 	float wisps = fbm(vec2(along * 3.1 - drift * 1.7, v_world.y * 0.035 + 2.3));
 	float sides = smoothstep(0.0, 0.22, UV.x) * smoothstep(1.0, 0.78, UV.x);
 	float base = pow(1.0 - clamp(UV.y, 0.0, 1.0), 1.8);
+	base *= mix(1.0, smoothstep(0.0, 0.24, UV.y), bottom_feather);
 	float a = sides * base * smoothstep(0.28, 0.72, body * 0.75 + wisps * 0.35);
 	// Holes: large slow gaps so a bank reads as layered mist with breaks, not a flat sheet (review 05).
 	a *= mix(1.0, smoothstep(0.32, 0.62, fbm(vec2(along * 0.45 + 5.1 - drift * 0.6, v_world.y * 0.006 + 1.7))), holes);

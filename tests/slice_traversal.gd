@@ -1072,7 +1072,7 @@ func _geology_scenario() -> void:
 		# the hero giant's cap framing the upper right (the concept's refuge/vista relationship).
 		["vista", Vector3(350.0, scenery.rendered_terrain_height(350.0, 100.0) + 1.7, 100.0), Vector3(-300.0, 90.0, -760.0), 60.0]]
 	var review := Camera3D.new()
-	review.far = 2600.0
+	review.far = scenery.get_view_distance()
 	game.add_child(review)
 	for mood: Array in [["day", false, false], ["night", true, false], ["rain", false, true]]:
 		game.world.set_appearance(mood[1], mood[2], false)
@@ -1106,7 +1106,7 @@ func _camera_sweep_scenario() -> void:
 	var specs: Variant = JSON.parse_string(OS.get_environment("MUSH_SWEEP"))
 	if not _check("Sweep poses supplied (MUSH_SWEEP JSON list)", specs is Array and not (specs as Array).is_empty(), OS.get_environment("MUSH_SWEEP")): return
 	var review := Camera3D.new()
-	review.far = 2600.0
+	review.far = scenery.get_view_distance()
 	game.add_child(review)
 	var mood_now: String = ""
 	for spec: Array in specs:
@@ -1131,7 +1131,7 @@ func _camera_sweep_scenario() -> void:
 		review.make_current()
 		await _frames(30)
 		await _capture("sweep-%s-%s" % [str(spec[0]), mood])
-		images[images.size() - 1]["frame"] = {"camera": _v(review.position), "aim": spec[3], "fov": spec[4]}
+		images[images.size() - 1]["frame"] = {"camera": _v(review.position), "aim": spec[3], "fov": spec[4], "far_plane": review.far}
 	player._camera.make_current()
 	review.queue_free()
 	game.world.set_appearance(false, false, false)
@@ -1149,7 +1149,7 @@ func _geology_diag_scenario() -> void:
 	# fog-previous: the same final rendering with the previous fog profile (matched atmosphere pair).
 	var states: Array = [["final", 0, false], ["fog-previous", 0, false], ["nofog", 0, true], ["albedo", 1, true], ["normal", 2, true], ["greylit", 3, false], ["greylit-nofog", 3, true], ["mask", 4, true]]
 	var review := Camera3D.new()
-	review.far = 2600.0
+	review.far = scenery.get_view_distance()
 	review.fov = 60.0
 	game.add_child(review)
 	game.world.set_appearance(false, false, false)

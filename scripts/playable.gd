@@ -51,7 +51,7 @@ func _ready() -> void:
 		add_child(prototype_scenery)
 		prototype_scenery.configure(world)
 		player.movement_extension = prototype_scenery
-		review_camera.far = PrototypeScenery.FAR_PLANE
+		review_camera.far = prototype_scenery.get_view_distance()
 	var arguments := OS.get_cmdline_user_args()
 	verification = "--mobile-save-review" in arguments or "--verify" in arguments or "--capture" in arguments or "--benchmark" in arguments or "--traversal" in arguments or "--crash-probe" in arguments or "--smoke" in arguments or "--ui-review" in arguments or "--growth-timing" in arguments or "--wake-review" in arguments
 	await _prewarm_camera_fade()

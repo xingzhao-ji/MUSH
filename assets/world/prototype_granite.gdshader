@@ -9,6 +9,10 @@ render_mode cull_back;
 // crest (strongest around the falls), and dark vegetation only on ledges and the crest.
 uniform float night = 0.0;
 uniform float rain = 0.0;
+// Optional C1 wall palette; zero keeps the geology look and diagnostic views unchanged.
+uniform float c1_sunset = 0.0;
+// The sky's sunset direction, already shared with geology materials by apply_look.
+uniform vec3 glow_dir = vec3(0.77, 0.0, -0.64);
 // Toward the sun (set by apply_look). Faces turned away from it lose part of the ambient fill, so
 // the walls get a shadow side from N.L instead of reading as evenly lit curtains (review 03).
 uniform vec3 sun_dir = vec3(0.77, 0.4, -0.64);
@@ -129,6 +133,22 @@ void fragment() {
 	rock = mix(rock, rock * mix(0.7, 1.2, step(0.5, speck)), smoothstep(0.82, 0.95, abs(speck - 0.5) * 2.0) * 0.4 * near);
 	rock = mix(rock, rock * 0.86, rain);
 	rock = mix(rock, rock * vec3(0.55, 0.58, 0.85), night * 0.6);
+	if (c1_sunset > 0.0 && !world_mapped && debug_view == 0) {
+		float amount = clamp(c1_sunset, 0.0, 1.0);
+		vec3 world_normal = normalize(v_up);
+		float bare = (1.0 - snow) * (1.0 - up * 0.85);
+		float shade = max(1.0 - smoothstep(-0.15, 0.55, dot(world_normal, normalize(sun_dir))), recess * 0.8);
+		// Multiplicative colour retains the long dark curtains, fracture relief and slab values.
+		rock *= mix(vec3(1.0), vec3(1.02, 0.90, 1.20), amount * bare * (0.4 + 0.6 * shade));
+		float upper = smoothstep(0.58, 0.96, rise);
+		float sunset_facing = smoothstep(-0.25, 0.35, dot(world_normal, normalize(glow_dir)));
+		float rim = pow(1.0 - clamp(abs(dot(normalize(NORMAL), normalize(VIEW))), 0.0, 1.0), 2.0);
+		float daylight = (1.0 - clamp(night, 0.0, 1.0)) * (1.0 - clamp(rain, 0.0, 1.0));
+		float warmth = amount * upper * sunset_facing * mix(0.35, 1.0, rim) * bare * (1.0 - wet * 0.75) * daylight;
+		rock *= mix(vec3(1.0), vec3(1.18, 1.035, 0.80), warmth * 0.6);
+		// A faint upper-edge bounce, absent at night and in full rain; the rock never glows broadly.
+		EMISSION = vec3(0.888, 0.445, 0.165) * warmth * 0.055;
+	}
 	ALBEDO = rock;
 	// Each joint block faces slightly differently (tangent frame from the face coordinates), so
 	// light breaks the face into fractured planes at mid scale.

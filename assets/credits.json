@@ -191,6 +191,39 @@
       "sha256": "0b5f0418eb1e686190c5d33bb54c400b1f9ed58813b5e34aa5e573a5197302b5",
       "status": "Adopted for the entrance top surface after isolated native paired capture/rollback checks; overall reference fidelity remains unaccepted.",
       "scope": "One unmodified 1K albedo, Godot-generated mipmaps. No third-party executable code or live service."
+    },
+    {
+      "id": "c1-m7-spore-silk-balloon",
+      "source": "assets/world/models/c1-procedural/spore_silk_balloon.glb",
+      "author": "Original workspace geometry and procedural painted textures by MUSH asset agent C",
+      "source_record": "MUSH-exchange/codex-assets/out/manifest.json; accepted spore_silk_balloon",
+      "source_sha256": "edbc09c227f72aa078b23231e325887851f2e2ace1d5c02c8b95494ee4918338",
+      "geometry": "67,660 triangles; shared by three visual-only instances (two at low quality); no collision or gameplay forces",
+      "textures": "Eight embedded 1024px procedural maps; reference concept is not a texture",
+      "license_scope": "Original project asset; no change to third-party notices or blanket licensing",
+      "status": "Milestone7 local visual candidate"
+    },
+    {
+      "id": "c1-m7-tripo-town-clusters",
+      "source": [
+        "assets/world/models/tripo/c1/spirehouse2.glb",
+        "assets/world/models/tripo/c1/mushcluster.glb"
+      ],
+      "author": "Owner-supplied Tripo Studio image-to-3D models from agent C concepts; prepared for MUSH",
+      "provenance": "Owner explicitly supplied and authorized integration on2026-10-28; prepared50m spire house and6m mushroom cluster",
+      "license_scope": "Model-generation provenance retained; no claim of original procedural geometry or new blanket license",
+      "status": "Milestone7 local visual candidate"
+    },
+    {
+      "id": "c1-m7-stone-viaduct",
+      "source": "assets/world/models/c1-procedural/stone_viaduct.glb",
+      "author": "Original workspace geometry and procedural painted textures by MUSH asset agent C",
+      "source_record": "MUSH-exchange/codex-assets/out/manifest.json; accepted stone_viaduct iteration 2",
+      "source_sha256": "b726bc5f6f31967d645dc20dabe607004b58bfbb2cc69525d01ef5955ec4213b",
+      "geometry": "113,587 triangles; 420 x 80 x 13 metres; twelve piers and eleven open arches; proposed C1 distance scenery only, no collider",
+      "textures": "Ten embedded 1024px original procedural base-colour images; no external URIs or reference artwork in textures",
+      "license_scope": "Original project asset under LICENSE.md; no new blanket license and no change to third-party notices",
+      "status": "Accepted source asset staged for optional milestone 7 C1 placement; scenery patch not yet applied"
     }
   ],
   "reference": {

@@ -707,11 +707,20 @@ func _compute_baked_extent() -> Rect2:
 ## depth fog so the farther stars are not dimmed. Startup only; prototype mode only.
 const SKY_DOME_SCALE := 19.0
 const MOON_DISTANCE := 2200.0
+## C1's outer landform ring reaches 8 km. Keep sky geometry behind it and inside
+## the same camera range used by the player, fixed review and capture cameras.
+const C1_VIEW_DISTANCE := 12000.0
+const C1_SKY_DOME_SCALE := 90.0
+const C1_MOON_DISTANCE := 10400.0
+const C1_SKYGLOW_RADIUS := 11200.0
 var sky_dome_report: Dictionary = {"pushed": false}
+func get_view_distance() -> float:
+	return C1_VIEW_DISTANCE if _c1_on() else FAR_PLANE
+
 func _add_skyglow() -> void:
 	var sphere := SphereMesh.new()
-	sphere.radius = SKYGLOW_RADIUS
-	sphere.height = SKYGLOW_RADIUS * 2.0
+	sphere.radius = C1_SKYGLOW_RADIUS if _c1_on() else SKYGLOW_RADIUS
+	sphere.height = sphere.radius * 2.0
 	sphere.radial_segments = 48
 	sphere.rings = 24
 	_skyglow_material = ShaderMaterial.new()
@@ -744,10 +753,12 @@ func _push_sky_dome() -> void:
 	# sky bindings still hold; instance transforms untouched). The visible sun is repositioned to
 	# 120 m by the world each frame and only shows by day; it is left as is.
 	var scaled: Array[String] = []
+	var dome_scale: float = C1_SKY_DOME_SCALE if _c1_on() else SKY_DOME_SCALE
+	var moon_distance: float = C1_MOON_DISTANCE if _c1_on() else MOON_DISTANCE
 	for key: String in ["_stars", "_r36_lines"]:
 		var child: Variant = _world.get(key)
 		if child is Node3D and is_instance_valid(child) and (child as Node3D).get_parent() == root:
-			(child as Node3D).scale = Vector3.ONE * SKY_DOME_SCALE
+			(child as Node3D).scale = Vector3.ONE * dome_scale
 			scaled.append(key)
 	var materials: int = 0
 	for node: Node in (root as Node3D).find_children("*", "GeometryInstance3D", true, false):
@@ -771,7 +782,7 @@ func _push_sky_dome() -> void:
 	var moon: Variant = _world.get("_moon")
 	var anchor: Variant = _world.get("_m37_anchor_moon_position")
 	if moon is MeshInstance3D and is_instance_valid(moon) and anchor is Vector3 and (anchor as Vector3).length() > 1.0:
-		var k: float = MOON_DISTANCE / (anchor as Vector3).length()
+		var k: float = moon_distance / (anchor as Vector3).length()
 		_world.set("_m37_anchor_moon_position", (anchor as Vector3) * k)
 		(moon as Node3D).scale *= k
 		var source: ShaderMaterial = (moon as MeshInstance3D).material_override as ShaderMaterial
@@ -781,8 +792,8 @@ func _push_sky_dome() -> void:
 			var copy: ShaderMaterial = source.duplicate()
 			copy.shader = shader
 			(moon as MeshInstance3D).material_override = copy
-		moon_pushed = MOON_DISTANCE
-	sky_dome_report = {"pushed": scaled.size() == 2, "scaled": scaled, "scale": SKY_DOME_SCALE, "dome_radius_m": 120.0 * SKY_DOME_SCALE, "fog_exempt_materials": materials, "far_plane": FAR_PLANE, "moon_distance_m": moon_pushed}
+		moon_pushed = moon_distance
+	sky_dome_report = {"pushed": scaled.size() == 2, "scaled": scaled, "scale": dome_scale, "dome_radius_m": 120.0 * dome_scale, "fog_exempt_materials": materials, "far_plane": get_view_distance(), "moon_distance_m": moon_pushed}
 	print("SKY_DOME ", JSON.stringify(sky_dome_report))
 
 func configure(world: Node3D) -> void:
@@ -860,7 +871,7 @@ func configure(world: Node3D) -> void:
 	diagnostic_skips = skip
 	var player: Node = _world.get_parent().get("player")
 	if player != null and is_instance_valid(player.get("_camera")):
-		player._camera.far = FAR_PLANE
+		player._camera.far = get_view_distance()
 
 func _add_terrain() -> void:
 	var st := SurfaceTool.new()
@@ -2542,6 +2553,12 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 	var parts: Array = _model_parts(path)
 	for i: int in parts.size():
 		var mesh: Mesh = parts[i][0]
+		# C1 a02: the old flat flagstones covered the lower textured paving, and the
+		# joined lavender beds exposed their rectangular authoring scatter in wide views.
+		# Omit only those legacy parts here; original GLBs/materials remain intact.
+		if path == C1_TERRACE_PROPS and mesh.get_surface_count() > 0:
+			var legacy: Material = mesh.surface_get_material(0)
+			if legacy != null and legacy.resource_name in ["hero_terrace_flag", "terrace_flower_lavender", "hero_terrace_leaf"]: continue
 		var xf: Transform3D = root * (parts[i][1] as Transform3D)
 		# cap_xf (world space) moves only the cap parts (giant cap, spots, gills, ribs, drips).
 		if cap_xf != Transform3D.IDENTITY and mesh.get_surface_count() > 0 and mesh.surface_get_material(0) != null:
@@ -2550,7 +2567,19 @@ func _blender_place(path: String, root: Transform3D, label: String, tint: Color 
 		for si: int in mesh.get_surface_count():
 			var src := mesh.surface_get_material(si) as StandardMaterial3D
 			if src == null: continue
-			node.set_surface_override_material(si, _blender_mat(src, tint, fills))
+			var material: StandardMaterial3D = _blender_mat(src, tint, fills)
+			if path == C1_TERRACE_PROPS and src.resource_name == "hero_terrace_ground":
+				# Texture the existing conforming ground itself: dark moss joints and banks,
+				# without a second hovering ground sheet or changed collision.
+				# The authored vertex colours already contain dark moss albedo; multiplying
+				# those by a second moss albedo crushes the broad terrace to near-black.
+				material.vertex_color_use_as_albedo = false
+				material.albedo_texture = MOSS_TEXTURE
+				material.uv1_triplanar = true
+				material.uv1_scale = Vector3.ONE * 0.48
+				material.roughness = 0.98
+				material.set_meta("day_tint", Color("93aa9a"))
+			node.set_surface_override_material(si, material)
 
 ## The scene copy of a Blender model's material: refuge day/night/rain tint (day_tint x tint), emissive ones
 ## on _blender_glow, `fills` {name: [emission colour, day energy]} for a daylight self-fill. Cached per source.
@@ -2691,7 +2720,15 @@ const C1_TREE_SINK := 110.0
 ## horizon (0 keeps the sink placement).
 const C1_TRIPO_TREE2 := "res://assets/world/models/tripo/c1/mushtree2.glb"
 const C1_TREE2_TURN := 0.0
-const C1_TREE_TOP_DEG := 14.0
+## Milestone 7 (concept-1 sees the cap from below: dome cut by the frame top, a broad golden underside over the trunk;
+## ours showed the whole dome and a thin rim): raised so the dome top is C1_TREE_TOP_DEG up, its foot on the hero
+## base town's plateau (C1_TREE_ON_TOWN: the foot may stand above the ground there, hidden by the plateau).
+const C1_TREE_TOP_DEG := 19.0
+const C1_TREE_ON_TOWN := true
+## Texture-masked amber branches on the down faces; violet gaps retain their material.
+## Colour is linear #F2B271. No broad pale fill: it erased the underside's texture in m7a.
+const C1_TREE_UNDER := Vector2(0.55, 1.0)
+const C1_UNDER_COLOR := Vector3(0.888, 0.445, 0.165)
 ## Concept-1's other giants are lilac with glowing undersides (the cream sheet colours read beige from the high eye).
 const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
 ## The Tripo texture's cap is saturated blue-violet; concept-1's cap is pale lilac-pink (L ~65, a +15, b -18): part
@@ -2700,8 +2737,10 @@ const C1_GIANT_TINT := Color(0.9, 0.76, 1.2)
 ## Capture s22: tree v2's cap and trunk read deep navy-violet against concept-1's pale lilac cap and lavender trunk.
 ## Capture s23: at 1.25 x and pale glow 0.3 it went ghost-white (top right L 80 vs the concept's violet L 52).
 const C1_TREE_DESAT := 0.0
-const C1_TREE_TINT := Vector3(1.08, 0.96, 1.08)
-const C1_TREE2_PALE_GLOW := 0.12
+const C1_TREE_TINT := Vector3.ONE
+var _c1_hero_at := Vector3.ZERO
+var _c1_balloons: Node3D = null
+const C1_TREE2_PALE_GLOW := 0.0
 const C1_TREE_GLOW := 3.0
 const C1_TRIPO_TREE_YAW := 0.0
 ## Lavender self-fill on the bark (capture c1v03: the backlit trunk read as a saturated navy mass).
@@ -2789,7 +2828,7 @@ func _add_blender_giants() -> void:
 				if C1_TREE_TOP_DEG > 0.0:
 					# dome top C1_TREE_TOP_DEG above the eye's horizon (concept-1: the frame top), its foot sunk at least 20 m
 					var top_y: float = ev.y + Vector2(tp.x - ev.x, tp.y - ev.z).length() * tan(deg_to_rad(C1_TREE_TOP_DEG))
-					tree_at.y = minf(top_y - C1_TRIPO_TREE_H, foot - 20.0)
+					tree_at.y = top_y - C1_TRIPO_TREE_H if C1_TREE_ON_TOWN else minf(top_y - C1_TRIPO_TREE_H, foot - 20.0)
 				ground = tree_at.y
 			var props_before: int = _refuge_props.size()
 			var tree_path: String = C1_TRIPO_TREE2 if C1_HIGH and ResourceLoader.exists(C1_TRIPO_TREE2) else C1_TRIPO_TREE
@@ -2800,14 +2839,9 @@ func _add_blender_giants() -> void:
 				tree_yaw = atan2(ev2.x - tree_at.x, ev2.z - tree_at.z) + C1_TRIPO_FRONT + deg_to_rad(C1_TREE2_TURN)
 			if not (_c1_on() and ResourceLoader.exists(tree_path) and _refuge_model(tree_path, tree_at, tree_yaw, C1_TRIPO_TREE_H, "BlenderGiant0")):
 				_blender_place(HERO_TREE_BLENDER, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(s), Vector3(x, ground, z)), "BlenderGiant0", Color.WHITE, Transform3D.IDENTITY, HERO_TREE_FILLS)
-			for pi: int in range(props_before, _refuge_props.size()):
-				_refuge_props[pi].set_shader_parameter("desat", C1_TREE_DESAT)
-				_refuge_props[pi].set_shader_parameter("base_tint", C1_TREE_TINT)
-				# ChatGPT checkpoint 4: a warm golden-orange interior under the cap (the texture's lit gills and veins)
-				_refuge_props[pi].set_shader_parameter("glow", C1_TREE_GLOW)
-				_refuge_props[pi].set_shader_parameter("glow_floor", 0.45)
-				# v2's underside is pale peach (too unsaturated for the warm glow): a pale self-light on bright texels
-				if tree_path == C1_TRIPO_TREE2: _refuge_props[pi].set_shader_parameter("pale_glow", C1_TREE2_PALE_GLOW)
+			if _c1_on() and _refuge_props.size() > props_before:
+				_c1_hero_at = tree_at
+				_c1_tree_mats(props_before, tree_at, C1_TRIPO_TREE_H, _c1_tree_radius(tree_path, C1_TRIPO_TREE_H), true)
 			hero_ground = ground
 			placed += 1
 			continue
@@ -2968,11 +3002,11 @@ func _model_top_at(path: String, at: Vector3, yaw: float, height: float, q: Vect
 	return best
 
 ## The transform _refuge_model gives a model placed at `at` (base centre), turned `yaw`, `height` m tall.
-func _model_root(path: String, at: Vector3, yaw: float, height: float) -> Transform3D:
+func _model_root(path: String, at: Vector3, yaw: float, height: float, xz: float = 1.0) -> Transform3D:
 	var box: AABB = _model_box(path)
 	var k: float = height / maxf(box.size.y, 0.001)
 	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
-	return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre)
+	return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(k * xz, k, k * xz)), at) * Transform3D(Basis.IDENTITY, -centre)
 
 ## Upward-facing surface points of a model (model space) whose height lies between fractions lo and hi of the model:
 ## the crown ground under its trees and huts (face normal y > 0.85, Godot's clockwise front faces). `n` picks, seeded;
@@ -3005,7 +3039,9 @@ func _model_crown_points(path: String, lo: float, hi: float, n: int, seed_: int)
 	return out
 
 ## Places an imported model (all its mesh parts) scaled to `height` m on its base, yaw about Y.
-func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String, luminous: bool = false) -> bool:
+## Optional: another shader with tripo_prop's uniforms (tripo_far), and a horizontal scale factor (xz) over the
+## uniform one (tall-stemmed far mushroom trees).
+func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: String, luminous: bool = false, shader: Shader = null, xz: float = 1.0) -> bool:
 	var parts: Array = _model_parts(path)
 	if parts.is_empty(): return false
 	var box := AABB()
@@ -3014,14 +3050,14 @@ func _refuge_model(path: String, at: Vector3, yaw: float, height: float, label: 
 		box = b if i == 0 else box.merge(b)
 	var k: float = height / maxf(box.size.y, 0.001)
 	var centre := Vector3(box.get_center().x, box.position.y, box.get_center().z)
-	var root := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * k), at) * Transform3D(Basis.IDENTITY, -centre)
+	var root := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(k * xz, k, k * xz)), at) * Transform3D(Basis.IDENTITY, -centre)
 	for i: int in parts.size():
 		var mesh: Mesh = parts[i][0]
 		var source := mesh.surface_get_material(0) as StandardMaterial3D if mesh.get_surface_count() > 0 else null
 		var material: Material = null
 		if source != null and source.albedo_texture != null:
 			var prop := ShaderMaterial.new()
-			prop.shader = TRIPO_SHADER
+			prop.shader = shader if shader != null else TRIPO_SHADER
 			prop.set_shader_parameter("albedo_tex", source.albedo_texture)
 			if source.roughness_texture != null: prop.set_shader_parameter("rough_tex", source.roughness_texture)
 			if source.normal_texture != null:
@@ -4342,32 +4378,516 @@ func _add_vista_refuge() -> void:
 const C1_MIST_TOP := -20.0
 const C1_MIST_STRENGTH := 0.4
 var concept_vista_report: Dictionary = {}
-## Extra lilac giants on the slopes below the perch (concept-1: a large glowing mushroom cap in the lower right, more
-## along the valley's near side): [concept pixel x, distance m, cap radius m, underside height m], on the GIANTS'
-## Blender model and lilac tint. Capture s24 cells: the lower right read L 23 against the concept's 43.
-const C1_EXTRA_GIANTS: Array = [[1215.0, 420.0, 52.0, 62.0], [1060.0, 560.0, 30.0, 44.0]]
+## Right-side focal mushroom uses an actual crown point of valley massif 4.
+var _c1_right_cluster_anchor: Vector3 = Vector3.INF
+func _c1_cluster_mats(n0: int, base: Vector3, height: float) -> void:
+	for pi: int in range(n0, _refuge_props.size()):
+		var mat: ShaderMaterial = _refuge_props[pi]
+		mat.set_shader_parameter("glow_floor", 0.42)
+		mat.set_shader_parameter("under_min_y", base.y + height * 0.18)
+		mat.set_shader_parameter("under_color", C1_UNDER_COLOR)
+		mat.set_meta("under", Vector2(0.62, 1.0))
+
+func _add_c1_cluster(at: Vector3, height: float, eye: Vector3, label: String, turn: float = 0.0) -> bool:
+	var base: Vector3 = at - Vector3.UP * height * 0.09
+	var n0: int = _refuge_props.size()
+	if not _refuge_model(C1_TRIPO_FG + "mushcluster.glb", base, atan2(eye.x - at.x, eye.z - at.z) + turn, height, label): return false
+	_c1_cluster_mats(n0, base, height)
+	return true
+
 func _add_c1_giants(eye: Vector3) -> Array:
-	var out: Array = []
-	if not (C1_HIGH and GIANT_BLENDER != "" and ResourceLoader.exists(GIANT_BLENDER)): return out
-	for i: int in C1_EXTRA_GIANTS.size():
-		var g: Array = C1_EXTRA_GIANTS[i]
-		var p: Vector2 = _c1_point(eye, float(g[0]), float(g[1]))
-		var ground: float = maxf(terrain_height(p.x, p.y), LAKE_Y)
-		var s := Vector3(float(g[2]) / GIANT_MODEL_R, float(g[3]) / GIANT_MODEL_UNDERSIDE, float(g[2]) / GIANT_MODEL_R)
-		_blender_place(GIANT_BLENDER, Transform3D(Basis(Vector3.UP, 1.3 + 2.1 * i) * Basis.from_scale(s), Vector3(p.x, ground - 2.0, p.y)), "C1Giant%d" % i, GIANT_SHADE_COMP * C1_GIANT_TINT, Transform3D.IDENTITY, GIANT_FILLS)
-		out.append([snappedf(p.x, 1.0), snappedf(ground, 1.0), snappedf(p.y, 1.0)])
+	if not C1_HIGH or not _c1_right_cluster_anchor.is_finite(): return []
+	# A 145 m cluster on the existing right-hand crown, instead of a 377 m
+	# ground-level mushroom. Its curled gold underside reads across the valley.
+	var height: float = 145.0
+	if not _add_c1_cluster(_c1_right_cluster_anchor, height, eye, "C1RightGlowingCluster"): return []
+	return [{"at": _v3(_c1_right_cluster_anchor), "height": height, "model": "mushcluster", "support": "massif4 native upward crown point", "root_burial_m": height * 0.09}]
+
+## Distant ring (the user, 2026-10-28: "the back feels very empty"; capture fog-185012 without haze: past the basin the
+## world was a flat plain to the horizon, and the depth fog's 95% cap past 1.9 km blanked whatever stood there).
+## Layers of the image-to-3D landforms all around the vista eye, denser in its view cone, on tripo_far (their own haze,
+## deeper with distance, so the layers recede as concept-1's distant spires and ridges do): [distance m, spread m,
+## bearing step in the cone deg, step elsewhere deg, top elevation lo, hi deg above the eye's horizon, models].
+const C1_FAR_LAYERS: Array = [
+	[3000.0, 450.0, 7.0, 20.0, 0.5, 6.0, ["needle", "tower", "massif", "tower", "needle"]],
+	[4800.0, 650.0, 6.0, 24.0, -0.8, 3.0, ["massif", "tower", "massif", "needle"]],
+	[7600.0, 900.0, 4.5, 30.0, -1.8, 1.2, ["massif", "massif", "tower"]]]
+const C1_FAR_CONE := 60.0
+const C1_FAR_HAZE := Vector2(0.45, 0.82)
+const C1_FAR_HAZE_RANGE := Vector2(2500.0, 8500.0)
+const C1_FAR_HAZE_DAY := Color("aea4d4")
+const C1_FAR_HAZE_NIGHT := Color("26244e")
+const C1_FAR_SHADER := preload("res://assets/world/tripo_far.gdshader")
+var _c1_far_mats: Array[ShaderMaterial] = []
+# Exact committed skirt triangles, cached once for visual prop placement only.
+var _c1_outer_faces := PackedVector3Array()
+var _c1_outer_radii := PackedFloat32Array()
+var _c1_outer_edge_count: int = 0
+var _c1_outer_material: ShaderMaterial
+## Concept-1's other mushroom trees (glowing gold undersides) in the middle and far distance, on the hero's two Tripo
+## models: [model, concept pixel x, pixel y of the cap top, distance m, cap width px, turn deg]; the stem runs down to
+## the ground there (sunk 30 m) and the model is narrowed or widened (non-uniform) to that cap width, so the far
+## ones stand tall-stemmed as concept-1's do.
+const C1_FAR_TREES: Array = [["mushtree", 700.0, 165.0, 1680.0, 100.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
+	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0], ["mushtree2", 1075.0, 175.0, 2600.0, 45.0, 200.0],
+	["mushtree2", 540.0, 130.0, 1480.0, 135.0, 0.0], ["mushtree2", 790.0, 205.0, 1900.0, 50.0, 80.0]]
+const C1_FAR_TREE_UNDER := Vector2(0.38, 0.8)
+# Mushrooms keep their lit surface at middle distance; the rock ring retains its denser haze.
+const C1_FAR_TREE_HAZE := Vector2(0.14, 0.50)
+const C1_FAR_TREE_HAZE_RANGE := Vector2(1400.0, 6500.0)
+## Hero base town (concept-1: the mushroom tree rises from a cliff plateau crowded with lit spire houses, small glowing
+## mushroom trees and falls): massifs at the trunk's foot [concept pixel x, distance m, crown height above LAKE_Y m,
+## turn deg, spire houses, small mushroom trees, glow points], the houses and trees on each crown's ground.
+const C1_TOWN: Array = [[930.0, 1250.0, 240.0, 0.0, 7, 3, 40], [1035.0, 1320.0, 285.0, 140.0, 5, 2, 30], [845.0, 1300.0, 270.0, 60.0, 4, 2, 24]]
+func _c1_pixel_ray(eye: Vector3, px: float, py: float) -> Vector3:
+	var look: Vector3 = (_vista_target() - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	return (look + right * (px - 640.0) / 640.0 * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * (360.0 - py) / 360.0 * tan(deg_to_rad(30.0))).normalized()
+
+func _c1_tree_radius(path: String, height: float, xz: float = 1.0) -> float:
+	var box: AABB = _model_box(path)
+	return maxf(box.size.x, box.size.z) * height * xz / maxf(box.size.y, 0.001) * 0.5
+
+func _c1_tree_mats(n0: int, at: Vector3, height: float, radius: float, hero: bool = false) -> void:
+	for pi: int in range(n0, _refuge_props.size()):
+		var m: ShaderMaterial = _refuge_props[pi]
+		m.set_shader_parameter("base_tint", C1_TREE_TINT)
+		# Only members of _c1_far_mats read this metadata; near/hero trees keep engine fog.
+		m.set_meta("haze_amount", C1_FAR_TREE_HAZE)
+		m.set_meta("haze_range", C1_FAR_TREE_HAZE_RANGE)
+		m.set_shader_parameter("glow_floor", 0.45)
+		m.set_shader_parameter("pale_glow", 0.0)
+		m.set_shader_parameter("under_color", C1_UNDER_COLOR)
+		m.set_shader_parameter("under_min_y", at.y + height * 0.42)
+		m.set_shader_parameter("tree_palette", 1.0)
+		m.set_shader_parameter("tree_base_y", at.y)
+		m.set_shader_parameter("tree_height", height)
+		m.set_shader_parameter("tree_center", Vector2(at.x, at.z))
+		m.set_shader_parameter("tree_radius", radius)
+		m.set_meta("c1_tree", true)
+		m.set_meta("under", C1_TREE_UNDER if hero else C1_FAR_TREE_UNDER)
+
+func _add_c1_far(eye: Vector3) -> Dictionary:
+	var out: Dictionary = {}
+	var ground_samples: Array = []
+	var tgt: Vector3 = _vista_target()
+	var axis: float = atan2(tgt.x - eye.x, tgt.z - eye.z)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261029
+	var n0: int = _refuge_props.size()
+	var ring: int = 0
+	for li: int in C1_FAR_LAYERS.size():
+		var lay: Array = C1_FAR_LAYERS[li]
+		var models: Array = lay[6]
+		var a: float = -180.0 + rng.randf() * 6.0
+		while a < 180.0:
+			var step: float = float(lay[2]) if absf(a) <= C1_FAR_CONE else float(lay[3])
+			var bearing: float = axis + deg_to_rad(a + rng.randf_range(-0.3, 0.3) * step)
+			var dist: float = float(lay[0]) + rng.randf_range(-0.5, 0.5) * float(lay[1])
+			var p := Vector2(eye.x + sin(bearing) * dist, eye.z + cos(bearing) * dist)
+			var path: String = str(C1_TRIPO_KIT.get(str(models[rng.randi() % models.size()]), ""))
+			var el: float = rng.randf_range(float(lay[4]), float(lay[5]))
+			var yaw: float = rng.randf() * TAU
+			# Let a few distant peaks break the west-wall crest, not the whole horizon.
+			if li == 0 and a > -7.0 and a < 18.0:
+				el = lerpf(6.0, 10.0, inverse_lerp(float(lay[4]), float(lay[5]), el))
+			# Broad overlapping flanks outside the composed view avoid isolated pillars.
+			if absf(a) > C1_FAR_CONE: path = str(C1_TRIPO_KIT["massif"])
+			if ResourceLoader.exists(path):
+				var sample: Dictionary = _c1_visual_ground(p.x, p.y)
+				sample["label"] = "ring%d_%d" % [li, ring]
+				ground_samples.append(sample)
+				if bool(sample.finite):
+					var ground: float = float(sample.height)
+					var base: float = (ground if sample.source == "outer_skirt" else maxf(ground, LAKE_Y)) - 40.0
+					sample["base_y"] = base
+					var h: float = maxf(eye.y + dist * tan(deg_to_rad(el)) - base, 180.0)
+					if _refuge_model(path, Vector3(p.x, base, p.y), yaw, h, "C1Far%d_%d" % [li, ring], false, C1_FAR_SHADER, 2.2 if absf(a) > C1_FAR_CONE else 1.0): ring += 1
+			a += step * rng.randf_range(0.8, 1.2)
+	for pi: int in range(n0, _refuge_props.size()):
+		_refuge_props[pi].set_shader_parameter("haze_range", C1_FAR_HAZE_RANGE)
+		_c1_far_mats.append(_refuge_props[pi])
+	out["ring"] = ring
+	# far mushroom trees
+	var trees: Array = []
+	for ti: int in C1_FAR_TREES.size():
+		var spec: Array = C1_FAR_TREES[ti]
+		var tpath: String = C1_TRIPO_FG + str(spec[0]) + ".glb"
+		if not ResourceLoader.exists(tpath): continue
+		var r: Vector3 = _c1_pixel_ray(eye, float(spec[1]), float(spec[2]))
+		var top: Vector3 = eye + r * (float(spec[3]) / maxf(Vector2(r.x, r.z).length(), 0.001))
+		var sample: Dictionary = _c1_visual_ground(top.x, top.z)
+		sample["label"] = "far_tree%d" % ti
+		ground_samples.append(sample)
+		if not bool(sample.finite): continue
+		var g: float = float(sample.height)
+		var base: float = (g if sample.source == "outer_skirt" else maxf(g, LAKE_Y)) - 30.0
+		sample["base_y"] = base
+		var h: float = top.y - base
+		if h < 40.0: continue
+		var box: AABB = _model_box(tpath)
+		var natural_w: float = maxf(box.size.x, box.size.z) * h / maxf(box.size.y, 0.001)
+		var want_w: float = float(spec[4]) * float(spec[3]) / (640.0 / (tan(deg_to_rad(30.0)) * 16.0 / 9.0))
+		var xz: float = clampf(want_w / maxf(natural_w, 0.001), 0.35, 1.4)
+		var to_eye := Vector2(eye.x - top.x, eye.z - top.z)
+		var t0: int = _refuge_props.size()
+		if _refuge_model(tpath, Vector3(top.x, base, top.z), atan2(to_eye.x, to_eye.y) + C1_TRIPO_FRONT + deg_to_rad(float(spec[5])), h, "C1FarTree%d" % ti, false, C1_FAR_SHADER, xz):
+			_c1_tree_mats(t0, Vector3(top.x, base, top.z), h, natural_w * xz * 0.5)
+			for pi: int in range(t0, _refuge_props.size()):
+				_refuge_props[pi].set_shader_parameter("haze_range", C1_FAR_HAZE_RANGE)
+				_c1_far_mats.append(_refuge_props[pi])
+			trees.append([spec[0], _v3(Vector3(top.x, base, top.z)), snappedf(h, 1.0), snappedf(xz, 0.01)])
+	out["trees"] = trees
+	out["ground_samples"] = ground_samples
+	# One distinct dark spire in front of the west wall, between the two far trees.
+	var spire_ray: Vector3 = _c1_pixel_ray(eye, 635.0, 105.0)
+	var spire_top: Vector3 = eye + spire_ray * (1600.0 / Vector2(spire_ray.x, spire_ray.z).length())
+	var spire_base: float = maxf(terrain_height(spire_top.x, spire_top.z), LAKE_Y) - 18.0
+	var spire_path: String = str(C1_TRIPO_KIT["needle"])
+	var spire_n: int = _refuge_props.size()
+	var spire_box: AABB = _model_box(spire_path)
+	var spire_xz: float = (52.0 * 1600.0 / 623.538) / (maxf(spire_box.size.x, spire_box.size.z) * (spire_top.y - spire_base) / spire_box.size.y)
+	_refuge_model(spire_path, Vector3(spire_top.x, spire_base, spire_top.z), deg_to_rad(25.0), spire_top.y - spire_base, "C1SunsetSpire", false, null, spire_xz)
+	for pi: int in range(spire_n, _refuge_props.size()):
+		_refuge_props[pi].set_shader_parameter("base_tint", Vector3(0.72, 0.68, 0.88))
+	out["sunset_spire"] = {"top": _v3(spire_top), "base_y": spire_base}
+	# hero base town
+	var town: Array = []
+	var mpath: String = str(C1_TRIPO_KIT.get("massif", ""))
+	var spath: String = C1_TRIPO_FG + "spirehouse2.glb"
+	var trng := RandomNumberGenerator.new()
+	trng.seed = 1029
+	for ci: int in C1_TOWN.size():
+		var tw: Array = C1_TOWN[ci]
+		if not ResourceLoader.exists(mpath): break
+		var p: Vector2 = Vector2(_c1_hero_at.x, _c1_hero_at.z) if ci == 0 and _c1_hero_at != Vector3.ZERO else _c1_point(eye, float(tw[0]), float(tw[1]))
+		var g: float = terrain_height(p.x, p.y)
+		var base: float = maxf(g if not is_nan(g) else LAKE_Y, LAKE_Y) - C1_SINK
+		var top: float = maxf(LAKE_Y + float(tw[2]), base + float(tw[2]) * 0.6)
+		if top - base < 60.0: continue
+		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
+		var yaw: float = atan2(to_eye.x, to_eye.y) + C1_TRIPO_FRONT + deg_to_rad(float(tw[3]))
+		if ci == 0 and _c1_hero_at != Vector3.ZERO:
+			var support: float = _model_top_at(mpath, Vector3(p.x, base, p.y), yaw, top - base, p)
+			if is_finite(support) and support > base + 1.0:
+				# At the model center the column fraction is invariant under uniform scale.
+				# Bury the root center 18 m into real crown geometry, with the base still in terrain.
+				top = base + clampf((top - base) * (_c1_hero_at.y + 18.0 - base) / (support - base), 120.0, 420.0)
+		_refuge_model(mpath, Vector3(p.x, base, p.y), yaw, top - base, "C1Town%d" % ci)
+		if ci == 0:
+			out["hero_support"] = {"root": _v3(_c1_hero_at), "surface_y": _model_top_at(mpath, Vector3(p.x, base, p.y), yaw, top - base, p), "base_y": base, "top_y": top, "scope": "visual center-column support; no collision"}
+		var root: Transform3D = _model_root(mpath, Vector3(p.x, base, p.y), yaw, top - base)
+		var band: Vector2 = C1_CROWN_BAND["massif"]
+		var cps: PackedVector3Array = _model_crown_points(mpath, band.x + (band.y - band.x) * 0.3, band.y, 80, 11000 + ci)
+		var houses: int = 0
+		var small: int = 0
+		for k: int in cps.size():
+			var wp: Vector3 = root * cps[k]
+			if houses < int(tw[4]) and ResourceLoader.exists(spath):
+				var sh: float = trng.randf_range(38.0, 60.0)
+				var ste := Vector2(eye.x - wp.x, eye.z - wp.z)
+				if _refuge_model(spath, wp - Vector3(0.0, 1.5, 0.0), atan2(ste.x, ste.y) + C1_TRIPO_FRONT + trng.randf_range(-0.6, 0.6), sh, "C1TownHouse%d_%d" % [ci, houses]):
+					_refuge_light(wp + Vector3(0.0, sh * 0.4, 0.0) + Vector3(ste.x, 0.0, ste.y).normalized() * sh * 0.2, sh * 1.2, "C1TownLight%d_%d" % [ci, houses])
+					var tl: OmniLight3D = _refuge_lights.pop_back()
+					tl.light_color = Color("ff9f50")
+					_c1_lights.append(tl)
+				houses += 1
+			elif small < int(tw[5]):
+				var mt: String = C1_TRIPO_FG + ("mushtree2.glb" if small % 2 == 0 else "mushtree.glb")
+				if ResourceLoader.exists(mt):
+					var mh: float = trng.randf_range(55.0, 110.0)
+					var t0: int = _refuge_props.size()
+					if _refuge_model(mt, wp - Vector3(0.0, 2.0, 0.0), trng.randf() * TAU, mh, "C1TownTree%d_%d" % [ci, small]):
+						_c1_tree_mats(t0, wp - Vector3(0.0, 2.0, 0.0), mh, _c1_tree_radius(mt, mh))
+				small += 1
+			else:
+				break
+		var gpts: PackedVector3Array = _model_crown_points(mpath, band.x, band.y, int(tw[6]), 12000 + ci)
+		for gi: int in gpts.size():
+			_c1_glow.append(root * gpts[gi] + Vector3(0.0, 2.0, 0.0))
+		town.append([_v3(Vector3(p.x, base, p.y)), snappedf(top, 1.0), houses, small])
+	out["town"] = town
 	return out
+
 func _add_concept_vista() -> void:
 	var eye: Vector3 = _vista_eye()
-	concept_vista_report = {"eye": _v3(eye), "target": _v3(_vista_target())}
+	concept_vista_report = {"eye": _v3(eye), "target": _v3(_vista_target()), "far_plane": get_view_distance()}
+	concept_vista_report["outer_ground"] = _add_c1_outer_ground()
 	concept_vista_report["terrace"] = _add_c1_terrace(eye)
 	concept_vista_report["valley"] = _add_c1_valley(eye)
+	concept_vista_report["far"] = _add_c1_far(eye)
+	concept_vista_report["viaduct"] = _add_c1_distance_viaduct(eye)
 	concept_vista_report["glow_points"] = _add_c1_glow(eye)
 	concept_vista_report["giants"] = _add_c1_giants(eye)
 	concept_vista_report["mist"] = _add_c1_mist(eye)
+	concept_vista_report["sunset_banks"] = _add_c1_sunset_banks(eye)
+	concept_vista_report["night_fill"] = _add_c1_night_fill(eye)
+	_c1_balloons = preload("res://scripts/c1_valley_balloons.gd").new()
+	add_child(_c1_balloons)
+	concept_vista_report["balloons"] = _c1_balloons.configure(self, eye)
+	_c1_balloons.set_reduced_motion(_reduced_motion)
 	concept_vista_report["mist_decks"] = _add_c1_decks(eye)
 	concept_vista_report["backdrop"] = _add_c1_backdrop(eye) if C1_BACKDROP else false
 	print("CONCEPT_VISTA ", JSON.stringify(concept_vista_report))
+
+## Original accepted eleven-arch stone viaduct, placed only in C1's right distance.
+## Choose one bounded candidate by native ground support and the standard C1 frame.
+const C1_DISTANCE_VIADUCT := "res://assets/world/models/c1-procedural/stone_viaduct.glb"
+func _c1_viaduct_pixel(eye: Vector3, at: Vector3) -> Vector2:
+	var forward: Vector3 = (_vista_target() - eye).normalized()
+	var right: Vector3 = forward.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(forward)
+	var delta: Vector3 = at - eye
+	var depth: float = delta.dot(forward)
+	if depth <= 0.0: return Vector2(INF, INF)
+	return Vector2(640.0 + 623.5382907248 * delta.dot(right) / depth, 360.0 - 623.5382907248 * delta.dot(up) / depth)
+
+func _add_c1_distance_viaduct(eye: Vector3) -> Dictionary:
+	if not _c1_on() or not ResourceLoader.exists(C1_DISTANCE_VIADUCT): return {"built": false, "reason": "C1 or imported asset unavailable"}
+	var box: AABB = _model_box(C1_DISTANCE_VIADUCT)
+	if box.size.distance_to(Vector3(420.0, 80.0, 13.0)) > 0.1: return {"built": false, "reason": "asset dimensions changed", "bounds": str(box)}
+	var ray: Vector3 = _c1_pixel_ray(eye, 1180.0, 290.0)
+	var attempts: Array = []
+	var best: Dictionary = {}
+	var best_score: float = INF
+	for distance: float in [2100.0, 2400.0, 2700.0]:
+		var target: Vector3 = eye + ray * (distance / Vector2(ray.x, ray.z).length())
+		var yaw: float = atan2(eye.x - target.x, eye.z - target.z)
+		var rotation := Basis(Vector3.UP, yaw)
+		for height: float in [80.0, 100.0, 120.0, 140.0]:
+			var scale_m: float = height / box.size.y
+			var ground_min: float = INF
+			var ground_max: float = -INF
+			var finite: bool = true
+			var feet: Array = []
+			# Exact source pier stations and eleven bottom-ring footing vertices, plus
+			# each centre. Blender Z-up exports to Godot Y-up with local Z=-source Y.
+			for pier: int in 12:
+				var local_x: float = -204.0 + 408.0 * float(pier) / 11.0
+				var foot_min: float = INF
+				var foot_max: float = -INF
+				for q: int in range(-1, 11):
+					var local := Vector3(local_x, 0.0, 0.0)
+					if q >= 0:
+						var angle: float = TAU * float(q) / 11.0
+						var wobble: float = 0.93 + 0.055 * sin(float(q) * 2.4 + float(pier) * 0.79)
+						local += Vector3(5.88 * wobble * cos(angle), 0.0, -6.25 * wobble * sin(angle))
+					var point: Vector3 = Vector3(target.x, 0.0, target.z) + rotation * (local * scale_m)
+					var ground: Dictionary = _c1_visual_ground(point.x, point.z)
+					if not bool(ground.finite):
+						finite = false
+						break
+					foot_min = minf(foot_min, float(ground.height))
+					foot_max = maxf(foot_max, float(ground.height))
+				if not finite: break
+				ground_min = minf(ground_min, foot_min)
+				ground_max = maxf(ground_max, foot_max)
+				feet.append({"pier": pier, "ground_min": foot_min, "ground_max": foot_max})
+			var receipt := {"distance_m": distance, "height_m": height, "finite": finite, "kept": false}
+			attempts.append(receipt)
+			if not finite:
+				receipt["reason"] = "nonfinite native ground sample"
+				continue
+			var base: float = ground_min - 6.0
+			var burial: float = ground_max - base
+			receipt["max_burial_m"] = burial
+			if burial > height * 0.5:
+				receipt["reason"] = "burial exceeds half the model height"
+				continue
+			var at := Vector3(target.x, base, target.z)
+			var top: Vector2 = _c1_viaduct_pixel(eye, at + Vector3.UP * height)
+			var left_px: float = INF
+			for side: float in [-1.0, 1.0]:
+				var end: Vector3 = at + rotation * Vector3(side * box.size.x * scale_m * 0.5, height * 0.925, 0.0)
+				left_px = minf(left_px, _c1_viaduct_pixel(eye, end).x)
+			receipt["top_pixel"] = [top.x, top.y]
+			receipt["left_pixel"] = left_px
+			if not top.is_finite() or top.y < 250.0 or top.y > 305.0 or left_px < 1060.0:
+				receipt["reason"] = "outside right-background composition window"
+				continue
+			var score: float = absf(top.y - 290.0) + absf(top.x - 1180.0) * 0.05
+			if score < best_score:
+				best_score = score
+				best = {"at": at, "yaw": yaw, "height": height, "feet": feet, "receipt": receipt}
+	if best.is_empty(): return {"built": false, "reason": "no grounded candidate within the right-background window", "attempts": attempts}
+	var first_material: int = _refuge_props.size()
+	if not _refuge_model(C1_DISTANCE_VIADUCT, best.at, best.yaw, best.height, "C1DistanceViaduct", false, C1_FAR_SHADER):
+		return {"built": false, "reason": "model placement failed", "attempts": attempts}
+	for index: int in range(first_material, _refuge_props.size()):
+		var material: ShaderMaterial = _refuge_props[index]
+		material.set_meta("haze_amount", Vector2(0.22, 0.55))
+		material.set_meta("haze_range", Vector2(1400.0, 6500.0))
+		_c1_far_mats.append(material)
+	best.receipt["kept"] = true
+	return {"built": true, "at": _v3(best.at), "height_m": best.height, "yaw_radians": best.yaw, "piers": best.feet,
+		"ground_samples": 144, "max_burial_m": best.receipt.max_burial_m, "top_pixel": best.receipt.top_pixel,
+		"attempts": attempts, "triangles": 113587, "colliders": 0, "shadow_casters": 0, "scope": "sampled visual footing; no traversal"}
+
+## Visual terrain extension beneath the 3–8 km ring. Inner vertices exactly reuse
+## WorldTerrain's graded square boundary; no changes to terrain queries or collision.
+func _add_c1_outer_ground() -> Dictionary:
+	var terrain: MeshInstance3D = get_node_or_null("WorldTerrain") as MeshInstance3D
+	if terrain == null or terrain.mesh == null: return {"finite": false, "reason": "WorldTerrain unavailable"}
+	var inner_arrays: Array = terrain.mesh.surface_get_arrays(0)
+	var inner_vertices: PackedVector3Array = inner_arrays[Mesh.ARRAY_VERTEX]
+	var inner_uvs: PackedVector2Array = inner_arrays[Mesh.ARRAY_TEX_UV]
+	var boundary: Dictionary = {}
+	# SurfaceTool compacts unused grid vertices around detail patches. Recover
+	# grid coordinates from native UVs instead of assuming row-major indices.
+	for vi: int in inner_vertices.size():
+		var p: Vector3 = inner_vertices[vi]
+		if absf(absf(p.x) - TERRAIN_HALF) < 0.001 or absf(absf(p.z) - TERRAIN_HALF) < 0.001:
+			boundary[Vector2i(roundi(inner_uvs[vi].x * TERRAIN_CELLS), roundi(inner_uvs[vi].y * TERRAIN_CELLS))] = p
+	if boundary.size() != TERRAIN_CELLS * 4: return {"finite": false, "reason": "WorldTerrain boundary incomplete", "found": boundary.size()}
+	var radii: Array[float] = [TERRAIN_HALF, 1580.0, 1800.0, 2200.0, 2800.0, 3600.0, 4500.0, 5600.0, 6800.0, 8200.0, 10000.0]
+	var edge := PackedVector2Array()
+	for side: int in 4:
+		for i: int in TERRAIN_CELLS:
+			var t: float = lerpf(-1.0, 1.0, float(i) / TERRAIN_CELLS)
+			var q: float = signf(t) * pow(absf(t), 1.7)
+			edge.append([Vector2(q, -1.0), Vector2(1.0, q), Vector2(-q, 1.0), Vector2(-1.0, -q)][side])
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var finite: bool = true
+	for ring: int in radii.size():
+		for segment: int in edge.size():
+			var p: Vector2 = edge[segment] * radii[ring]
+			var at: Vector3
+			if ring == 0:
+				# Copy native boundary vertices exactly; mirrored power evaluation can
+				# differ by a float32 ULP even where the nominal grid coordinate agrees.
+				var side: int = segment / TERRAIN_CELLS
+				var i: int = segment % TERRAIN_CELLS
+				var source_key: Vector2i = [Vector2i(i, 0), Vector2i(TERRAIN_CELLS, i),
+					Vector2i(TERRAIN_CELLS - i, TERRAIN_CELLS), Vector2i(0, TERRAIN_CELLS - i)][side]
+				if not boundary.has(source_key): return {"finite": false, "reason": "WorldTerrain boundary key missing"}
+				at = boundary[source_key]
+			else:
+				# _raw_height's 0.1 m/m rim was designed for the original 1.5 km square.
+				# Keep its boundary rise, not a new kilometre-high bowl at the skirt edge.
+				var inner_radius: float = (edge[segment] * TERRAIN_HALF).length()
+				var rim_extension: float = maxf(p.length() - inner_radius, 0.0) * 0.1
+				at = Vector3(p.x, terrain_height(p.x, p.y) - rim_extension, p.y)
+			finite = finite and at.is_finite()
+			st.set_color(Color(0.0, 0.0, 0.0))
+			st.set_uv(Vector2(at.x, at.z) * 0.001)
+			st.add_vertex(at)
+	for r: int in radii.size() - 1:
+		for i: int in edge.size():
+			var j: int = (i + 1) % edge.size()
+			var a: int = r * edge.size() + i
+			var b: int = r * edge.size() + j
+			var c: int = a + edge.size()
+			var d: int = b + edge.size()
+			for index: int in [a, c, b, b, c, d]: st.add_index(index)
+	st.generate_normals()
+	var mesh: ArrayMesh = st.commit()
+	_c1_outer_faces = mesh.get_faces()
+	_c1_outer_radii = PackedFloat32Array(radii)
+	_c1_outer_edge_count = edge.size()
+	var min_up: float = 1.0
+	for normal: Vector3 in (mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] as PackedVector3Array):
+		finite = finite and normal.is_finite()
+		min_up = minf(min_up, normal.y)
+	_c1_outer_material = _c1_outer_ground_material()
+	_refuge_mesh(mesh, _c1_outer_material, Transform3D.IDENTITY, "C1OuterTerrain")
+	return {"finite": finite, "min_normal_y": min_up, "triangles": (radii.size() - 1) * edge.size() * 2, "bounds": str(mesh.get_aabb()), "seam": "880 exact native WorldTerrain boundary vertices", "colliders": 0}
+
+## The terrain source shader must never write FOG: doing so disables engine fog
+## even when an optional branch is off. Only this C1 skirt's private copy writes it.
+func _c1_outer_ground_material() -> ShaderMaterial:
+	var outer_shader := Shader.new()
+	var uniforms: String = "uniform vec3 haze_color = vec3(0.6, 0.55, 0.75);\nuniform vec2 haze = vec2(0.45, 0.82);\nuniform vec2 haze_range = vec2(2500.0, 8500.0);\n"
+	var fog: String = "\tFOG = vec4(haze_color, debug_unlit ? 0.0 : mix(haze.x, haze.y, smoothstep(haze_range.x, haze_range.y, dist)));\n"
+	# These anchors occur once in the retained source. Preserve every existing terrain operation.
+	outer_shader.code = TERRAIN_SHADER.code.replace("void fragment() {", uniforms + "void fragment() {").replace("\tSPECULAR = mix(", fog + "\tSPECULAR = mix(")
+	var material: ShaderMaterial = _terrain_material.duplicate() as ShaderMaterial
+	material.shader = outer_shader
+	material.set_shader_parameter("haze_range", C1_FAR_HAZE_RANGE)
+	_geology_materials.append(material) # Shared night/rain/sun direction.
+	_soft_materials.append(material) # Shared soft key/hemisphere lighting.
+	_c1_far_mats.append(material) # Ring-matched haze colour and distance profile.
+	return material
+
+## Exact height on the visual skirt. Its quad sector follows the same graded
+## square perimeter as the builder; only that quad and its two neighbours are
+## queried (at most six native triangle probes, including boundary rounding).
+func _c1_outer_height(x: float, z: float) -> float:
+	if _c1_outer_faces.is_empty() or _c1_outer_radii.size() < 2 or _c1_outer_edge_count <= 0: return NAN
+	var radius: float = maxf(absf(x), absf(z))
+	if radius < _c1_outer_radii[0] or radius > _c1_outer_radii[_c1_outer_radii.size() - 1]: return NAN
+	var band: int = 0
+	while band < _c1_outer_radii.size() - 2 and radius > _c1_outer_radii[band + 1]: band += 1
+	var side: int = 0
+	var q: float = 0.0
+	if absf(z) >= absf(x):
+		side = 0 if z < 0.0 else 2
+		q = x / radius if side == 0 else -x / radius
+	else:
+		side = 1 if x > 0.0 else 3
+		q = z / radius if side == 1 else -z / radius
+	var cells: int = _c1_outer_edge_count / 4
+	var t: float = signf(q) * pow(absf(q), 1.0 / 1.7)
+	var sector: int = side * cells + clampi(floori((t + 1.0) * 0.5 * cells), 0, cells - 1)
+	for offset: int in [0, -1, 1]:
+		var segment: int = posmod(sector + offset, _c1_outer_edge_count)
+		var first: int = (band * _c1_outer_edge_count + segment) * 6
+		for triangle: int in 2:
+			var index: int = first + triangle * 3
+			var a: Vector3 = _c1_outer_faces[index]
+			var b: Vector3 = _c1_outer_faces[index + 1]
+			var c: Vector3 = _c1_outer_faces[index + 2]
+			var origin := Vector3(x, maxf(a.y, maxf(b.y, c.y)) + 1.0, z)
+			var hit: Variant = Geometry3D.ray_intersects_triangle(origin, Vector3.DOWN, a, b, c)
+			if hit is Vector3 and (hit as Vector3).is_finite(): return (hit as Vector3).y
+	return NAN
+
+## Placement receipt includes the actual rendered height and its difference from
+## analytic terrain. An in-skirt miss stays failed instead of silently floating.
+## Outside the built skirt, or before it exists, retain the analytic fallback.
+func _c1_visual_ground(x: float, z: float) -> Dictionary:
+	var analytic: float = terrain_height(x, z)
+	var height: float = NAN
+	var source: String = "analytic_fallback"
+	var radius: float = maxf(absf(x), absf(z))
+	if radius <= TERRAIN_HALF:
+		height = _mesh_ground(x, z)
+		source = "inner_terrain"
+	elif not _c1_outer_faces.is_empty() and radius <= _c1_outer_radii[_c1_outer_radii.size() - 1]:
+		height = _c1_outer_height(x, z)
+		source = "outer_skirt" if is_finite(height) else "outer_skirt_miss"
+	else:
+		height = analytic
+	var finite: bool = is_finite(height) and is_finite(analytic)
+	return {"xz": [x, z], "source": source, "height": height if is_finite(height) else null,
+		"analytic_y": analytic if is_finite(analytic) else null, "delta_y": height - analytic if finite else null, "finite": finite}
+
+func _add_c1_sunset_banks(eye: Vector3) -> int:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Low, separated banks pass across the dark spire's foot and the wall's lower ledges.
+	for row: Array in [[540.0, 265.0, 1420.0, 390.0, 120.0], [675.0, 260.0, 1550.0, 330.0, 95.0], [755.0, 285.0, 1700.0, 250.0, 85.0]]:
+		var ray: Vector3 = _c1_pixel_ray(eye, row[0], row[1])
+		var c: Vector3 = eye + ray * (float(row[2]) / Vector2(ray.x, ray.z).length())
+		var side: Vector3 = (eye - c).cross(Vector3.UP).normalized() * float(row[3]) * 0.5
+		var up := Vector3(0.0, float(row[4]), 0.0)
+		var corners: Array = [[c - side - up * 0.5, Vector2(0, 0)], [c + side - up * 0.5, Vector2(1, 0)], [c + side + up * 0.5, Vector2(1, 1)], [c - side + up * 0.5, Vector2(0, 1)]]
+		for k: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(corners[k][1])
+			st.add_vertex(corners[k][0])
+	st.generate_normals()
+	var material := ShaderMaterial.new()
+	material.shader = MIST_SHADER
+	material.set_shader_parameter("strength", 0.58)
+	material.set_shader_parameter("holes", 0.25)
+	material.set_shader_parameter("billow", 0.4)
+	material.set_shader_parameter("bottom_feather", 1.0)
+	material.set_shader_parameter("day_tint", Color("b4a6cf"))
+	material.set_meta("glow_tint", Color("f0c0a2"))
+	_geology_materials.append(material)
+	_refuge_mesh(st.commit(), material, Transform3D.IDENTITY, "C1SunsetBanks")
+	return 3
 
 ## Home terrace (MUSH-exchange/blender/scripts/terrace.py, ChatGPT sheet mush-c1-sheet-terrace-01): authored in
 ## the vista camera's own frame (Blender camera at (0, 0, C1_TERRACE_CAM_H) looking along +Y, pitched 15.3 degrees
@@ -4389,30 +4909,38 @@ const C1_TERRACE_PROPS := "res://assets/world/models/blender/c1/terrace_props.gl
 ## mushrooms and hanging wisteria make the cliff lip right of the path.
 const C1_TRIPO_FG := "res://assets/world/models/tripo/c1/"
 const C1_FG_PROPS: Array = [
+	["mushcluster", 650.0, 675.0, 30.0, 1.7, 0.0, 0.10, 0.0, "ground"], ["mushcluster", 465.0, 605.0, 30.0, 1.25, 0.0, 0.10, 0.0, "ground"],
+	["mushcluster", 120.0, 525.0, 30.0, 1.3, 0.0, 0.10, 0.0, "ground"],
 	# capture s10: at 2-2.6 m the lilies filled a third of the frame, white-hot; concept blooms are ~100 px
 	# capture s23 (fronts to the eye): the blooms faced the camera and the lower-left cell read L 42 against the
 	# concept's 25; a quarter smaller. The outcrops' dark crowns filled the lower right (L 23 vs 43): smaller, lower.
 	["lily", 90.0, 655.0, 6.0, 1.05, 0.0, 0.62, 0.5], ["lily", 15.0, 575.0, 7.5, 1.0, 70.0, 0.6, 0.5], ["lily", 250.0, 695.0, 6.5, 0.85, 150.0, 0.6, 0.5],
 	["lily", 380.0, 705.0, 7.5, 0.7, 220.0, 0.6, 0.5], ["lily", 175.0, 600.0, 9.0, 0.8, 300.0, 0.6, 0.5],
 	["rock", 915.0, 690.0, 26.0, 6.0, 0.0, 0.85, 0.0], ["rock", 1210.0, 715.0, 34.0, 8.0, 60.0, 0.85, 0.0],
-	["shrub", 610.0, 690.0, 15.0, 2.2, 0.0, 0.25, 0.0], ["shrub", 760.0, 640.0, 18.0, 2.6, 90.0, 0.25, 0.0], ["shrub", 470.0, 650.0, 13.0, 1.8, 200.0, 0.25, 0.0],
+	["shrub", 710.0, 700.0, 15.0, 1.25, 0.0, 0.25, 0.0], ["shrub", 760.0, 640.0, 18.0, 2.6, 90.0, 0.25, 0.0], ["shrub", 570.0, 655.0, 13.0, 1.0, 200.0, 0.25, 0.0],
 	# ChatGPT checkpoint 5: the home's rock base under the patio read chunky and geometric; flowering shrubs and lilies
 	# in front of it (the concept's patio edge sinks into flowers and wisteria)
 	# (capture s21: at 2.4-3.2 m they buried the path; smaller, the lily off the path)
-	["shrub", 430.0, 515.0, 13.0, 2.3, 30.0, 0.35, 0.0], ["shrub", 545.0, 495.0, 14.0, 2.5, 120.0, 0.35, 0.0], ["shrub", 595.0, 455.0, 16.0, 2.3, 250.0, 0.35, 0.0],
-	["lily", 330.0, 640.0, 9.0, 1.1, 90.0, 0.6, 0.7], ["shrub", 350.0, 555.0, 11.0, 1.9, 310.0, 0.35, 0.0],
+	["shrub", 465.0, 510.0, 13.0, 1.5, 30.0, 0.35, 0.0], ["shrub", 545.0, 495.0, 14.0, 2.5, 120.0, 0.35, 0.0], ["shrub", 595.0, 455.0, 16.0, 2.3, 250.0, 0.35, 0.0],
+	["lily", 330.0, 640.0, 9.0, 1.1, 90.0, 0.6, 0.7], ["shrub", 385.0, 545.0, 11.0, 1.0, 310.0, 0.35, 0.0],
 	# ChatGPT checkpoint 6: the left foreground still sparse and chunky; a second Tripo set from ChatGPT's foreground
 	# sheet: weathered flagstone stairs down from the patio, rustic lantern posts (lit) along them, fern and moss clumps
 	# with small glowing flowers on the bare ground (all on the terrace ground the pixel's ray meets), and wisteria
 	# curtains hanging under the patio lip, the cliff lip and the old tree's limbs.
-	["stairs", 255.0, 525.0, 30.0, 3.4, -25.0, 0.12, 0.0, "ground"], ["stairs", 430.0, 640.0, 30.0, 3.0, 15.0, 0.12, 0.0, "ground"],
+	["stairs", 255.0, 525.0, 30.0, 3.4, -25.0, 0.12, 0.0, "ground"],
 	# (capture s31: at 2.6-2.8 m the posts read as twigs; concept-1's path lanterns are bold warm points)
-	["lantern", 320.0, 545.0, 30.0, 3.4, 0.0, 0.05, 0.0, "ground"], ["lantern", 520.0, 620.0, 30.0, 3.4, 40.0, 0.05, 0.0, "ground"],
-	["lantern", 180.0, 505.0, 30.0, 3.2, -30.0, 0.05, 0.0, "ground"], ["lantern", 395.0, 580.0, 30.0, 3.2, 20.0, 0.05, 0.0, "ground"],
-	["lantern", 640.0, 665.0, 30.0, 3.4, 60.0, 0.05, 0.0, "ground"],
+	["lantern", 320.0, 545.0, 30.0, 2.55, 0.0, 0.12, 0.0, "ground"], ["lantern", 520.0, 620.0, 30.0, 2.55, 40.0, 0.12, 0.0, "ground"],
+	["lantern", 180.0, 505.0, 30.0, 2.40, -30.0, 0.12, 0.0, "ground"], ["lantern", 395.0, 580.0, 30.0, 2.40, 20.0, 0.12, 0.0, "ground"],
+	["lantern", 640.0, 665.0, 30.0, 2.55, 60.0, 0.12, 0.0, "ground"],
 	["fern", 140.0, 540.0, 30.0, 1.3, 0.0, 0.1, 0.6, "ground"], ["fern", 60.0, 470.0, 30.0, 1.4, 90.0, 0.1, 0.6, "ground"],
 	["fern", 300.0, 600.0, 30.0, 1.1, 200.0, 0.1, 0.6, "ground"], ["fern", 600.0, 560.0, 30.0, 1.2, 40.0, 0.1, 0.6, "ground"],
-	["fern", 230.0, 480.0, 30.0, 1.0, 120.0, 0.1, 0.6, "ground"], ["fern", 690.0, 610.0, 30.0, 1.3, 260.0, 0.1, 0.6, "ground"],
+	["fern", 185.0, 490.0, 30.0, 0.75, 120.0, 0.1, 0.6, "ground"], ["fern", 690.0, 610.0, 30.0, 1.3, 260.0, 0.1, 0.6, "ground"],
+	# Uneven low Tripo beds replace the old square lavender scatter. Most sit just
+	# below the 60-degree frame, so the wide view also has textured foliage at its feet.
+	["shrub", -80.0, 785.0, 40.0, 1.15, 25.0, 0.22, 0.0, "ground"],
+	["fern", 140.0, 810.0, 40.0, 1.05, 155.0, 0.22, 0.15, "ground"],
+	["shrub", 310.0, 785.0, 40.0, 1.0, 245.0, 0.22, 0.0, "ground"],
+	["fern", 485.0, 735.0, 40.0, 0.72, 75.0, 0.20, 0.15, "ground"],
 	["wisteria", 500.0, 470.0, 13.5, 3.2, 0.0, 0.92, 0.0], ["wisteria", 330.0, 455.0, 12.0, 2.8, 30.0, 0.92, 0.0],
 	# (capture s30: at pixel 95, 120 the limb curtain hung across the roof and window; tucked into the corner)
 	["wisteria", 860.0, 645.0, 25.0, 5.0, -20.0, 0.95, 0.0], ["wisteria", 25.0, 70.0, 15.0, 3.0, 0.0, 0.95, 0.0]]
@@ -4464,6 +4992,215 @@ func _c1_ground_hit(eye: Vector3, ray: Vector3, max_t: float) -> Vector3:
 		t += 0.2
 	return Vector3.INF
 
+## C1-only path: copy the existing textured stairs' upward stone/moss faces, lay them into overlapping
+## 3.1 m sections and conform every vertex to the actual terrace ground. No new asset or collider.
+const C1_PATH_WIDTH := 3.1
+const C1_PATH_RELIEF := 0.045
+const C1_PATH_PIXELS: Array[Vector2] = [Vector2(255, 555), Vector2(315, 585), Vector2(410, 620), Vector2(520, 660), Vector2(635, 710), Vector2(740, 760)]
+var _c1_path_report: Dictionary = {}
+
+## Exact triangle sample through a bounded 2 m spatial index; excludes house/patio/rail/plant meshes.
+func _c1_path_ground(at: Vector3, faces: PackedVector3Array, cells: Dictionary, owner: Array[int] = []) -> float:
+	var top: float = -INF
+	if not owner.is_empty(): owner[0] = -1
+	var key := Vector2i(floori(at.x / 2.0), floori(at.z / 2.0))
+	if not cells.has(key): return top
+	for fi: int in cells[key]:
+		var a: Vector3 = faces[fi]
+		var b: Vector3 = faces[fi + 1]
+		var c: Vector3 = faces[fi + 2]
+		var d: float = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z)
+		if absf(d) < 1e-8: continue
+		var u: float = ((b.z - c.z) * (at.x - c.x) + (c.x - b.x) * (at.z - c.z)) / d
+		var v: float = ((c.z - a.z) * (at.x - c.x) + (a.x - c.x) * (at.z - c.z)) / d
+		if u < -0.00001 or v < -0.00001 or u + v > 1.00001: continue
+		var height: float = a.y * u + b.y * v + c.y * (1.0 - u - v)
+		if height > top:
+			top = height
+			# Optional owner is strict: tolerance-only hits still sample normally, but
+			# cannot authorize the same-plane interior fast path.
+			if not owner.is_empty(): owner[0] = fi if u >= 0.0 and v >= 0.0 and u + v <= 1.0 else -1
+	return top
+
+func _add_c1_flagstone_path(eye: Vector3) -> Dictionary:
+	var path: String = C1_TRIPO_FG + "stairs.glb"
+	if not ResourceLoader.exists(path): return {"built": false, "reason": "stairs absent"}
+	var ground := PackedVector3Array()
+	for item: GeometryInstance3D in _static:
+		if not item is MeshInstance3D or not String(item.name).begins_with("C1Terrace_"): continue
+		var mi := item as MeshInstance3D
+		if mi.mesh.get_surface_count() == 0: continue
+		var mat: Material = mi.mesh.surface_get_material(0)
+		if mat == null or mat.resource_name != "hero_terrace_ground": continue
+		for vertex: Vector3 in mi.mesh.get_faces(): ground.append(mi.transform * vertex)
+	if ground.is_empty(): return {"built": false, "reason": "terrace ground absent"}
+	var cells: Dictionary = {}
+	for fi: int in range(0, ground.size(), 3):
+		var low: Vector3 = ground[fi].min(ground[fi + 1]).min(ground[fi + 2])
+		var high: Vector3 = ground[fi].max(ground[fi + 1]).max(ground[fi + 2])
+		for gx: int in range(floori(low.x / 2.0), floori(high.x / 2.0) + 1):
+			for gz: int in range(floori(low.z / 2.0), floori(high.z / 2.0) + 1):
+				var key := Vector2i(gx, gz)
+				if not cells.has(key): cells[key] = []
+				(cells[key] as Array).append(fi)
+	var look: Vector3 = (_vista_target() - eye).normalized()
+	var right: Vector3 = look.cross(Vector3.UP).normalized()
+	var up: Vector3 = right.cross(look)
+	var route := PackedVector3Array()
+	for pixel: Vector2 in C1_PATH_PIXELS:
+		var ray: Vector3 = (look + right * ((pixel.x - 640.0) / 640.0) * tan(deg_to_rad(30.0)) * 16.0 / 9.0 + up * ((360.0 - pixel.y) / 360.0) * tan(deg_to_rad(30.0))).normalized()
+		var hit: Vector3 = _c1_ground_hit(eye, ray, 40.0)
+		if not hit.is_finite(): continue
+		hit.y = _c1_path_ground(hit, ground, cells)
+		if hit.is_finite(): route.append(hit)
+	if route.size() < 2: return {"built": false, "reason": "insufficient ground"}
+	var parts: Array = _model_parts(path)
+	if parts.is_empty(): return {"built": false, "reason": "stairs mesh absent"}
+	var source_mesh: Mesh = parts[0][0]
+	var source_xf: Transform3D = parts[0][1]
+	var arrays: Array = source_mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	if vertices.size() != uvs.size() or indices.is_empty(): return {"built": false, "reason": "stairs channels absent"}
+	var box: AABB = _model_box(path)
+	var horizontal_scale: float = C1_PATH_WIDTH / maxf(box.size.x, 0.001)
+	var section_length: float = box.size.z * horizontal_scale
+	# Preserve source winding and UVs, omitting risers and vertical vegetation. Each tread gets real ground below it.
+	var tread := PackedInt32Array()
+	var used: Dictionary = {}
+	for ti: int in range(0, indices.size(), 3):
+		var a: Vector3 = source_xf * vertices[indices[ti]]
+		var b: Vector3 = source_xf * vertices[indices[ti + 1]]
+		var c: Vector3 = source_xf * vertices[indices[ti + 2]]
+		var normal: Vector3 = (c - a).cross(b - a)
+		if normal.length_squared() < 1e-12 or normal.normalized().y < 0.5: continue
+		for j: int in 3:
+			var vi: int = indices[ti + j]
+			tread.append(vi)
+			used[vi] = true
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var station: float = 0.0
+	var total: float = 0.0
+	var sections: int = 0
+	var triangles: int = 0
+	var rejected: int = 0
+	var support_rejected: int = 0
+	var support_linear: int = 0
+	var bounds := AABB()
+	for ri: int in route.size() - 1:
+		var a: Vector3 = route[ri]
+		var b: Vector3 = route[ri + 1]
+		var along: Vector3 = Vector3(b.x - a.x, 0.0, b.z - a.z)
+		var length_m: float = along.length()
+		if length_m < 0.01: continue
+		along /= length_m
+		var side: Vector3 = Vector3(along.z, 0.0, -along.x)
+		while station <= total + length_m and sections < 12:
+			var p: Vector3 = a.lerp(b, clampf((station - total) / length_m, 0.0, 1.0))
+			station += section_length * 0.66
+			# Small deterministic changes in tread direction and width break the repeated
+			# stair stamp; original stone texture/UV seams stay intact and all points conform.
+			var turn: float = [-0.065, 0.045, -0.025, 0.075, 0.015][sections % 5]
+			var section_along: Vector3 = along.rotated(Vector3.UP, turn)
+			var section_side := Vector3(section_along.z, 0.0, -section_along.x)
+			var width_scale: float = [0.96, 1.04, 0.93, 1.0, 0.98][sections % 5]
+			p += side * [0.04, -0.10, 0.08, -0.06, 0.0][sections % 5]
+			var mapped := PackedVector3Array()
+			mapped.resize(vertices.size())
+			var ground_owner := PackedInt32Array()
+			ground_owner.resize(vertices.size())
+			ground_owner.fill(-1)
+			var owner: Array[int] = [-1]
+			for vi: int in used:
+				var src: Vector3 = source_xf * vertices[vi]
+				var q: Vector3 = p + section_side * ((src.x - box.get_center().x) * horizontal_scale * width_scale) + section_along * ((src.z - box.get_center().z) * horizontal_scale)
+				var sampled_ground: float = _c1_path_ground(q, ground, cells, owner)
+				q.y = sampled_ground
+				# A thin paving veneer: 12-57 mm above ground, with no unsupported rigid slab across the slope.
+				q.y += ((src.y - box.position.y) / maxf(box.size.y, 0.001)) * C1_PATH_RELIEF + 0.012
+				mapped[vi] = q
+				var vertex_relief: float = q.y - sampled_ground
+				if q.is_finite() and is_finite(vertex_relief) and vertex_relief >= 0.010 and vertex_relief <= 0.059:
+					ground_owner[vi] = owner[0]
+			for ti: int in range(0, tread.size(), 3):
+				var va: Vector3 = mapped[tread[ti]]
+				var vb: Vector3 = mapped[tread[ti + 1]]
+				var vc: Vector3 = mapped[tread[ti + 2]]
+				if not va.is_finite() or not vb.is_finite() or not vc.is_finite() or (vc - va).cross(vb - va).y <= 1e-9:
+					rejected += 1
+					continue
+				# Vertex conformity alone misses triangles spanning a sharp ground crease.
+				# Leave a small moss gap wherever the face interior exceeds the same relief
+				# envelope used by the independent native mesh diagnostic (12–57 mm +/-3 mm).
+				var supported: bool = true
+				var fi: int = ground_owner[tread[ti]]
+				if fi >= 0 and fi == ground_owner[tread[ti + 1]] and fi == ground_owner[tread[ti + 2]]:
+					# A triangle is convex. Three vertices strictly inside one ground face
+					# stay over its plane; their bounded clearances interpolate linearly.
+					support_linear += 1
+				else:
+					for probe: Vector3 in [(va + vb + vc) / 3.0, (va + vb) * 0.5, (vb + vc) * 0.5, (vc + va) * 0.5]:
+						var ground_y: float = _c1_path_ground(probe, ground, cells)
+						var relief: float = probe.y - ground_y
+						if not is_finite(ground_y) or relief < 0.010 or relief > 0.059:
+							supported = false
+							break
+				if not supported:
+					rejected += 1
+					support_rejected += 1
+					continue
+				for j: int in 3:
+					var v: Vector3 = mapped[tread[ti + j]]
+					st.set_uv(uvs[tread[ti + j]])
+					st.add_vertex(v)
+					bounds = AABB(v, Vector3.ZERO) if triangles == 0 and j == 0 else bounds.expand(v)
+				triangles += 1
+			sections += 1
+		total += length_m
+	if triangles == 0: return {"built": false, "reason": "no supported tread triangles"}
+	st.generate_normals()
+	st.generate_tangents()
+	var mesh: ArrayMesh = st.commit()
+	# Conforming the source UVs across a slope can leave MikkTSpace tangents
+	# skewed against the generated normals. Re-orthogonalize the final basis,
+	# retaining every UV seam and the original tangent handedness.
+	var final_arrays: Array = mesh.surface_get_arrays(0)
+	var final_normals: PackedVector3Array = final_arrays[Mesh.ARRAY_NORMAL]
+	var final_tangents: PackedFloat32Array = final_arrays[Mesh.ARRAY_TANGENT]
+	for vi: int in final_normals.size():
+		var n: Vector3 = final_normals[vi].normalized()
+		var t := Vector3(final_tangents[vi * 4], final_tangents[vi * 4 + 1], final_tangents[vi * 4 + 2])
+		t -= n * t.dot(n)
+		if t.length_squared() < 1e-10:
+			t = n.cross(Vector3.RIGHT if absf(n.x) < 0.8 else Vector3.FORWARD)
+		t = t.normalized()
+		final_tangents[vi * 4] = t.x
+		final_tangents[vi * 4 + 1] = t.y
+		final_tangents[vi * 4 + 2] = t.z
+	final_arrays[Mesh.ARRAY_TANGENT] = final_tangents
+	mesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, final_arrays)
+
+	var source := source_mesh.surface_get_material(0) as StandardMaterial3D
+	var material := ShaderMaterial.new()
+	material.shader = TRIPO_SHADER
+	if source != null:
+		material.set_shader_parameter("albedo_tex", source.albedo_texture)
+		if source.roughness_texture != null: material.set_shader_parameter("rough_tex", source.roughness_texture)
+		if source.normal_texture != null:
+			material.set_shader_parameter("normal_tex", source.normal_texture)
+			material.set_shader_parameter("has_normal", true)
+	material.set_shader_parameter("base_tint", Vector3(0.72, 0.80, 0.75))
+	material.set_shader_parameter("desat", 0.18)
+	# The stones receive the lantern pools; their orange texture does not self-emit.
+	material.set_shader_parameter("glow_floor", 1.0)
+	material.set_meta("luminous", false)
+	_refuge_props.append(material)
+	_refuge_mesh(mesh, material, Transform3D.IDENTITY, "C1FlagstonePath")
+	return {"built": true, "sections": sections, "triangles": triangles, "rejected_triangles": rejected, "support_rejected_triangles": support_rejected, "support_linear_triangles": support_linear, "width_m": C1_PATH_WIDTH, "length_m": snappedf(total, 0.01), "bounds_min": _v3(bounds.position), "bounds_max": _v3(bounds.end), "source": "stairs.glb varied upward faces + UV; legacy flag parts omitted", "collision": false}
+
 func _add_c1_fg_props(eye: Vector3) -> Array:
 	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
@@ -4493,6 +5230,7 @@ func _add_c1_fg_props(eye: Vector3) -> Array:
 			for pi: int in range(n0, _refuge_props.size()):
 				_refuge_props[pi].set_shader_parameter("cool_glow", float(spec[7]))
 				if str(spec[0]) == "lily": _refuge_props[pi].set_shader_parameter("base_tint", C1_LILY_TINT)
+			if str(spec[0]) == "mushcluster": _c1_cluster_mats(n0, base, h)
 			if str(spec[0]) == "lantern":
 				# its glass hangs at ~0.72 of the post's height
 				_refuge_light(base + Vector3(0.0, h * 0.72, 0.0), 6.0, "C1FgLanternLight%d" % placed.size())
@@ -4570,6 +5308,7 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 	# foreground props last, so the ground grid sees the home's patio and stairs as well as the scripted ground
 	if base_glb == C1_TERRACE_PROPS:
 		_c1_build_tgrid()
+		_c1_path_report = _add_c1_flagstone_path(eye)
 		_add_c1_fg_props(eye)
 	for k: int in C1_TERRACE_LIGHTS.size():
 		var l: Array = C1_TERRACE_LIGHTS[k]
@@ -4577,7 +5316,7 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 		var light: OmniLight3D = _refuge_lights.pop_back()
 		light.light_color = Color("ff9f50")
 		_c1_lights.append(light)
-	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size(), "ground_cells": _c1_tgrid.size(), "fg": _c1_fg_report}
+	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size(), "ground_cells": _c1_tgrid.size(), "fg": _c1_fg_report, "flagstone_path": _c1_path_report}
 
 ## Valley kit (MUSH-exchange/blender/scripts/valley.py, ChatGPT sheet mush-c1-sheet-valley-01): cliff pillar islands,
 ## a wide island and arched viaducts standing in the lake and the basin beyond, as concept-1's misty valley.
@@ -4700,9 +5439,13 @@ func _c1_point(eye: Vector3, px: float, dist: float) -> Vector2:
 
 func _add_c1_valley(eye: Vector3) -> Dictionary:
 	var placed: Array = []
+	var landforms: Dictionary = {}
+	var widened: Array = []
 	_c1_bases.clear()
 	_c1_glow.clear()
-	for spec: Array in C1_ISLANDS:
+	_c1_right_cluster_anchor = Vector3.INF
+	for island_index: int in C1_ISLANDS.size():
+		var spec: Array = C1_ISLANDS[island_index]
 		var path: String = C1_KIT + str(spec[0]) + ".glb"
 		if not ResourceLoader.exists(path): continue
 		var dims: Array = C1_KIT_DIMS[spec[0]]
@@ -4719,6 +5462,7 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			continue
 		var base: float = maxf(terrain_height(p.x, p.y), LAKE_Y) - C1_SINK
 		var top: float = maxf(LAKE_Y + float(spec[3]), base + float(spec[3]) * 0.6)
+		var xz: float = 1.4 if island_index in [0, 4, 8, 11] else 1.0
 		var k: float = float(spec[4]) / float(dims[1])
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.y)
 		var tpath: String = str(C1_TRIPO_KIT.get(spec[0], ""))
@@ -4727,15 +5471,29 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			continue
 		if tpath != "" and ResourceLoader.exists(tpath):
 			var turn: float = C1_TRIPO_FRONT + deg_to_rad(float(spec[5]) if spec.size() > 5 else 0.0)
-			_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()])
-			var root_i: Transform3D = _model_root(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base)
+			_refuge_model(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, "C1Tripo%s%d" % [str(spec[0]).capitalize(), placed.size()], false, null, xz)
+			var root_i: Transform3D = _model_root(tpath, Vector3(p.x, base, p.y), atan2(to_eye.x, to_eye.y) + turn, top - base, xz)
+			landforms[island_index] = {"at": Vector3(p.x, base, p.y), "height": top - base}
+			if xz > 1.0: widened.append({"index": island_index, "horizontal_scale": xz})
 			var band: Vector2 = C1_CROWN_BAND.get(spec[0], Vector2(0.65, 0.92))
 			# ChatGPT checkpoint 5: fine-scale richness between the big forms; lantern, window and mushroom glow points on
 			# each mass's crown ground and ledges (upward faces in its crown band)
 			var gpts: PackedVector3Array = _model_crown_points(tpath, band.x, band.y, C1_GLOW_PER_ISLAND, 7000 + placed.size())
 			for gi: int in gpts.size():
 				_c1_glow.append(root_i * gpts[gi] + Vector3(0.0, 2.0, 0.0))
-			var spire_path: String = C1_TRIPO_FG + "spire.glb"
+			if island_index == 4:
+				var closest: float = INF
+				for cp: Vector3 in gpts:
+					var wp: Vector3 = root_i * cp
+					var separation: float = Vector2(wp.x - p.x, wp.z - p.y).length_squared()
+					if separation < closest:
+						closest = separation
+						_c1_right_cluster_anchor = wp
+
+			if island_index in [0, 1, 4, 7, 10, 12, 14, 16] and not gpts.is_empty():
+				var cluster_at: Vector3 = root_i * gpts[mini(4, gpts.size() - 1)]
+				_add_c1_cluster(cluster_at, 18.0 + float(island_index % 4) * 6.0, eye, "C1CrownCluster%d" % island_index, float(island_index % 3) * 0.12)
+			var spire_path: String = C1_TRIPO_FG + "spirehouse2.glb"
 			if spec.size() > 6 and ResourceLoader.exists(spire_path):
 				var sh: float = float(spec[6])
 				# crown ground (upward faces in the crown band) nearest the mass's centre in plan (captures s16-s18: a fixed
@@ -4759,8 +5517,12 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			var xf := Transform3D(Basis(Vector3.UP, atan2(to_eye.x, to_eye.y)) * Basis.from_scale(Vector3(k, (top - base) / float(dims[0]), k)), Vector3(p.x, base, p.y))
 			_blender_place(path, xf, "C1%s%d" % [str(spec[0]).capitalize(), placed.size()])
 		var w_est: float = float(spec[4]) if float(spec[4]) > 0.0 else float(dims[1]) * (top - base) / float(dims[0])
+		if tpath != "" and ResourceLoader.exists(tpath):
+			var box: AABB = _model_box(tpath)
+			w_est = maxf(box.size.x, box.size.z) * (top - base) / maxf(box.size.y, 0.001) * xz
 		_c1_bases.append([p, w_est, base + (top - base) * rng_mid(placed.size())])
 		placed.append([spec[0], snappedf(p.x, 1.0), snappedf(p.y, 1.0), snappedf(terrain_height(p.x, p.y), 1.0)])
+	var ridges: Array = _add_c1_valley_ridges(landforms)
 	# far rock spires on the basin's rim and walls (concept-1: distant spires layer the horizon left of the tree; capture
 	# s28: that band was a flat pale wall), standing on whatever ground is there
 	for fi: int in C1_FAR_SPIRES.size():
@@ -4802,7 +5564,46 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var basis := Basis(dir * (span / float(bdims[1])), Vector3.UP * sy, dir.cross(Vector3.UP) * sz)
 		_blender_place(bpath, Transform3D(basis, Vector3((a.x + b.x) * 0.5, base, (a.y + b.y) * 0.5)), "C1Bridge%d" % bridges.size())
 		bridges.append([spec[0], snappedf(span, 1.0), snappedf(LAKE_Y + float(spec[5]), 1.0)])
-	return {"islands": placed, "bridges": bridges, "spires": _c1_spires}
+	return {"islands": placed, "bridges": bridges, "spires": _c1_spires, "widened": widened, "base_ridges": ridges}
+
+## Low, overlapping shoulders join selected cliff feet; the open central water corridor remains.
+## Reuse the irregular massif silhouette and place its bottom beneath the actual basin ground.
+func _add_c1_valley_ridges(landforms: Dictionary) -> Array:
+	var placed: Array = []
+	var path: String = str(C1_TRIPO_KIT["massif"])
+	var box: AABB = _model_box(path)
+	for pair: Array in [[0, 5], [1, 4], [6, 11]]:
+		if not landforms.has(pair[0]) or not landforms.has(pair[1]): continue
+		var a: Vector3 = landforms[pair[0]].at
+		var b: Vector3 = landforms[pair[1]].at
+		var p: Vector3 = a.lerp(b, 0.5)
+		p.y = maxf(terrain_height(p.x, p.z), LAKE_Y) - 24.0
+		var h: float = clampf(minf(landforms[pair[0]].height, landforms[pair[1]].height) * 0.45, 60.0, 120.0)
+		var span: float = Vector2(a.x - b.x, a.z - b.z).length() * 1.12
+		var xz: float = span / (maxf(box.size.x, box.size.z) * h / box.size.y)
+		var dir: Vector3 = (b - a).normalized()
+		var yaw: float = atan2(dir.x, dir.z) - (PI * 0.5 if box.size.x > box.size.z else 0.0)
+		var n0: int = _refuge_props.size()
+		var built: bool = _refuge_model(path, p, yaw, h, "C1ValleyRidge%d" % placed.size(), false, null, xz)
+		if not built: continue
+		for pi: int in range(n0, _refuge_props.size()):
+			_refuge_props[pi].set_shader_parameter("base_tint", Vector3(0.83, 0.80, 0.94))
+		_c1_bases.append([Vector2(p.x, p.z), span, p.y + h * 0.25])
+		placed.append({"joins": pair, "at": _v3(p), "height": h, "span": span, "colliders": 0})
+	return placed
+
+## Three shadowless cool pools below the bridges. Day energy is zero; lanterns stay warm.
+var _c1_night_fill: Array[OmniLight3D] = []
+func _add_c1_night_fill(eye: Vector3) -> int:
+	for spec: Array in [[740.0, 820.0, 380.0], [1030.0, 1080.0, 400.0], [650.0, 1250.0, 350.0]]:
+		var p: Vector2 = _c1_point(eye, spec[0], spec[1])
+		var at := Vector3(p.x, maxf(terrain_height(p.x, p.y), LAKE_Y) + 100.0, p.y)
+		_refuge_light(at, spec[2], "C1NightFill%d" % _c1_night_fill.size())
+		var fill: OmniLight3D = _refuge_lights.pop_back()
+		fill.light_color = Color("4e507d")
+		fill.light_energy = 0.0
+		_c1_night_fill.append(fill)
+	return _c1_night_fill.size()
 
 ## Far backdrop (c1_backdrop.gdshader): a curved haze card C1_BACKDROP_R from the eye, beyond the islands and in front
 ## of the basin's far wall, with the concept's peach sunset band, cloud banks and distant spire silhouettes. Faded out
@@ -5092,6 +5893,34 @@ func _add_horizon_giants() -> void:
 		stems.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(stem_r, h + r * 0.5 * 0.22 - base, stem_r)), Vector3(x, base, z)))
 		cap_tints.append(Color(rng.randf(), 0, 0))
 		stem_tints.append(Color(rng.randf(), 1, 1))
+	var replacements: Array = []
+	var replacement_ground: Array = []
+	if _c1_on() and ResourceLoader.exists(C1_TRIPO_TREE2):
+		# Preserve every original RNG draw and all non-C1 instances. These two
+		# exposed silhouettes were a straight navy post and a flat saucer in a01.
+		var eye: Vector3 = _vista_eye()
+		for index: int in [3, 0]:
+			var row: Array = HORIZON_GIANTS[index]
+			var sample: Dictionary = _c1_visual_ground(float(row[0]), float(row[1]))
+			sample["label"] = "horizon%d" % index
+			replacement_ground.append(sample)
+			if not bool(sample.finite): continue
+			var ground: float = float(sample.height)
+			var at := Vector3(float(row[0]), (ground if sample.source == "outer_skirt" else maxf(ground, LAKE_Y)) - 30.0, float(row[1]))
+			sample["base_y"] = at.y
+			var h: float = maxf(float(row[3]) + float(row[2]) * 0.23 - at.y, 100.0)
+			var xz: float = float(row[2]) / _c1_tree_radius(C1_TRIPO_TREE2, h)
+			var n0: int = _refuge_props.size()
+			if _refuge_model(C1_TRIPO_TREE2, at, atan2(eye.x - at.x, eye.z - at.z), h, "C1HorizonTree%d" % index, false, C1_FAR_SHADER, xz):
+				_c1_tree_mats(n0, at, h, float(row[2]))
+				for pi: int in range(n0, _refuge_props.size()):
+					_refuge_props[pi].set_shader_parameter("haze_range", C1_FAR_HAZE_RANGE)
+					_c1_far_mats.append(_refuge_props[pi])
+				caps.remove_at(index)
+				stems.remove_at(index)
+				cap_tints.remove_at(index)
+				stem_tints.remove_at(index)
+				replacements.append({"index": index, "at": _v3(at), "height": h, "radius": row[2]})
 	# A shader copy that writes FOG (capped haze), for these two materials only.
 	var capped := Shader.new()
 	capped.code = SHADER.code.replace("// FOG_CAP_HOOK", "if (fog_cap.a >= 0.0) FOG = vec4(fog_cap.rgb, fog_cap.a);\n\t//")
@@ -5102,7 +5931,8 @@ func _add_horizon_giants() -> void:
 	_horizon_stem_material = (_nodes[_nodes.size() - 1] as MultiMeshInstance3D).material_override
 	_horizon_stem_material.shader = capped
 	_add_cap_tendrils(caps, "HorizonTendrils", 47)
-	horizon_giants_report = {"built": true, "giants": caps.size(), "triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0, "note": "outside the walkable world; not part of GIANTS"}
+	horizon_giants_report = {"built": true, "giants": caps.size(), "c1_replacements": replacements, "ground_samples": replacement_ground, "triangles": (_triangle_count(cap) + _triangle_count(stem)) * caps.size(), "colliders": 0, "shadow_casters": 0, "note": "outside the walkable world; not part of GIANTS"}
+	if not replacements.is_empty(): print("C1_HORIZON ", JSON.stringify(horizon_giants_report))
 
 ## Distance to the nearest walking-ribbon sample (<= 4 m spacing) within 16 m, else INF.
 func _ribbon_gap(at: Vector2) -> float:
@@ -6077,6 +6907,7 @@ func _add_wall() -> void:
 	var granite := ShaderMaterial.new()
 	granite.shader = GRANITE_SHADER
 	granite.set_shader_parameter("snowline", SNOWLINE)
+	granite.set_shader_parameter("c1_sunset", 1.0 if _c1_on() else 0.0)
 	_geology_materials.append(granite)
 	var node := MeshInstance3D.new()
 	node.name = "WestWall"
@@ -7190,7 +8021,11 @@ func _process(delta: float) -> void:
 	if is_instance_valid(_skyglow) and is_inside_tree():
 		var camera: Camera3D = get_viewport().get_camera_3d()
 		if camera != null: _skyglow.global_position = camera.global_position
+	var controller: Node = get_parent().get("environment_controller") if is_instance_valid(_c1_balloons) else null
+	if is_instance_valid(controller): _c1_balloons.set_quality(controller.quality)
 	if frozen or _reduced_motion or (is_inside_tree() and get_tree().paused): return
+	if is_instance_valid(controller) and controller.foreground:
+		_c1_balloons.update_motion(delta, controller.wind_direction, controller._applied_wind_strength, controller.quality)
 	_time += delta
 	for material: ShaderMaterial in _art + [_lake_material] + _geology_materials:
 		material.set_shader_parameter("shimmer_time", _time)
@@ -7317,6 +8152,7 @@ func set_overview(value: bool) -> void:
 func set_debug_colors(enabled: bool) -> void:
 	_debug_colors = enabled
 	_terrain_material.set_shader_parameter("debug_unlit", enabled)
+	if _c1_outer_material != null: _c1_outer_material.set_shader_parameter("debug_unlit", enabled)
 	_lake_material.set_shader_parameter("debug_unlit", enabled)
 
 ## Capture-only: paint just the giant caps and stems magenta for coverage metrics. The lake's
@@ -7329,6 +8165,7 @@ func set_debug_mask(enabled: bool) -> void:
 
 func set_reduced_motion(value: bool) -> void:
 	_reduced_motion = value
+	if is_instance_valid(_c1_balloons): _c1_balloons.set_reduced_motion(value)
 	for material: ShaderMaterial in _art + _geology_materials:
 		material.set_shader_parameter("shimmer_amount", 0.0 if value else 1.0)
 
@@ -7479,16 +8316,19 @@ const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "b4a6d8", "day_fog
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
 	# walls 1.5-2 km out still read (capture s06: at density 1.0, far 0.8 they washed out to the sky).
 	"cloud_glow_color": "f3b677", "glow_color": "f0a070", "mist_warm": "a79dce", "grade_sat": 0.9, "sun_energy": 1.05, "fog_density": 0.95,
-	"far_fog": 0.55, "ambient_energy": 0.32,
+	"far_fog": 0.8, "ambient_energy": 0.32,
 	# c1v09 variant F3: a pale rose fill and a greyer ambient (the lavender fill turned grey rock indigo), a warmer key.
 	"fill_color": "c8b4b8", "fill_energy": 0.25, "hemi_color": "a8a0c8",
 	# c1v12 variant V1: denser, nearer haze (16x9 distance 25.0 -> 24.3).
 	"fog_begin": 350.0,
+	# M7: the 1.9 km endpoint flattened the west wall to 95% haze, hiding its
+	# relief and the layers behind it. Only C1 supplies these longer endpoints.
+	"fog_depth_end": 2300.0, "fog_depth_curve": 2.6,
 	# High eye: the frame top is only ~15 degrees above the horizon, below the golden zenith band (0.40-0.56), so the
 	# whole sky read as the warm horizon glow; the violet zenith starts low and the glow narrows to the far gap.
 	"zenith_lo": 0.06, "zenith_hi": 0.32, "horizon_glow_power": 6.0,
 	# Milestone 4 review: the horizon giants hazed to cream; concept-1's far caps are lilac.
-	"far_cap_color": "a090d4"}
+	"far_cap_color": "aea4d4"}
 
 ## Amber/lavender grade, written after the shared lighting owner's endpoints. With C1_VISTA on, C1_LOOK supplies
 ## the defaults under look_override for this call.
@@ -7523,19 +8363,20 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 		environment.adjustment_saturation = grade_sat
 		environment.adjustment_contrast = grade_con
 	# Capture-only shelf exploration (keys ledge_fill, ledge_grass [r,g,b], ledge_desat, ledge_fleck, ledge_riser_dim).
-	if _terrain_material != null:
+	for terrain_material: ShaderMaterial in [_terrain_material, _c1_outer_material]:
+		if terrain_material == null: continue
 		for key: String in ["ledge_fill", "ledge_desat", "ledge_fleck", "ledge_riser_dim"]:
-			if look_override.has(key): _terrain_material.set_shader_parameter(key, float(look_override[key]))
+			if look_override.has(key): terrain_material.set_shader_parameter(key, float(look_override[key]))
 		for key: String in ["ledge_grass", "ledge_riser_tint"]:
 			if look_override.has(key):
 				var lg: Array = look_override[key]
-				_terrain_material.set_shader_parameter(key, Vector3(float(lg[0]), float(lg[1]), float(lg[2])))
+				terrain_material.set_shader_parameter(key, Vector3(float(lg[0]), float(lg[1]), float(lg[2])))
 		if look_override.has("shore_wet"):
 			var sw: Array = look_override["shore_wet"]
-			_terrain_material.set_shader_parameter("shore_wet", Vector2(float(sw[0]), float(sw[1])))
+			terrain_material.set_shader_parameter("shore_wet", Vector2(float(sw[0]), float(sw[1])))
 		if look_override.has("face_grass"):
-			var fd: Vector4 = _terrain_material.get_shader_parameter("face_grass_disc")
-			_terrain_material.set_shader_parameter("face_grass_disc", Vector4(fd.x, fd.y, fd.z, float(look_override["face_grass"])))
+			var fd: Vector4 = terrain_material.get_shader_parameter("face_grass_disc")
+			terrain_material.set_shader_parameter("face_grass_disc", Vector4(fd.x, fd.y, fd.z, float(look_override["face_grass"])))
 	if not look_override.is_empty():
 		day = day.duplicate()
 		for key: String in look_override:
@@ -7565,7 +8406,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	var mist_warm: Color = Color(str(look_override.get("mist_warm", GOLDEN_MIST_WARM))) if look_depth else Color(0.80, 0.78, 0.93)
 	var sheen_lin: Color = (day.lake_horizon as Color).srgb_to_linear() * float(look_override.get("stream_sheen", GOLDEN_STREAM_SHEEN)) * (1.0 - night) * (1.0 - 0.6 * rain) if look_depth else Color(0, 0, 0)
 	for material: ShaderMaterial in _geology_materials:
-		material.set_shader_parameter("glow_tint", mist_warm)
+		material.set_shader_parameter("glow_tint", material.get_meta("glow_tint", mist_warm))
 		material.set_shader_parameter("glow_dir", Vector3(sin(m_az), 0.0, cos(m_az)))
 		material.set_shader_parameter("day_sheen", Vector3(sheen_lin.r, sheen_lin.g, sheen_lin.b))
 	# Daytime cap luminosity (golden hour only; far_canopy mode 0 reads it, other modes ignore it).
@@ -7650,8 +8491,8 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	# (review 08: vista massif p5 21 -> 28 after the warm haze).
 	var fog_begin_day: float = lerpf(float(look_override.get("fog_begin", GOLDEN_FOG_BEGIN if look_depth else FOG_BEGIN)), FOG_BEGIN, night)
 	environment.fog_depth_begin = 200.0 if atmosphere_previous else lerpf(fog_begin_day, 200.0, rain)
-	environment.fog_depth_end = 1400.0 if atmosphere_previous else lerpf(FOG_END, 1400.0, rain)
-	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(FOG_CURVE, 1.8, rain)
+	environment.fog_depth_end = 1400.0 if atmosphere_previous else lerpf(float(look_override.get("fog_depth_end", FOG_END)), 1400.0, rain)
+	environment.fog_depth_curve = 1.8 if atmosphere_previous else lerpf(float(look_override.get("fog_depth_curve", FOG_CURVE)), 1.8, rain)
 	environment.fog_density = 0.0 if _debug_fog_off else (0.14 if _overview else (lerpf(0.5, 0.8, rain) if atmosphere_previous else lerpf(lerpf(float(look_override.get("fog_density", GOLDEN_FOG_DENSITY if look_depth else FOG_DENSITY)), FOG_DENSITY, night), 0.7, rain)))
 	environment.fog_aerial_perspective = lerpf(float(look_override.get("aerial", GOLDEN_AERIAL if look_depth else 0.15)), 0.15, night)
 	# Overcast rain has no sun to scatter: the golden-hour scatter lit the rain haze pink (vista rain).
@@ -7744,6 +8585,7 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	for prop: ShaderMaterial in _refuge_props:
 		var pt: Color = lily_tint if prop.get_meta("luminous", false) else refuge_tint
 		prop.set_shader_parameter("tint", Vector3(pt.r, pt.g, pt.b))
+		if prop.get_meta("c1_tree", false): prop.set_shader_parameter("tree_night", night)
 		prop.set_shader_parameter("glow", lerpf(0.8, 2.2, maxf(night, rain * 0.5)))
 		if prop.get_meta("luminous", false):
 			var pale: bool = prop.get_meta("pale", false)
@@ -7752,7 +8594,21 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 			prop.set_shader_parameter("pale_glow", float(look_override.get("hero_lily_glow", LEDGE_HERO_LILY_GLOW)) * (1.0 - night) * (1.0 - 0.5 * rain) if pale else 0.0)
 	for light: OmniLight3D in _refuge_lights: light.light_energy = lerpf(0.9, 2.6, maxf(night, rain * 0.6))
 	for light: OmniLight3D in _c1_lights: light.light_energy = lerpf(C1_LIGHT_ENERGY.x, C1_LIGHT_ENERGY.y, maxf(night, rain * 0.6))
+	for light: OmniLight3D in _c1_night_fill: light.light_energy = 0.85 * night * (1.0 - rain * 0.3)
 	if _c1_glow_mat != null: _c1_glow_mat.set_shader_parameter("energy", lerpf(C1_GLOW_ENERGY.x, C1_GLOW_ENERGY.y, maxf(night, rain * 0.6)))
+	# Concept-1 mushroom undersides (milestone 7): [day, night] golden glow on down faces.
+	for prop: ShaderMaterial in _refuge_props:
+		if prop.has_meta("under"):
+			var ug: Vector2 = prop.get_meta("under")
+			prop.set_shader_parameter("under_glow", lerpf(ug.x, ug.y, maxf(night, rain * 0.5)))
+	# The distant ring's own haze follows the horizon by day and night (look_override far_haze for exploration).
+	var far_haze: Color = Color(str(look_override.get("far_haze", C1_FAR_HAZE_DAY.to_html(false)))).lerp(C1_FAR_HAZE_NIGHT, night).lerp(Color("8a8498"), rain * (1.0 - night)).srgb_to_linear()
+	var far_amt: Vector2 = Vector2(float(look_override.get("far_haze_near", C1_FAR_HAZE.x)), float(look_override.get("far_haze_far", C1_FAR_HAZE.y)))
+	for fm: ShaderMaterial in _c1_far_mats:
+		fm.set_shader_parameter("haze_color", Vector3(far_haze.r, far_haze.g, far_haze.b))
+		var haze_amount: Vector2 = fm.get_meta("haze_amount", far_amt)
+		fm.set_shader_parameter("haze", haze_amount * (fm.get_meta("haze_k", 1.0) as float))
+		fm.set_shader_parameter("haze_range", fm.get_meta("haze_range", C1_FAR_HAZE_RANGE))
 	# Blender models: window glass, gills and lanterns brighter at night and in rain.
 	for glow_m: StandardMaterial3D in _blender_glow:
 		if glow_m.has_meta("day_fill"):
@@ -7784,4 +8640,4 @@ func get_report() -> Dictionary:
 		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: shadows += 1
 	var winding_ok: bool = float(winding_checks.get("terrain_centre_normal_y", -1.0)) > 0.0 and float(winding_checks.get("cap_top_normal_y", -1.0)) > 0.0 and bool(winding_checks.get("stem_side_normal_outward", false))
 	var footing_ok: bool = float(landform_checks.get("giant_footing_drift_m", INF)) <= FOOTING_TOLERANCE
-	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "vista_refuge": vista_refuge_report, "horizon_giants": horizon_giants_report, "cap_tendrils": tendril_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": FAR_PLANE, "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
+	return {"passed": colliders == 0 and shadows == 0 and winding_ok and footing_ok, "footing_ok": footing_ok, "trees": tree_report, "moss_mean": _moss_mean.to_html(false), "winding_checks": winding_checks, "winding_ok": winding_ok, "colliders": colliders, "shadow_casters": shadows, "canopies": canopy_count, "grounded_stems": grounded_stems, "rocks": rock_count, "erratics": erratic_report, "vista_grove": vista_grove_report, "vista_refuge": vista_refuge_report, "horizon_giants": horizon_giants_report, "cap_tendrils": tendril_report, "forest_clumps": carpet_count, "forest_chunks": carpet_chunks, "rock_spire_triangles": rock_triangles, "depth_look": {"enabled": look_depth, "day_endpoints": DEPTH_LOOK, "scope": "prototype apply_look only; day key/fill endpoints here; fog profile under atmosphere"}, "hero_cap_shape": hero_cap_mesh_check, "escarpment": escarpment_report, "stream": stream_report, "leaf_craft": leaf_craft_report.merged({"enabled": leaf_craft, "side_flip_corrected_materials": _prototype_leaf_materials.size()}), "cap_craft": {"enabled": cap_material != null and float(cap_material.get_shader_parameter("cap_craft")) > 0.0, "owner": "HeroCanopy material only (far_canopy mode 0)"}, "stem_finish": {"focus_radius_m": STEM_FOCUS_RADIUS, "strength": STEM_ORGANIC, "owner": "CanopyStems (shared far_canopy mode 1, hero-masked)"}, "rock_readability": {"region_xz": [_detail_region.position.x, _detail_region.position.y, _detail_region.end.x, _detail_region.end.y], "values": ROCK_READABILITY, "owner": "CliffDetailPatch (shared terrain shader, region-masked)"}, "leaf_materials_restrained": leaf_materials_restrained, "stem_buttresses": "5 lobes integrated into the stem surface", "slice": slice_report, "slice_patch_triangles": slice_patch_triangles, "root_collision_triangles": root_collision_triangles, "owned_colliders": owned, "detail_patch_triangles": detail_patch_triangles, "coarse_cells_replaced": detail_cells_replaced, "landform_checks": landform_checks, "diagnostic_skips": diagnostic_skips, "terrain_triangles": terrain_triangles, "carpet_triangles": carpet_triangles, "understory": understory_report, "shore_groves": shore_groves_report, "lake_water": {"enabled": lake_water, "shader": (LAKE_SHADER if lake_water else WATER_SHADER).resource_path}, "draw_nodes": _nodes.size() + _static.size(), "baked_extent_xz": [baked_extent.position.x, baked_extent.position.y, baked_extent.end.x, baked_extent.end.y], "far_plane": get_view_distance(), "fog_end": FOG_END, "atmosphere": {"fog_begin": FOG_BEGIN, "fog_end": FOG_END, "fog_curve": FOG_CURVE, "fog_density_day_rain": [FOG_DENSITY, 0.7], "rain": "blends to the previous begin/end/curve; rain density 0.7, darker slate rain haze", "previous": {"begin": 200.0, "end": 1400.0, "curve": 1.8, "density_day_rain": [0.5, 0.8]}, "scope": "prototype apply_look only"}, "built_at_startup_only": true, "route": route_report, "traversable": "existing route + connected slice corridors only", "scope": "Far terrain, giants, pillars and carpet are a non-colliding visual blockout. Collision: the NaturalRoute and SliceRoute ribbons and the hero root band."}
