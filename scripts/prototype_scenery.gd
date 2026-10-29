@@ -2764,12 +2764,13 @@ const C1_TREE_ON_TOWN := true
 ## gills, a darker outer cap and sparse bioluminescent specks. [cap_shade, gold_spread, fine_branch, vein_cool_glow,
 ## sparkle] for the hero and for the other concept trees.
 ## The input colour is deeper than #F2B271 (linear 0.89, 0.36, 0.08): tonemapped at gill brightness it reads that gold.
-const C1_TREE_UNDER := Vector2(0.95, 1.1)
+const C1_TREE_UNDER := Vector2(1.35, 1.2)
 const C1_UNDER_COLOR := Vector3(0.89, 0.36, 0.08)
 ## M10 (Fable review; concept samples cap #916C97, rim #BD9DAC, trunk #DFB1B7): no outer darkening, no limb darkening.
-const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 2.0, 0.0]
+const C1_TREE_M9 := [0.95, 1.0, 1.35, 0.9, 1.2, 0.0]
 ## [cap tone, bark tone (linear), rim glow, trunk glow] for the hero; far trees keep the M9 tones.
-const C1_TREE_M10 := [Vector3(0.56, 0.31, 0.52), Vector3(0.66, 0.46, 0.60), 0.45, 1.1]
+## (M10c: cap toward concept-1's #916C97, darker against the lavender-blue sky; specks sparser)
+const C1_TREE_M10 := [Vector3(0.46, 0.25, 0.45), Vector3(0.66, 0.46, 0.60), 0.45, 1.1]
 ## M10b (Fable: the gold underside washed to pink-cream): 0.2 -> 0.13.
 const C1_HERO_HAZE := Vector2(0.13, 0.13)
 const C1_FAR_TREE_M9 := [0.86, 0.6, 0.0, 0.5, 0.0, 0.2]
@@ -4495,7 +4496,7 @@ var _c1_outer_material: ShaderMaterial
 ## the ground there (sunk 30 m) and the model is narrowed or widened (non-uniform) to that cap width, so the far
 ## ones stand tall-stemmed as concept-1's do.
 const C1_FAR_TREES: Array = [["curled", 700.0, 155.0, 1680.0, 135.0, 0.0], ["mushtree2", 1160.0, 240.0, 1550.0, 125.0, 40.0],
-	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0], ["mushtree2", 1075.0, 175.0, 2600.0, 45.0, 200.0],
+	["mushtree", 1262.0, 168.0, 2800.0, 70.0, 120.0],
 	["mushtree2", 535.0, 140.0, 1480.0, 170.0, 35.0], ["mushtree", 800.0, 225.0, 1900.0, 45.0, 115.0]]
 const C1_FAR_TREE_UNDER := Vector2(0.62, 1.0)
 # Mushrooms keep their lit surface at middle distance; the rock ring retains its denser haze.
@@ -4752,7 +4753,7 @@ func _c1_viaduct_pixel(eye: Vector3, at: Vector3) -> Vector2:
 ## C1_PRINCIPAL_VIADUCT_BASE below the lake (the banks hide their feet). The old low risebridge stays as a secondary.
 ## M10 (ChatGPT checkpoint 12: too even and dominant; Fable: a dam across the centre, rotate 40-50 deg so it recedes
 ## toward the hero, ~40% shorter, further back; at 1.05 km the waterfall massif hid it): turned 40 deg, 540 m, 880 m out.
-const C1_PRINCIPAL_VIADUCT := [800.0, 305.0, 880.0, 540.0, 40.0]
+const C1_PRINCIPAL_VIADUCT := [800.0, 282.0, 880.0, 540.0, 40.0]
 const C1_PRINCIPAL_VIADUCT_BASE := 12.0
 ## M10b (ChatGPT checkpoint 13: the eleven equal bays still read as an aqueduct wall): an open variant of the same
 ## procedural viaduct (MUSH-exchange/codex-assets/work/stone_viaduct_open.py): five unequal spans (84/58/92/66/108 m),
@@ -4777,6 +4778,18 @@ func _add_c1_principal_viaduct(eye: Vector3) -> Dictionary:
 		_refuge_props[index].set_meta("haze_amount", C1_VALLEY_HAZE)
 		_refuge_props[index].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
 		_c1_far_mats.append(_refuge_props[index])
+	# M10c (Fable): a lit spire house at each end of the deck
+	var sh_path: String = C1_TRIPO_FG + "spirehouse2.glb"
+	if ResourceLoader.exists(sh_path):
+		for end: float in [-0.5, 0.5]:
+			var e: Vector3 = deck + (Basis(Vector3.UP, yaw) * Vector3.RIGHT) * end * float(spec[3]) * 0.97
+			var h0: int = _refuge_props.size()
+			_refuge_model(sh_path, e - Vector3(0.0, 2.0, 0.0), yaw + PI * 0.5 * end, 34.0, "C1ViaductHouse%d" % int(end + 1.0), false, C1_FAR_SHADER)
+			for hi: int in range(h0, _refuge_props.size()):
+				_refuge_props[hi].set_meta("haze_amount", C1_CLUSTER_HAZE)
+				_refuge_props[hi].set_meta("haze_range", C1_VALLEY_HAZE_RANGE)
+				_c1_far_mats.append(_refuge_props[hi])
+			_c1_glow.append(e + Vector3(0.0, 14.0, 0.0))
 	# a few warm lamps in irregular clusters on the deck (Fable: an even row read as fairy lights)
 	var right: Vector3 = Basis(Vector3.UP, yaw) * Vector3.RIGHT
 	for t: float in [-0.46, -0.42, -0.12, 0.05, 0.09, 0.41]:
@@ -5090,7 +5103,10 @@ const C1_FG_PROPS: Array = [
 	["fern", 485.0, 735.0, 40.0, 0.72, 75.0, 0.20, 0.15, "ground"],
 	["wisteria", 500.0, 470.0, 13.5, 3.2, 0.0, 0.92, 0.0], ["wisteria", 330.0, 455.0, 12.0, 2.8, 30.0, 0.92, 0.0],
 	# (capture s30: at pixel 95, 120 the limb curtain hung across the roof and window; tucked into the corner)
-	["wisteria", 860.0, 645.0, 25.0, 5.0, -20.0, 0.95, 0.0], ["wisteria", 25.0, 70.0, 15.0, 3.0, 0.0, 0.95, 0.0]]
+	["wisteria", 860.0, 645.0, 25.0, 5.0, -20.0, 0.95, 0.0], ["wisteria", 25.0, 70.0, 15.0, 3.0, 0.0, 0.95, 0.0],
+	# M10c (ChatGPT checkpoint 14: bury the patio base in hanging growth)
+	["wisteria", 412.0, 468.0, 12.5, 3.0, 140.0, 0.92, 0.0],
+	["wisteria", 585.0, 440.0, 14.0, 3.0, 210.0, 0.92, 0.0]]
 ## Terrace ground grid: the highest surface of the home terrace's meshes (scripted ground, the Tripo home's patio and
 ## stairs) per C1_TGRID_CELL square, so foreground props can stand on the ground a pixel's ray meets.
 var _c1_tgrid: Dictionary = {}
@@ -5583,8 +5599,15 @@ const C1_TRIPO_BRIDGES: Array = [[880.0, 700.0, 215.0, 310.0, 0.0],
 ## M10 (Fable: the smooth basin-wall domes at frame 640-780 x 70-200 and 1150-1280 x 100-200 read as eggs): spires and a
 ## tower of varied height stand in front of them, pale in the haze, breaking their outline into staggered crests.
 const C1_FAR_SPIRES: Array = [["needle", 440.0, 2050.0, 470.0, 30.0], ["tower", 545.0, 2250.0, 380.0, 160.0],
-	["needle", 505.0, 2350.0, 560.0, 90.0], ["needle", 668.0, 1700.0, 610.0, 200.0], ["tower", 742.0, 1820.0, 470.0, 40.0],
-	["needle", 712.0, 1950.0, 720.0, 300.0], ["needle", 1180.0, 1750.0, 560.0, 120.0], ["tower", 1255.0, 1850.0, 450.0, 250.0]]
+	["needle", 505.0, 2350.0, 560.0, 90.0]]
+## M10c (ChatGPT checkpoint 14: hide 60-70% of the basin-wall domes' arcs with staggered broken ridges, nearer #7E88A7,
+## farther #B4BCD1; engine-fogged spires in M10 dissolved into the wall's own haze): image-to-3D masses on their own
+## haze, darker than the ~1.9 km wall behind, tops on frame rows. [model, px, horizontal m, top frame y, turn deg,
+## horizontal scale, haze].
+## (m10r: broad massifs there built a new wall of forested mesas; narrow spires and towers only, lighter haze)
+const C1_RIDGES: Array = [["needle", 545.0, 1500.0, 135.0, 20.0, 0.8, 0.36], ["tower", 612.0, 1620.0, 100.0, 70.0, 0.7, 0.40],
+	["needle", 700.0, 1560.0, 120.0, 150.0, 0.75, 0.38], ["tower", 772.0, 1680.0, 110.0, 230.0, 0.6, 0.44],
+	["needle", 1230.0, 1600.0, 120.0, 40.0, 0.8, 0.40]]
 ## Image-to-3D fronts: tripo_prep's turntable shows the sheet's view at its 0 degree frame (camera on Blender -Y, glTF
 ## and Godot +Z), so the front faces the eye with no turn. (Milestone 4 turned -90 degrees, from a misread of the
 ## preview angles, showing the masses' sides.)
@@ -5776,6 +5799,9 @@ func _add_c1_ledge_forest(eye: Vector3) -> Dictionary:
 		var w: float = h * rng.randf_range(0.8, 1.25)
 		var xf := Transform3D(Basis(Vector3.UP, rng.randf() * TAU) * Basis.from_scale(Vector3(w, h, w)), q - Vector3(0.0, h * 0.06, 0.0))
 		var col: Color = C1_LEDGE_COLORS[rng.randi() % C1_LEDGE_COLORS.size()] * rng.randf_range(0.85, 1.15)
+		if canopy:
+			# M10c (Fable: a uniform dark carpet): lighter and a little violet with distance
+			col = col.lerp(Color(0.06, 0.055, 0.10), smoothstep(380.0, 900.0, q.distance_to(eye)) * 0.7) * rng.randf_range(0.9, 1.6)
 		(sets[0 if rng.randf() < 0.68 else 1] as Array).append([xf, col])
 		# a lantern or lit window beside about one ledge tree in five (concept-1's lights run down the terraces)
 		if rng.randf() < (0.04 if canopy else 0.2): _c1_glow.append(q + Vector3(rng.randf_range(-4.0, 4.0), 3.0, rng.randf_range(-4.0, 4.0)))
@@ -5960,6 +5986,22 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var fto := Vector2(eye.x - fp.x, eye.z - fp.y)
 		_refuge_model(fpath, Vector3(fp.x, fbase, fp.y), atan2(fto.x, fto.y) + C1_TRIPO_FRONT + deg_to_rad(float(fs[4])), float(fs[3]), "C1FarSpire%d" % fi)
 		placed.append(["far " + str(fs[0]), snappedf(fp.x, 1.0), snappedf(fp.y, 1.0), snappedf(fbase, 1.0)])
+	for ri: int in C1_RIDGES.size():
+		var rs: Array = C1_RIDGES[ri]
+		var rpath: String = str(C1_TRIPO_KIT.get(rs[0], ""))
+		if not ResourceLoader.exists(rpath): continue
+		var rray: Vector3 = _c1_pixel_ray(eye, float(rs[1]), float(rs[3]))
+		var rtop: Vector3 = eye + rray * (float(rs[2]) / maxf(Vector2(rray.x, rray.z).length(), 0.001))
+		var rbase: float = maxf(terrain_height(rtop.x, rtop.z), LAKE_Y) - 30.0
+		if rtop.y - rbase < 80.0: continue
+		var rto := Vector2(eye.x - rtop.x, eye.z - rtop.z)
+		var r0: int = _refuge_props.size()
+		_refuge_model(rpath, Vector3(rtop.x, rbase, rtop.z), atan2(rto.x, rto.y) + C1_TRIPO_FRONT + deg_to_rad(float(rs[4])), rtop.y - rbase, "C1Ridge%d" % ri, false, C1_FAR_SHADER, float(rs[5]))
+		for rpi: int in range(r0, _refuge_props.size()):
+			_refuge_props[rpi].set_meta("haze_amount", Vector2(float(rs[6]), float(rs[6])))
+			_refuge_props[rpi].set_meta("haze_range", Vector2(0.0, 1.0))
+			_c1_far_mats.append(_refuge_props[rpi])
+		placed.append(["ridge " + str(rs[0]), snappedf(rtop.x, 1.0), snappedf(rtop.z, 1.0), snappedf(rbase, 1.0)])
 	var bridges: Array = []
 	var bpath_t: String = str(C1_TRIPO_KIT["risebridge"])
 	if C1_HIGH and ResourceLoader.exists(bpath_t):
@@ -8754,7 +8796,7 @@ const C1_LAKE_DEEP := Color("3f8a9a")
 const C1_LAKE_GLOW := Vector2(0.85, 0.3)
 const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "a2a6cc", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
-	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
+	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "3a3a86", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
 	# walls 1.5-2 km out still read (capture s06: at density 1.0, far 0.8 they washed out to the sky).
 	"cloud_glow_color": "f3b677", "glow_color": "f0a070", "mist_warm": "a79dce", "grade_sat": 0.9, "sun_energy": 1.05, "fog_density": 0.95,
