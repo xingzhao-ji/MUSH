@@ -1,0 +1,1047 @@
+{
+  "schema_version": 1,
+  "character": "thimble",
+  "quests": [
+    "q_thimble",
+    "m_garden"
+  ],
+  "entries": {
+    "meeting": [
+      "thimble_meeting_open"
+    ],
+    "greeting": [
+      "thimble_greeting_dawn_clear",
+      "thimble_greeting_dawn_rain",
+      "thimble_greeting_day_clear",
+      "thimble_greeting_day_rain",
+      "thimble_greeting_dusk_clear",
+      "thimble_greeting_dusk_rain",
+      "thimble_greeting_night_clear",
+      "thimble_greeting_night_rain"
+    ],
+    "quest": [
+      "thimble_quest_after",
+      "thimble_quest_ready",
+      "thimble_quest_event_wait",
+      "thimble_quest_prepare",
+      "thimble_quest_travel_wait",
+      "thimble_quest_offer"
+    ],
+    "relationship": [
+      "thimble_relationship_trusted",
+      "thimble_relationship_trusted_repeat",
+      "thimble_relationship_friend",
+      "thimble_relationship_friend_repeat",
+      "thimble_relationship_acquaintance"
+    ],
+    "festival": [
+      "thimble_festival_after",
+      "thimble_festival_ready_clear",
+      "thimble_festival_ready_rain",
+      "thimble_festival_before"
+    ],
+    "idle": [
+      "thimble_idle_1",
+      "thimble_idle_2",
+      "thimble_idle_3"
+    ],
+    "main": [
+      "thimble_m_garden_after",
+      "thimble_m_garden_callback",
+      "thimble_m_garden_ready",
+      "thimble_m_garden_low_magic",
+      "thimble_m_garden_pending",
+      "thimble_m_garden_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "thimble_meeting_open",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "Hello! I am Thimble. This envelope used to hold seeds. Now it holds the idea of seeds, which is much easier to carry.",
+      "conditions": [
+        {
+          "not_flag": "met_thimble"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_thimble",
+          "value": true
+        }
+      ],
+      "next": "thimble_meeting_question"
+    },
+    {
+      "id": "thimble_meeting_question",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "I am deciding what belongs beside what. The garden seems willing to try more things than I expected.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ],
+      "choices": [
+        {
+          "text": "What was your first garden like?",
+          "next": "thimble_meeting_value_1"
+        },
+        {
+          "text": "How would you choose a flower?",
+          "next": "thimble_meeting_value_2"
+        },
+        {
+          "text": "Who lives by the moss?",
+          "next": "thimble_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "thimble_meeting_value_1",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "I remember a garden full of pointed leaves. I liked it very much. That does not mean every garden needs to be that garden.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ],
+      "next": "thimble_meeting_close"
+    },
+    {
+      "id": "thimble_meeting_value_2",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "Whatever catches your eye. We can look at its shape first and find a reason afterward, if we need one.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ],
+      "next": "thimble_meeting_close"
+    },
+    {
+      "id": "thimble_meeting_value_3",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "That is Nuzzle by the moss. A neighbour, not a gardening problem. We have different opinions about damp corners.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ],
+      "next": "thimble_meeting_close"
+    },
+    {
+      "id": "thimble_meeting_close",
+      "speaker": "thimble",
+      "kind": "meeting",
+      "text": "If you plant something you like, I would enjoy seeing it. If you only come to look, I would enjoy that too.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_dawn_clear",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "The dew is holding tiny copies of the dawn. I counted six on that leaf, then the seventh rolled into view.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_dawn_rain",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "Dawn rain! The leaf tips are making room for each new drop. I am trying to take the hint with my seed envelopes.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_day_clear",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "That flower has turned toward the light. Entirely without consulting my sketch.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_day_rain",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "The garden colours look deeper in rain. My apron mostly looks wetter. Still an interesting result.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_dusk_clear",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "At dusk, the pale petals stay visible longest. The darker ones have not gone anywhere. They have simply become harder to count.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_dusk_rain",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "Evening rain has filled the curled leaf again. Nuzzle inspected it earlier. Very thorough work.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_night_clear",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "The garden is quieter tonight. I was about to rearrange the envelopes, but I think I shall just look.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "thimble_greeting_night_rain",
+      "speaker": "thimble",
+      "kind": "greeting",
+      "text": "Rain on leaves sounds different from rain on felt. We have an excellent place here to compare them.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_offer",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Would you choose a garden place to show me? Plant any unlocked variety you like, or show me something already growing there.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "not_flag": "q_thimble_accepted"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I will choose a place to show you.",
+          "next": "thimble_quest_accept"
+        },
+        {
+          "text": "I would like to look around first.",
+          "next": "thimble_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_accept",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Wonderful. We can begin by looking at the garden together. I will try not to suggest the first leaf that comes to mind.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "not_flag": "q_thimble_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_thimble_accepted",
+          "value": true
+        }
+      ],
+      "next": "thimble_quest_travel_wait"
+    },
+    {
+      "id": "thimble_quest_defer",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Certainly. I can look without deciding for a while. It may be very good practice.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "not_flag": "q_thimble_accepted"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_travel_wait",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Meet me at the garden when you feel like looking. There is no need to plant anything before we talk.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "not_flag": "q_thimble_prepared"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_prepare",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Here we are. Choose a place with a flower you like, or plant an unlocked variety in an available garden place. Which sounds useful?",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "not_flag": "q_thimble_prepared"
+        },
+        {
+          "visited": "garden"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I will choose a flower I like.",
+          "next": "thimble_quest_prepared"
+        },
+        {
+          "text": "Can I show you an existing flower?",
+          "next": "thimble_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_detail",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "An existing flower counts. A new one uses the usual 25 magic, which returns on its own. You need not plant anything extra for me.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "not_flag": "q_thimble_prepared"
+        },
+        {
+          "visited": "garden"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I will choose a flower I like.",
+          "next": "thimble_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_prepared",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "When you have chosen, use the garden interaction to show me that place. I am looking forward to a choice I did not make.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "not_flag": "q_thimble_prepared"
+        },
+        {
+          "visited": "garden"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_thimble_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_event_wait",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Show me your chosen garden place when you are ready. A flower already there is a perfectly good answer.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "flag": "q_thimble_prepared"
+        },
+        {
+          "not_flag": "e_thimble_leaf"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_ready",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "I have seen the leaf you chose. It is not the one I first pictured, which has made looking at it much more interesting.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "flag": "q_thimble_prepared"
+        },
+        {
+          "flag": "e_thimble_leaf"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Let us keep the choice open.",
+          "next": "thimble_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_complete",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "Keep this empty seed envelope. It is a memento, with room for a possibility. Your garden need not become a copy of mine.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        },
+        {
+          "flag": "q_thimble_accepted"
+        },
+        {
+          "flag": "q_thimble_prepared"
+        },
+        {
+          "flag": "e_thimble_leaf"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_thimble_done",
+          "value": true
+        },
+        {
+          "give_item": "seed_envelope"
+        }
+      ]
+    },
+    {
+      "id": "thimble_quest_after",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "I looked at your choice again. I noticed something new about its edge. I may need fewer opinions and a longer look.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "q_thimble_done"
+        }
+      ],
+      "next": "thimble_quest_after_detail"
+    },
+    {
+      "id": "thimble_quest_after_detail",
+      "speaker": "thimble",
+      "kind": "quest",
+      "text": "I left one envelope empty on purpose today. It is doing an excellent job of not deciding anything yet.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "q_thimble_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_relationship_acquaintance",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "I could ask you a great many questions about flowers. I will begin with one, whenever you have an answer you would like to share.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "q_thimble_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_relationship_friend",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "You showed me a choice instead of asking for the correct one. I feel as though I can bring you a different idea without apologising for it.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "q_thimble_done"
+        },
+        {
+          "not_flag": "friend_thimble"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_thimble",
+          "value": true
+        }
+      ],
+      "next": "thimble_relationship_friend_reply"
+    },
+    {
+      "id": "thimble_relationship_friend_reply",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "Perhaps tomorrow I will like a leaf I have passed a hundred times. I would like to tell you if I do.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "friend_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_relationship_friend_repeat",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "I have saved a place beside the seed tray for looking at things. It is also a good place for simply being nearby.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "friend_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_relationship_trusted",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "At the gathering, all those different little lights belonged together. Your garden helped me notice how that could happen.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "friend_thimble"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_thimble"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_thimble",
+          "value": true
+        }
+      ],
+      "next": "thimble_relationship_trusted_reply"
+    },
+    {
+      "id": "thimble_relationship_trusted_reply",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "I still miss my old garden sometimes. I like that I can tell you without making this one any less lovely.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "trusted_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_relationship_trusted_repeat",
+      "speaker": "thimble",
+      "kind": "relationship",
+      "text": "There is something comforting about knowing you may choose differently. It means I get to see more than one garden.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "trusted_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_festival_before",
+      "speaker": "thimble",
+      "kind": "festival",
+      "text": "I could bring flowers to the gathering. Not all the same kind, perhaps. I am considering the very bold idea of asking what people like.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_festival_ready_clear",
+      "speaker": "thimble",
+      "kind": "festival",
+      "text": "The invitation leaves time for people to arrive as they can. Flowers do not all open together either. The garden remains a garden.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "thimble_festival_ready_rain",
+      "speaker": "thimble",
+      "kind": "festival",
+      "text": "There are sheltered flowers beside the ground display. The rain can have the outside petals; we can admire the rest from under the roof.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "thimble_festival_after",
+      "speaker": "thimble",
+      "kind": "festival",
+      "text": "I saw three different flowers in one little pot at the gathering. None of them seemed concerned about matching.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_idle_1",
+      "speaker": "thimble",
+      "kind": "idle",
+      "text": "Pumel asked whether the pot rim catches my apron. A much better question than whether it looks like a proper pot.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_idle_2",
+      "speaker": "thimble",
+      "kind": "idle",
+      "text": "Nuzzle has inspected that leaf twice. Perhaps the second side was more interesting.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_idle_3",
+      "speaker": "thimble",
+      "kind": "idle",
+      "text": "Plink chose the shaded edge. I had made such a careful plan for the brightest one.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_offer",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Three planted places would make a lovely welcome. Any unlocked seeds you like. Shall we try?",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "flag": "m_home_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "thimble_m_garden_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "thimble_m_garden_defer"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_accept",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Use three of your eight garden places. Each planting costs 25 magic and blooms at once. Your magic returns on its own.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "flag": "m_home_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_garden_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_defer",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "The empty places are quite good at waiting.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "not_flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "flag": "m_home_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_pending",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Three planted garden places will do. Anything already growing counts. You need not match my idea of a garden.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_ready",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Three little patches of color. Look at that one leaning into the space you left.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "garden_planted_gte": 3
+        },
+        {
+          "not_flag": "q_thimble_done"
+        }
+      ],
+      "next": "thimble_m_garden_reveal"
+    },
+    {
+      "id": "thimble_m_garden_callback",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "That leaf you chose belongs among the others. Three planted places, and still room for another idea.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "garden_planted_gte": 3
+        },
+        {
+          "flag": "q_thimble_done"
+        }
+      ],
+      "next": "thimble_m_garden_reveal"
+    },
+    {
+      "id": "thimble_m_garden_reveal",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "People once followed small welcomes like these from the falls to the coast. Rillik has found an old sign of it.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        }
+      ],
+      "next": "thimble_m_garden_complete"
+    },
+    {
+      "id": "thimble_m_garden_complete",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Look for Rillik at the dry plunge-pool overlook. I can mind the garden while you follow the water.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_garden_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_after",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "You may fill the other places or leave them open. Both are a garden.",
+      "conditions": [
+        {
+          "flag": "m_garden_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Do all the flowers need to match?",
+          "next": "thimble_m_garden_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "thimble_m_garden_close"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_answer",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Only if that pleases you. Mine certainly do not agree on everything.",
+      "conditions": [
+        {
+          "flag": "m_garden_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_close",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "I'll be here, arguing gently with a leaf.",
+      "conditions": [
+        {
+          "flag": "m_garden_done"
+        }
+      ]
+    },
+    {
+      "id": "thimble_m_garden_low_magic",
+      "speaker": "thimble",
+      "kind": "main",
+      "text": "Your magic is below 25. It comes back while you explore. Your plants and this invitation can wait.",
+      "conditions": [
+        {
+          "flag": "met_thimble"
+        },
+        {
+          "flag": "m_garden_accepted"
+        },
+        {
+          "not_flag": "m_garden_done"
+        },
+        {
+          "magic_lt": 25
+        }
+      ]
+    }
+  ]
+}

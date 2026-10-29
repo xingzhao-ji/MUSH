@@ -1,0 +1,1060 @@
+{
+  "schema_version": 1,
+  "character": "puffrel",
+  "quests": [
+    "q_puffrel",
+    "m_festival"
+  ],
+  "entries": {
+    "meeting": [
+      "puffrel_meeting_open"
+    ],
+    "greeting": [
+      "puffrel_greeting_dawn_clear",
+      "puffrel_greeting_dawn_rain",
+      "puffrel_greeting_day_clear",
+      "puffrel_greeting_day_rain",
+      "puffrel_greeting_dusk_clear",
+      "puffrel_greeting_dusk_rain",
+      "puffrel_greeting_night_clear",
+      "puffrel_greeting_night_rain"
+    ],
+    "quest": [
+      "puffrel_quest_after",
+      "puffrel_quest_ready",
+      "puffrel_quest_event_wait",
+      "puffrel_quest_prepare",
+      "puffrel_quest_travel_wait",
+      "puffrel_quest_offer"
+    ],
+    "relationship": [
+      "puffrel_relationship_trusted",
+      "puffrel_relationship_trusted_repeat",
+      "puffrel_relationship_friend",
+      "puffrel_relationship_friend_repeat",
+      "puffrel_relationship_acquaintance"
+    ],
+    "festival": [
+      "puffrel_festival_after",
+      "puffrel_festival_ready_clear",
+      "puffrel_festival_ready_rain",
+      "puffrel_festival_before"
+    ],
+    "idle": [
+      "puffrel_idle_1",
+      "puffrel_idle_2",
+      "puffrel_idle_3"
+    ],
+    "main": [
+      "puffrel_m_festival_after",
+      "puffrel_m_festival_callback",
+      "puffrel_m_festival_ready",
+      "puffrel_m_festival_pending",
+      "puffrel_m_festival_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "puffrel_meeting_open",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "Welcome to the balloon yard! I'm Puffrel. The basket is on the ground, which is an excellent place to begin most things.",
+      "conditions": [
+        {
+          "not_flag": "met_puffrel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_puffrel",
+          "value": true
+        }
+      ],
+      "next": "puffrel_meeting_question"
+    },
+    {
+      "id": "puffrel_meeting_question",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "I have been planning ways to enjoy the balloons. Which part catches your eye?",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "The colors of the silk.",
+          "next": "puffrel_meeting_value_1"
+        },
+        {
+          "text": "The view from the ground.",
+          "next": "puffrel_meeting_value_2"
+        },
+        {
+          "text": "The basket and its small details.",
+          "next": "puffrel_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_meeting_value_1",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "Mine too. From below, a balloon is a little piece of morning you can look at without squinting.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": [],
+      "next": "puffrel_meeting_close"
+    },
+    {
+      "id": "puffrel_meeting_value_2",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "A very fine view. I am learning to put its seats on the plan before drawing arrows into the sky.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": [],
+      "next": "puffrel_meeting_close"
+    },
+    {
+      "id": "puffrel_meeting_value_3",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "Then come closer. There is a useful knot here and an entirely unnecessary bow. I am equally proud of them.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": [],
+      "next": "puffrel_meeting_close"
+    },
+    {
+      "id": "puffrel_meeting_close",
+      "speaker": "puffrel",
+      "kind": "meeting",
+      "text": "You can find me by the grounded basket. I usually have a ribbon in hand and three ideas trying to share one sentence.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_dawn_clear",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "Clear dawn! I have already admired the silk from six angles. The seventh is probably best enjoyed sitting down.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_dawn_rain",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "Rain at dawn. The silk is sheltered, the basket is dry, and my seventh idea can wait with the other six.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_day_clear",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "Look how the balloon silk catches the day. We can admire it from right here; the sky has no monopoly on a good view.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_day_rain",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "The rain is playing the awning. Our basket display has acquired a roof and a very irregular drummer.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_dusk_clear",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "Dusk puts a warm edge on every ribbon. I keep meaning to find out which one is best, then liking another.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_dusk_rain",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "Evening rain. Come see the basket under cover. It is surprisingly good at staying exactly where we left it.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_night_clear",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "The yard feels wide at night. I have left a little space beside the basket for simply looking up.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_greeting_night_rain",
+      "speaker": "puffrel",
+      "kind": "greeting",
+      "text": "A wet night calls for lanterns under shelter. I enjoy the soft light on the basket weave.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_quest_offer",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Would you help decorate the grounded basket with a ribbon, then sit nearby for its still display? I want the ground welcome to feel complete.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "not_flag": "q_puffrel_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Let's make a lovely ground display.",
+          "next": "puffrel_quest_accept"
+        },
+        {
+          "text": "I'll visit the basket later.",
+          "next": "puffrel_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_accept",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Come to the balloon yard first. We can look at the grounded basket together and decide where your ribbon will go.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "not_flag": "q_puffrel_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_puffrel_accepted",
+          "value": true
+        }
+      ],
+      "next": "puffrel_quest_travel_wait"
+    },
+    {
+      "id": "puffrel_quest_defer",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Of course. The basket is not going anywhere for this display. It is taking its role very seriously.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "not_flag": "q_puffrel_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_quest_travel_wait",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Visit the balloon yard when you like. The grounded basket is waiting for us to plan its small decoration.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "not_flag": "q_puffrel_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_quest_prepare",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Here is our grounded basket. Shall we choose a ribbon for it and enjoy the finished display from a nearby seat?",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "not_flag": "q_puffrel_prepared"
+        },
+        {
+          "visited": "balloon_yard"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll choose a ribbon and sit nearby.",
+          "next": "puffrel_quest_prepared"
+        },
+        {
+          "text": "Does this need a balloon flight?",
+          "next": "puffrel_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_detail",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "No flight is needed. This is a still display with the basket on the ground. A ribbon, a comfortable seat, and a little company.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "not_flag": "q_puffrel_prepared"
+        },
+        {
+          "visited": "balloon_yard"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll choose a ribbon and sit nearby.",
+          "next": "puffrel_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_prepared",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Decorate the grounded basket with your chosen ribbon, then sit nearby for its still display. Both are part of this invitation.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "not_flag": "q_puffrel_prepared"
+        },
+        {
+          "visited": "balloon_yard"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_puffrel_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_event_wait",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Once your ribbon is attached, enjoy the grounded basket from the nearby seat or viewpoint. Come back after sharing its still display.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "flag": "q_puffrel_prepared"
+        },
+        {
+          "not_flag": "e_puffrel_basket"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_quest_ready",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Your ribbon is on the grounded basket, and you stayed nearby for its still display. It felt like a whole occasion, didn't it?",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "flag": "q_puffrel_prepared"
+        },
+        {
+          "flag": "e_puffrel_basket"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "It did. I liked staying with it.",
+          "next": "puffrel_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_complete",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "Keep this basket ribbon as a memento of our display. I am adding 'comfortable place to stay' to every future sketch.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        },
+        {
+          "flag": "q_puffrel_accepted"
+        },
+        {
+          "flag": "q_puffrel_prepared"
+        },
+        {
+          "flag": "e_puffrel_basket"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_puffrel_done",
+          "value": true
+        },
+        {
+          "give_item": "basket_ribbon"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_quest_after",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "I thought a still basket needed an explanation. Now I think it mainly needs someone to move over and make room.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "q_puffrel_done"
+        }
+      ],
+      "effects": [],
+      "next": "puffrel_quest_after_detail"
+    },
+    {
+      "id": "puffrel_quest_after_detail",
+      "speaker": "puffrel",
+      "kind": "quest",
+      "text": "The ribbon is such a small detail from far away. Close up, it tells you somebody expected company.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "q_puffrel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_relationship_acquaintance",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "I can be a little brisk when I am excited. If I offer three plans at once, you are welcome to choose a fourth: sitting.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_relationship_friend",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "You helped me notice what a grounded basket could offer. I would like to have more afternoons with your kind of company.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "q_puffrel_done"
+        },
+        {
+          "not_flag": "friend_puffrel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_puffrel",
+          "value": true
+        }
+      ],
+      "next": "puffrel_relationship_friend_reply"
+    },
+    {
+      "id": "puffrel_relationship_friend_reply",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "I shall try not to schedule them into a marvelous series of events. An afternoon may just be an afternoon.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "friend_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_relationship_friend_repeat",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "No grand plan today. I have a ribbon to smooth and room beside me. That seems plenty.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "friend_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_relationship_trusted",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "After the gathering, I stayed beside the basket while others wandered off. I felt content. You helped me recognize that feeling.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "friend_puffrel"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_puffrel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_puffrel",
+          "value": true
+        }
+      ],
+      "next": "puffrel_relationship_trusted_reply"
+    },
+    {
+      "id": "puffrel_relationship_trusted_reply",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "Sometimes I worry a quiet welcome will be overlooked. With you, I can say that aloud and let the welcome stay quiet.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "trusted_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_relationship_trusted_repeat",
+      "speaker": "puffrel",
+      "kind": "relationship",
+      "text": "I had one idea this morning. Just one. It was to sit here and hope you might visit.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "trusted_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_festival_before",
+      "speaker": "puffrel",
+      "kind": "festival",
+      "text": "The old arrival notice has made a tangle of the plans. I am sketching a ground display while we sort out a kinder invitation.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_festival_ready_clear",
+      "speaker": "puffrel",
+      "kind": "festival",
+      "text": "The ground display is ready. A flight view can be an option when conditions are calm; clear skies alone do not promise calm air.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_festival_ready_rain",
+      "speaker": "puffrel",
+      "kind": "festival",
+      "text": "Our sheltered ground display is ready for the rain. There is no need to wait for a flight to enjoy the gathering.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_festival_after",
+      "speaker": "puffrel",
+      "kind": "festival",
+      "text": "The lanterns stayed for later arrivals. I loved seeing the basket surrounded by people who each came in their own time.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_idle_1",
+      "speaker": "puffrel",
+      "kind": "idle",
+      "text": "This bow has two loops. My original design had seven, which was six loops more opinion than the ribbon needed.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_idle_2",
+      "speaker": "puffrel",
+      "kind": "idle",
+      "text": "Selvie can fold spore-silk into a surprisingly small bundle. My plans have yet to learn that trick.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_idle_3",
+      "speaker": "puffrel",
+      "kind": "idle",
+      "text": "From this seat, the Kindly Crown seems to be holding up the whole evening.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "puffrel_m_festival_offer",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "The new plan is here. Shall we get the gathering ready, with both feet welcome on the ground?",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "flag": "m_agreement_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "puffrel_m_festival_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "puffrel_m_festival_defer"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_accept",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Come to the balloon yard and choose Begin the gathering when you want. The sheltered display is ready in any weather.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "flag": "m_agreement_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_festival_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_defer",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Absolutely. I have put the hurry away. It folds surprisingly small.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "not_flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "flag": "m_agreement_done"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_pending",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Choose Begin the gathering at the balloon yard when you feel ready. You can stay under cover and keep every basket on the ground.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_ready",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Look at the steady lights along the bridges. There is room to follow them, or stay beside this basket.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "flag": "e_festival_ready"
+        },
+        {
+          "not_flag": "q_puffrel_done"
+        }
+      ],
+      "next": "puffrel_m_festival_reveal"
+    },
+    {
+      "id": "puffrel_m_festival_callback",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Your ribbon is still on the grounded basket. Beyond it, the bridge lights welcome people arriving at their own pace.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "flag": "e_festival_ready"
+        },
+        {
+          "flag": "q_puffrel_done"
+        }
+      ],
+      "next": "puffrel_m_festival_reveal"
+    },
+    {
+      "id": "puffrel_m_festival_reveal",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "Under the Kindly Crown, the town glows gold. Beyond it, the falls carry light into all those little distances.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "next": "puffrel_m_festival_complete"
+    },
+    {
+      "id": "puffrel_m_festival_complete",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "And there is your terrace. A small light, with a place beside it. We will keep the gathering open.",
+      "conditions": [
+        {
+          "flag": "met_puffrel"
+        },
+        {
+          "flag": "m_festival_accepted"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_festival_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_after",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "The festival is still here. Some neighbors are arriving; some have only just found a comfortable seat.",
+      "conditions": [
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Did we finish everything?",
+          "next": "puffrel_m_festival_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "puffrel_m_festival_close"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_answer",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "We finished the invitation. The visiting part can take as long as it likes.",
+      "conditions": [
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "puffrel_m_festival_close",
+      "speaker": "puffrel",
+      "kind": "main",
+      "text": "I'll be by the grounded basket. Best view of the people.",
+      "conditions": [
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    }
+  ]
+}

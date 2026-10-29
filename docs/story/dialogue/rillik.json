@@ -1,0 +1,1050 @@
+{
+  "schema_version": 1,
+  "character": "rillik",
+  "quests": [
+    "q_rillik",
+    "m_marks"
+  ],
+  "entries": {
+    "meeting": [
+      "rillik_meeting_open"
+    ],
+    "greeting": [
+      "rillik_greeting_dawn_clear",
+      "rillik_greeting_dawn_rain",
+      "rillik_greeting_day_clear",
+      "rillik_greeting_day_rain",
+      "rillik_greeting_dusk_clear",
+      "rillik_greeting_dusk_rain",
+      "rillik_greeting_night_clear",
+      "rillik_greeting_night_rain"
+    ],
+    "quest": [
+      "rillik_quest_after",
+      "rillik_quest_ready",
+      "rillik_quest_event_wait",
+      "rillik_quest_prepare",
+      "rillik_quest_travel_wait",
+      "rillik_quest_offer"
+    ],
+    "relationship": [
+      "rillik_relationship_trusted",
+      "rillik_relationship_trusted_repeat",
+      "rillik_relationship_friend",
+      "rillik_relationship_friend_repeat",
+      "rillik_relationship_acquaintance"
+    ],
+    "festival": [
+      "rillik_festival_after",
+      "rillik_festival_ready_clear",
+      "rillik_festival_ready_rain",
+      "rillik_festival_before"
+    ],
+    "idle": [
+      "rillik_idle_1",
+      "rillik_idle_2",
+      "rillik_idle_3"
+    ],
+    "main": [
+      "rillik_m_marks_after",
+      "rillik_m_marks_callback",
+      "rillik_m_marks_ready",
+      "rillik_m_marks_pending",
+      "rillik_m_marks_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "rillik_meeting_open",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "Rillik. I keep the flood records here. The water has provided rather more material than my shelves were designed for.",
+      "conditions": [
+        {
+          "not_flag": "met_rillik"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_rillik",
+          "value": true
+        }
+      ],
+      "next": "rillik_meeting_question"
+    },
+    {
+      "id": "rillik_meeting_question",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "You can see the marks from this dry overlook. We need not step into the pool to read what it left behind.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ],
+      "choices": [
+        {
+          "text": "What do the marks record?",
+          "next": "rillik_meeting_value_1"
+        },
+        {
+          "text": "Can you tell how old they are?",
+          "next": "rillik_meeting_value_2"
+        },
+        {
+          "text": "Do you enjoy keeping the records?",
+          "next": "rillik_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "rillik_meeting_value_1",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "They record where water reached, and where a reply was left. At least, that is what the surviving paired records suggest.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ],
+      "next": "rillik_meeting_close"
+    },
+    {
+      "id": "rillik_meeting_value_2",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "The first scratch can be older than the clear one beside it. Weather wears a surface unevenly. A tidy line is not always a recent line.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ],
+      "next": "rillik_meeting_close"
+    },
+    {
+      "id": "rillik_meeting_value_3",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "I like the work. I am less certain that I always explain it usefully. Please stop me if I start describing the drawer instead of the record.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ],
+      "next": "rillik_meeting_close"
+    },
+    {
+      "id": "rillik_meeting_close",
+      "speaker": "rillik",
+      "kind": "meeting",
+      "text": "We can look at one thing at a time. The pool will continue being a pool while we do.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_dawn_clear",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "Clear dawn makes the shallow scratches easier to see. I record the light as well as the mark, so I remember what helped me read it.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_dawn_rain",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "The morning rain darkens the rock. We can still compare the marks from under the roof. The paper need not join the weather.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_day_clear",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "Good day. I found the note I was looking for. It was beneath my note about where I had put it.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_day_rain",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "Rain is an observation, not an interruption. Wet paper, on the other hand, is a practical difficulty. The shelf here is dry.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_dusk_clear",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "The sun has left the lower mark. I copied it earlier, but I enjoy looking at the stone after the measurements are finished.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_dusk_rain",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "The evening rain is loud at the lip of the pool. We can read the rubbing here without having to speak over it.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_night_clear",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "The pool looks deeper at night. That is an impression, so I keep it separate from the measured depth.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "rillik_greeting_night_rain",
+      "speaker": "rillik",
+      "kind": "greeting",
+      "text": "A wet night. The archive roof is doing its oldest and most useful piece of research: keeping these pages dry.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_offer",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "There is a low flood mark I would like another pair of eyes on. Will you compare it with my rubbing from the dry overlook?",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "not_flag": "q_rillik_accepted"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I will compare the mark with you.",
+          "next": "rillik_quest_accept"
+        },
+        {
+          "text": "I will return for a closer look.",
+          "next": "rillik_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_accept",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Thank you. Meet me at the plunge-pool overlook. We will compare the stone and paper without leaving the dry route.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "not_flag": "q_rillik_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_rillik_accepted",
+          "value": true
+        }
+      ],
+      "next": "rillik_quest_travel_wait"
+    },
+    {
+      "id": "rillik_quest_defer",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Of course. I will keep the rubbing flat. An unanswered question is allowed to remain a question for a while.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "not_flag": "q_rillik_accepted"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_travel_wait",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "The dry overlook beside the plunge pool is our starting point. No climb or water crossing is needed.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "not_flag": "q_rillik_prepared"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_prepare",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "From this overlook, the low mark is visible beside the older line. Would you like to compare the rubbing with what you can actually see?",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "not_flag": "q_rillik_prepared"
+        },
+        {
+          "visited": "plunge_pool"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. Let us compare them.",
+          "next": "rillik_quest_prepared"
+        },
+        {
+          "text": "What can the rubbing tell us?",
+          "next": "rillik_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_detail",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "The rubbing captures a surface, not its whole history. We should notice where it is faint rather than fill the gap with a confident guess.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "not_flag": "q_rillik_prepared"
+        },
+        {
+          "visited": "plunge_pool"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. Let us compare them.",
+          "next": "rillik_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_prepared",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Look at the low mark from this dry position, then use the comparison point to put my rubbing beside it. We can talk about what matches.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "not_flag": "q_rillik_prepared"
+        },
+        {
+          "visited": "plunge_pool"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_rillik_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_event_wait",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Compare the low mark and its rubbing at the overlook when you are ready. We do not need to get closer to the water.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "flag": "q_rillik_prepared"
+        },
+        {
+          "not_flag": "e_rillik_rubbing"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_ready",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "You compared the two. The long scratch matches; the short end fades on both stone and paper. Shall we keep that uncertainty in the record?",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "flag": "q_rillik_prepared"
+        },
+        {
+          "flag": "e_rillik_rubbing"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. We can leave the uncertain part clear.",
+          "next": "rillik_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_complete",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Then it is an honest record. Keep this copy of the flood rubbing. A visible gap is more useful than a certainty we invented.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        },
+        {
+          "flag": "q_rillik_accepted"
+        },
+        {
+          "flag": "q_rillik_prepared"
+        },
+        {
+          "flag": "e_rillik_rubbing"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_rillik_done",
+          "value": true
+        },
+        {
+          "give_item": "flood_rubbing"
+        }
+      ]
+    },
+    {
+      "id": "rillik_quest_after",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "I have written that the short end is unclear. It took fewer words than my earlier attempt to explain it away.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "q_rillik_done"
+        }
+      ],
+      "next": "rillik_quest_after_detail"
+    },
+    {
+      "id": "rillik_quest_after_detail",
+      "speaker": "rillik",
+      "kind": "quest",
+      "text": "Nacri asked where the answer would go. I have left a place beside the first note. The drawer can manage one more page.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "q_rillik_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_relationship_acquaintance",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "You need not bring a question every time. I sometimes discover what I am thinking by having someone nearby who is not another shelf.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_relationship_friend",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "You were willing to leave a gap in the record. I trust a friend who can say what they have not seen.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "q_rillik_done"
+        },
+        {
+          "not_flag": "friend_rillik"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_rillik",
+          "value": true
+        }
+      ],
+      "next": "rillik_relationship_friend_reply"
+    },
+    {
+      "id": "rillik_relationship_friend_reply",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "That makes it easier for me to do the same. I have quite a number of unfinished observations, as it turns out.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "friend_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_relationship_friend_repeat",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "I have a new note, if you would like to hear it. Or we could let the water keep the conversation for a while.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "friend_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_relationship_trusted",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "The gathering held more answers than any single notice. I am glad you were there when I began understanding the difference.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "friend_rillik"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_rillik"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_rillik",
+          "value": true
+        }
+      ],
+      "next": "rillik_relationship_trusted_reply"
+    },
+    {
+      "id": "rillik_relationship_trusted_reply",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "There are old records I have never made sense of. I would enjoy looking at them with you, without promising a discovery.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "trusted_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_relationship_trusted_repeat",
+      "speaker": "rillik",
+      "kind": "relationship",
+      "text": "I know I can bring you an uncertain thought. That is a surprisingly steady thing to know.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "trusted_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_festival_before",
+      "speaker": "rillik",
+      "kind": "festival",
+      "text": "The old gathering notice records an arrival but gives little room to the reply. We should find out what changed before copying it again.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_festival_ready_clear",
+      "speaker": "rillik",
+      "kind": "festival",
+      "text": "Both halves are now in the shared plan. The clear sky may suit one arrival; the sheltered ground display suits another.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "rillik_festival_ready_rain",
+      "speaker": "rillik",
+      "kind": "festival",
+      "text": "Rain is included in the plan this time. The notice does not need the weather to agree with it before it can be useful.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "rillik_festival_after",
+      "speaker": "rillik",
+      "kind": "festival",
+      "text": "I recorded when the first lamp was lit. Then I stopped writing down arrival times. People continued to be welcome without my help.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_idle_1",
+      "speaker": "rillik",
+      "kind": "idle",
+      "text": "Avren's upstream notes are very clear. I must remember to send a clear answer, rather than merely file them clearly.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_idle_2",
+      "speaker": "rillik",
+      "kind": "idle",
+      "text": "Quillip has left a blank place on the map. Apparently it contains a bench. A respectable use of blankness.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_idle_3",
+      "speaker": "rillik",
+      "kind": "idle",
+      "text": "This rubbing is dry. I have checked three times. The third inspection has added very little to our knowledge.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_offer",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "These old marks come in pairs. Will you look at both with me, from the dry overlook?",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        },
+        {
+          "flag": "m_garden_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "rillik_m_marks_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "rillik_m_marks_defer"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_accept",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "Visit the plunge-pool overlook and inspect the two flood marks. Keep to the dry path. There is no need to enter the water.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        },
+        {
+          "flag": "m_garden_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_marks_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_defer",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "I will leave my rubbing flat. The rock has waited longer than either of us.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "not_flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        },
+        {
+          "flag": "m_garden_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_pending",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "The two marks are read together. Inspect each from the dry overlook, then bring me what you noticed.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_ready",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "Yes. The upper mark records water arriving. The lower one records the reply sent to the next settlement.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        },
+        {
+          "visited": "plunge_pool"
+        },
+        {
+          "flag": "e_marks_read"
+        },
+        {
+          "not_flag": "q_rillik_done"
+        }
+      ],
+      "next": "rillik_m_marks_reveal"
+    },
+    {
+      "id": "rillik_m_marks_callback",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "The low mark you helped me read has a companion. The arrival above and the reply below complete the pair.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        },
+        {
+          "visited": "plunge_pool"
+        },
+        {
+          "flag": "e_marks_read"
+        },
+        {
+          "flag": "q_rillik_done"
+        }
+      ],
+      "next": "rillik_m_marks_known_reveal"
+    },
+    {
+      "id": "rillik_m_marks_reveal",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "I thought the second mark was a correction. It was a conversation. Even stone can leave room for an answer.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        }
+      ],
+      "next": "rillik_m_marks_complete"
+    },
+    {
+      "id": "rillik_m_marks_complete",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "Selvie has the present notice at the silk awning. Let's find out whether its reply ever reached this side.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_marks_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_after",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "The stone was not asking us to hold the water still. It was asking us to tell each other when it moved.",
+      "conditions": [
+        {
+          "flag": "m_marks_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Who made the first marks?",
+          "next": "rillik_m_marks_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "rillik_m_marks_close"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_answer",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "Pool keepers who needed their neighbors to know what the water was doing. The smallest strokes were the acknowledgements.",
+      "conditions": [
+        {
+          "flag": "m_marks_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_close",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "I'll add today's note on a loose card. The old stone stays as it is.",
+      "conditions": [
+        {
+          "flag": "m_marks_done"
+        }
+      ]
+    },
+    {
+      "id": "rillik_m_marks_known_reveal",
+      "speaker": "rillik",
+      "kind": "main",
+      "text": "You already helped me hear the smaller mark. Together, the pair shows how an observation became a conversation.",
+      "conditions": [
+        {
+          "flag": "met_rillik"
+        },
+        {
+          "flag": "m_marks_accepted"
+        },
+        {
+          "not_flag": "m_marks_done"
+        }
+      ],
+      "next": "rillik_m_marks_complete"
+    }
+  ]
+}

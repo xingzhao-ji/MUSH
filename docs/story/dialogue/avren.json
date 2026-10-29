@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "avren",
+  "quests": [
+    "q_avren"
+  ],
+  "entries": {
+    "meeting": [
+      "avren_meeting_open"
+    ],
+    "greeting": [
+      "avren_greeting_dawn_clear",
+      "avren_greeting_dawn_rain",
+      "avren_greeting_day_clear",
+      "avren_greeting_day_rain",
+      "avren_greeting_dusk_clear",
+      "avren_greeting_dusk_rain",
+      "avren_greeting_night_clear",
+      "avren_greeting_night_rain"
+    ],
+    "quest": [
+      "avren_quest_after",
+      "avren_quest_ready",
+      "avren_quest_event_wait",
+      "avren_quest_prepare",
+      "avren_quest_travel_wait",
+      "avren_quest_offer"
+    ],
+    "relationship": [
+      "avren_relationship_trusted",
+      "avren_relationship_trusted_repeat",
+      "avren_relationship_friend",
+      "avren_relationship_friend_repeat",
+      "avren_relationship_acquaintance"
+    ],
+    "festival": [
+      "avren_festival_after",
+      "avren_festival_ready_clear",
+      "avren_festival_ready_rain",
+      "avren_festival_before"
+    ],
+    "idle": [
+      "avren_idle_1",
+      "avren_idle_2",
+      "avren_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "avren_meeting_open",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "Avren, first-melt courier. That tells you my name and why my satchel smells faintly of wet stone.",
+      "conditions": [
+        {
+          "not_flag": "met_avren"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_avren",
+          "value": true
+        }
+      ],
+      "next": "avren_meeting_question"
+    },
+    {
+      "id": "avren_meeting_question",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "I brought news down from the ice. Before I open the satchel, what would you like to know?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "How was the journey?",
+          "next": "avren_meeting_value_1"
+        },
+        {
+          "text": "What does first melt mean to you?",
+          "next": "avren_meeting_value_2"
+        },
+        {
+          "text": "Would you like to rest?",
+          "next": "avren_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "avren_meeting_value_1",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "Long enough to rehearse every message. I am trying to remember that a greeting need not be rehearsed.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": [],
+      "next": "avren_meeting_close"
+    },
+    {
+      "id": "avren_meeting_value_2",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "The first water reaches our stone channels. We send word below, then listen for the answer. Both parts matter.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": [],
+      "next": "avren_meeting_close"
+    },
+    {
+      "id": "avren_meeting_value_3",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "Yes. Thank you for asking before I offered to carry something else. This step looks wonderfully unimportant.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": [],
+      "next": "avren_meeting_close"
+    },
+    {
+      "id": "avren_meeting_close",
+      "speaker": "avren",
+      "kind": "meeting",
+      "text": "If you need a message carried, find me by the courier steps. If you only want company, those same steps will do.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_dawn_clear",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "Clear dawn. I can see the upper falls from here. Up home, this is when we check which channels have begun to sing.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_dawn_rain",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "Rain at dawn. I have put the notices under cover, including the one reminding me to put notices under cover.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_day_clear",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "Good day. My satchel has room for replies. I used to pack it much too neatly to allow for those.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_day_rain",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "Come under the eaves. I can keep a message dry, but I have not yet found a fold that keeps a whole courier dry.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_dusk_clear",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "The light is leaving the high stone first. I like watching where it arrives next.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_dusk_rain",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "Dusk rain makes the steps shine. There is room beside me where the roof reaches.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_night_clear",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "The falls are a pale thread tonight. I can follow them with my eyes without following them with my feet.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_greeting_night_rain",
+      "speaker": "avren",
+      "kind": "greeting",
+      "text": "A wet night is a fine reason to finish telling a story indoors. Even a courier's story.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_quest_offer",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "My first-melt notice needs its downstream reply beside it. Will you help carry a complete copy to the sheltered stand?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "not_flag": "q_avren_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll help carry both parts.",
+          "next": "avren_quest_accept"
+        },
+        {
+          "text": "I'd like to come back for this.",
+          "next": "avren_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_accept",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Then we will begin at the courier steps. I want to show you how the two parts belong together before you carry them.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "not_flag": "q_avren_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_avren_accepted",
+          "value": true
+        }
+      ],
+      "next": "avren_quest_travel_wait"
+    },
+    {
+      "id": "avren_quest_defer",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Of course. The copy will stay in my satchel. It will still be worth sharing when you return.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "not_flag": "q_avren_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_quest_travel_wait",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Visit the courier steps when you are ready. We can check the copy there without hurrying along the route.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "not_flag": "q_avren_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_quest_prepare",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Here at the courier steps, the first-melt notice and downstream reply make one reading. Ready to carry their copy?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "not_flag": "q_avren_prepared"
+        },
+        {
+          "visited": "courier_steps"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Keep the reply with the notice.",
+          "next": "avren_quest_prepared"
+        },
+        {
+          "text": "Why did the reply get left out?",
+          "next": "avren_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_detail",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "An older notice kept being copied. Nobody meant to leave anyone out. A correct beginning can still need a new ending.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "not_flag": "q_avren_prepared"
+        },
+        {
+          "visited": "courier_steps"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Keep the reply with the notice.",
+          "next": "avren_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_prepared",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "The copy is ready for the sheltered notice stand. Carry it there, then tell me it includes the downstream reply.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "not_flag": "q_avren_prepared"
+        },
+        {
+          "visited": "courier_steps"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_avren_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_event_wait",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "At the sheltered stand, share the copy with its downstream reply. When both are displayed, come tell me the reply is included.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "flag": "q_avren_prepared"
+        },
+        {
+          "not_flag": "e_avren_notice"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_quest_ready",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "The complete copy has reached the sheltered stand. Tell me, did the downstream reply stay with the first-melt notice?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "flag": "q_avren_prepared"
+        },
+        {
+          "flag": "e_avren_notice"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "The downstream reply is included.",
+          "next": "avren_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_complete",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Then both voices can be read. Keep this spare melt notice as a memento, with both parts and a little room for the next reply.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        },
+        {
+          "flag": "q_avren_accepted"
+        },
+        {
+          "flag": "q_avren_prepared"
+        },
+        {
+          "flag": "e_avren_notice"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_avren_done",
+          "value": true
+        },
+        {
+          "give_item": "melt_notice"
+        }
+      ]
+    },
+    {
+      "id": "avren_quest_after",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "I checked the stand again. It is pleasant to find a notice that does not need apologizing for.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "q_avren_done"
+        }
+      ],
+      "effects": [],
+      "next": "avren_quest_after_detail"
+    },
+    {
+      "id": "avren_quest_after_detail",
+      "speaker": "avren",
+      "kind": "quest",
+      "text": "Next first melt, I will ask who has answered before I ask how quickly I can leave.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "q_avren_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_relationship_acquaintance",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "I know your footsteps better than your habits yet. There is no hurry. The steps are good for learning both.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "q_avren_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_relationship_friend",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "You helped carry the answer, not just my news. May I count you among the people I come to see, rather than deliver to?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "q_avren_done"
+        },
+        {
+          "not_flag": "friend_avren"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_avren",
+          "value": true
+        }
+      ],
+      "next": "avren_relationship_friend_reply"
+    },
+    {
+      "id": "avren_relationship_friend_reply",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "Good. Then I can admit that sometimes I arrive early because I want a longer visit.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "friend_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_relationship_friend_repeat",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "I have no delivery for you today. I nearly packed one out of habit. Shall we sit anyway?",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "friend_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_relationship_trusted",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "After the gathering, I found I could leave my satchel hanging by the door. With you, I do not need a useful reason to stay.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "friend_avren"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_avren"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_avren",
+          "value": true
+        }
+      ],
+      "next": "avren_relationship_trusted_reply"
+    },
+    {
+      "id": "avren_relationship_trusted_reply",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "When I next go home to the ice, I would like to tell them about this step and the friend who made it a resting place.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "trusted_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_relationship_trusted_repeat",
+      "speaker": "avren",
+      "kind": "relationship",
+      "text": "You can ask me about the journey, or about nothing at all. I am becoming quite fond of nothing at all.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "trusted_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_festival_before",
+      "speaker": "avren",
+      "kind": "festival",
+      "text": "The old notice has confused some arrivals. I am keeping the replies together while we decide how to welcome everyone.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_festival_ready_clear",
+      "speaker": "avren",
+      "kind": "festival",
+      "text": "The shared plan allows different arrivals. In this clear weather, I will begin by welcoming whoever is already here.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_festival_ready_rain",
+      "speaker": "avren",
+      "kind": "festival",
+      "text": "The notice names the sheltered ground display too. I am glad the rain does not make anyone's journey the wrong one.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_festival_after",
+      "speaker": "avren",
+      "kind": "festival",
+      "text": "Some arrived after the first lanterns were lit. There was still a place for them. That is the news I want to carry home.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_idle_1",
+      "speaker": "avren",
+      "kind": "idle",
+      "text": "My satchel buckle clicks twice. Once to close it, and once because I never quite trust the first click.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_idle_2",
+      "speaker": "avren",
+      "kind": "idle",
+      "text": "Rillik can fit a remarkable number of notes into one drawer. I am trying to leave room for questions in mine.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "avren_idle_3",
+      "speaker": "avren",
+      "kind": "idle",
+      "text": "At home we stack stones against the wind. Here, someone put a cushion on a step.",
+      "conditions": [
+        {
+          "flag": "met_avren"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "nuzzle",
+  "quests": [
+    "q_nuzzle"
+  ],
+  "entries": {
+    "meeting": [
+      "nuzzle_meeting_open"
+    ],
+    "greeting": [
+      "nuzzle_greeting_dawn_clear",
+      "nuzzle_greeting_dawn_rain",
+      "nuzzle_greeting_day_clear",
+      "nuzzle_greeting_day_rain",
+      "nuzzle_greeting_dusk_clear",
+      "nuzzle_greeting_dusk_rain",
+      "nuzzle_greeting_night_clear",
+      "nuzzle_greeting_night_rain"
+    ],
+    "quest": [
+      "nuzzle_quest_after",
+      "nuzzle_quest_ready",
+      "nuzzle_quest_event_wait",
+      "nuzzle_quest_prepare",
+      "nuzzle_quest_travel_wait",
+      "nuzzle_quest_offer"
+    ],
+    "relationship": [
+      "nuzzle_relationship_trusted",
+      "nuzzle_relationship_trusted_repeat",
+      "nuzzle_relationship_friend",
+      "nuzzle_relationship_friend_repeat",
+      "nuzzle_relationship_acquaintance"
+    ],
+    "festival": [
+      "nuzzle_festival_after",
+      "nuzzle_festival_ready_clear",
+      "nuzzle_festival_ready_rain",
+      "nuzzle_festival_before"
+    ],
+    "idle": [
+      "nuzzle_idle_1",
+      "nuzzle_idle_2",
+      "nuzzle_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "nuzzle_meeting_open",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "A moss-backed snail follows the damp seam below a stone step. Nuzzle's upper feelers extend beyond the edge of the shell.",
+      "conditions": [
+        {
+          "not_flag": "met_nuzzle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_nuzzle",
+          "value": true
+        }
+      ],
+      "next": "nuzzle_meeting_question"
+    },
+    {
+      "id": "nuzzle_meeting_question",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "Nuzzle touches the step's upright face, then turns along the level ground beside it.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll watch from beside the route.",
+          "next": "nuzzle_meeting_value_1"
+        },
+        {
+          "text": "I'll look for the way around the step.",
+          "next": "nuzzle_meeting_value_2"
+        },
+        {
+          "text": "I'll stay here without moving Nuzzle.",
+          "next": "nuzzle_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_meeting_value_1",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "Nuzzle continues along the stone's base. The open ground between the snail and the player stays clear.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": [],
+      "next": "nuzzle_meeting_close"
+    },
+    {
+      "id": "nuzzle_meeting_value_2",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "The level path curves around the step. Nuzzle's feelers follow the moss toward the curve.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": [],
+      "next": "nuzzle_meeting_close"
+    },
+    {
+      "id": "nuzzle_meeting_value_3",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "Nuzzle passes a small dip in the stone and continues under the shelter of an overhanging leaf.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": [],
+      "next": "nuzzle_meeting_close"
+    },
+    {
+      "id": "nuzzle_meeting_close",
+      "speaker": "nuzzle",
+      "kind": "meeting",
+      "text": "The moss on Nuzzle's shell brushes a low stem. The snail moves beneath it without disturbing the leaf above.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_dawn_clear",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Dawn light reaches the top of the step. Nuzzle travels through the cooler moss at its base.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_dawn_rain",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Morning rain gathers on the broad leaf above Nuzzle. The snail follows the damp ground beneath its edge.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_day_clear",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "In the clear daylight, Nuzzle rests where the stone's overhang shades the moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_day_rain",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "A fine rain darkens the shell's cream bands. Nuzzle moves along the sheltered side of the step.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_dusk_clear",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Dusk softens the shell's ochre spiral. Nuzzle follows a pale leaf vein lying beside the moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_dusk_rain",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Evening rain beads on Nuzzle's shell. The snail continues toward the step's low, sheltered recess.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_night_clear",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Nuzzle's upper feelers rise into a small patch of lantern light, then turn back toward the moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_greeting_night_rain",
+      "speaker": "nuzzle",
+      "kind": "greeting",
+      "text": "Rain falls beyond the recess. Nuzzle rests under its dry upper lip, with the front of the body on damp ground.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_quest_offer",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle feels along the tall step, then turns toward the existing ground route around it. The curve disappears behind a low stem.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "not_flag": "q_nuzzle_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll explore the ground route and find a leaf marker.",
+          "next": "nuzzle_quest_accept"
+        },
+        {
+          "text": "I'll leave the route open and come back.",
+          "next": "nuzzle_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_accept",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle follows the moss toward the foot of the step. A loose leaf rests on the low marker stand beside the route.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "not_flag": "q_nuzzle_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nuzzle_accepted",
+          "value": true
+        }
+      ],
+      "next": "nuzzle_quest_travel_wait"
+    },
+    {
+      "id": "nuzzle_quest_defer",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle continues along the step's base. The level path remains open past the player's resting place.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "not_flag": "q_nuzzle_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_quest_travel_wait",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "At the moss step, the existing path bends around the stone. Nuzzle moves beside its damp edge.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "not_flag": "q_nuzzle_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_quest_prepare",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "From the moss step, the ground route curves toward a sheltered bend. Nuzzle pauses beside a low patch of moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "not_flag": "q_nuzzle_prepared"
+        },
+        {
+          "visited": "moss_step"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll explore that route and place a loose leaf beside it.",
+          "next": "nuzzle_quest_prepared"
+        },
+        {
+          "text": "I'll look at the ground route more closely.",
+          "next": "nuzzle_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_detail",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "The path goes around the step without rising onto it. At the bend, there is space beside the walking surface for a loose leaf.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "not_flag": "q_nuzzle_prepared"
+        },
+        {
+          "visited": "moss_step"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll explore that route and place a loose leaf beside it.",
+          "next": "nuzzle_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_prepared",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle's feelers turn along the ground route. The marker stand's loose leaf rests near the player's feet.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "not_flag": "q_nuzzle_prepared"
+        },
+        {
+          "visited": "moss_step"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nuzzle_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_event_wait",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle pauses at the mossy edge. The level path curves around the stone, with room for a loose leaf beside its bend.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "flag": "q_nuzzle_prepared"
+        },
+        {
+          "not_flag": "e_nuzzle_leaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_quest_ready",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "A loose leaf now marks the explored ground route. Nuzzle continues along the moss at the base of the step.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "flag": "q_nuzzle_prepared"
+        },
+        {
+          "flag": "e_nuzzle_leaf"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll keep a second leaf to remember this route.",
+          "next": "nuzzle_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_complete",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "The marker stays beside the clear route. A second loose leaf is kept in the player's pouch as Nuzzle continues along the moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        },
+        {
+          "flag": "q_nuzzle_accepted"
+        },
+        {
+          "flag": "q_nuzzle_prepared"
+        },
+        {
+          "flag": "e_nuzzle_leaf"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nuzzle_done",
+          "value": true
+        },
+        {
+          "give_item": "leaf_marker"
+        }
+      ]
+    },
+    {
+      "id": "nuzzle_quest_after",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle follows the same level route. The leaf marker rests beside its bend, clear of the walking surface.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "q_nuzzle_done"
+        }
+      ],
+      "effects": [],
+      "next": "nuzzle_quest_after_detail"
+    },
+    {
+      "id": "nuzzle_quest_after_detail",
+      "speaker": "nuzzle",
+      "kind": "quest",
+      "text": "Nuzzle turns a feeler from a curled leaf edge toward the moss, then continues along the ground route.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "q_nuzzle_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_relationship_acquaintance",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "Nuzzle passes near the player's resting place, following the damp seam between stone and moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "q_nuzzle_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_relationship_friend",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "Nuzzle reaches the patch of moss beside the player and rests there, body still touching the open ground route.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "q_nuzzle_done"
+        },
+        {
+          "not_flag": "friend_nuzzle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_nuzzle",
+          "value": true
+        }
+      ],
+      "next": "nuzzle_relationship_friend_reply"
+    },
+    {
+      "id": "nuzzle_relationship_friend_reply",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "One upper feeler turns toward the player. Nuzzle stays on the moss while the other follows the edge of a leaf.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "friend_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_relationship_friend_repeat",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "Nuzzle follows the familiar curve and settles nearby. The shell's moss brushes the same low stem.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "friend_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_relationship_trusted",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "At the gathering's low edge, Nuzzle reaches the moss beside the player and extends both upper feelers.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "friend_nuzzle"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_nuzzle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_nuzzle",
+          "value": true
+        }
+      ],
+      "next": "nuzzle_relationship_trusted_reply"
+    },
+    {
+      "id": "nuzzle_relationship_trusted_reply",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "Nuzzle rests there with a broad leaf overhead. The path remains clear on either side of the shell.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "trusted_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_relationship_trusted_repeat",
+      "speaker": "nuzzle",
+      "kind": "relationship",
+      "text": "Nuzzle comes along the open ground route and pauses beside the player, then slowly turns toward the next patch of moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "trusted_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_festival_before",
+      "speaker": "nuzzle",
+      "kind": "festival",
+      "text": "A folded awning rests above the low route. Nuzzle follows the moss underneath it, passing a loose cord without touching it.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_festival_ready_clear",
+      "speaker": "nuzzle",
+      "kind": "festival",
+      "text": "Clear light falls across the prepared display. Nuzzle travels through the narrow shade along its ground-level edge.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_festival_ready_rain",
+      "speaker": "nuzzle",
+      "kind": "festival",
+      "text": "Rain runs off the display awning beyond the low path. Nuzzle continues along the sheltered strip of moss beneath it.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_festival_after",
+      "speaker": "nuzzle",
+      "kind": "festival",
+      "text": "Near the gathering's lanterns, Nuzzle rounds the low bend and rests beneath a broad leaf. The ground route stays open.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_idle_1",
+      "speaker": "nuzzle",
+      "kind": "idle",
+      "text": "Nuzzle touches a fallen petal with one feeler, follows its edge, and continues around it.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_idle_2",
+      "speaker": "nuzzle",
+      "kind": "idle",
+      "text": "A tiny drop clings to the moss on Nuzzle's shell. It remains there through the next small turn.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nuzzle_idle_3",
+      "speaker": "nuzzle",
+      "kind": "idle",
+      "text": "Nuzzle reaches the end of a leaf vein and turns onto the adjoining patch of moss.",
+      "conditions": [
+        {
+          "flag": "met_nuzzle"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

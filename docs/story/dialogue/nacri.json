@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "nacri",
+  "quests": [
+    "q_nacri"
+  ],
+  "entries": {
+    "meeting": [
+      "nacri_meeting_open"
+    ],
+    "greeting": [
+      "nacri_greeting_dawn_clear",
+      "nacri_greeting_dawn_rain",
+      "nacri_greeting_day_clear",
+      "nacri_greeting_day_rain",
+      "nacri_greeting_dusk_clear",
+      "nacri_greeting_dusk_rain",
+      "nacri_greeting_night_clear",
+      "nacri_greeting_night_rain"
+    ],
+    "quest": [
+      "nacri_quest_after",
+      "nacri_quest_ready",
+      "nacri_quest_event_wait",
+      "nacri_quest_prepare",
+      "nacri_quest_travel_wait",
+      "nacri_quest_offer"
+    ],
+    "relationship": [
+      "nacri_relationship_trusted",
+      "nacri_relationship_trusted_repeat",
+      "nacri_relationship_friend",
+      "nacri_relationship_friend_repeat",
+      "nacri_relationship_acquaintance"
+    ],
+    "festival": [
+      "nacri_festival_after",
+      "nacri_festival_ready_clear",
+      "nacri_festival_ready_rain",
+      "nacri_festival_before"
+    ],
+    "idle": [
+      "nacri_idle_1",
+      "nacri_idle_2",
+      "nacri_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "nacri_meeting_open",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "Nacri. I bring news from the lagoon exchanges, along with several parcels and one lunch that must not join the parcels.",
+      "conditions": [
+        {
+          "not_flag": "met_nacri"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_nacri",
+          "value": true
+        }
+      ],
+      "next": "nacri_meeting_question"
+    },
+    {
+      "id": "nacri_meeting_question",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "This parcel has two addresses. Before I make another label, what do you think that could mean?",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "It belongs in two places.",
+          "next": "nacri_meeting_value_1"
+        },
+        {
+          "text": "Both exchanges share what's inside.",
+          "next": "nacri_meeting_value_2"
+        },
+        {
+          "text": "We should read both labels.",
+          "next": "nacri_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "nacri_meeting_value_1",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "That is my favorite possibility. A parcel can have two homes without being lost between them.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": [],
+      "next": "nacri_meeting_close"
+    },
+    {
+      "id": "nacri_meeting_value_2",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "Exactly. The lagoon exchange and these steps share the craft samples inside. Both deserve a place on the outside.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": [],
+      "next": "nacri_meeting_close"
+    },
+    {
+      "id": "nacri_meeting_value_3",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "A fine beginning. I was so busy choosing which one to trust that I forgot I could trust them together.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": [],
+      "next": "nacri_meeting_close"
+    },
+    {
+      "id": "nacri_meeting_close",
+      "speaker": "nacri",
+      "kind": "meeting",
+      "text": "I will be at the exchange steps. Bring a story if you have one. You need not wrap it.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_dawn_clear",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Clear dawn. The lagoon at home would be pale jade now, with the exchange halls opening their shutters.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_dawn_rain",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Morning rain reminds me of the woven causeways. We used to tuck news under our coats and let our elbows get wet.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_day_clear",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Good day. I have sorted the parcels and left the stories in a cheerful heap.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_day_rain",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Rain has brought everyone closer under the roof. An efficient arrangement for exchanging news.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_dusk_clear",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Dusk already. At home, this is when the ferry tables fill with things that are almost forgotten.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_dusk_rain",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "Evening rain. I have moved the labels in from the edge. They were beginning to look unusually thoughtful.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_night_clear",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "The steps are quiet tonight. A good time to tell a story without needing to shorten the beginning.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_greeting_night_rain",
+      "speaker": "nacri",
+      "kind": "greeting",
+      "text": "A wet night. The parcel twine is dry, and there is no reason we cannot be too. Come under the roof.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_quest_offer",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "This shared parcel carries two home addresses. Will you explore both labels with me and help keep them together?",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "not_flag": "q_nacri_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Let's read both and keep both homes.",
+          "next": "nacri_quest_accept"
+        },
+        {
+          "text": "I'll return to the parcel another time.",
+          "next": "nacri_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_accept",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Meet me at the exchange steps. The parcel is there, with both tags still tied where their senders put them.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "not_flag": "q_nacri_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nacri_accepted",
+          "value": true
+        }
+      ],
+      "next": "nacri_quest_travel_wait"
+    },
+    {
+      "id": "nacri_quest_defer",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Take your time. I shall resist my urge to tidy away information merely because it has two corners.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "not_flag": "q_nacri_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_quest_travel_wait",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Visit the exchange steps when you are ready. We can begin beside the parcel, where both labels can be read.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "not_flag": "q_nacri_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_quest_prepare",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Here at the exchange steps, we can examine both labels. Shall we read them before agreeing what the parcel should carry?",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "not_flag": "q_nacri_prepared"
+        },
+        {
+          "visited": "exchange_steps"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's explore both labels.",
+          "next": "nacri_quest_prepared"
+        },
+        {
+          "text": "Why did you think one had to go?",
+          "next": "nacri_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_detail",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "I wanted one tidy destination. But these samples connect the lagoon exchange and Lamploom. My tidy version would have hidden half their story.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "not_flag": "q_nacri_prepared"
+        },
+        {
+          "visited": "exchange_steps"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's explore both labels.",
+          "next": "nacri_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_prepared",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Explore both labels at these steps, then agree to keep two address tags on the shared parcel. Both homes should remain readable.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "not_flag": "q_nacri_prepared"
+        },
+        {
+          "visited": "exchange_steps"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nacri_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_event_wait",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Read each label, then confirm that both tags should stay. The parcel can wait right here while you consider its two homes.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "flag": "q_nacri_prepared"
+        },
+        {
+          "not_flag": "e_nacri_labels"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_quest_ready",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Both labels have been explored, and we agreed to keep the two tags. The parcel shows where it is welcome here and at the lagoon.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "flag": "q_nacri_prepared"
+        },
+        {
+          "flag": "e_nacri_labels"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "It can belong to both.",
+          "next": "nacri_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_complete",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "Take this double address tag as a memento. It has room for two places on purpose, rather than as an apology in the margin.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        },
+        {
+          "flag": "q_nacri_accepted"
+        },
+        {
+          "flag": "q_nacri_prepared"
+        },
+        {
+          "flag": "e_nacri_labels"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_nacri_done",
+          "value": true
+        },
+        {
+          "give_item": "double_address_tag"
+        }
+      ]
+    },
+    {
+      "id": "nacri_quest_after",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "I am leaving more space on my new labels. Occasionally a tidy parcel has a wonderfully untidy story.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "q_nacri_done"
+        }
+      ],
+      "effects": [],
+      "next": "nacri_quest_after_detail"
+    },
+    {
+      "id": "nacri_quest_after_detail",
+      "speaker": "nacri",
+      "kind": "quest",
+      "text": "I will tell the exchange neighbors how close I came to removing one of those perfectly useful addresses.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "q_nacri_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_relationship_acquaintance",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "I know which parcels go where. I am still learning where people like to linger. You can help by lingering a little.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "q_nacri_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_relationship_friend",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "You listened to both labels. I would trust you with a story that takes two different beginnings to tell.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "q_nacri_done"
+        },
+        {
+          "not_flag": "friend_nacri"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_nacri",
+          "value": true
+        }
+      ],
+      "next": "nacri_relationship_friend_reply"
+    },
+    {
+      "id": "nacri_relationship_friend_reply",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "That is what friendship feels like to me: room to say 'also' without watching someone reach for the scissors.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "friend_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_relationship_friend_repeat",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "I have news from the coast, if you want it. Or you can tell me how things look from your own doorstep.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "friend_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_relationship_trusted",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "At the gathering, I spoke of going home and realized I meant two places. With you, I did not feel I had to correct myself.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "friend_nacri"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_nacri"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_nacri",
+          "value": true
+        }
+      ],
+      "next": "nacri_relationship_trusted_reply"
+    },
+    {
+      "id": "nacri_relationship_trusted_reply",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "I miss the lagoon. I love these steps. I am glad you can hear both sentences without asking me to choose.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "trusted_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_relationship_trusted_repeat",
+      "speaker": "nacri",
+      "kind": "relationship",
+      "text": "Some days I want the salt air and these lanterns at once. Sitting with you makes that a comfortable thing to want.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "trusted_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_festival_before",
+      "speaker": "nacri",
+      "kind": "festival",
+      "text": "A copied notice can travel farther than its correction. I will make room for both arrival news and the downstream reply.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_festival_ready_clear",
+      "speaker": "nacri",
+      "kind": "festival",
+      "text": "The welcome now leaves room for different arrivals. That should make the exchange steps a pleasant place to linger.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_festival_ready_rain",
+      "speaker": "nacri",
+      "kind": "festival",
+      "text": "I have put the parcels under shelter. Guests can come to the ground display as they arrive, however wet their stories are.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_festival_after",
+      "speaker": "nacri",
+      "kind": "festival",
+      "text": "I heard three different accounts of the gathering. Each began at a different lantern. All of them sounded like ours.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_idle_1",
+      "speaker": "nacri",
+      "kind": "idle",
+      "text": "A knot is easy to admire until you need the parcel open before lunch.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_idle_2",
+      "speaker": "nacri",
+      "kind": "idle",
+      "text": "My reed cases smell faintly of the lagoon. I open an empty one sometimes, just to check.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "nacri_idle_3",
+      "speaker": "nacri",
+      "kind": "idle",
+      "text": "Selvie asks which coast a dye came from. I usually add whose roof I waited under while it was packed.",
+      "conditions": [
+        {
+          "flag": "met_nacri"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

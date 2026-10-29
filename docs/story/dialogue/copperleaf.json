@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "copperleaf",
+  "quests": [
+    "q_copperleaf"
+  ],
+  "entries": {
+    "meeting": [
+      "copperleaf_meeting_open"
+    ],
+    "greeting": [
+      "copperleaf_greeting_dawn_clear",
+      "copperleaf_greeting_dawn_rain",
+      "copperleaf_greeting_day_clear",
+      "copperleaf_greeting_day_rain",
+      "copperleaf_greeting_dusk_clear",
+      "copperleaf_greeting_dusk_rain",
+      "copperleaf_greeting_night_clear",
+      "copperleaf_greeting_night_rain"
+    ],
+    "quest": [
+      "copperleaf_quest_after",
+      "copperleaf_quest_ready",
+      "copperleaf_quest_event_wait",
+      "copperleaf_quest_prepare",
+      "copperleaf_quest_travel_wait",
+      "copperleaf_quest_offer"
+    ],
+    "relationship": [
+      "copperleaf_relationship_trusted",
+      "copperleaf_relationship_trusted_repeat",
+      "copperleaf_relationship_friend",
+      "copperleaf_relationship_friend_repeat",
+      "copperleaf_relationship_acquaintance"
+    ],
+    "festival": [
+      "copperleaf_festival_after",
+      "copperleaf_festival_ready_clear",
+      "copperleaf_festival_ready_rain",
+      "copperleaf_festival_before"
+    ],
+    "idle": [
+      "copperleaf_idle_1",
+      "copperleaf_idle_2",
+      "copperleaf_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "copperleaf_meeting_open",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "Copperleaf. Route keeper, occasional umbrella rack. That last part is a misunderstanding about my spines.",
+      "conditions": [
+        {
+          "not_flag": "met_copperleaf"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_copperleaf",
+          "value": true
+        }
+      ],
+      "next": "copperleaf_meeting_question"
+    },
+    {
+      "id": "copperleaf_meeting_question",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "I am checking the covered walk. What would help you feel welcome on an unfamiliar path?",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Knowing where it leads.",
+          "next": "copperleaf_meeting_value_1"
+        },
+        {
+          "text": "A place to stop.",
+          "next": "copperleaf_meeting_value_2"
+        },
+        {
+          "text": "Someone to walk with.",
+          "next": "copperleaf_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_meeting_value_1",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "Then the card should say so plainly. A beautiful arrow pointing nowhere is merely an ambitious leaf.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": [],
+      "next": "copperleaf_meeting_close"
+    },
+    {
+      "id": "copperleaf_meeting_value_2",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "Quite. A route without a resting place is only half described. I am adding the other half.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": [],
+      "next": "copperleaf_meeting_close"
+    },
+    {
+      "id": "copperleaf_meeting_value_3",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "I can manage that. My pace includes looking at things and the occasional disagreement with my folio strap.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": [],
+      "next": "copperleaf_meeting_close"
+    },
+    {
+      "id": "copperleaf_meeting_close",
+      "speaker": "copperleaf",
+      "kind": "meeting",
+      "text": "Find me along the covered walk. If I am standing still, that may be part of the route inspection.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_dawn_clear",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "Clear dawn. The covered walk is still useful. Shade is shelter with different weather.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_dawn_rain",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "A wet morning. The roof has begun its inspection before I have begun mine.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_day_clear",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "Good day. I have drawn a larger rest mark on the card. It deserved more space than my initials.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_day_rain",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "Stay under the cover if you like. Rain is much easier to admire from the side.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_dusk_clear",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "The last light turns the leaf litter copper. I deny arranging it to match my name.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_dusk_rain",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "Dusk rain. I have a dry card and a slightly damp sleeve. A reasonable division of duties.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_night_clear",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "The covered walk is quiet tonight. The rest mark can serve someone who merely wants to look at the lanterns.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_greeting_night_rain",
+      "speaker": "copperleaf",
+      "kind": "greeting",
+      "text": "A rainy night rewards a well-placed roof. Also a friend who moves over on the bench.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_quest_offer",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "My route card marks every turn and no rests. Will you carry a dry copy along the covered walk and show the resting place?",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "not_flag": "q_copperleaf_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll walk it and show the resting place.",
+          "next": "copperleaf_quest_accept"
+        },
+        {
+          "text": "I'll leave the card with you for now.",
+          "next": "copperleaf_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_accept",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Come to the covered walk first. We can look at the new rest mark before you take the card along it.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "not_flag": "q_copperleaf_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_copperleaf_accepted",
+          "value": true
+        }
+      ],
+      "next": "copperleaf_quest_travel_wait"
+    },
+    {
+      "id": "copperleaf_quest_defer",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Good. I know where it is, and you know where I am. That is already a respectable arrangement.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "not_flag": "q_copperleaf_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_quest_travel_wait",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Visit the covered walk when you feel like a stroll. I will have the dry route card ready there.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "not_flag": "q_copperleaf_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_quest_prepare",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Here is the covered walk. The dry card now includes a rest mark. Shall we check that it is useful to someone walking?",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "not_flag": "q_copperleaf_prepared"
+        },
+        {
+          "visited": "covered_walk"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll carry the card along the walk.",
+          "next": "copperleaf_quest_prepared"
+        },
+        {
+          "text": "What makes a useful rest mark?",
+          "next": "copperleaf_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_detail",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "It says where a traveler can stop without being in the way. It should also look like an invitation, not a warning.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "not_flag": "q_copperleaf_prepared"
+        },
+        {
+          "visited": "covered_walk"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll carry the card along the walk.",
+          "next": "copperleaf_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_prepared",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Carry the dry route card along this covered walk, then show the marked resting place. An unhurried inspection is ideal.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "not_flag": "q_copperleaf_prepared"
+        },
+        {
+          "visited": "covered_walk"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_copperleaf_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_event_wait",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "After carrying the dry card along the covered walk and showing its marked resting place, come tell me how the route felt.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "flag": "q_copperleaf_prepared"
+        },
+        {
+          "not_flag": "e_copperleaf_route"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_quest_ready",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "You carried the dry card along the walk and showed the resting place. The small mark has earned its space.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "flag": "q_copperleaf_prepared"
+        },
+        {
+          "flag": "e_copperleaf_route"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Keep that invitation on the route.",
+          "next": "copperleaf_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_complete",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "Take this route card as a memento. I kept the rest mark nice and large. My initials have survived the indignity.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        },
+        {
+          "flag": "q_copperleaf_accepted"
+        },
+        {
+          "flag": "q_copperleaf_prepared"
+        },
+        {
+          "flag": "e_copperleaf_route"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_copperleaf_done",
+          "value": true
+        },
+        {
+          "give_item": "route_card"
+        }
+      ]
+    },
+    {
+      "id": "copperleaf_quest_after",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "People can now find the resting place without pretending to adjust a loose strap. A useful improvement.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "q_copperleaf_done"
+        }
+      ],
+      "effects": [],
+      "next": "copperleaf_quest_after_detail"
+    },
+    {
+      "id": "copperleaf_quest_after_detail",
+      "speaker": "copperleaf",
+      "kind": "quest",
+      "text": "You may stop there for no reason at all. The card is quite clear on the location and wisely silent on the reason.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "q_copperleaf_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_relationship_acquaintance",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "I do not know your preferred pace yet. Walk beside me and I will discover it without issuing a questionnaire.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "q_copperleaf_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_relationship_friend",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "You helped make room for a stop. I am fond of someone who understands that a journey can contain sitting down.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "q_copperleaf_done"
+        },
+        {
+          "not_flag": "friend_copperleaf"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_copperleaf",
+          "value": true
+        }
+      ],
+      "next": "copperleaf_relationship_friend_reply"
+    },
+    {
+      "id": "copperleaf_relationship_friend_reply",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "We can call this friendship. It is shorter to write on the card than 'person whose pauses I appreciate.'",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "friend_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_relationship_friend_repeat",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "I have no route to check with you today. We may therefore take as long as necessary to go nowhere.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "friend_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_relationship_trusted",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "The gathering left room for late arrivals. I felt very at home there. I feel much the same sitting here with you.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "friend_copperleaf"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_copperleaf"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_copperleaf",
+          "value": true
+        }
+      ],
+      "next": "copperleaf_relationship_trusted_reply"
+    },
+    {
+      "id": "copperleaf_relationship_trusted_reply",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "If I am tired, I will tell you. I used to call it inspecting the bench. You deserve a more accurate report.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "trusted_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_relationship_trusted_repeat",
+      "speaker": "copperleaf",
+      "kind": "relationship",
+      "text": "Today I would like a short walk and a long rest. There. An honest itinerary.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "trusted_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_festival_before",
+      "speaker": "copperleaf",
+      "kind": "festival",
+      "text": "The old notice gave us one arrival to aim for. I would prefer a welcome with rather more room around the edges.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_festival_ready_clear",
+      "speaker": "copperleaf",
+      "kind": "festival",
+      "text": "The covered walk is ready even in clear weather. Some guests want shade; others simply prefer a roof that stays put.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_festival_ready_rain",
+      "speaker": "copperleaf",
+      "kind": "festival",
+      "text": "The sheltered route and ground display are ready. I have marked the resting places especially clearly for this weather.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_festival_after",
+      "speaker": "copperleaf",
+      "kind": "festival",
+      "text": "No one had to apologize for stopping on the way. I consider that a remarkably well-planned gathering.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_idle_1",
+      "speaker": "copperleaf",
+      "kind": "idle",
+      "text": "A dry route card is most useful outside the drawer where it stays perfectly dry.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_idle_2",
+      "speaker": "copperleaf",
+      "kind": "idle",
+      "text": "This leaf is shaped like an arrow. It is pointing at my lunch, which limits its professional value.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "copperleaf_idle_3",
+      "speaker": "copperleaf",
+      "kind": "idle",
+      "text": "Quillip can see the whole route from a perch. I can report on the quality of every bench. We compare notes.",
+      "conditions": [
+        {
+          "flag": "met_copperleaf"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

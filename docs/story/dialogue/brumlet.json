@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "brumlet",
+  "quests": [
+    "q_brumlet"
+  ],
+  "entries": {
+    "meeting": [
+      "brumlet_meeting_open"
+    ],
+    "greeting": [
+      "brumlet_greeting_dawn_clear",
+      "brumlet_greeting_dawn_rain",
+      "brumlet_greeting_day_clear",
+      "brumlet_greeting_day_rain",
+      "brumlet_greeting_dusk_clear",
+      "brumlet_greeting_dusk_rain",
+      "brumlet_greeting_night_clear",
+      "brumlet_greeting_night_rain"
+    ],
+    "quest": [
+      "brumlet_quest_after",
+      "brumlet_quest_ready",
+      "brumlet_quest_event_wait",
+      "brumlet_quest_prepare",
+      "brumlet_quest_travel_wait",
+      "brumlet_quest_offer"
+    ],
+    "relationship": [
+      "brumlet_relationship_trusted",
+      "brumlet_relationship_trusted_repeat",
+      "brumlet_relationship_friend",
+      "brumlet_relationship_friend_repeat",
+      "brumlet_relationship_acquaintance"
+    ],
+    "festival": [
+      "brumlet_festival_after",
+      "brumlet_festival_ready_clear",
+      "brumlet_festival_ready_rain",
+      "brumlet_festival_before"
+    ],
+    "idle": [
+      "brumlet_idle_1",
+      "brumlet_idle_2",
+      "brumlet_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "brumlet_meeting_open",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "I'm Brumlet. I came up from the Basalt Shore. This is a good landing. The stone holds a little of the day's warmth.",
+      "conditions": [
+        {
+          "not_flag": "met_brumlet"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_brumlet",
+          "value": true
+        }
+      ],
+      "next": "brumlet_meeting_question"
+    },
+    {
+      "id": "brumlet_meeting_question",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "I am looking for a place to sit and listen. What makes a place comfortable for you?",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "A little shelter.",
+          "next": "brumlet_meeting_value_1"
+        },
+        {
+          "text": "Something soft to sit on.",
+          "next": "brumlet_meeting_value_2"
+        },
+        {
+          "text": "Someone who is happy to be quiet.",
+          "next": "brumlet_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_meeting_value_1",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "Yes. Enough to keep the wind from speaking directly into both ears.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": [],
+      "next": "brumlet_meeting_close"
+    },
+    {
+      "id": "brumlet_meeting_value_2",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "I brought a felt liner for that. Basalt taught me to appreciate a small, portable softness.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": [],
+      "next": "brumlet_meeting_close"
+    },
+    {
+      "id": "brumlet_meeting_value_3",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "I can do that. And I will not mind if you think of something to say.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": [],
+      "next": "brumlet_meeting_close"
+    },
+    {
+      "id": "brumlet_meeting_close",
+      "speaker": "brumlet",
+      "kind": "meeting",
+      "text": "You can find me near the quiet landing. You need not arrive quietly. I would like to know you are there.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_dawn_clear",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "Clear dawn. The stone is cool yet. I have folded the liner twice.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_dawn_rain",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "Rain this morning. I like watching a drop gather before it decides where to go.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_day_clear",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "The landing is warm on this side. There is enough for both of us.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_day_rain",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "Daytime rain makes the far cliff disappear a little. I know it is still there.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_dusk_clear",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "At dusk, the falls look softer. I think it is the light. They do not seem to be doing less work.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_dusk_rain",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "The evening rain has found the edge of the roof. Our side can stay dry.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_night_clear",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "Clear night. The lanterns reach this far as little patches of color.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_greeting_night_rain",
+      "speaker": "brumlet",
+      "kind": "greeting",
+      "text": "Rain at night is easier to hear than to see. We can enjoy the shelter without filling the quiet.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_quest_offer",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Would you help me choose a wind-sheltered listening place and carry my soft felt liner there? I would like to sit comfortably.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "not_flag": "q_brumlet_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll help find shelter for the liner.",
+          "next": "brumlet_quest_accept"
+        },
+        {
+          "text": "I'll come back when I'd like to sit.",
+          "next": "brumlet_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_accept",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Come to the quiet landing first. We can look for shelter from there without going far.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "not_flag": "q_brumlet_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brumlet_accepted",
+          "value": true
+        }
+      ],
+      "next": "brumlet_quest_travel_wait"
+    },
+    {
+      "id": "brumlet_quest_defer",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "That will be fine. The liner folds up easily, and I do not mind keeping a place in mind.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "not_flag": "q_brumlet_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_quest_travel_wait",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Visit the quiet landing when you are ready. We can begin looking for a listening place there.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "not_flag": "q_brumlet_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_quest_prepare",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Here at the quiet landing, we can choose a place out of the wind. Shall we bring the felt liner when we find it?",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "not_flag": "q_brumlet_prepared"
+        },
+        {
+          "visited": "quiet_landing"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's choose shelter for it.",
+          "next": "brumlet_quest_prepared"
+        },
+        {
+          "text": "What would you like to hear there?",
+          "next": "brumlet_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_detail",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Whatever reaches us comfortably. Water, leaves, company. It need not sound like the sea to be a place I can like.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "not_flag": "q_brumlet_prepared"
+        },
+        {
+          "visited": "quiet_landing"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's choose shelter for it.",
+          "next": "brumlet_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_prepared",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Choose the wind-sheltered listening place, then carry the soft felt liner there. We can take the short way.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "not_flag": "q_brumlet_prepared"
+        },
+        {
+          "visited": "quiet_landing"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brumlet_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_event_wait",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Choose either sheltered nook and bring the felt liner there. Once it is laid down, we can enjoy the place together.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "flag": "q_brumlet_prepared"
+        },
+        {
+          "not_flag": "e_brumlet_liner"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_quest_ready",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "You chose shelter from the wind and carried the felt liner there. I can settle down without trying to settle the weather.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "flag": "q_brumlet_prepared"
+        },
+        {
+          "flag": "e_brumlet_liner"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'm glad the place feels comfortable.",
+          "next": "brumlet_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_complete",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "Keep this small felt liner as a memento. I have another for my own seat. A little softness can travel a long way.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        },
+        {
+          "flag": "q_brumlet_accepted"
+        },
+        {
+          "flag": "q_brumlet_prepared"
+        },
+        {
+          "flag": "e_brumlet_liner"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brumlet_done",
+          "value": true
+        },
+        {
+          "give_item": "felt_liner"
+        }
+      ]
+    },
+    {
+      "id": "brumlet_quest_after",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "I like our listening place. Some visits I hear the falls. Other visits I mostly notice how comfortably I am sitting.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "q_brumlet_done"
+        }
+      ],
+      "effects": [],
+      "next": "brumlet_quest_after_detail"
+    },
+    {
+      "id": "brumlet_quest_after_detail",
+      "speaker": "brumlet",
+      "kind": "quest",
+      "text": "I still miss the shore. I am glad I can miss it somewhere pleasant.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "q_brumlet_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_relationship_acquaintance",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "You are becoming a familiar shape along the path. That is a nice thing to notice.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "q_brumlet_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_relationship_friend",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "You helped me find shelter without asking me to stop missing home. I would be glad to call you my friend.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "q_brumlet_done"
+        },
+        {
+          "not_flag": "friend_brumlet"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_brumlet",
+          "value": true
+        }
+      ],
+      "next": "brumlet_relationship_friend_reply"
+    },
+    {
+      "id": "brumlet_relationship_friend_reply",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "If you visit and I have little to say, it still counts as a visit I wanted.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "friend_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_relationship_friend_repeat",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "There is space beside me. We can talk, or watch the light move along the stone.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "friend_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_relationship_trusted",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "At the gathering, I could leave the busy part and still feel included. You made that seem possible before anyone hung a lantern.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "friend_brumlet"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_brumlet"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_brumlet",
+          "value": true
+        }
+      ],
+      "next": "brumlet_relationship_trusted_reply"
+    },
+    {
+      "id": "brumlet_relationship_trusted_reply",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "I am learning to say when I need a quiet place. I trust you to hear it as an invitation to understand me.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "trusted_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_relationship_trusted_repeat",
+      "speaker": "brumlet",
+      "kind": "relationship",
+      "text": "I am happy you came. That is all I had ready to say. We can let it be enough for a while.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "trusted_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_festival_before",
+      "speaker": "brumlet",
+      "kind": "festival",
+      "text": "I hope the welcome will have somewhere calm at its edge. I would like to be near everyone without being in the middle.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_festival_ready_clear",
+      "speaker": "brumlet",
+      "kind": "festival",
+      "text": "The ground display has a sheltered place nearby. I can watch the lanterns, then come back to the quiet when I want.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_festival_ready_rain",
+      "speaker": "brumlet",
+      "kind": "festival",
+      "text": "Rain changes the sound of the shelter. I can enjoy the gathering from a dry seat and move closer when I feel ready.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_festival_after",
+      "speaker": "brumlet",
+      "kind": "festival",
+      "text": "I stayed a little, rested a little, and came back. The welcome was still there. I liked that very much.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_idle_1",
+      "speaker": "brumlet",
+      "kind": "idle",
+      "text": "Black sand holds the warmth differently from this stone. I notice small differences when I sit long enough.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_idle_2",
+      "speaker": "brumlet",
+      "kind": "idle",
+      "text": "Puffrel calls this a magnificent resting place. I agree. I might have said it a little more softly.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brumlet_idle_3",
+      "speaker": "brumlet",
+      "kind": "idle",
+      "text": "The sea is a long way from here. Sometimes a damp breeze reminds me without asking me to go.",
+      "conditions": [
+        {
+          "flag": "met_brumlet"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

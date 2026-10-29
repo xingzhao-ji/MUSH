@@ -1,0 +1,1023 @@
+{
+  "schema_version": 1,
+  "character": "brindle",
+  "quests": [
+    "q_brindle",
+    "m_home"
+  ],
+  "entries": {
+    "meeting": [
+      "brindle_meeting_open"
+    ],
+    "greeting": [
+      "brindle_greeting_dawn_clear",
+      "brindle_greeting_dawn_rain",
+      "brindle_greeting_day_clear",
+      "brindle_greeting_day_rain",
+      "brindle_greeting_dusk_clear",
+      "brindle_greeting_dusk_rain",
+      "brindle_greeting_night_clear",
+      "brindle_greeting_night_rain"
+    ],
+    "quest": [
+      "brindle_quest_after",
+      "brindle_quest_ready",
+      "brindle_quest_event_wait",
+      "brindle_quest_prepare",
+      "brindle_quest_travel_wait",
+      "brindle_quest_offer"
+    ],
+    "relationship": [
+      "brindle_relationship_trusted",
+      "brindle_relationship_trusted_repeat",
+      "brindle_relationship_friend",
+      "brindle_relationship_friend_repeat",
+      "brindle_relationship_acquaintance"
+    ],
+    "festival": [
+      "brindle_festival_after",
+      "brindle_festival_ready_clear",
+      "brindle_festival_ready_rain",
+      "brindle_festival_before"
+    ],
+    "idle": [
+      "brindle_idle_1",
+      "brindle_idle_2",
+      "brindle_idle_3"
+    ],
+    "main": [
+      "brindle_m_home_after",
+      "brindle_m_home_callback",
+      "brindle_m_home_ready",
+      "brindle_m_home_pending",
+      "brindle_m_home_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "brindle_meeting_open",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "Oh, hello. I am Brindle. I was moving this cushion so the room would look less arranged. It has taken three attempts.",
+      "conditions": [
+        {
+          "not_flag": "met_brindle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_brindle",
+          "value": true
+        }
+      ],
+      "next": "brindle_meeting_question"
+    },
+    {
+      "id": "brindle_meeting_question",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "There is room by the window. Or we can stay out here, where the view does most of the talking.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ],
+      "choices": [
+        {
+          "text": "What is that great tree?",
+          "next": "brindle_meeting_value_1"
+        },
+        {
+          "text": "Do you live nearby?",
+          "next": "brindle_meeting_value_2"
+        },
+        {
+          "text": "What are you making?",
+          "next": "brindle_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "brindle_meeting_value_1",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "That is the Kindly Crown beyond the mist. Healthy as ever. From here, I like seeing the little windows beneath it.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ],
+      "next": "brindle_meeting_close"
+    },
+    {
+      "id": "brindle_meeting_value_2",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "Mine is the lodge beside the terrace. Yours need not look like it. That is half the pleasure of having a neighbour.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ],
+      "next": "brindle_meeting_close"
+    },
+    {
+      "id": "brindle_meeting_value_3",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "I mend felt. Mostly cushions, occasionally something that used to be a cushion. I keep the useful pieces.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ],
+      "next": "brindle_meeting_close"
+    },
+    {
+      "id": "brindle_meeting_close",
+      "speaker": "brindle",
+      "kind": "meeting",
+      "text": "Come by whenever you feel like it. You do not need to bring a reason in with you.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_dawn_clear",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "The first light has found the window seat. I have left the rest of the morning unarranged.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_dawn_rain",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "The dawn rain is tapping on the roof. Come under the eaves if you would like a quieter sound.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_day_clear",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "Hello again. I have moved the cushion once today. A marked improvement over yesterday.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_day_rain",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "A wet afternoon makes the felt smell pleasantly of the garden. The dry side of the porch is over here.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_dusk_clear",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "The windows across the valley are beginning to show. It is easier to imagine all those small rooms at dusk.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_dusk_rain",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "The rain has softened every edge except the roof's. A very useful roof, this one.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_night_clear",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "The terrace lamp is on. You may stay awhile, or let it be a light you pass on your way home.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "brindle_greeting_night_rain",
+      "speaker": "brindle",
+      "kind": "greeting",
+      "text": "I have shut the window against the rain. The door can still open, if you would like company.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_offer",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Would you show me a place you have arranged inside your home? A seat, or any furniture you like. I would like to see what feels right to you.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "not_flag": "q_brindle_accepted"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I would like to show you.",
+          "next": "brindle_quest_accept"
+        },
+        {
+          "text": "Another visit, perhaps.",
+          "next": "brindle_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_accept",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Then we can begin at the home terrace. I shall bring my curiosity and leave my measuring string here.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "not_flag": "q_brindle_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brindle_accepted",
+          "value": true
+        }
+      ],
+      "next": "brindle_quest_travel_wait"
+    },
+    {
+      "id": "brindle_quest_defer",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Of course. A room can take its time becoming yours. There is no visit to prepare for until you want one.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "not_flag": "q_brindle_accepted"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_travel_wait",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Find me at the home terrace when you are ready. We can talk about the visit before you arrange anything.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "not_flag": "q_brindle_prepared"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_prepare",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Here on the terrace, I can almost see your window. Would you like to choose something inside and invite me to look?",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "not_flag": "q_brindle_prepared"
+        },
+        {
+          "visited": "home_terrace"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. I will choose the place.",
+          "next": "brindle_quest_prepared"
+        },
+        {
+          "text": "Does it have to be a seat?",
+          "next": "brindle_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_detail",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "A seat would be lovely, but any furniture counts. Something already placed is just as much your choice as something new.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "not_flag": "q_brindle_prepared"
+        },
+        {
+          "visited": "home_terrace"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. I will choose the place.",
+          "next": "brindle_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_prepared",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Arrange or keep any chosen furniture inside your home, then use the invitation to show me. You can change your mind about the room later.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "not_flag": "q_brindle_prepared"
+        },
+        {
+          "visited": "home_terrace"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brindle_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_event_wait",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "When you like the arrangement, invite me to see it from inside your home. I promise not to straighten anything without asking.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "flag": "q_brindle_prepared"
+        },
+        {
+          "not_flag": "e_brindle_seat"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_ready",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Thank you for showing me. I noticed the space around your choice as much as the thing itself. Shall we leave it just as you chose?",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "flag": "q_brindle_prepared"
+        },
+        {
+          "flag": "e_brindle_seat"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Yes. It feels right this way.",
+          "next": "brindle_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_complete",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Keep this felt pad as a reminder of the visit. You left room for someone without deciding how they ought to sit.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        },
+        {
+          "flag": "q_brindle_accepted"
+        },
+        {
+          "flag": "q_brindle_prepared"
+        },
+        {
+          "flag": "e_brindle_seat"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_brindle_done",
+          "value": true
+        },
+        {
+          "give_item": "felt_seat_pad"
+        }
+      ]
+    },
+    {
+      "id": "brindle_quest_after",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "I still think about the place you showed me. It felt lived in, even with plenty left to choose.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "q_brindle_done"
+        }
+      ],
+      "next": "brindle_quest_after_detail"
+    },
+    {
+      "id": "brindle_quest_after_detail",
+      "speaker": "brindle",
+      "kind": "quest",
+      "text": "Yesterday I left a cushion crooked. Then someone used it. A very persuasive opinion.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "q_brindle_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_relationship_acquaintance",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "I am learning which paths bring you past this porch. I need not know your whole day to be glad you are in this part of it.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "q_brindle_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_relationship_friend",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "You let me see your room without making it perfect for me. I think that is a fine beginning to a friendship.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "q_brindle_done"
+        },
+        {
+          "not_flag": "friend_brindle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_brindle",
+          "value": true
+        }
+      ],
+      "next": "brindle_relationship_friend_reply"
+    },
+    {
+      "id": "brindle_relationship_friend_reply",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "I can leave the spare cushion where it is now. If you want it somewhere else, I trust you to say.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "friend_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_relationship_friend_repeat",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "I have nothing to mend for you today. We can still spend a little time together.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "friend_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_relationship_trusted",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "With all those lanterns lit, I kept thinking of your first small arrangement. You helped me stop confusing welcome with preparation.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "friend_brindle"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_brindle"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_brindle",
+          "value": true
+        }
+      ],
+      "next": "brindle_relationship_trusted_reply"
+    },
+    {
+      "id": "brindle_relationship_trusted_reply",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "There are things I would like to tell you before I have found their neat ending. That feels new, and rather comfortable.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "trusted_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_relationship_trusted_repeat",
+      "speaker": "brindle",
+      "kind": "relationship",
+      "text": "Some days I want company. Some days I want a quiet porch. I am glad we can say which it is.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "trusted_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_festival_before",
+      "speaker": "brindle",
+      "kind": "festival",
+      "text": "The old invitation has made arrival sound more complicated than it needs to be. I hope the next one leaves room for an ordinary visit.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_festival_ready_clear",
+      "speaker": "brindle",
+      "kind": "festival",
+      "text": "The plan leaves the door open for different arrivals. I have put a pad by the ground display. It is not reserved for anyone in particular.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "brindle_festival_ready_rain",
+      "speaker": "brindle",
+      "kind": "festival",
+      "text": "There is shelter beside the grounded basket. I have checked the dry places, and resisted assigning them to people.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "brindle_festival_after",
+      "speaker": "brindle",
+      "kind": "festival",
+      "text": "Someone came after the lanterns were already lit. We moved one cushion, and there was room. I liked that part.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_idle_1",
+      "speaker": "brindle",
+      "kind": "idle",
+      "text": "This shelf leans a little. I call it a resting shelf. Ombel calls it my next repair.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_idle_2",
+      "speaker": "brindle",
+      "kind": "idle",
+      "text": "Thimble gave me a flower for an uneven pot. They seem to have reached an agreement.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_idle_3",
+      "speaker": "brindle",
+      "kind": "idle",
+      "text": "Brumlet and I spent a whole cup of tea watching the water. Neither of us improved the conversation.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_offer",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "You can see the whole valley from here. First, shall we make one small corner that feels like yours?",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "brindle_m_home_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "brindle_m_home_defer"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_accept",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "Go inside and place any furniture you like. One piece is enough. If you have already settled in, show me.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_home_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_defer",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "Of course. The room will keep its shape while you find yours.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "not_flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_pending",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "There are six furniture places inside. Use Decorate while standing on the floor. Choose one piece, then come back.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_ready",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "There. You chose where something belongs. That is the beginning of a home.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        },
+        {
+          "visited": "home"
+        },
+        {
+          "furniture_placed_gte": 1
+        },
+        {
+          "not_flag": "q_brindle_done"
+        }
+      ],
+      "next": "brindle_m_home_reveal"
+    },
+    {
+      "id": "brindle_m_home_callback",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "You left room for your own ideas before you showed me. Now this corner is ready for whoever you choose to invite.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        },
+        {
+          "visited": "home"
+        },
+        {
+          "furniture_placed_gte": 1
+        },
+        {
+          "flag": "q_brindle_done"
+        }
+      ],
+      "next": "brindle_m_home_reveal"
+    },
+    {
+      "id": "brindle_m_home_reveal",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "See the tiny amber windows across the mist? Each one has a near side, with someone deciding where to put a chair.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ],
+      "next": "brindle_m_home_complete"
+    },
+    {
+      "id": "brindle_m_home_complete",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "Thimble is by the garden. They like a welcome that can grow in more than one direction.",
+      "conditions": [
+        {
+          "flag": "met_brindle"
+        },
+        {
+          "flag": "m_home_accepted"
+        },
+        {
+          "not_flag": "m_home_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_home_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_after",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "Your room does not have to stay the way I first saw it. A home is allowed to change its mind.",
+      "conditions": [
+        {
+          "flag": "m_home_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Who lived here before?",
+          "next": "brindle_m_home_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "brindle_m_home_close"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_answer",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "Many visitors have rested here. I kept a little space open, so the next one would not feel like a guest forever.",
+      "conditions": [
+        {
+          "flag": "m_home_done"
+        }
+      ]
+    },
+    {
+      "id": "brindle_m_home_close",
+      "speaker": "brindle",
+      "kind": "main",
+      "text": "I'll leave the door easy to find.",
+      "conditions": [
+        {
+          "flag": "m_home_done"
+        }
+      ]
+    }
+  ]
+}

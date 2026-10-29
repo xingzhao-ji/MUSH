@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "quillip",
+  "quests": [
+    "q_quillip"
+  ],
+  "entries": {
+    "meeting": [
+      "quillip_meeting_open"
+    ],
+    "greeting": [
+      "quillip_greeting_dawn_clear",
+      "quillip_greeting_dawn_rain",
+      "quillip_greeting_day_clear",
+      "quillip_greeting_day_rain",
+      "quillip_greeting_dusk_clear",
+      "quillip_greeting_dusk_rain",
+      "quillip_greeting_night_clear",
+      "quillip_greeting_night_rain"
+    ],
+    "quest": [
+      "quillip_quest_after",
+      "quillip_quest_ready",
+      "quillip_quest_event_wait",
+      "quillip_quest_prepare",
+      "quillip_quest_travel_wait",
+      "quillip_quest_offer"
+    ],
+    "relationship": [
+      "quillip_relationship_trusted",
+      "quillip_relationship_trusted_repeat",
+      "quillip_relationship_friend",
+      "quillip_relationship_friend_repeat",
+      "quillip_relationship_acquaintance"
+    ],
+    "festival": [
+      "quillip_festival_after",
+      "quillip_festival_ready_clear",
+      "quillip_festival_ready_rain",
+      "quillip_festival_before"
+    ],
+    "idle": [
+      "quillip_idle_1",
+      "quillip_idle_2",
+      "quillip_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "quillip_meeting_open",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "Quillip! Maps, small discoveries, occasional corrections. Mostly corrections this morning. Come close; the map is my size.",
+      "conditions": [
+        {
+          "not_flag": "met_quillip"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_quillip",
+          "value": true
+        }
+      ],
+      "next": "quillip_meeting_question"
+    },
+    {
+      "id": "quillip_meeting_question",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "I have drawn the terrace from my perch. What would you want to find on a map you could walk with?",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "A comfortable place to stop.",
+          "next": "quillip_meeting_value_1"
+        },
+        {
+          "text": "The view from the ground.",
+          "next": "quillip_meeting_value_2"
+        },
+        {
+          "text": "A little space to add something.",
+          "next": "quillip_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "quillip_meeting_value_1",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "A stop! I have marked seven things to pass and nothing to stay beside. That does seem an omission.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": [],
+      "next": "quillip_meeting_close"
+    },
+    {
+      "id": "quillip_meeting_value_2",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "Yes, the ground. I keep giving it very elegant outlines. You could tell me what happens between the outlines.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": [],
+      "next": "quillip_meeting_close"
+    },
+    {
+      "id": "quillip_meeting_value_3",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "Blank space on purpose? I was about to fill that corner with a second drawing of the first tree. Your idea is roomier.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": [],
+      "next": "quillip_meeting_close"
+    },
+    {
+      "id": "quillip_meeting_close",
+      "speaker": "quillip",
+      "kind": "meeting",
+      "text": "My consultation ledge is down here. You need not borrow wings to help with a map.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_dawn_clear",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Clear dawn. The far cliff has a golden edge. I shall enjoy it before trying to draw all of it.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_dawn_rain",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "A rainy dawn! The map is under its hood. I am beside it, making a very small additional roof.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_day_clear",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Good day. That bend looks different from down here. Same bend, entirely new opinion.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_day_rain",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Rain makes the covered walk easy to appreciate. I should ask Copperleaf where to put its rest marks.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_dusk_clear",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Dusk has joined two distant trees into one shape. I will keep them separate on paper. Probably.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_dusk_rain",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Evening rain. I have folded the map inward so the interesting part stays dry. That was a satisfying decision.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_night_clear",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "Clear night. The windows make a tempting pattern to copy, but a route needs more than dots.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_greeting_night_rain",
+      "speaker": "quillip",
+      "kind": "greeting",
+      "text": "The map is dry tonight. My tail was briefly less so. I have adjusted both the tail and my position.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_quest_offer",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "My terrace map has a fine view and nowhere to stop. Will you explore the sightline from the ground and mark one comfortable pause?",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "not_flag": "q_quillip_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll look from the ground and find a stop.",
+          "next": "quillip_quest_accept"
+        },
+        {
+          "text": "I'll visit your map another time.",
+          "next": "quillip_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_accept",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Meet me at the map perch. We can spread the foldout on the low ledge before you explore.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "not_flag": "q_quillip_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_quillip_accepted",
+          "value": true
+        }
+      ],
+      "next": "quillip_quest_travel_wait"
+    },
+    {
+      "id": "quillip_quest_defer",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Of course. I shall leave that corner blank. It will be a small exercise in not drawing another tree.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "not_flag": "q_quillip_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_quest_travel_wait",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Visit the map perch when you like. The low consultation ledge is reachable on foot.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "not_flag": "q_quillip_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_quest_prepare",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Here is the foldout at the map perch. Shall we look across the terrace from ground level and find a comfortable stopping place?",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "not_flag": "q_quillip_prepared"
+        },
+        {
+          "visited": "map_perch"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll explore the sightline and mark a stop.",
+          "next": "quillip_quest_prepared"
+        },
+        {
+          "text": "Which stopping places can I consider?",
+          "next": "quillip_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_detail",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "The near bench or the covered overlook. Explore whichever suits you, then mark it on the foldout. No distant expedition required.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "not_flag": "q_quillip_prepared"
+        },
+        {
+          "visited": "map_perch"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. I'll explore the sightline and mark a stop.",
+          "next": "quillip_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_prepared",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Explore the terrace sightline, then mark a visited stop on the map. The near bench and covered overlook are both good choices.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "not_flag": "q_quillip_prepared"
+        },
+        {
+          "visited": "map_perch"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_quillip_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_event_wait",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "After exploring the terrace sightline, mark one visited stopping place on the foldout. I have left the rest of the paper open.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "flag": "q_quillip_prepared"
+        },
+        {
+          "not_flag": "e_quillip_map"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_quest_ready",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "You explored the sightline and marked a stop. Look! The map now tells a walker where the journey can include a rest.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "flag": "q_quillip_prepared"
+        },
+        {
+          "flag": "e_quillip_map"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Let's keep some space for the next discovery.",
+          "next": "quillip_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_complete",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "Keep this foldout map as a memento. I have copied the stop and left a generous blank beside it. A deliberate blank!",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        },
+        {
+          "flag": "q_quillip_accepted"
+        },
+        {
+          "flag": "q_quillip_prepared"
+        },
+        {
+          "flag": "e_quillip_map"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_quillip_done",
+          "value": true
+        },
+        {
+          "give_item": "foldout_map"
+        }
+      ]
+    },
+    {
+      "id": "quillip_quest_after",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "A stopping place changes the whole route. I keep looking at the map and imagining the view from that pause.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "q_quillip_done"
+        }
+      ],
+      "effects": [],
+      "next": "quillip_quest_after_detail"
+    },
+    {
+      "id": "quillip_quest_after_detail",
+      "speaker": "quillip",
+      "kind": "quest",
+      "text": "The empty corner remains empty. This is unusually good news about something I have drawn.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "q_quillip_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_relationship_acquaintance",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "What can you see from there? I am collecting ground-level opinions. Yours need not agree with my perch.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "q_quillip_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_relationship_friend",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "You found something useful between my outlines. I would like to walk a little route with you, as a friend, without drawing all of it.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "q_quillip_done"
+        },
+        {
+          "not_flag": "friend_quillip"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_quillip",
+          "value": true
+        }
+      ],
+      "next": "quillip_relationship_friend_reply"
+    },
+    {
+      "id": "quillip_relationship_friend_reply",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "I shall still point at things. Friendship cannot possibly require me to stop pointing at things.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "friend_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_relationship_friend_repeat",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "A bend, a patch of moss, a familiar visitor. Today has arranged itself nicely.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "friend_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_relationship_trusted",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "At the gathering, I stopped looking for the best overview. There you were, close enough to see without leaving my ledge.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "friend_quillip"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_quillip"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_quillip",
+          "value": true
+        }
+      ],
+      "next": "quillip_relationship_trusted_reply"
+    },
+    {
+      "id": "quillip_relationship_trusted_reply",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "I like being beside someone who can find me interesting at ground level. Even when I have no new map.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "trusted_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_relationship_trusted_repeat",
+      "speaker": "quillip",
+      "kind": "relationship",
+      "text": "I brought no paper today. If we discover something wonderful, we can just spend a little time with it.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "trusted_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_festival_before",
+      "speaker": "quillip",
+      "kind": "festival",
+      "text": "The arrival notice makes the route look simpler than it feels underfoot. I would like to mark places for an unhurried welcome.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_festival_ready_clear",
+      "speaker": "quillip",
+      "kind": "festival",
+      "text": "The shared plan includes ground displays and places to pause. I can enjoy the wide view from my low ledge.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_festival_ready_rain",
+      "speaker": "quillip",
+      "kind": "festival",
+      "text": "The covered route belongs on the gathering map. So does every dry place where a visitor can linger.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_festival_after",
+      "speaker": "quillip",
+      "kind": "festival",
+      "text": "Guests reached the lanterns by different routes. I kept leaving room for their stories, and the map never felt unfinished.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_idle_1",
+      "speaker": "quillip",
+      "kind": "idle",
+      "text": "Nuzzle can find a bend underneath a bend I have already drawn. There is a great deal of world close to the ground.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_idle_2",
+      "speaker": "quillip",
+      "kind": "idle",
+      "text": "I named that corner Crooked Twig. The twig has moved. The corner is being very patient about it.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "quillip_idle_3",
+      "speaker": "quillip",
+      "kind": "idle",
+      "text": "Thimble left a little perch near the garden. From there, one flower can take up nearly the whole view.",
+      "conditions": [
+        {
+          "flag": "met_quillip"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

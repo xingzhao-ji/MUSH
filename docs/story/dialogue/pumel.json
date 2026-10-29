@@ -1,0 +1,827 @@
+{
+  "schema_version": 1,
+  "character": "pumel",
+  "quests": [
+    "q_pumel"
+  ],
+  "entries": {
+    "meeting": [
+      "pumel_meeting_open"
+    ],
+    "greeting": [
+      "pumel_greeting_dawn_clear",
+      "pumel_greeting_dawn_rain",
+      "pumel_greeting_day_clear",
+      "pumel_greeting_day_rain",
+      "pumel_greeting_dusk_clear",
+      "pumel_greeting_dusk_rain",
+      "pumel_greeting_night_clear",
+      "pumel_greeting_night_rain"
+    ],
+    "quest": [
+      "pumel_quest_after",
+      "pumel_quest_ready",
+      "pumel_quest_event_wait",
+      "pumel_quest_prepare",
+      "pumel_quest_travel_wait",
+      "pumel_quest_offer"
+    ],
+    "relationship": [
+      "pumel_relationship_trusted",
+      "pumel_relationship_trusted_repeat",
+      "pumel_relationship_friend",
+      "pumel_relationship_friend_repeat",
+      "pumel_relationship_acquaintance"
+    ],
+    "festival": [
+      "pumel_festival_after",
+      "pumel_festival_ready_clear",
+      "pumel_festival_ready_rain",
+      "pumel_festival_before"
+    ],
+    "idle": [
+      "pumel_idle_1",
+      "pumel_idle_2",
+      "pumel_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "pumel_meeting_open",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "Careful where you put your elbow. Everything on this bench is either a cup or my lunch, and I am fond of both. I'm Pumel.",
+      "conditions": [
+        {
+          "not_flag": "met_pumel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_pumel",
+          "value": true
+        }
+      ],
+      "next": "pumel_meeting_question"
+    },
+    {
+      "id": "pumel_meeting_question",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "I came from the Mineral Springs Terraces with a crate of pots. What would you look for in a cup?",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "A shape that feels good to hold.",
+          "next": "pumel_meeting_value_1"
+        },
+        {
+          "text": "A lovely color.",
+          "next": "pumel_meeting_value_2"
+        },
+        {
+          "text": "One that won't tip over.",
+          "next": "pumel_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "pumel_meeting_value_1",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "Ah, a sensible pair of paws. I make the handle first when I can. It reminds the rest of the cup whom it is for.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": [],
+      "next": "pumel_meeting_close"
+    },
+    {
+      "id": "pumel_meeting_value_2",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "Then let us turn it toward the light. A glaze can keep a little pool of color even when the cup is empty.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": [],
+      "next": "pumel_meeting_close"
+    },
+    {
+      "id": "pumel_meeting_value_3",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "Exactly. I made a very handsome cup that disagreed with the table. We are negotiating a broader base.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": [],
+      "next": "pumel_meeting_close"
+    },
+    {
+      "id": "pumel_meeting_close",
+      "speaker": "pumel",
+      "kind": "meeting",
+      "text": "You are welcome at the potter's bench. Opinions fit on the shelf too, provided we leave room for the cups.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_dawn_clear",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "Morning light makes this clay look like warm bread. I have labeled my lunch, just in case.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_dawn_rain",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "Rain before breakfast. The roof does the tapping, and I can give my fingers a rest.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_day_clear",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "Come feel this smooth edge with your eyes. The glaze is finished, but I still enjoy being fussy about it.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_day_rain",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "A rainy day gives every pot on the sill its own little reflection. Mine is the roundest.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_dusk_clear",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "The cream glaze goes rosy at dusk. I would bottle the color if I could find a bottle that deserved it.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_dusk_rain",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "Dusk already? I have been matching the glaze to that wet stone. The stone keeps changing its mind.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_night_clear",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "The bench is quiet tonight. Sit if you like. I have moved the jar that used to occupy the best seat.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_greeting_night_rain",
+      "speaker": "pumel",
+      "kind": "greeting",
+      "text": "Rain on the awning, warm cup in the hands. That is a very well-balanced arrangement.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_quest_offer",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "This cup tips too easily. Will you try a broader base on the stable display ledge, then help me choose a finish?",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "not_flag": "q_pumel_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Let's give it a steadier base.",
+          "next": "pumel_quest_accept"
+        },
+        {
+          "text": "I'll visit the bench another time.",
+          "next": "pumel_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_accept",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Meet me at the potter's bench. We will look at the ledge together before trying the cup.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "not_flag": "q_pumel_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_pumel_accepted",
+          "value": true
+        }
+      ],
+      "next": "pumel_quest_travel_wait"
+    },
+    {
+      "id": "pumel_quest_defer",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Certainly. Clay has taught me several kinds of waiting. This is one of the easy ones.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "not_flag": "q_pumel_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_quest_travel_wait",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Find the potter's bench when it suits you. The broad base is waiting beside the display ledge.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "not_flag": "q_pumel_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_quest_prepare",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Here is the broad base, and there is the stable ledge. Shall we try it there and choose a finish together?",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "not_flag": "q_pumel_prepared"
+        },
+        {
+          "visited": "potters_bench"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's try it on the ledge.",
+          "next": "pumel_quest_prepared"
+        },
+        {
+          "text": "What finishes can we choose?",
+          "next": "pumel_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_detail",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Cream or ochre, whichever you like. One holds the light gently; the other reminds me of home. Neither makes a steadier cup.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "not_flag": "q_pumel_prepared"
+        },
+        {
+          "visited": "potters_bench"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's try it on the ledge.",
+          "next": "pumel_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_prepared",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Try the broad base on the stable display ledge, then choose the finish with me. We need both before I call it ready.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "not_flag": "q_pumel_prepared"
+        },
+        {
+          "visited": "potters_bench"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_pumel_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_event_wait",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Once the broad base has been tried on the stable ledge and its finish is chosen, we can admire the cup together.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "flag": "q_pumel_prepared"
+        },
+        {
+          "not_flag": "e_pumel_cup"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_quest_ready",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "The broad base has had its trial, and we chose the finish together. It looks pleased with the ledge. I certainly am.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "flag": "q_pumel_prepared"
+        },
+        {
+          "flag": "e_pumel_cup"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "That feels like a cup worth keeping.",
+          "next": "pumel_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_complete",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "Please keep the broad-based cup as our little memento. I shall make another with the same good sense underneath.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        },
+        {
+          "flag": "q_pumel_accepted"
+        },
+        {
+          "flag": "q_pumel_prepared"
+        },
+        {
+          "flag": "e_pumel_cup"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_pumel_done",
+          "value": true
+        },
+        {
+          "give_item": "broad_based_cup"
+        }
+      ]
+    },
+    {
+      "id": "pumel_quest_after",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "I am drawing more broad bases. Apparently a cup can be graceful without balancing on its smallest possible foot.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "q_pumel_done"
+        }
+      ],
+      "effects": [],
+      "next": "pumel_quest_after_detail"
+    },
+    {
+      "id": "pumel_quest_after_detail",
+      "speaker": "pumel",
+      "kind": "quest",
+      "text": "The new drawings look rather like me standing in a queue. An unexpectedly useful reference.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "q_pumel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_relationship_acquaintance",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "I usually learn a visitor's favorite cup before their favorite subject. We can begin with either.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "q_pumel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_relationship_friend",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "You stayed for the plain part underneath the glaze. I like having a friend who notices what makes things comfortable.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "q_pumel_done"
+        },
+        {
+          "not_flag": "friend_pumel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_pumel",
+          "value": true
+        }
+      ],
+      "next": "pumel_relationship_friend_reply"
+    },
+    {
+      "id": "pumel_relationship_friend_reply",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "That earns you no chores. It earns you the right to tell me when my shelf is too high.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "friend_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_relationship_friend_repeat",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "I saved the warm side of the bench for you. No special occasion. The sun happened to be obliging.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "friend_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_relationship_trusted",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "At the gathering, I left a slightly uneven bowl on the table. Everyone used it. I think your company helped me let it stay.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "friend_pumel"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_pumel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_pumel",
+          "value": true
+        }
+      ],
+      "next": "pumel_relationship_trusted_reply"
+    },
+    {
+      "id": "pumel_relationship_trusted_reply",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "I would like you to see my unfinished things as well. Some of them are cups. Some are ideas about myself.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "trusted_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_relationship_trusted_repeat",
+      "speaker": "pumel",
+      "kind": "relationship",
+      "text": "An unfinished pot is allowed on this bench. So are you, if today feels like that.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "trusted_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_festival_before",
+      "speaker": "pumel",
+      "kind": "festival",
+      "text": "I can bring cups whenever the welcome is settled. Pots travel better when nobody expects them to hurry.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_festival_ready_clear",
+      "speaker": "pumel",
+      "kind": "festival",
+      "text": "Clear sky, sheltered tables ready. I will put the cups where ground visitors can reach them, even if balloons go up.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_festival_ready_rain",
+      "speaker": "pumel",
+      "kind": "festival",
+      "text": "The cups are under the awning. Rain can have the saucers outside; everyone else gets a dry place at the table.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_festival_after",
+      "speaker": "pumel",
+      "kind": "festival",
+      "text": "The cups came back in different groups, all with stories attached. I have never enjoyed washing up quite so much.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_idle_1",
+      "speaker": "pumel",
+      "kind": "idle",
+      "text": "A thumb leaves a very honest mark in clay. Usually just where I meant to smooth it.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_idle_2",
+      "speaker": "pumel",
+      "kind": "idle",
+      "text": "The terraces at home are cream and ochre. My apron is both, with a generous addition of lunch.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "pumel_idle_3",
+      "speaker": "pumel",
+      "kind": "idle",
+      "text": "Brumlet has a good eye for a low cup. I used to ask if a handle looked right. Now I ask how it feels.",
+      "conditions": [
+        {
+          "flag": "met_pumel"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

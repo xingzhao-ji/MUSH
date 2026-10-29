@@ -1,0 +1,1066 @@
+{
+  "schema_version": 1,
+  "character": "ombel",
+  "quests": [
+    "q_ombel",
+    "m_agreement"
+  ],
+  "entries": {
+    "meeting": [
+      "ombel_meeting_open"
+    ],
+    "greeting": [
+      "ombel_greeting_dawn_clear",
+      "ombel_greeting_dawn_rain",
+      "ombel_greeting_day_clear",
+      "ombel_greeting_day_rain",
+      "ombel_greeting_dusk_clear",
+      "ombel_greeting_dusk_rain",
+      "ombel_greeting_night_clear",
+      "ombel_greeting_night_rain"
+    ],
+    "quest": [
+      "ombel_quest_after",
+      "ombel_quest_ready",
+      "ombel_quest_event_wait",
+      "ombel_quest_prepare",
+      "ombel_quest_travel_wait",
+      "ombel_quest_offer"
+    ],
+    "relationship": [
+      "ombel_relationship_trusted",
+      "ombel_relationship_trusted_repeat",
+      "ombel_relationship_friend",
+      "ombel_relationship_friend_repeat",
+      "ombel_relationship_acquaintance"
+    ],
+    "festival": [
+      "ombel_festival_after",
+      "ombel_festival_ready_clear",
+      "ombel_festival_ready_rain",
+      "ombel_festival_before"
+    ],
+    "idle": [
+      "ombel_idle_1",
+      "ombel_idle_2",
+      "ombel_idle_3"
+    ],
+    "main": [
+      "ombel_m_agreement_after",
+      "ombel_m_agreement_callback",
+      "ombel_m_agreement_ready",
+      "ombel_m_agreement_pending",
+      "ombel_m_agreement_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "ombel_meeting_open",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "Welcome to Lamploom. I'm Ombel. I keep the lodge plans, spare pegs, and a number of invitations that do not require an answer.",
+      "conditions": [
+        {
+          "not_flag": "met_ombel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_ombel",
+          "value": true
+        }
+      ],
+      "next": "ombel_meeting_question"
+    },
+    {
+      "id": "ombel_meeting_question",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "I am thinking about the places we leave open for guests. What makes a room feel welcoming to you?",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "A place for something of my own.",
+          "next": "ombel_meeting_value_1"
+        },
+        {
+          "text": "A clear invitation to rest.",
+          "next": "ombel_meeting_value_2"
+        },
+        {
+          "text": "Being allowed to come and go.",
+          "next": "ombel_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "ombel_meeting_value_1",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "Then we must leave some space unclaimed. A guest should not have to move our idea of them out of the way.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": [],
+      "next": "ombel_meeting_close"
+    },
+    {
+      "id": "ombel_meeting_value_2",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "A chair, a little light, and permission to use both. I sometimes remember the chair and forget the permission.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": [],
+      "next": "ombel_meeting_close"
+    },
+    {
+      "id": "ombel_meeting_value_3",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "Yes. A warm window should help you find a door, not make you feel obliged to remain behind it.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": [],
+      "next": "ombel_meeting_close"
+    },
+    {
+      "id": "ombel_meeting_close",
+      "speaker": "ombel",
+      "kind": "meeting",
+      "text": "Find me in town when you feel like visiting. If I am measuring a wall, you may interrupt. The wall will keep its size.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_dawn_clear",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Clear dawn over Lamploom. I like seeing the windows before anyone decides what the day ought to contain.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_dawn_rain",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "A rainy morning. The felt awnings are doing their quiet work. I shall try to do mine as calmly.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_day_clear",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Good day. I have left a gap in the afternoon's plans. It seems a sensible place for a conversation.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_day_rain",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Come under the eaves. I was reviewing a plan for shelter, but actual shelter is more useful at the moment.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_dusk_clear",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Dusk has reached the oval windows. Each one makes the town look as if it has just remembered a guest.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_dusk_rain",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Evening rain. There is a dry place here where we can watch the lamplight on the steps.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_night_clear",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "Lamploom is settling for the night. A few windows stay bright for those who prefer arriving after the bustle.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_greeting_night_rain",
+      "speaker": "ombel",
+      "kind": "greeting",
+      "text": "The rain is quite busy tonight. You are welcome to be less so. There is room under this awning.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_quest_offer",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "There is an unassigned window niche in town. Will you explore it with me and choose a welcoming arrangement for whoever comes?",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "not_flag": "q_ombel_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Let's see what the niche could welcome.",
+          "next": "ombel_quest_accept"
+        },
+        {
+          "text": "I'll visit the window another time.",
+          "next": "ombel_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_accept",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Come into town when you are ready. We will begin by looking at the niche before deciding what belongs there.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "not_flag": "q_ombel_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_ombel_accepted",
+          "value": true
+        }
+      ],
+      "next": "ombel_quest_travel_wait"
+    },
+    {
+      "id": "ombel_quest_defer",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Of course. A space left open should be allowed to stay open for a while.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "not_flag": "q_ombel_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_quest_travel_wait",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Visit town when you like. The unassigned window niche will give us somewhere to begin.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "not_flag": "q_ombel_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_quest_prepare",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Here in town, the niche still has no assigned purpose. Shall we explore it and choose an arrangement that invites company?",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "not_flag": "q_ombel_prepared"
+        },
+        {
+          "visited": "town"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's look before arranging it.",
+          "next": "ombel_quest_prepared"
+        },
+        {
+          "text": "Do you have a particular guest in mind?",
+          "next": "ombel_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_detail",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "No. That is the useful part. We can make it warm and welcoming without deciding who will stand beside it.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "not_flag": "q_ombel_prepared"
+        },
+        {
+          "visited": "town"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Yes. Let's look before arranging it.",
+          "next": "ombel_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_prepared",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Explore the unassigned window niche, then choose its welcoming arrangement with me. There is room to consider more than one idea.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "not_flag": "q_ombel_prepared"
+        },
+        {
+          "visited": "town"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_ombel_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_event_wait",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Explore the niche, choose its welcoming arrangement, and place it there. I am happy to look together whenever you are ready.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "flag": "q_ombel_prepared"
+        },
+        {
+          "not_flag": "e_ombel_window"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_quest_ready",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "We explored the niche and chose an arrangement together. It welcomes a visitor without requiring a name on the plan.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "flag": "q_ombel_prepared"
+        },
+        {
+          "flag": "e_ombel_window"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "Leave that welcome open to anyone.",
+          "next": "ombel_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_complete",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "Keep this little oval window model as a memento. I will use the real niche to remind myself that open space can be intentional.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        },
+        {
+          "flag": "q_ombel_accepted"
+        },
+        {
+          "flag": "q_ombel_prepared"
+        },
+        {
+          "flag": "e_ombel_window"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_ombel_done",
+          "value": true
+        },
+        {
+          "give_item": "oval_window_model"
+        }
+      ]
+    },
+    {
+      "id": "ombel_quest_after",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "I passed the niche this morning and nearly assigned it a purpose again. Then I let it continue being welcoming.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "q_ombel_done"
+        }
+      ],
+      "effects": [],
+      "next": "ombel_quest_after_detail"
+    },
+    {
+      "id": "ombel_quest_after_detail",
+      "speaker": "ombel",
+      "kind": "quest",
+      "text": "It is a curious pleasure to leave a box on the lodge plan unlabeled. I may eventually stop checking it.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "q_ombel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_relationship_acquaintance",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "I know how to welcome a guest in general. I would like to learn what welcome means to you in particular.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_relationship_friend",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "You helped me leave room for someone I could not predict. I would enjoy being your friend without making a plan for that either.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "q_ombel_done"
+        },
+        {
+          "not_flag": "friend_ombel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_ombel",
+          "value": true
+        }
+      ],
+      "next": "ombel_relationship_friend_reply"
+    },
+    {
+      "id": "ombel_relationship_friend_reply",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "There. No list of duties follows. I am pleased to discover that I do not need one.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "friend_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_relationship_friend_repeat",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "I set aside my plans when I saw you coming. A conversation can be the whole purpose of a visit.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "friend_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_relationship_trusted",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "The gathering welcomed people beyond any list I could make. With you, I am learning to trust what a little open space can hold.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "friend_ombel"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_ombel"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_ombel",
+          "value": true
+        }
+      ],
+      "next": "ombel_relationship_trusted_reply"
+    },
+    {
+      "id": "ombel_relationship_trusted_reply",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "Sometimes I arrange things because uncertainty makes me fidget. You can sit with me while I leave one thing undecided.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "trusted_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_relationship_trusted_repeat",
+      "speaker": "ombel",
+      "kind": "relationship",
+      "text": "I have an unfinished plan and a free chair. Today I am more interested in who might use the chair.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "trusted_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_festival_before",
+      "speaker": "ombel",
+      "kind": "festival",
+      "text": "The old notice has left arrivals out of step. We need a shared plan that can welcome people from both directions.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_festival_ready_clear",
+      "speaker": "ombel",
+      "kind": "festival",
+      "text": "The rolling welcome is agreed. The ground display stays available; a flight view is optional when conditions are calm.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_festival_ready_rain",
+      "speaker": "ombel",
+      "kind": "festival",
+      "text": "The sheltered ground display is part of the shared plan. Rain changes where we gather, and everyone still has a place.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_festival_after",
+      "speaker": "ombel",
+      "kind": "festival",
+      "text": "The welcome kept making room. No one had to prove they belonged by arriving with the first group.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_idle_1",
+      "speaker": "ombel",
+      "kind": "idle",
+      "text": "This peg is spare. I have labeled it spare, which may be more responsibility than a spare peg needs.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_idle_2",
+      "speaker": "ombel",
+      "kind": "idle",
+      "text": "The Kindly Crown shades the town beautifully. It has never asked to see my seating plan.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_idle_3",
+      "speaker": "ombel",
+      "kind": "idle",
+      "text": "Brindle can turn one spare pad into an invitation. I sometimes turn one invitation into three pages of planning.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ombel_m_agreement_offer",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "A single arrival time has made a very crowded little box. Shall we give this plan more room?",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "flag": "m_weave_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "ombel_m_agreement_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "ombel_m_agreement_defer"
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_accept",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "Visit the town notice stand. Share the upstream notice and downstream reply together, with shelter for those who come early or late.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "flag": "m_weave_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_agreement_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_defer",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "There is no meeting you can miss. I'll keep a place beside the stand.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "not_flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "flag": "m_weave_done"
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_pending",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "At the town stand, share both notices. The welcome should offer a sheltered ground display and an optional calm-weather flight view.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_ready",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "The ice courier, the ferry folk, the basket makers: all their journeys can fit if the welcome stays open.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "visited": "town"
+        },
+        {
+          "flag": "e_water_plan_shared"
+        },
+        {
+          "not_flag": "q_ombel_done"
+        }
+      ],
+      "next": "ombel_m_agreement_reveal"
+    },
+    {
+      "id": "ombel_m_agreement_callback",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "You left a window open for someone we had not met. Now this notice can do the same for each arrival.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "visited": "town"
+        },
+        {
+          "flag": "e_water_plan_shared"
+        },
+        {
+          "flag": "q_ombel_done"
+        }
+      ],
+      "next": "ombel_m_agreement_reveal"
+    },
+    {
+      "id": "ombel_m_agreement_reveal",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "We will greet arrivals as they come. Lanterns under cover first, baskets on the ground, and flight only when the air suits it.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        }
+      ],
+      "next": "ombel_m_agreement_complete"
+    },
+    {
+      "id": "ombel_m_agreement_complete",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "Puffrel can help you begin at the balloon yard whenever you choose. A festival can have an open door too.",
+      "conditions": [
+        {
+          "flag": "met_ombel"
+        },
+        {
+          "flag": "m_agreement_accepted"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_agreement_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_after",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "The spare window has become a useful idea. Not every space needs a person assigned to it in advance.",
+      "conditions": [
+        {
+          "flag": "m_agreement_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "What if someone comes much later?",
+          "next": "ombel_m_agreement_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "ombel_m_agreement_close"
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_answer",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "We show them where the good light is, and ask how their journey went. That part never needed a schedule.",
+      "conditions": [
+        {
+          "flag": "m_agreement_done"
+        }
+      ]
+    },
+    {
+      "id": "ombel_m_agreement_close",
+      "speaker": "ombel",
+      "kind": "main",
+      "text": "I'll put the reply where short neighbors can read it too.",
+      "conditions": [
+        {
+          "flag": "m_agreement_done"
+        }
+      ]
+    }
+  ]
+}

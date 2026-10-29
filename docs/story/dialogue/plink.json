@@ -1,0 +1,835 @@
+{
+  "schema_version": 1,
+  "character": "plink",
+  "quests": [
+    "q_plink"
+  ],
+  "entries": {
+    "meeting": [
+      "plink_meeting_open"
+    ],
+    "greeting": [
+      "plink_greeting_dawn_clear",
+      "plink_greeting_dawn_rain",
+      "plink_greeting_day_clear",
+      "plink_greeting_day_rain",
+      "plink_greeting_dusk_clear",
+      "plink_greeting_dusk_rain",
+      "plink_greeting_night_clear",
+      "plink_greeting_night_rain"
+    ],
+    "quest": [
+      "plink_quest_after",
+      "plink_quest_ready",
+      "plink_quest_event_wait",
+      "plink_quest_prepare",
+      "plink_quest_travel_wait",
+      "plink_quest_offer"
+    ],
+    "relationship": [
+      "plink_relationship_trusted",
+      "plink_relationship_trusted_repeat",
+      "plink_relationship_friend",
+      "plink_relationship_friend_repeat",
+      "plink_relationship_acquaintance"
+    ],
+    "festival": [
+      "plink_festival_after",
+      "plink_festival_ready_clear",
+      "plink_festival_ready_rain",
+      "plink_festival_before"
+    ],
+    "idle": [
+      "plink_idle_1",
+      "plink_idle_2",
+      "plink_idle_3"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "plink_meeting_open",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "A small plum-shelled beetle pauses beside the low lantern post. Plink's amber light stays steady.",
+      "conditions": [
+        {
+          "not_flag": "met_plink"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_plink",
+          "value": true
+        }
+      ],
+      "next": "plink_meeting_question"
+    },
+    {
+      "id": "plink_meeting_question",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "Plink circles a pebble, stops in its shadow, and turns both antennae toward the player.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll stay a little way back.",
+          "next": "plink_meeting_value_1"
+        },
+        {
+          "text": "I'll look at the shady side.",
+          "next": "plink_meeting_value_2"
+        },
+        {
+          "text": "I'll sit nearby and watch.",
+          "next": "plink_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "plink_meeting_value_1",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "Plink takes two small steps around the pebble. The space between the beetle and the player remains open.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": [],
+      "next": "plink_meeting_close"
+    },
+    {
+      "id": "plink_meeting_value_2",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "The pebble's shadow reaches the post. Plink follows its edge without stepping into the brighter patch.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": [],
+      "next": "plink_meeting_close"
+    },
+    {
+      "id": "plink_meeting_value_3",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "Plink climbs onto the pebble's lower edge, then turns toward the player's resting place.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": [],
+      "next": "plink_meeting_close"
+    },
+    {
+      "id": "plink_meeting_close",
+      "speaker": "plink",
+      "kind": "meeting",
+      "text": "Plink remains beside the lantern post, one antenna resting lightly against the pebble.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_dawn_clear",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Morning light reaches the post. Plink walks along the narrow shadow at its base.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_dawn_rain",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Rain beads on the leaf hood at dawn. Plink stands beneath its dry, curled edge.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_day_clear",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Plink shifts around the post as the sun reaches the ground beside it. The beetle's small light remains steady.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_day_rain",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "A drop runs down the lantern post. Plink steps around it and continues beneath the old leaf hood.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_dusk_clear",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "The post's shadow stretches across the stone. Plink follows it as far as the next pebble.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_dusk_rain",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Dusk rain darkens the stone. Under the leaf hood, Plink's amber underside rests above a dry patch.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_night_clear",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Plink walks between two pebbles in the clear night. The steady amber light outlines the low edge of each one.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_greeting_night_rain",
+      "speaker": "plink",
+      "kind": "greeting",
+      "text": "Night rain taps the leaf hood. Plink stays beneath it, antennae angled toward the open side.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_quest_offer",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink walks from the bright edge of the lantern stand into a pebble's shadow. The nearby trial nook has space for a small shade.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "not_flag": "q_plink_accepted"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll help try a gentle light and leave room for shade.",
+          "next": "plink_quest_accept"
+        },
+        {
+          "text": "I'll give Plink space and visit again.",
+          "next": "plink_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_accept",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink circles the foot of the lantern stand. The lantern nook's broad handle and spare leaf shades are visible beside the post.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "not_flag": "q_plink_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_plink_accepted",
+          "value": true
+        }
+      ],
+      "next": "plink_quest_travel_wait"
+    },
+    {
+      "id": "plink_quest_defer",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink stays by the pebble while the open path continues past the lantern post.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "not_flag": "q_plink_accepted"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_quest_travel_wait",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "At the lantern nook, Plink moves between the post and its old leaf hood. The trial lantern rests on the low stand.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "not_flag": "q_plink_prepared"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_quest_prepare",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Beside the trial nook, Plink pauses at the lantern's broad base. A loose shade lies within the player's reach.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "not_flag": "q_plink_prepared"
+        },
+        {
+          "visited": "lantern_nook"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll try Glow, then leave the shaded nook open.",
+          "next": "plink_quest_prepared"
+        },
+        {
+          "text": "I'll try the shaded lantern and leave room at the nook.",
+          "next": "plink_quest_prepared"
+        },
+        {
+          "text": "I'll look over the light and shade options.",
+          "next": "plink_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_detail",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "The hand-operated lantern has a broad shade and a steady light. Beside it, the trial space is wide enough for the player's Glow.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "not_flag": "q_plink_prepared"
+        },
+        {
+          "visited": "lantern_nook"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll try Glow, then leave the shaded nook open.",
+          "next": "plink_quest_prepared"
+        },
+        {
+          "text": "I'll try the shaded lantern and leave room at the nook.",
+          "next": "plink_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_prepared",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink moves to the edge of the trial space. The route from the lantern stand to the resting nook remains clear.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "not_flag": "q_plink_prepared"
+        },
+        {
+          "visited": "lantern_nook"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_plink_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_event_wait",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink walks beside the trial stand. The covered lantern, loose shades, and resting nook remain within reach.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "flag": "q_plink_prepared"
+        },
+        {
+          "not_flag": "e_plink_shade"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_quest_ready",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "After the light trial, Plink steps beneath the shade placed at the resting nook and settles in the dimmer light.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "flag": "q_plink_prepared"
+        },
+        {
+          "flag": "e_plink_shade"
+        }
+      ],
+      "effects": [],
+      "choices": [
+        {
+          "text": "I'll keep the spare shade as a memento.",
+          "next": "plink_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_complete",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink stays under the installed shade while a spare leaf shade is tucked into the player's keepsake pouch.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        },
+        {
+          "flag": "q_plink_accepted"
+        },
+        {
+          "flag": "q_plink_prepared"
+        },
+        {
+          "flag": "e_plink_shade"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_plink_done",
+          "value": true
+        },
+        {
+          "give_item": "lantern_shade"
+        }
+      ]
+    },
+    {
+      "id": "plink_quest_after",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "Plink rests beneath the nook's shade, then walks out to circle a neighboring pebble.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "q_plink_done"
+        }
+      ],
+      "effects": [],
+      "next": "plink_quest_after_detail"
+    },
+    {
+      "id": "plink_quest_after_detail",
+      "speaker": "plink",
+      "kind": "quest",
+      "text": "On returning, Plink settles just inside the shade's edge. There is still open ground beside the nook.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "q_plink_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_relationship_acquaintance",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Plink pauses near the player's feet, antennae moving in two small arcs, then continues around the post.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "q_plink_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_relationship_friend",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Plink approaches the player's resting place and settles on the stone beside it. The beetle's light remains soft and steady.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "q_plink_done"
+        },
+        {
+          "not_flag": "friend_plink"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_plink",
+          "value": true
+        }
+      ],
+      "next": "plink_relationship_friend_reply"
+    },
+    {
+      "id": "plink_relationship_friend_reply",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "One antenna touches the stone between them. Plink stays close while the leaf hood shifts overhead.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "friend_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_relationship_friend_repeat",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Plink circles the familiar resting place once, then stands beside the player without climbing onto them.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "friend_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_relationship_trusted",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Near the gathering's quiet edge, Plink leaves the shelter and comes to rest beside the player.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "friend_plink"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_plink"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_plink",
+          "value": true
+        }
+      ],
+      "next": "plink_relationship_trusted_reply"
+    },
+    {
+      "id": "plink_relationship_trusted_reply",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Plink remains there as lantern light passes across the stone. Both antennae lower until their tips touch the ground.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "trusted_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_relationship_trusted_repeat",
+      "speaker": "plink",
+      "kind": "relationship",
+      "text": "Plink steps out from the shade and settles nearby, leaving the way back to the nook open.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "trusted_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_festival_before",
+      "speaker": "plink",
+      "kind": "festival",
+      "text": "Plink walks around a folded length of festival ribbon. The beetle passes underneath its loose loop and emerges on the shaded side.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_festival_ready_clear",
+      "speaker": "plink",
+      "kind": "festival",
+      "text": "In clear light, Plink moves along the shaded edge of the prepared display, away from the open center.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_festival_ready_rain",
+      "speaker": "plink",
+      "kind": "festival",
+      "text": "Rain dots the outside of the display awning. Plink crosses the dry strip beneath it, close to the ground.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_festival_after",
+      "speaker": "plink",
+      "kind": "festival",
+      "text": "Plink rests at the gathering's shaded edge. Lanterns stay steady beyond the small leaf hood.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_idle_1",
+      "speaker": "plink",
+      "kind": "idle",
+      "text": "Plink braces two feet against a pebble and turns it a little. A thin new strip of shadow appears.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_idle_2",
+      "speaker": "plink",
+      "kind": "idle",
+      "text": "An empty cup rests near the post. Plink walks beneath its handle and stops halfway through.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "plink_idle_3",
+      "speaker": "plink",
+      "kind": "idle",
+      "text": "Plink crosses a dry leaf vein, pauses at the ridge, then takes the longer way around.",
+      "conditions": [
+        {
+          "flag": "met_plink"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

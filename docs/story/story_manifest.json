@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "status": "proposal, not built",
+  "tree": {
+    "name": "The Kindly Crown",
+    "name_zh": "暖冠"
+  },
+  "town": {
+    "name": "Lamploom",
+    "name_zh": "灯织镇"
+  },
+  "characters": [
+    {
+      "id": "brindle",
+      "name": "Brindle",
+      "name_zh": "绒枝",
+      "species": "valley woodland creature",
+      "region": "Granite Falls Valley",
+      "location": "home_terrace",
+      "height_m": 0.95,
+      "quest": {
+        "id": "q_brindle",
+        "title": "A Place Left Open",
+        "event": "e_brindle_seat",
+        "action": "Arrange a seat or any chosen furniture inside the home, then invite Brindle to look.",
+        "reward": "felt_seat_pad"
+      }
+    },
+    {
+      "id": "thimble",
+      "name": "Thimble",
+      "name_zh": "顶针",
+      "species": "dormouse",
+      "region": "Granite Falls Valley",
+      "location": "garden",
+      "height_m": 0.42,
+      "quest": {
+        "id": "q_thimble",
+        "title": "Room for a Different Leaf",
+        "event": "e_thimble_leaf",
+        "action": "Plant any unlocked variety, then show Thimble the chosen garden place. Existing plants count.",
+        "reward": "seed_envelope"
+      }
+    },
+    {
+      "id": "rillik",
+      "name": "Rillik",
+      "name_zh": "涓刻",
+      "species": "water vole",
+      "region": "Granite Falls Valley",
+      "location": "plunge_pool",
+      "height_m": 0.7,
+      "quest": {
+        "id": "q_rillik",
+        "title": "The Low Mark",
+        "event": "e_rillik_rubbing",
+        "action": "Explore the low flood mark from the dry overlook, then compare its rubbing with Rillik.",
+        "reward": "flood_rubbing"
+      }
+    },
+    {
+      "id": "selvie",
+      "name": "Selvie",
+      "name_zh": "丝芙",
+      "species": "silk moth",
+      "region": "Tuff Tower Highlands",
+      "location": "silk_awning",
+      "height_m": 0.58,
+      "quest": {
+        "id": "q_selvie",
+        "title": "The Unmatched Patch",
+        "event": "e_selvie_patch",
+        "action": "Choose either patch color and help display the mended spore-silk panel.",
+        "reward": "patch_sample"
+      }
+    },
+    {
+      "id": "avren",
+      "name": "Avren",
+      "name_zh": "岩温",
+      "species": "alpine pika",
+      "region": "High Ice Basin",
+      "location": "courier_steps",
+      "height_m": 0.64,
+      "quest": {
+        "id": "q_avren",
+        "title": "First Melt, Second Telling",
+        "event": "e_avren_notice",
+        "action": "Carry a copy of the first-melt notice to the sheltered notice stand, then tell Avren it includes the downstream reply.",
+        "reward": "melt_notice"
+      }
+    },
+    {
+      "id": "pumel",
+      "name": "Pumel",
+      "name_zh": "泉团",
+      "species": "rock hyrax",
+      "region": "Mineral Springs Terraces",
+      "location": "potters_bench",
+      "height_m": 0.73,
+      "quest": {
+        "id": "q_pumel",
+        "title": "The Cup That Tips",
+        "event": "e_pumel_cup",
+        "action": "Try the broad base on a stable display ledge and choose its finish with Pumel.",
+        "reward": "broad_based_cup"
+      }
+    },
+    {
+      "id": "copperleaf",
+      "name": "Copperleaf",
+      "name_zh": "铜叶",
+      "species": "hedgehog",
+      "region": "Autumn Gorge Woods",
+      "location": "covered_walk",
+      "height_m": 0.61,
+      "quest": {
+        "id": "q_copperleaf",
+        "title": "A Dry Way Home",
+        "event": "e_copperleaf_route",
+        "action": "Carry a dry route card along the covered walk and show the marked resting place.",
+        "reward": "route_card"
+      }
+    },
+    {
+      "id": "puffrel",
+      "name": "Puffrel",
+      "name_zh": "蓬络",
+      "species": "jerboa",
+      "region": "Tuff Tower Highlands",
+      "location": "balloon_yard",
+      "height_m": 0.76,
+      "quest": {
+        "id": "q_puffrel",
+        "title": "A Basket on the Ground",
+        "event": "e_puffrel_basket",
+        "action": "Decorate the grounded balloon basket with a chosen ribbon and sit nearby for its still display.",
+        "reward": "basket_ribbon"
+      }
+    },
+    {
+      "id": "nacri",
+      "name": "Nacri",
+      "name_zh": "贝纹",
+      "species": "river otter",
+      "region": "Karst Lagoon Coast",
+      "location": "exchange_steps",
+      "height_m": 1.05,
+      "quest": {
+        "id": "q_nacri",
+        "title": "The Parcel With Two Homes",
+        "event": "e_nacri_labels",
+        "action": "Explore both labels at the exchange steps and agree to keep two address tags on the shared parcel.",
+        "reward": "double_address_tag"
+      }
+    },
+    {
+      "id": "brumlet",
+      "name": "Brumlet",
+      "name_zh": "雾砾",
+      "species": "small shore seal",
+      "region": "Basalt Shore",
+      "location": "quiet_landing",
+      "height_m": 0.67,
+      "quest": {
+        "id": "q_brumlet",
+        "title": "A Quiet Place for the Sea",
+        "event": "e_brumlet_liner",
+        "action": "Choose a wind-sheltered listening place and carry the soft felt liner there.",
+        "reward": "felt_liner"
+      }
+    },
+    {
+      "id": "ombel",
+      "name": "Ombel",
+      "name_zh": "翁蓓",
+      "species": "badger",
+      "region": "Granite Falls Valley",
+      "location": "town",
+      "height_m": 1.12,
+      "quest": {
+        "id": "q_ombel",
+        "title": "The Spare Window",
+        "event": "e_ombel_window",
+        "action": "Explore the unassigned window niche and choose a welcoming arrangement with Ombel.",
+        "reward": "oval_window_model"
+      }
+    },
+    {
+      "id": "quillip",
+      "name": "Quillip",
+      "name_zh": "羽粒",
+      "species": "wren",
+      "region": "Granite Falls Valley",
+      "location": "map_perch",
+      "height_m": 0.18,
+      "quest": {
+        "id": "q_quillip",
+        "title": "The Map That Leaves Space",
+        "event": "e_quillip_map",
+        "action": "Explore the terrace sightline and mark one comfortable stopping place on the map.",
+        "reward": "foldout_map"
+      }
+    },
+    {
+      "id": "plink",
+      "name": "Plink",
+      "name_zh": "叮点",
+      "species": "lantern beetle",
+      "region": "Granite Falls Valley",
+      "location": "lantern_nook",
+      "height_m": 0.09,
+      "quest": {
+        "id": "q_plink",
+        "title": "A Little Less Bright",
+        "event": "e_plink_shade",
+        "action": "Try Glow or a shaded steady lantern, then let Plink choose the dimmer resting nook.",
+        "reward": "lantern_shade"
+      }
+    },
+    {
+      "id": "nuzzle",
+      "name": "Nuzzle",
+      "name_zh": "团嗅",
+      "species": "moss snail",
+      "region": "Granite Falls Valley",
+      "location": "moss_step",
+      "height_m": 0.12,
+      "quest": {
+        "id": "q_nuzzle",
+        "title": "The Long Way Round",
+        "event": "e_nuzzle_leaf",
+        "action": "Explore the existing ground-level route and mark it with a loose leaf for Nuzzle.",
+        "reward": "leaf_marker"
+      }
+    }
+  ],
+  "main_quests": [
+    {
+      "id": "m_home",
+      "title": "An Open Door",
+      "owner": "brindle",
+      "prerequisite": null,
+      "conditions": [
+        {
+          "visited": "home"
+        },
+        {
+          "furniture_placed_gte": 1
+        }
+      ],
+      "discovery": "A home can be prepared for someone without deciding who they must be."
+    },
+    {
+      "id": "m_garden",
+      "title": "Three Small Lights",
+      "owner": "thimble",
+      "prerequisite": "m_home_done",
+      "conditions": [
+        {
+          "garden_planted_gte": 3
+        }
+      ],
+      "discovery": "The garden is the near end of a valley-wide chain of welcome."
+    },
+    {
+      "id": "m_marks",
+      "title": "What the Water Remembers",
+      "owner": "rillik",
+      "prerequisite": "m_garden_done",
+      "conditions": [
+        {
+          "visited": "plunge_pool"
+        },
+        {
+          "flag": "e_marks_read"
+        }
+      ],
+      "discovery": "The old paired flood marks record both an arrival and the reply sent downstream."
+    },
+    {
+      "id": "m_weave",
+      "title": "A Reply Across the Mist",
+      "owner": "selvie",
+      "prerequisite": "m_marks_done",
+      "conditions": [
+        {
+          "flag": "e_signal_tested"
+        }
+      ],
+      "discovery": "An out-of-date notice, not a broken tree, made this year's gathering hard to coordinate."
+    },
+    {
+      "id": "m_agreement",
+      "title": "Room for Every Arrival",
+      "owner": "ombel",
+      "prerequisite": "m_weave_done",
+      "conditions": [
+        {
+          "visited": "town"
+        },
+        {
+          "flag": "e_water_plan_shared"
+        }
+      ],
+      "discovery": "The community chooses a rolling welcome with a ground display and optional calm-weather balloon flight."
+    },
+    {
+      "id": "m_festival",
+      "title": "The Lanterns Stay",
+      "owner": "puffrel",
+      "prerequisite": "m_agreement_done",
+      "conditions": [
+        {
+          "flag": "e_festival_ready"
+        }
+      ],
+      "discovery": "The home terrace becomes one light among many; nobody has to arrive on time to belong."
+    }
+  ],
+  "world_events": {
+    "e_marks_read": "At the dry plunge-pool overlook, interact with both old flood marks to compare their paired messages; walking access only.",
+    "e_signal_tested": "At the silk awning, test a steady signal using either Glow or the hand-operated covered lantern. Neither branch requires timing, flashing, or spending magic in dialogue.",
+    "e_water_plan_shared": "At the town notice stand, interact to share the copied upstream notice and downstream reply, with sheltered and calm-weather arrangements both included.",
+    "e_festival_ready": "After m_festival is accepted, explicitly choose Begin the gathering at the balloon yard. The proposed interaction offers a sheltered ground display in any weather, or an optional calm-weather flight view."
+  }
+}

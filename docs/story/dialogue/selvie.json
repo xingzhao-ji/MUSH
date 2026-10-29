@@ -1,0 +1,1026 @@
+{
+  "schema_version": 1,
+  "character": "selvie",
+  "quests": [
+    "q_selvie",
+    "m_weave"
+  ],
+  "entries": {
+    "meeting": [
+      "selvie_meeting_open"
+    ],
+    "greeting": [
+      "selvie_greeting_dawn_clear",
+      "selvie_greeting_dawn_rain",
+      "selvie_greeting_day_clear",
+      "selvie_greeting_day_rain",
+      "selvie_greeting_dusk_clear",
+      "selvie_greeting_dusk_rain",
+      "selvie_greeting_night_clear",
+      "selvie_greeting_night_rain"
+    ],
+    "quest": [
+      "selvie_quest_after",
+      "selvie_quest_ready",
+      "selvie_quest_event_wait",
+      "selvie_quest_prepare",
+      "selvie_quest_travel_wait",
+      "selvie_quest_offer"
+    ],
+    "relationship": [
+      "selvie_relationship_trusted",
+      "selvie_relationship_trusted_repeat",
+      "selvie_relationship_friend",
+      "selvie_relationship_friend_repeat",
+      "selvie_relationship_acquaintance"
+    ],
+    "festival": [
+      "selvie_festival_after",
+      "selvie_festival_ready_clear",
+      "selvie_festival_ready_rain",
+      "selvie_festival_before"
+    ],
+    "idle": [
+      "selvie_idle_1",
+      "selvie_idle_2",
+      "selvie_idle_3"
+    ],
+    "main": [
+      "selvie_m_weave_after",
+      "selvie_m_weave_callback",
+      "selvie_m_weave_ready",
+      "selvie_m_weave_pending",
+      "selvie_m_weave_offer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "selvie_meeting_open",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "Hello. I am Selvie. This panel has a small tear, and I have six almost-matching scraps. Almost is doing a great deal of work.",
+      "conditions": [
+        {
+          "not_flag": "met_selvie"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "met_selvie",
+          "value": true
+        }
+      ],
+      "next": "selvie_meeting_question"
+    },
+    {
+      "id": "selvie_meeting_question",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "Come under the awning if you like. There is room to look without holding anything for me.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ],
+      "choices": [
+        {
+          "text": "What is the cloth made from?",
+          "next": "selvie_meeting_value_1"
+        },
+        {
+          "text": "Where did you learn this craft?",
+          "next": "selvie_meeting_value_2"
+        },
+        {
+          "text": "Does the patch need to match?",
+          "next": "selvie_meeting_value_3"
+        }
+      ]
+    },
+    {
+      "id": "selvie_meeting_value_1",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "Spore-silk, with a plain binding. It is light enough to fold into a small space, and useful enough to deserve a careful mend.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ],
+      "next": "selvie_meeting_close"
+    },
+    {
+      "id": "selvie_meeting_value_2",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "Puffrel and I came from the Tuff Tower Highlands. Clear mornings, pale stone, a surprising number of opinions about knots.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ],
+      "next": "selvie_meeting_close"
+    },
+    {
+      "id": "selvie_meeting_value_3",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "The patch can show. I know that when I mend someone else's cloth. I am practising knowing it when I mend my own.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ],
+      "next": "selvie_meeting_close"
+    },
+    {
+      "id": "selvie_meeting_close",
+      "speaker": "selvie",
+      "kind": "meeting",
+      "text": "You can visit while I work. A conversation does not have to leave a perfect seam behind it.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_dawn_clear",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "The dawn makes this silk look almost peach. I shall remember that before declaring any two scraps the same colour.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_dawn_rain",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "Rain at dawn. I have drawn the work under the awning. There is still enough soft light to see each stitch.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "dawn"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_day_clear",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "Hello again. I found a use for one of the almost-matching scraps. It has become a very good patch, without becoming a match.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_day_rain",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "Listen to the rain on the silk roof. A gentle sound for so many separate drops.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "day"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_dusk_clear",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "The mauve cloth deepens at dusk. I like seeing the seam remain visible while the colours change around it.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_dusk_rain",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "The evening rain has left a silver edge along the awning. We can admire it without asking it to become a new design.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "dusk"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_night_clear",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "One covered lamp is enough for this seam tonight. Plink helped me choose where the shade should fall.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "selvie_greeting_night_rain",
+      "speaker": "selvie",
+      "kind": "greeting",
+      "text": "Wet night, dry spool. That seems a good arrangement. There is a dry place for you beside the worktable too.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "time": "night"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_offer",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Would you help choose a patch for this panel? Amber or violet. Either will show, and either will make a sound mend.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "not_flag": "q_selvie_accepted"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I would like to help choose.",
+          "next": "selvie_quest_accept"
+        },
+        {
+          "text": "I will come back to the cloth later.",
+          "next": "selvie_quest_defer"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_accept",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Thank you. Meet me at the silk awning, where we can see the cloth in a steady light.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "not_flag": "q_selvie_accepted"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_selvie_accepted",
+          "value": true
+        }
+      ],
+      "next": "selvie_quest_travel_wait"
+    },
+    {
+      "id": "selvie_quest_defer",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Certainly. I shall keep both scraps. Cloth is quite good at waiting without taking it personally.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "not_flag": "q_selvie_accepted"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_travel_wait",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "The panel is under the silk awning. Come look when you would like to choose its patch.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "not_flag": "q_selvie_prepared"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_prepare",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Here are the two scraps. We can choose the amber patch or the violet patch when we display the mend. Neither needs to disappear.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "not_flag": "q_selvie_prepared"
+        },
+        {
+          "visited": "silk_awning"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I am ready to choose at the panel.",
+          "next": "selvie_quest_prepared"
+        },
+        {
+          "text": "Why let the repair show?",
+          "next": "selvie_quest_detail"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_detail",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "A hidden repair and a visible repair can both be careful work. For this panel, I would like to stop pretending it never needed help.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "not_flag": "q_selvie_prepared"
+        },
+        {
+          "visited": "silk_awning"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I am ready to choose at the panel.",
+          "next": "selvie_quest_prepared"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_prepared",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "At the panel, choose either patch colour and help display the mended cloth. The choice will stay yours; both seams are ready to hold.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "not_flag": "q_selvie_prepared"
+        },
+        {
+          "visited": "silk_awning"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_selvie_prepared",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_event_wait",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "The display interaction beside the panel lets you choose the patch and hang the cloth. Amber or violet, both belong here.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "flag": "q_selvie_prepared"
+        },
+        {
+          "not_flag": "e_selvie_patch"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_ready",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "There it is, hanging with its patch in view. I can see what we changed, and I like the cloth better for knowing it.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "flag": "q_selvie_prepared"
+        },
+        {
+          "flag": "e_selvie_patch"
+        }
+      ],
+      "choices": [
+        {
+          "text": "The visible patch suits it.",
+          "next": "selvie_quest_complete"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_complete",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Keep this small patch sample. I made the stitches easy to see. Thank you for helping me leave the repair in the story.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        },
+        {
+          "flag": "q_selvie_accepted"
+        },
+        {
+          "flag": "q_selvie_prepared"
+        },
+        {
+          "flag": "e_selvie_patch"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "q_selvie_done",
+          "value": true
+        },
+        {
+          "give_item": "patch_sample"
+        }
+      ]
+    },
+    {
+      "id": "selvie_quest_after",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "Someone admired the patch before the rest of the panel. I discovered that I did not mind.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "q_selvie_done"
+        }
+      ],
+      "next": "selvie_quest_after_detail"
+    },
+    {
+      "id": "selvie_quest_after_detail",
+      "speaker": "selvie",
+      "kind": "quest",
+      "text": "I put the remaining scraps in the useful box. It used to be called the almost box. A small change, but a pleasant one.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "q_selvie_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_relationship_acquaintance",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "You can ask about the cloth, or bring something else to talk about. I have more interests than this spool suggests.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_relationship_friend",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "You let the patch be a choice instead of a mistake to hide. I feel I can show a friend a piece before I have finished fixing it.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "q_selvie_done"
+        },
+        {
+          "not_flag": "friend_selvie"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "friend_selvie",
+          "value": true
+        }
+      ],
+      "next": "selvie_relationship_friend_reply"
+    },
+    {
+      "id": "selvie_relationship_friend_reply",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "Next time I may bring you the awkward first attempt. I usually hide those beneath the tidiest one.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "friend_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_relationship_friend_repeat",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "I have left a clear corner of the table. For company, not another job that needs doing.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "friend_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_relationship_trusted",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "At the gathering, the mended panel belonged with all the other cloth. You helped me see that being cared for can be part of its beauty.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "friend_selvie"
+        },
+        {
+          "flag": "m_festival_done"
+        },
+        {
+          "not_flag": "trusted_selvie"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "trusted_selvie",
+          "value": true
+        }
+      ],
+      "next": "selvie_relationship_trusted_reply"
+    },
+    {
+      "id": "selvie_relationship_trusted_reply",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "When I miss the highland mornings, I do not need to fold the feeling away. I think I could tell you while we worked.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "trusted_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_relationship_trusted_repeat",
+      "speaker": "selvie",
+      "kind": "relationship",
+      "text": "You have seen the loose ends and stayed. It makes an unfinished afternoon feel rather comfortable.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "trusted_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_festival_before",
+      "speaker": "selvie",
+      "kind": "festival",
+      "text": "We have cloth for the gathering. What we need now is a notice everyone can answer, not a brighter lamp.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_festival_ready_clear",
+      "speaker": "selvie",
+      "kind": "festival",
+      "text": "The shared plan leaves room for a ground display as well as a calm-weather view. I have sewn the panel to look lovely at basket height.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "clear"
+        }
+      ]
+    },
+    {
+      "id": "selvie_festival_ready_rain",
+      "speaker": "selvie",
+      "kind": "festival",
+      "text": "The sheltered display will keep the cloth dry. The rain can be part of the view, without being part of the seating.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_agreement_done"
+        },
+        {
+          "not_flag": "m_festival_done"
+        },
+        {
+          "weather": "rain"
+        }
+      ]
+    },
+    {
+      "id": "selvie_festival_after",
+      "speaker": "selvie",
+      "kind": "festival",
+      "text": "The repaired panel caught the same warm light as every other one. I did not spend the evening checking whether anyone noticed its patch.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_festival_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_idle_1",
+      "speaker": "selvie",
+      "kind": "idle",
+      "text": "Puffrel has suggested another ribbon. I have suggested leaving room to see the basket. We are making progress.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_idle_2",
+      "speaker": "selvie",
+      "kind": "idle",
+      "text": "Plink chose the softer side of the lamp. A useful reminder that light can help without doing quite so much.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_idle_3",
+      "speaker": "selvie",
+      "kind": "idle",
+      "text": "This thread has one stubborn loop. We shall work around it. Neither of us needs a dramatic afternoon.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_offer",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "The notice is sound, but the reply is missing from this copy. Help me test a steady signal at the awning?",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        },
+        {
+          "flag": "m_marks_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I'd like to help.",
+          "next": "selvie_m_weave_accept"
+        },
+        {
+          "text": "Another time.",
+          "next": "selvie_m_weave_defer"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_accept",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "Try Glow, or use the covered lantern by hand. Either will do. We need one readable light, not a flashing code.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        },
+        {
+          "flag": "m_marks_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_weave_accepted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_defer",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "I'll keep both versions together. A quiet reply is still a reply.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "not_flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        },
+        {
+          "flag": "m_marks_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_pending",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "Test the steady signal at the silk awning. If you would rather save your magic, use the covered lantern.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_ready",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "Clear enough to read from the next terrace. Here is the missing reply: visits can arrive a little at a time.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        },
+        {
+          "flag": "e_signal_tested"
+        },
+        {
+          "not_flag": "q_selvie_done"
+        }
+      ],
+      "next": "selvie_m_weave_reveal"
+    },
+    {
+      "id": "selvie_m_weave_callback",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "Like the patch we left visible, this reply belongs beside the first message. The steady light makes it easy to find.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        },
+        {
+          "flag": "e_signal_tested"
+        },
+        {
+          "flag": "q_selvie_done"
+        }
+      ],
+      "next": "selvie_m_weave_reveal"
+    },
+    {
+      "id": "selvie_m_weave_reveal",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "The first notice asked for one shared ascent. This copy kept traveling after the plan changed. No one had the whole conversation.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        }
+      ],
+      "next": "selvie_m_weave_complete"
+    },
+    {
+      "id": "selvie_m_weave_complete",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "Ombel is in Lamploom. Show the town both messages, so the welcome can fit the water and the people.",
+      "conditions": [
+        {
+          "flag": "met_selvie"
+        },
+        {
+          "flag": "m_weave_accepted"
+        },
+        {
+          "not_flag": "m_weave_done"
+        }
+      ],
+      "effects": [
+        {
+          "set_flag": "m_weave_done",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_after",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "The patch did not need to be invisible. Neither did the change of plan.",
+      "conditions": [
+        {
+          "flag": "m_weave_done"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Will everyone understand the new signal?",
+          "next": "selvie_m_weave_answer"
+        },
+        {
+          "text": "I'll leave you to it.",
+          "next": "selvie_m_weave_close"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_answer",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "The light only says there is a message. The words travel too, on a copied card. Nobody has to guess at a flicker.",
+      "conditions": [
+        {
+          "flag": "m_weave_done"
+        }
+      ]
+    },
+    {
+      "id": "selvie_m_weave_close",
+      "speaker": "selvie",
+      "kind": "main",
+      "text": "I'll fold the old notice beside the reply, not over it.",
+      "conditions": [
+        {
+          "flag": "m_weave_done"
+        }
+      ]
+    }
+  ]
+}
