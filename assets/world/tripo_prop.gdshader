@@ -14,6 +14,8 @@ uniform vec3 base_tint = vec3(1.0);
 uniform float desat = 0.0;
 uniform float glow = 1.0;
 uniform float glow_floor = 0.6;
+// M17: keep the warm texel glow in only this share of 7 m world cells (thins rows of lamp posts that read as beads); 1 = all.
+uniform float glow_keep = 1.0;
 // Cool glow (luminous petals and cores): bright texels with blue over red emit; 0 = off.
 uniform float cool_glow = 0.0;
 // Pale self-light over the whole bloom (hero lilies by day: the goal's lilies are the brightest, palest
@@ -121,6 +123,10 @@ void fragment() {
 	float mn = min(c.r, min(c.g, c.b));
 	float sat = (mx - mn) / max(mx, 0.001);
 	float warm = smoothstep(glow_floor, glow_floor + 0.25, c.r) * smoothstep(0.35, 0.6, sat) * smoothstep(-0.02, 0.06, c.g - c.b) * smoothstep(0.28, 0.5, c.g);
+	if (glow_keep < 1.0) {
+		vec3 gcell = floor(vec3(world_xz.x, world_y, world_xz.y) / 7.0);
+		warm *= step(fract(sin(dot(gcell, vec3(127.1, 311.7, 74.7))) * 43758.5453), glow_keep);
+	}
 	EMISSION = c * warm * glow;
 	// Cores only: blue-white/cyan texels (green over red); lavender petals (red over green) stay lit material.
 	float cool = smoothstep(0.55, 0.85, c.b) * smoothstep(0.0, 0.08, c.g - c.r);

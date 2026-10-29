@@ -4800,6 +4800,7 @@ func _add_concept_vista() -> void:
 	concept_vista_report["principal_viaduct"] = _add_c1_principal_viaduct(eye)
 	sec["viaducts"] = (Time.get_ticks_usec() - t0) / 1000; t0 = Time.get_ticks_usec()
 	concept_vista_report["glow_points"] = _add_c1_glow(eye)
+	concept_vista_report["glow_points_thinned"] = c1_glow_thinned
 	concept_vista_report["dream_lights"] = _add_c1_dream_lights(eye)
 	concept_vista_report["giants"] = _add_c1_giants(eye)
 	concept_vista_report["near_clusters"] = _add_c1_near_clusters(eye)
@@ -5925,8 +5926,33 @@ func _add_c1_dream_lights(eye: Vector3) -> Dictionary:
 		add_child(node)
 		_static.append(node)
 	return {"built": true, "spores": spores, "fairy_lights": fairy, "string_lights": _c1_dream_string.size(), "colliders": 0, "new_lights": 0}
+## M17 (Fable, M16b look: rows of 7-12 warm points at 14-20 px on the right ledge rim, the hero plateau lip and the near
+## arch read as beads; the owner: lights never dense or clustered): screen-space thinning in the vista frame, no two
+## valley lights closer than C1_GLOW_GAP px (points off the frame are kept).
+const C1_GLOW_GAP := 22.0
+const C1_BRIDGE_GLOW_KEEP := 0.4
+var c1_glow_thinned: int = 0
 func _add_c1_glow(eye: Vector3) -> int:
 	if _c1_glow.is_empty(): return 0
+	var kept := PackedVector3Array()
+	var cells: Dictionary = {}
+	for q: Vector3 in _c1_glow:
+		var px: Vector2 = _c1_viaduct_pixel(eye, q)
+		if not px.is_finite() or px.x < -40.0 or px.x > 1320.0 or px.y < -40.0 or px.y > 760.0:
+			kept.append(q)
+			continue
+		var cell := Vector2i(floori(px.x / C1_GLOW_GAP), floori(px.y / C1_GLOW_GAP))
+		var near: bool = false
+		for dy: int in range(-1, 2):
+			for dx: int in range(-1, 2):
+				for o: Vector2 in cells.get(cell + Vector2i(dx, dy), []):
+					if o.distance_to(px) < C1_GLOW_GAP: near = true
+		if near: continue
+		if not cells.has(cell): cells[cell] = []
+		(cells[cell] as Array).append(px)
+		kept.append(q)
+	c1_glow_thinned = _c1_glow.size() - kept.size()
+	_c1_glow = kept
 	var quad := QuadMesh.new()
 	quad.size = Vector2(1.0, 1.0)
 	var multi := MultiMesh.new()
@@ -6155,7 +6181,10 @@ func _add_c1_river(eye: Vector3) -> Dictionary:
 	node.mesh = mesh
 	# (sweep m14l: an emissive StandardMaterial read as flat pale cut-outs; the lake's own water shader, with its sky
 	# reflection, body glow and shimmer, reads as water)
-	node.material_override = _lake_material if C1_RIVER_LAKE_SHADER and _lake_material != null else mat
+	# (M17, Fable: the river read flat lilac-grey and lighter than its banks; concept-1's water is darker than the mist,
+	# turquoise, with glints) its own copy of the lake material, synced each frame in apply_look with C1_RIVER_WATER.
+	if C1_RIVER_LAKE_SHADER and _lake_material != null: _c1_river_mat = _lake_material.duplicate()
+	node.material_override = _c1_river_mat if _c1_river_mat != null else mat
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(node)
 	_static.append(node)
@@ -6518,7 +6547,11 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 			var turn: float = (-PI * 0.5 if bbox.size.z >= bbox.size.x else 0.0) + deg_to_rad(float(spec[4]))
 			var base_y: float = LAKE_Y + float(spec[2]) - h
 			var b_yaw: float = atan2(to_eye.x, to_eye.y) + turn
+			var bg0: int = _refuge_props.size()
 			_refuge_model(bpath_t, Vector3(c.x, base_y, c.y), b_yaw, h, "C1TripoBridge%d" % bridges.size())
+			# M17 (Fable, M16b look: the near arch's parapet lamps, ~12 at a 20 px pitch, were the frame's most regular
+			# string once the viaduct was thinned; the owner: never dense): about 4 in 10 lamp posts stay lit.
+			for bgi: int in range(bg0, _refuge_props.size()): _refuge_props[bgi].set_shader_parameter("glow_keep", C1_BRIDGE_GLOW_KEEP)
 			bridges.append(["risebridge", snappedf(c.x, 1.0), snappedf(c.y, 1.0), snappedf(h, 1.0)])
 			if bridges.size() == 1:
 				# M10e (Fable, checkpoints 13-15: the near bridge's left end ledge hung in the air above the mist): a rock
@@ -9317,6 +9350,10 @@ const C1_LAKE_SHALLOW := Color("6aa8b8")
 const C1_LAKE_DEEP := Color("3f8a9a")
 ## (M10d, Fable: the lake still read grey-lilac #7A84A1 through the fog)
 const C1_LAKE_GLOW := Vector2(1.5, 0.4)
+## M17 (Fable, M16b look: river median #686790, lighter than its banks; target darker than the mist, turquoise body):
+## river water [shallow, deep, body glow (day, night), share of the lake's reflectance floor].
+const C1_RIVER_WATER: Array = [Color("3f8fa6"), Color("23466e"), Vector2(0.45, 0.35), 0.5]
+var _c1_river_mat: ShaderMaterial = null
 const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "a09bcc", "day_fog": "9ea3d0", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
 	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.15, "zenith_color": "34488e", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
@@ -9575,6 +9612,13 @@ func _apply_look_impl(environment: Environment, sun: DirectionalLight3D, night: 
 	# The lake's sky-gradient fallback follows the same sky colours.
 	_lake_material.set_shader_parameter("sky_top", sky_top_now)
 	_lake_material.set_shader_parameter("sky_horizon", sky_horizon_now)
+	if _c1_river_mat != null:
+		for u: Dictionary in _lake_material.shader.get_shader_uniform_list():
+			_c1_river_mat.set_shader_parameter(u.name, _lake_material.get_shader_parameter(u.name))
+		_c1_river_mat.set_shader_parameter("shallow", C1_RIVER_WATER[0])
+		_c1_river_mat.set_shader_parameter("deep", C1_RIVER_WATER[1])
+		_c1_river_mat.set_shader_parameter("body_glow", lerpf(C1_RIVER_WATER[2].x, C1_RIVER_WATER[2].y, night) * (1.0 - 0.5 * rain))
+		_c1_river_mat.set_shader_parameter("reflect_floor", float(_lake_material.get_shader_parameter("reflect_floor")) * C1_RIVER_WATER[3])
 	# M14c (performance): everything below depends only on night, rain and the look overrides, yet ran every frame
 	# (~10^4 material parameter writes over the vista's props, far masses and glow materials). Skip it while those
 	# inputs and the registries are unchanged; a full pass still runs every 60 calls.
