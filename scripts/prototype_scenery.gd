@@ -5545,7 +5545,7 @@ const C1_ANC_TREE_TURN := 0.0
 const C1_ANC_TREE_TINT := Vector3(1.4, 1.25, 1.05)
 ## Capture s33 cells: the lily corner read L 39 against the concept's 25 (its glowing blooms sit in dark foliage).
 ## M10d (cells: lower-left L 37-46 vs the concept's 21-29): dimmer.
-const C1_LILY_TINT := Vector3(0.6, 0.6, 0.74)
+const C1_LILY_TINT := Vector3(0.5, 0.5, 0.66)
 ## High terrace support (C1_HIGH): tower set C1_SUPPORT_BACK m behind the eye, top C1_SUPPORT_TOP_BELOW m under it
 ## (the terrace skirt reaches ~77 m under the eye).
 const C1_SUPPORT_BACK := 30.0
