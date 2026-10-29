@@ -1,26 +1,26 @@
 {
-	"fingerprint": "28d785efd2146ba38fc750af928ef57a0a058ef4f65481290f6d9f9a39754d5b",
-	"mesh_sha256": "9fbc359a094902fc5a6f271efb2725838d420591426729b2062bc5612bc01ed7",
+	"fingerprint": "c670b60ace26431e9b7755ff2ef8cd741340360ea3c8d59107a0c4c3998cfcb9",
+	"mesh_sha256": "2501da529497d54f4552ef9e39f8976c92407a0211b580d2c94dc16eac2d7eab",
 	"report": {
 		"bounds_max": [
-			519.0,
-			345.5,
-			454.7
+			520.3,
+			344.3,
+			455.8
 		],
 		"bounds_min": [
-			506.7,
-			338.7,
-			448.9
+			506.9,
+			338.2,
+			447.8
 		],
 		"built": true,
 		"collision": false,
-		"length_m": 11.42,
-		"rejected_triangles": 947,
-		"sections": 5,
+		"length_m": 14.54,
+		"rejected_triangles": 1564,
+		"sections": 7,
 		"source": "stairs.glb varied upward faces + UV; legacy flag parts omitted",
-		"support_linear_triangles": 83639,
-		"support_rejected_triangles": 947,
-		"triangles": 97683,
-		"width_m": 3.1
+		"support_linear_triangles": 118832,
+		"support_rejected_triangles": 1564,
+		"triangles": 136518,
+		"width_m": 2.8
 	}
 }

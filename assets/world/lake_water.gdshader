@@ -35,6 +35,9 @@ uniform vec2 inflow_size = vec2(0.0);
 // grazing) Schlick gives ~0.12 and the lake read as a dark hole (L*11 vs the concept's 38,
 // review 06); the floor lets it mirror the glowing sky and walls as the concepts do.
 uniform float reflect_floor = 0.0;
+// Concept-1 (M9): the water's own luminous turquoise body, so the valley floor reads as glowing channels
+// rather than a dark basin from the high eye; 0 = off.
+uniform float body_glow = 0.0;
 varying vec3 v_world;
 
 float hash21(vec2 p) {
@@ -180,6 +183,7 @@ void fragment() {
 		// Night: a faint moonlit-sky sheen on the open water (seen from above, the deep lake read as a
 		// black hole, L*2 against a sky of 12; review 03). Shallows and the shore contact stay as they were.
 		EMISSION += vec3(0.012, 0.018, 0.042) * night * smoothstep(1.0, 4.0, depth_v) * (1.0 - f);
+		EMISSION += body * body_glow * (1.0 - f) * soft;
 	}
 	ALPHA = alpha;
 	ROUGHNESS = 0.3;

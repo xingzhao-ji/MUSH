@@ -4,36 +4,33 @@ extends Node3D
 ## collision, physics forces, lights, or autonomous process. The scenery owns
 ## ordinary night/rain/sun updates through its existing material registry.
 const CLOUD_SHADER: Shader = preload("res://assets/world/c1_cloud_sea.gdshader")
-## [C1 pixel x, horizontal distance, centre y, radius x, radius y, radius z].
-## Lower broad banks close the water surface; smaller higher banks break the
-## outline and submerge subordinate islands without burying the principal crowns.
+## [C1 pixel x, horizontal distance, centre y, radius x, radius y, radius z, density, lobe strength].
+## Milestone 9 (ChatGPT checkpoint 9: the continuous blanket hid the valley's islands and water): separate, smaller,
+## translucent banks between the cliffs in the near and middle valley so ~half of its floor shows; the far broad
+## layers keep the distance soft; a few taller crowns where the falls land.
 const BANKS: Array = [
-	[700.0, 580.0, -11.0, 205.0, 62.0, 160.0],
-	[1030.0, 720.0, -1.0, 260.0, 70.0, 190.0],
-	[1250.0, 850.0, 0.0, 280.0, 70.0, 225.0],
-	[430.0, 980.0, 7.0, 235.0, 66.0, 210.0],
-	[670.0, 1020.0, 13.0, 310.0, 72.0, 235.0],
-	[920.0, 1100.0, 11.0, 330.0, 75.0, 245.0],
-	[1170.0, 1250.0, 19.0, 340.0, 84.0, 260.0],
-	[530.0, 1430.0, 27.0, 330.0, 80.0, 255.0],
-	[790.0, 1500.0, 25.0, 360.0, 85.0, 275.0],
-	[1060.0, 1650.0, 35.0, 390.0, 90.0, 300.0],
-	[1280.0, 1800.0, 40.0, 430.0, 96.0, 330.0],
-	[400.0, 1900.0, 40.0, 370.0, 88.0, 280.0],
-	[670.0, 2050.0, 45.0, 430.0, 95.0, 340.0],
-	[920.0, 2200.0, 53.0, 430.0, 100.0, 350.0],
-	[680.0, 780.0, -7.0, 235.0, 68.0, 210.0],
-	[1080.0, 1320.0, 45.0, 210.0, 52.0, 150.0],
-	[580.0, 1670.0, 59.0, 230.0, 58.0, 180.0],
-	# Seven taller, smaller banks break the low sea into rounded cloud crowns.
-	# Their bases overlap the broad layers; no independent floating puff bases.
-	[680.0, 780.0, 25.0, 130.0, 58.0, 115.0],
-	[900.0, 710.0, 15.0, 145.0, 65.0, 130.0],
-	[1100.0, 880.0, 25.0, 160.0, 76.0, 140.0],
-	[1230.0, 1080.0, 45.0, 165.0, 70.0, 145.0],
-	[600.0, 1350.0, 35.0, 145.0, 80.0, 120.0],
-	[830.0, 1660.0, 50.0, 180.0, 90.0, 160.0],
-	[1120.0, 1720.0, 70.0, 195.0, 90.0, 175.0],
+	# near and middle valley: separated banks between the masses
+	[600.0, 640.0, -16.0, 115.0, 42.0, 95.0, 0.012, 0.7],
+	[860.0, 780.0, -12.0, 150.0, 46.0, 115.0, 0.011, 0.7],
+	[1170.0, 880.0, -8.0, 140.0, 48.0, 115.0, 0.012, 0.7],
+	[470.0, 1080.0, 2.0, 165.0, 52.0, 130.0, 0.012, 0.7],
+	[1000.0, 1180.0, 10.0, 175.0, 56.0, 140.0, 0.012, 0.7],
+	# thin translucent ground haze: softens the exposed valley floor without hiding islands and water
+	[780.0, 760.0, -30.0, 330.0, 26.0, 260.0, 0.0028, 0.35],
+	[1080.0, 1000.0, -22.0, 360.0, 28.0, 280.0, 0.0028, 0.35],
+	[560.0, 1050.0, -20.0, 300.0, 26.0, 240.0, 0.0028, 0.35],
+	# far broad layers (distance haze over the far valley floor)
+	[530.0, 1430.0, 27.0, 330.0, 80.0, 255.0, 0.011, 0.55],
+	[790.0, 1500.0, 25.0, 360.0, 85.0, 275.0, 0.011, 0.55],
+	[1060.0, 1650.0, 35.0, 390.0, 90.0, 300.0, 0.011, 0.55],
+	[1280.0, 1800.0, 40.0, 430.0, 96.0, 330.0, 0.011, 0.55],
+	[400.0, 1900.0, 40.0, 370.0, 88.0, 280.0, 0.011, 0.55],
+	[670.0, 2050.0, 45.0, 430.0, 95.0, 340.0, 0.011, 0.55],
+	[920.0, 2200.0, 53.0, 430.0, 100.0, 350.0, 0.011, 0.55],
+	# taller crowns where the falls land
+	[700.0, 760.0, 18.0, 95.0, 52.0, 85.0, 0.018, 1.0],
+	[1230.0, 1080.0, 40.0, 130.0, 62.0, 110.0, 0.017, 1.0],
+	[830.0, 1660.0, 50.0, 180.0, 90.0, 160.0, 0.018, 1.0],
 ]
 var _materials: Array[ShaderMaterial] = []
 var _configured: bool = false
@@ -61,12 +58,12 @@ func configure(scene: Node3D, eye: Vector3) -> Dictionary:
 		material.set_shader_parameter("bank_center", centre)
 		material.set_shader_parameter("bank_radii", radii)
 		material.set_shader_parameter("seed", 1.73 * float(i))
-		material.set_shader_parameter("density", 0.022 if i >= 17 else (0.016 if i < 14 else 0.013))
-		material.set_shader_parameter("lobe_strength", 1.0 if i >= 17 else 0.55)
+		material.set_shader_parameter("density", float(spec[6]))
+		material.set_shader_parameter("lobe_strength", float(spec[7]))
 		material.set_shader_parameter("march_steps", _march_steps())
-		material.set_shader_parameter("cloud_lit", Color("c6c7e1"))
-		material.set_shader_parameter("cloud_shade", Color("777ba3"))
-		material.set_shader_parameter("cloud_warm", Color("cfc3c9"))
+		material.set_shader_parameter("cloud_lit", Color("b4adcf"))
+		material.set_shader_parameter("cloud_shade", Color("736e98"))
+		material.set_shader_parameter("cloud_warm", Color("cbbcc6"))
 		material.set_shader_parameter("cloud_night_lit", Color("666c96"))
 		material.set_shader_parameter("cloud_night_shade", Color("2c2d4c"))
 		_materials.append(material)

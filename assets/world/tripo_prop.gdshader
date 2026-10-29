@@ -30,6 +30,18 @@ uniform float tree_height = 1.0;
 uniform vec2 tree_center = vec2(0.0);
 uniform float tree_radius = 1.0;
 uniform float tree_night = 0.0;
+// M9 (ChatGPT checkpoint 10): a darker outer cap, a broader gold underside, fine branching at the
+// trunk-to-cap join, violet-blue vein highlights and bioluminescent specks. Zero keeps the M8 look.
+uniform float cap_shade = 1.0;
+uniform float gold_spread = 0.0;
+uniform float fine_branch = 0.0;
+uniform vec3 vein_cool = vec3(0.342, 0.192, 0.807);
+uniform float vein_cool_glow = 0.0;
+uniform float sparkle = 0.0;
+uniform float sparkle_cell = 12.0;
+// Darkens the branch geometry between trunk and cap (side faces), so the glowing gills read between
+// darker limbs as in the concept rather than pale lavender limbs over a pale membrane.
+uniform float branch_dark = 0.0;
 varying float world_y;
 varying vec2 world_xz;
 
@@ -45,6 +57,22 @@ float c1_gill_line(float phase, float width) {
 	float aa = clamp(footprint * 0.55, 0.012, 0.40);
 	return (1.0 - smoothstep(width - aa, width + aa, abs(sin(phase))))
 		* (1.0 - smoothstep(0.9, 2.5, footprint));
+}
+
+// Sparse specks on a 3D cell grid (world metres): one candidate per cell, kept when its hash clears
+// 1 - density; antialiased and faded once a speck falls well under a pixel.
+float c1_speck(vec3 p, float cell, float density) {
+	// A tilted lattice, so the specks do not line up in rings where the cap crosses its layers.
+	vec3 g = mat3(vec3(0.80, 0.36, -0.48), vec3(-0.28, 0.93, 0.24), vec3(0.53, -0.08, 0.84)) * p / cell;
+	vec3 id = floor(g);
+	vec3 f = fract(g) - 0.5;
+	float h = fract(sin(dot(id, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+	vec3 o = vec3(fract(h * 17.0), fract(h * 31.0), fract(h * 53.0)) - 0.5;
+	float d = length(f - o * 0.55);
+	float aa = clamp(fwidth(d), 0.002, 0.5);
+	float r = 0.10 + 0.06 * fract(h * 11.0);
+	float level = 0.35 + 0.65 * fract(h * 23.0);
+	return level * step(1.0 - density, fract(h * 7.0)) * (1.0 - smoothstep(r - aa, r + aa, d)) * (1.0 - smoothstep(0.25, 0.6, aa));
 }
 
 void fragment() {
@@ -75,11 +103,13 @@ void fragment() {
 		float under_surface = down * step(under_min_y, world_y) * smoothstep(0.40, 0.52, height_fraction);
 		float cap_top = smoothstep(0.60, 0.70, height_fraction) * smoothstep(-0.1, 0.45, normal_y);
 		float vein = smoothstep(0.02, 0.22, c.r - c.b) * smoothstep(0.3, 0.65, c.r);
-		float core = 1.0 - smoothstep(0.18, 0.90, radius_fraction);
+		float core = 1.0 - smoothstep(0.18 + 0.10 * gold_spread, 0.90 + 0.12 * gold_spread, radius_fraction);
 		float detail = clamp(dot(c, vec3(0.3, 0.55, 0.15)) / 0.28, 0.45, 1.45);
 		// Linear lilac palettes retain the texture's relief and a share of its original colour.
 		vec3 bark = mix(c, vec3(0.48, 0.36, 0.62) * detail, 0.78);
 		vec3 cap = mix(c, vec3(0.48, 0.35, 0.69) * detail, 0.76);
+		float outer_cap = mix(1.0, cap_shade, smoothstep(0.30, 0.95, radius_fraction));
+		cap *= outer_cap;
 		vec3 violet = vec3(0.270, 0.147, 0.807) * clamp(mx / 0.7, 0.45, 1.2);
 		// Two curved radial families split as they travel outward. The faint connective membrane
 		// softens the bare-branch reading; brightest filaments stay around the trunk, not the rim.
@@ -91,19 +121,40 @@ void fragment() {
 			* smoothstep(0.25, 0.65, radius_fraction);
 		float gills = max(main_gill * 0.78, fine_gill * 0.45)
 			* smoothstep(0.08, 0.20, radius_fraction) * (1.0 - smoothstep(0.88, 1.01, radius_fraction));
-		float gold_mask = clamp(vein * core + gills * (0.24 + 0.56 * core) + 0.10 * core, 0.0, 1.0);
+		// Fine branching where the trunk opens into the cap: a dense third family fading by mid-radius.
+		float branch = c1_gill_line(angle * 97.0 + radius_fraction * 23.0 + warp * 2.3, 0.07)
+			* smoothstep(0.04, 0.10, radius_fraction) * (1.0 - smoothstep(0.22, 0.48, radius_fraction)) * fine_branch;
+		gills = max(gills, branch * 0.85);
+		float gold_mask = clamp(vein * core + gills * (0.24 + 0.56 * core) + (0.10 + 0.16 * gold_spread) * core, 0.0, 1.0);
 		vec3 underside = mix(violet, under_color * clamp(mx, 0.45, 1.0), gold_mask);
 		vec3 tree_color = mix(bark, cap, cap_top);
 		tree_color = mix(tree_color, mix(c, underside, 0.85), under_surface);
+		float branch_zone = smoothstep(0.30, 0.44, height_fraction) * (1.0 - smoothstep(0.60, 0.67, height_fraction))
+			* (1.0 - under_surface) * (1.0 - cap_top);
+		tree_color *= 1.0 - branch_dark * branch_zone;
 		ALBEDO = mix(ALBEDO, clamp(tree_color, vec3(0.0), vec3(1.0)) * base_tint * tint, palette);
 		// Soft coloured fill keeps the bark legible under the blue night key; no white fill.
-		vec3 tree_emission = mix(bark, cap, cap_top) * mix(0.11, 0.075, night) * (1.0 - under_surface);
+		vec3 tree_emission = mix(bark, cap, cap_top) * mix(0.11, 0.075, night) * (1.0 - under_surface) * (1.0 - branch_dark * branch_zone);
+		// Warm light caught along the limbs' texture veins under the glowing gills.
+		tree_emission += under_color * under_glow * branch_zone * vein * mx * 0.6 * branch_dark;
 		tree_emission += violet * mix(0.025, 0.04, night) * under_surface;
 		// Imported large veins and finer gills share one orange-gold source. The low membrane
 		// contribution is coloured and radius-limited, preserving violet gaps and texture relief.
 		float warm_energy = vein * mx * (0.06 + 1.00 * core)
-			+ gills * (0.10 + 0.58 * core) + 0.045 * core * clamp(detail, 0.6, 1.2);
+			+ gills * (0.10 + 0.58 * core) + (0.045 + 0.035 * gold_spread) * core * clamp(detail, 0.6, 1.2);
 		tree_emission += under_color * under_glow * under_surface * warm_energy;
+		// Violet-blue highlights on the outer fine gills, where the gold thins toward the rim.
+		tree_emission += vein_cool * vein_cool_glow * under_surface * fine_gill * (1.0 - 0.75 * core)
+			* (1.0 - smoothstep(0.88, 1.01, radius_fraction));
+		if (sparkle > 0.0) {
+			vec3 wp = vec3(world_xz.x, world_y, world_xz.y);
+			float on_cap = smoothstep(0.55, 0.62, height_fraction);
+			// Denser toward the rim, as the concept's cap lights gather at its edge.
+			float s_top = c1_speck(wp, sparkle_cell, 0.18 + 0.30 * smoothstep(0.45, 0.95, radius_fraction)) * cap_top * on_cap;
+			float s_under = c1_speck(wp + 3.7, sparkle_cell * 0.8, 0.5) * under_surface;
+			tree_emission += vec3(1.0, 0.70, 0.62) * s_top * sparkle * mix(0.6, 1.6, night);
+			tree_emission += mix(vein_cool, vec3(0.85, 0.9, 1.0), 0.45) * s_under * sparkle * 1.3 * mix(1.0, 1.6, night);
+		}
 		// Keep the imported bright flecks, without the old broad warm emission washing the cap out.
 		tree_emission += EMISSION * mix(0.15, 0.08, under_surface);
 		tree_emission += c * smoothstep(0.78, 0.95, mx) * smoothstep(0.05, 0.24, c.b - c.r) * cap_top * 0.045;
