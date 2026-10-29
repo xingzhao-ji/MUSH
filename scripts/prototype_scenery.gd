@@ -4400,7 +4400,70 @@ const C1_FG_PROPS: Array = [
 	# in front of it (the concept's patio edge sinks into flowers and wisteria)
 	# (capture s21: at 2.4-3.2 m they buried the path; smaller, the lily off the path)
 	["shrub", 430.0, 515.0, 13.0, 2.3, 30.0, 0.35, 0.0], ["shrub", 545.0, 495.0, 14.0, 2.5, 120.0, 0.35, 0.0], ["shrub", 595.0, 455.0, 16.0, 2.3, 250.0, 0.35, 0.0],
-	["lily", 330.0, 640.0, 9.0, 1.1, 90.0, 0.6, 0.7], ["shrub", 350.0, 555.0, 11.0, 1.9, 310.0, 0.35, 0.0]]
+	["lily", 330.0, 640.0, 9.0, 1.1, 90.0, 0.6, 0.7], ["shrub", 350.0, 555.0, 11.0, 1.9, 310.0, 0.35, 0.0],
+	# ChatGPT checkpoint 6: the left foreground still sparse and chunky; a second Tripo set from ChatGPT's foreground
+	# sheet: weathered flagstone stairs down from the patio, rustic lantern posts (lit) along them, fern and moss clumps
+	# with small glowing flowers on the bare ground (all on the terrace ground the pixel's ray meets), and wisteria
+	# curtains hanging under the patio lip, the cliff lip and the old tree's limbs.
+	["stairs", 255.0, 525.0, 30.0, 3.4, -25.0, 0.12, 0.0, "ground"], ["stairs", 430.0, 640.0, 30.0, 3.0, 15.0, 0.12, 0.0, "ground"],
+	# (capture s31: at 2.6-2.8 m the posts read as twigs; concept-1's path lanterns are bold warm points)
+	["lantern", 320.0, 545.0, 30.0, 3.4, 0.0, 0.05, 0.0, "ground"], ["lantern", 520.0, 620.0, 30.0, 3.4, 40.0, 0.05, 0.0, "ground"],
+	["lantern", 180.0, 505.0, 30.0, 3.2, -30.0, 0.05, 0.0, "ground"], ["lantern", 395.0, 580.0, 30.0, 3.2, 20.0, 0.05, 0.0, "ground"],
+	["lantern", 640.0, 665.0, 30.0, 3.4, 60.0, 0.05, 0.0, "ground"],
+	["fern", 140.0, 540.0, 30.0, 1.3, 0.0, 0.1, 0.6, "ground"], ["fern", 60.0, 470.0, 30.0, 1.4, 90.0, 0.1, 0.6, "ground"],
+	["fern", 300.0, 600.0, 30.0, 1.1, 200.0, 0.1, 0.6, "ground"], ["fern", 600.0, 560.0, 30.0, 1.2, 40.0, 0.1, 0.6, "ground"],
+	["fern", 230.0, 480.0, 30.0, 1.0, 120.0, 0.1, 0.6, "ground"], ["fern", 690.0, 610.0, 30.0, 1.3, 260.0, 0.1, 0.6, "ground"],
+	["wisteria", 500.0, 470.0, 13.5, 3.2, 0.0, 0.92, 0.0], ["wisteria", 330.0, 455.0, 12.0, 2.8, 30.0, 0.92, 0.0],
+	# (capture s30: at pixel 95, 120 the limb curtain hung across the roof and window; tucked into the corner)
+	["wisteria", 860.0, 645.0, 25.0, 5.0, -20.0, 0.95, 0.0], ["wisteria", 25.0, 70.0, 15.0, 3.0, 0.0, 0.95, 0.0]]
+## Terrace ground grid: the highest surface of the home terrace's meshes (scripted ground, the Tripo home's patio and
+## stairs) per C1_TGRID_CELL square, so foreground props can stand on the ground a pixel's ray meets.
+var _c1_tgrid: Dictionary = {}
+const C1_TGRID_CELL := 0.5
+func _c1_build_tgrid() -> int:
+	_c1_tgrid.clear()
+	for node: GeometryInstance3D in _static:
+		if not node is MeshInstance3D: continue
+		var nm: String = String(node.name)
+		if not (nm.begins_with("C1Terrace_") or nm.begins_with("C1TripoTerrace_")): continue
+		var mi := node as MeshInstance3D
+		var xf: Transform3D = mi.transform
+		var faces: PackedVector3Array = mi.mesh.get_faces()
+		for i: int in range(0, faces.size(), 3):
+			var a: Vector3 = xf * faces[i]
+			var b: Vector3 = xf * faces[i + 1]
+			var c: Vector3 = xf * faces[i + 2]
+			var d: float = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z)
+			if absf(d) < 1e-6: continue
+			var x0: int = floori(minf(a.x, minf(b.x, c.x)) / C1_TGRID_CELL)
+			var x1: int = floori(maxf(a.x, maxf(b.x, c.x)) / C1_TGRID_CELL)
+			var z0: int = floori(minf(a.z, minf(b.z, c.z)) / C1_TGRID_CELL)
+			var z1: int = floori(maxf(a.z, maxf(b.z, c.z)) / C1_TGRID_CELL)
+			if (x1 - x0 + 1) * (z1 - z0 + 1) > 2500: continue
+			for gx: int in range(x0, x1 + 1):
+				for gz: int in range(z0, z1 + 1):
+					var qx: float = (gx + 0.5) * C1_TGRID_CELL
+					var qz: float = (gz + 0.5) * C1_TGRID_CELL
+					var w0: float = ((b.z - c.z) * (qx - c.x) + (c.x - b.x) * (qz - c.z)) / d
+					var w1: float = ((c.z - a.z) * (qx - c.x) + (a.x - c.x) * (qz - c.z)) / d
+					var w2: float = 1.0 - w0 - w1
+					if w0 < -0.02 or w1 < -0.02 or w2 < -0.02: continue
+					var y: float = a.y * w0 + b.y * w1 + c.y * w2
+					var key := Vector2i(gx, gz)
+					if not _c1_tgrid.has(key) or y > float(_c1_tgrid[key]): _c1_tgrid[key] = y
+	return _c1_tgrid.size()
+
+## Where a ray from the eye first meets the terrace ground grid (within max_t m), or Vector3.INF.
+func _c1_ground_hit(eye: Vector3, ray: Vector3, max_t: float) -> Vector3:
+	var t: float = 1.5
+	while t < max_t:
+		var p: Vector3 = eye + ray * t
+		var key := Vector2i(floori(p.x / C1_TGRID_CELL), floori(p.z / C1_TGRID_CELL))
+		if _c1_tgrid.has(key) and p.y <= float(_c1_tgrid[key]) + 0.02:
+			return Vector3(p.x, float(_c1_tgrid[key]), p.z)
+		t += 0.2
+	return Vector3.INF
+
 func _add_c1_fg_props(eye: Vector3) -> Array:
 	var look: Vector3 = (_vista_target() - eye).normalized()
 	var right: Vector3 = look.cross(Vector3.UP).normalized()
@@ -4415,13 +4478,31 @@ func _add_c1_fg_props(eye: Vector3) -> Array:
 		var p: Vector3 = eye + ray * float(spec[3])
 		var h: float = float(spec[4])
 		var base: Vector3 = p - Vector3(0.0, h * float(spec[6]), 0.0)
+		# a ninth field "ground": stand on the terrace ground the pixel's ray meets (within spec[3] m), sunk spec[6] x h
+		var on_ground: bool = spec.size() > 8 and str(spec[8]) == "ground"
+		if on_ground:
+			var hit: Vector3 = _c1_ground_hit(eye, ray, float(spec[3]))
+			if hit == Vector3.INF:
+				placed.append([spec[0], "no ground hit"])
+				continue
+			p = hit
+			base = hit - Vector3(0.0, h * float(spec[6]), 0.0)
 		var to_eye := Vector2(eye.x - p.x, eye.z - p.z)
 		var n0: int = _refuge_props.size()
 		if _refuge_model(path, base, atan2(to_eye.x, to_eye.y) + C1_TRIPO_FRONT + deg_to_rad(float(spec[5])), h, "C1Fg%s%d" % [str(spec[0]).capitalize(), placed.size()]):
 			for pi: int in range(n0, _refuge_props.size()):
 				_refuge_props[pi].set_shader_parameter("cool_glow", float(spec[7]))
+				if str(spec[0]) == "lily": _refuge_props[pi].set_shader_parameter("base_tint", C1_LILY_TINT)
+			if str(spec[0]) == "lantern":
+				# its glass hangs at ~0.72 of the post's height
+				_refuge_light(base + Vector3(0.0, h * 0.72, 0.0), 6.0, "C1FgLanternLight%d" % placed.size())
+				var ll: OmniLight3D = _refuge_lights.pop_back()
+				ll.light_color = Color("ffa050")
+				_c1_lights.append(ll)
 			placed.append([spec[0], _v3(base)])
+	_c1_fg_report = placed
 	return placed
+var _c1_fg_report: Array = []
 const C1_TRIPO_TERRACE := "res://assets/world/models/tripo/c1/terrace.glb"
 ## ChatGPT checkpoint 5: the home still dominated the frame and read chunky: 11% smaller about its window (which stays
 ## on the concept's), the timber and patio darker toward #5A4337.
@@ -4432,6 +4513,9 @@ const C1_TERRACE_TINT := Vector3(0.8, 0.74, 0.76)
 const C1_ANC_TREE_AT := Vector3(-20.0, -2.0, -32.0)
 const C1_ANC_TREE_H := 32.0
 const C1_ANC_TREE_TURN := 0.0
+const C1_ANC_TREE_TINT := Vector3(1.4, 1.25, 1.05)
+## Capture s33 cells: the lily corner read L 39 against the concept's 25 (its glowing blooms sit in dark foliage).
+const C1_LILY_TINT := Vector3(0.75, 0.76, 0.9)
 ## High terrace support (C1_HIGH): tower set C1_SUPPORT_BACK m behind the eye, top C1_SUPPORT_TOP_BELOW m under it
 ## (the terrace skirt reaches ~77 m under the eye).
 const C1_SUPPORT_BACK := 30.0
@@ -4456,7 +4540,6 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 	var tripo: bool = ResourceLoader.exists(C1_TRIPO_TERRACE) and ResourceLoader.exists(C1_TERRACE_BASE)
 	var base_glb: String = C1_TERRACE_PROPS if tripo and ResourceLoader.exists(C1_TERRACE_PROPS) else C1_TERRACE_BASE
 	_blender_place(base_glb if tripo else C1_TERRACE, xf, "C1Terrace", Color.WHITE, Transform3D.IDENTITY, C1_TERRACE_FILLS)
-	if base_glb == C1_TERRACE_PROPS: _add_c1_fg_props(eye)
 	if C1_HIGH:
 		# the high terrace's own rock: a Tripo cliff tower from the ground up to under the terrace skirt, set back behind
 		# the eye so the frame keeps the valley (seen from the rest of the world the home no longer floats)
@@ -4480,14 +4563,21 @@ func _add_c1_terrace(eye: Vector3) -> Dictionary:
 		var at_path: String = C1_TRIPO_FG + "anctree.glb"
 		if ResourceLoader.exists(at_path):
 			var tl: Vector3 = xf * C1_ANC_TREE_AT
+			var an0: int = _refuge_props.size()
 			_refuge_model(at_path, tl, atan2(eye.x - tl.x, eye.z - tl.z) + C1_TRIPO_FRONT + deg_to_rad(C1_ANC_TREE_TURN), C1_ANC_TREE_H, "C1AncientTree")
+			# capture s33 cells: the corner read L 15 against the concept's warm lit canopy (L 24, a 10, b 8)
+			for ai: int in range(an0, _refuge_props.size()): _refuge_props[ai].set_shader_parameter("base_tint", C1_ANC_TREE_TINT)
+	# foreground props last, so the ground grid sees the home's patio and stairs as well as the scripted ground
+	if base_glb == C1_TERRACE_PROPS:
+		_c1_build_tgrid()
+		_add_c1_fg_props(eye)
 	for k: int in C1_TERRACE_LIGHTS.size():
 		var l: Array = C1_TERRACE_LIGHTS[k]
 		_refuge_light(xf * Vector3(float(l[0]), float(l[1]), float(l[2])), float(l[3]), "C1TerraceLight%d" % k)
 		var light: OmniLight3D = _refuge_lights.pop_back()
 		light.light_color = Color("ff9f50")
 		_c1_lights.append(light)
-	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size()}
+	return {"built": true, "origin": _v3(xf.origin), "yaw_deg": snappedf(rad_to_deg(atan2(-look.x, -look.z)), 0.1), "lights": C1_TERRACE_LIGHTS.size(), "ground_cells": _c1_tgrid.size(), "fg": _c1_fg_report}
 
 ## Valley kit (MUSH-exchange/blender/scripts/valley.py, ChatGPT sheet mush-c1-sheet-valley-01): cliff pillar islands,
 ## a wide island and arched viaducts standing in the lake and the basin beyond, as concept-1's misty valley.
@@ -4525,10 +4615,21 @@ const C1_ISLANDS: Array = [
 	# ChatGPT checkpoint 5 (milestone 4): empty gaps between and beneath the bridges; smaller isles (each with its own
 	# hut, trees and falls) fill them at the middle distance.
 	["lowisle", 830.0, 1060.0, 120.0, 0.0, 120.0], ["lowisle", 600.0, 660.0, 70.0, 0.0, -60.0], ["lowisle", 960.0, 1150.0, 150.0, 0.0, 200.0],
-	["lowisle", 1240.0, 1080.0, 170.0, 0.0, 40.0], ["lowisle", 720.0, 1200.0, 140.0, 0.0, -100.0]]
+	["lowisle", 1240.0, 1080.0, 170.0, 0.0, 40.0], ["lowisle", 720.0, 1200.0, 140.0, 0.0, -100.0],
+	# checkpoint 6: staggered secondary forms at more depths (narrow needles and isles between the masses)
+	# (capture s27: a needle at pixel 870 stood dark in front of the tree's trunk; dropped)
+	["needle", 520.0, 830.0, 210.0, 0.0, 30.0], ["lowisle", 1110.0, 1380.0, 210.0, 0.0, 15.0],
+	["needle", 1000.0, 1250.0, 300.0, 0.0, 220.0], ["lowisle", 560.0, 1600.0, 240.0, 0.0, 80.0]]
 ## Image-to-3D curved bridges (risebridge: a stone arch rising left to right on its own end ledges), spanning
 ## between masses: [concept pixel x, distance m of the span centre, deck height above LAKE_Y, span m, turn degrees].
-const C1_TRIPO_BRIDGES: Array = [[880.0, 700.0, 230.0, 380.0, 0.0], [700.0, 1180.0, 260.0, 440.0, 15.0]]
+## ChatGPT checkpoint 6: the centre still read as separate placed assets; smaller bridgelets at several depths tie the
+## masses together so the eye travels through overlapping layers.
+const C1_TRIPO_BRIDGES: Array = [[880.0, 700.0, 230.0, 380.0, 0.0], [700.0, 1180.0, 260.0, 440.0, 15.0],
+	[600.0, 880.0, 150.0, 200.0, -25.0], [1010.0, 1020.0, 190.0, 240.0, 30.0], [790.0, 1480.0, 290.0, 300.0, -10.0], [540.0, 1260.0, 250.0, 220.0, 20.0]]
+## Far spires: [model, concept pixel x, distance m, height m, turn degrees], on the ground there (rim or wall).
+## (capture s30: at 380-520 m they stood behind the 400-650 m west wall, unseen; they rise well above it now)
+const C1_FAR_SPIRES: Array = [["needle", 440.0, 2050.0, 760.0, 30.0], ["tower", 545.0, 2250.0, 820.0, 160.0], ["needle", 620.0, 1950.0, 700.0, 260.0],
+	["needle", 505.0, 2350.0, 880.0, 90.0]]
 ## Image-to-3D fronts: tripo_prep's turntable shows the sheet's view at its 0 degree frame (camera on Blender -Y, glTF
 ## and Godot +Z), so the front faces the eye with no turn. (Milestone 4 turned -90 degrees, from a misread of the
 ## preview angles, showing the masses' sides.)
@@ -4660,6 +4761,17 @@ func _add_c1_valley(eye: Vector3) -> Dictionary:
 		var w_est: float = float(spec[4]) if float(spec[4]) > 0.0 else float(dims[1]) * (top - base) / float(dims[0])
 		_c1_bases.append([p, w_est, base + (top - base) * rng_mid(placed.size())])
 		placed.append([spec[0], snappedf(p.x, 1.0), snappedf(p.y, 1.0), snappedf(terrain_height(p.x, p.y), 1.0)])
+	# far rock spires on the basin's rim and walls (concept-1: distant spires layer the horizon left of the tree; capture
+	# s28: that band was a flat pale wall), standing on whatever ground is there
+	for fi: int in C1_FAR_SPIRES.size():
+		var fs: Array = C1_FAR_SPIRES[fi]
+		var fpath: String = str(C1_TRIPO_KIT.get(fs[0], ""))
+		if not ResourceLoader.exists(fpath): continue
+		var fp: Vector2 = _c1_point(eye, float(fs[1]), float(fs[2]))
+		var fbase: float = maxf(terrain_height(fp.x, fp.y), LAKE_Y) - 30.0
+		var fto := Vector2(eye.x - fp.x, eye.z - fp.y)
+		_refuge_model(fpath, Vector3(fp.x, fbase, fp.y), atan2(fto.x, fto.y) + C1_TRIPO_FRONT + deg_to_rad(float(fs[4])), float(fs[3]), "C1FarSpire%d" % fi)
+		placed.append(["far " + str(fs[0]), snappedf(fp.x, 1.0), snappedf(fp.y, 1.0), snappedf(fbase, 1.0)])
 	var bridges: Array = []
 	var bpath_t: String = str(C1_TRIPO_KIT["risebridge"])
 	if C1_HIGH and ResourceLoader.exists(bpath_t):
@@ -7355,12 +7467,18 @@ const SOFT_BOUNCE := 0.3
 ## High eye, capture s12b cells: the upper right read peach (L 71, b +4) where the concept is violet-blue (L 52, b -27),
 ## the valley dark and green-grey: a rosier, less orange horizon, a deeper violet top, nearer lilac-blue haze.
 ## Capture s13 cells: the top right still L 78 b +2 (the horizon glow behind the cap) against the concept's L 52 b -27.
-const C1_LOOK := {"day_sky_top": "3c40a0", "day_sky_horizon": "d0a0c4", "day_fog": "8c8cc8", "day_ambient": "8a88c0", "day_sun": "ffb8a0",
+## ChatGPT checkpoint 6: the day still pale, flat and pink-washed; deeper distant violets (#786EAF), lilac mist
+## (#A79DCE), warm amber light (#F3B677), turquoise water (#78B7C8) and a fuller grade for warm-cool separation.
+## (Sweep s27 variants: the full grade and the deep fog warmed and darkened the middle row, frame distance 22.2; the
+## lighter fog, softer key and 0.9 grade keep the amber horizon and turquoise water at 21.4.)
+## (Sweep s33: a bluer lilac horizon b4a6d8, a deeper top and rosier cloud tint pulled the top right toward the
+## concept's violet-blue, 21.4 -> 21.3.)
+const C1_LOOK := {"day_sky_top": "343c98", "day_sky_horizon": "b4a6d8", "day_fog": "8a84c4", "day_ambient": "8a88c0", "day_sun": "ffd0b0",
 	# ChatGPT checkpoint 4: turquoise water channels (#69AABF) between the islands, not a grey-pink mirror.
-	"day_lake_horizon": "6aa8bc", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "f0c0c8",
+	"day_lake_horizon": "78b7c8", "warm_top": "5c5cb0", "warm_mix": 0.4, "zenith_color": "5058a8", "zenith_mix": 1.0, "cloud_warm": "d8b8c8",
 	# High eye (C1_HIGH; the user, 2026-10-28: the basin's walls and falls carry the massive scale): thinner haze so the
 	# walls 1.5-2 km out still read (capture s06: at density 1.0, far 0.8 they washed out to the sky).
-	"cloud_glow_color": "e0a0a8", "glow_color": "e08880", "mist_warm": "c8c0e8", "grade_sat": 0.85, "sun_energy": 1.05, "fog_density": 0.95,
+	"cloud_glow_color": "f3b677", "glow_color": "f0a070", "mist_warm": "a79dce", "grade_sat": 0.9, "sun_energy": 1.05, "fog_density": 0.95,
 	"far_fog": 0.55, "ambient_energy": 0.32,
 	# c1v09 variant F3: a pale rose fill and a greyer ambient (the lavender fill turned grey rock indigo), a warmer key.
 	"fill_color": "c8b4b8", "fill_energy": 0.25, "hemi_color": "a8a0c8",
