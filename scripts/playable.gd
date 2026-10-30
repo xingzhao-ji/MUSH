@@ -205,7 +205,7 @@ func _snapshot() -> Dictionary:
 	return snapshot
 
 func _capture_review() -> void:
-	var runner: Node = load("res://tests/slice_traversal.gd" if "--slice" in OS.get_cmdline_user_args() else "res://tests/lod_check.gd" if "--lod" in OS.get_cmdline_user_args() else "res://tests/perf_probe.gd" if "--perf" in OS.get_cmdline_user_args() else "res://tests/route_traversal.gd" if "--route" in OS.get_cmdline_user_args() else "res://tests/scenic_capture.gd" if "--scenic" in OS.get_cmdline_user_args() else "res://tests/capture_current.gd").new()
+	var runner: Node = load("res://tests/demo_tour.gd" if "--demo-tour" in OS.get_cmdline_user_args() else "res://tests/slice_traversal.gd" if "--slice" in OS.get_cmdline_user_args() else "res://tests/lod_check.gd" if "--lod" in OS.get_cmdline_user_args() else "res://tests/perf_probe.gd" if "--perf" in OS.get_cmdline_user_args() else "res://tests/route_traversal.gd" if "--route" in OS.get_cmdline_user_args() else "res://tests/scenic_capture.gd" if "--scenic" in OS.get_cmdline_user_args() else "res://tests/capture_current.gd").new()
 	add_child.call_deferred(runner)
 
 func _build_ui() -> void:
